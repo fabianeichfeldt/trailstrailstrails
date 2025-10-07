@@ -1,251 +1,119 @@
-<head>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-   integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-   crossorigin=""/>
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <title>trails·trails·trails</title>
 
-<!-- Make sure you put this AFTER Leaflet's CSS -->
- <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-   integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-   crossorigin=""></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
 
-<style>
-	#mapid { height: 90%; }
-	body {
-    font-family:  Arial, sans-serif;
-	background-color: #eeeeee;
-}
-	
-</style>
-</head>
+    <script type="importmap">
+      {
+        "imports": {
+          "leaflet": "https://unpkg.com/leaflet@1.9.4/dist/leaflet-src.esm.js"
+        }
+      }
+    </script>
 
-<body>
-	<H1><font color=grey>trails</font>trails<font color=grey>trails</font></H1>
-Hier sammle ich legale, extra fürs Mountainbike angelegte Trails. <BR>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f5f5f5;
+        color: #333;
+      }
 
-<div id="mapid">
-</div>
+      main {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        padding: 1rem;
+        gap: 1rem;
+      }
 
-	Vorschläge für weitere Strecken könnt ihr gerne an <a href= "mailto:airace3@gmail.com">airace3@gmail.com</a> schicken, im <a href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/">mtb-news Forum-Thraed</a> oder über <a href="https://github.com/Steli0Kont0s/trailstrailstrails/issues">Github</a> melden.
-		<BR>
-		Sollten sich über die Zeit Links verändern, könnt ihr mich ebenfalls gerne informieren.
-		Das ganze hat natürlich weder Anspruch auf Vollständigkeit noch Richtigkeit. Informiert euch immer selbst über die aktuellen Bedingungen!
-		<BR>
-		Vielen Dank an <a href="https://www.mtb-news.de/forum/m/florian.680/">Florian</a> für das Sammeln der Trails und Erstellen der Website!
-		<BR><BR><BR><BR><BR><BR><BR><BR>	
-		Das Icon für Bikeparks stammt von <a href="https://pixabay.com/de/users/openclipart-vectors-30363/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=161315">OpenClipart-Vectors</a> auf <a href="https://pixabay.com/de/?utm_source=link-attribution&amp;utm_medium=referral&amp;utm_campaign=image&amp;utm_content=161315">Pixabay</a>
-		
-		Diese Website nutzt Kartendienste, die von der OpenStreetMap Foundation, St John's Innovation Centre, Cowley Road, Cambridge, CB4 0WS, Vereinigtes Königreich (kurz OSMF) bereitgestellt werden. Dein Browser wird sich zu Servern von OSMF in anderen Länder verbinden. Der Betreiber dieser Website hat keinen Einfluss auf diese Verbindungen und die Verarbeitung Ihrer Daten durch das OSMF. Weitere Informationen über die Verarbeitung von Nutzerdaten durch die OSMF finden Sie in den <A HREF="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</A>.
+      header {
+        text-align: center;
+        padding: 0.5rem 0;
+      }
 
-<script>
-	var mymap = L.map('mapid').setView([49.505, 11.09], 9);
-	
-	L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-	maxZoom: 19,
-	attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-	}).addTo(mymap);
-	
-	var Bikepark = L.icon({
-		iconUrl: 'bikepark.png',
-		iconSize:[35, 22]
-	});
+      header h1 {
+        font-weight: normal;
+        color: #444;
+        font-size: 2rem;
+      }
 
-	var Horaffentrails =L.marker([49.146499, 10.106773]).addTo(mymap).bindPopup("<a href='https://www.dimb.de/trails/horaffentrails-crailsheim/'>"+"Horaffen Trails Crailsheim"+"</a>");
-	var Guenzburg =L.marker([48.434555, 10.316520]).addTo(mymap).bindPopup("<a href='https://www.dav-guenzburg.de/gruppen/mountainbike/mtb_trails/'>"+"Flow Forest Günzburg"+"</a>");
-	var Lichtenfels =L.marker([50.146121, 11.063623]).addTo(mymap).bindPopup("<a href='https://www.frankentourismus.de/blog/2023/04/28/obermainjura-mit-vereinten-kraeften-zum-traum-trail/'>"+"Obermain Trails"+"</a>");
-	var Kulmbach =L.marker([50.111120, 11.460615]).addTo(mymap).bindPopup("<a href='https://www.bierstadttrails.de/'>"+"Bierstadttrails"+"</a>");
-	var Saalfeld =L.marker([50.621241, 11.357102]).addTo(mymap).bindPopup("<a href='https://feen-bike-events.de/trail-center/'>"+"Feen Bike Trails"+"</a>");
-	var Waldsassen =L.marker([50.013441, 12.294832]).addTo(mymap).bindPopup("<a href='https://www.oberpfaelzerwald.de/wasa-trails-mtb/'>"+"Wasa Trails"+"</a>");
-	var Augsburg =L.marker([48.352741,10.8030619]).addTo(mymap).bindPopup("<a href='https://mtb-augsburg.de/trails/'>"+"Augsburg Trails"+"</a>");
-	var Saarbruecken =L.marker([49.251799, 7.040966]).addTo(mymap).bindPopup("<a href='https://mv-sb.de/trails/'>"+"Trailnetz Saarbrücken"+"</a>");
-	var BadIburg =L.marker([52.1783734,8.0421044]).addTo(mymap).bindPopup("<a href='https://www.teutofreun.de/'>"+"Teutofreun.de - Trails am Dörenberg"+"</a>");
-	var Deidesheim =L.marker([49.412082, 8.198044]).addTo(mymap).bindPopup("<a href='https://edelweiss-deidesheim.de/#Naturtrail'>"+"Naturtrails Deidesheim"+"</a>");
-	var Kiedrich =L.marker([50.049873, 8.072345]).addTo(mymap).bindPopup("<a href='https://wald-weit.com/erleben/mountainbiketrails'>"+"Wald.Weit Flowtrails"+"</a>");
-	var BadKreuznach =L.marker([49.8276989,7.8335049]).addTo(mymap).bindPopup("<a href='https://mtb-kh.de/ueber-hardt-lines'>"+"Hardt Lines - Bad Kreuznach"+"</a>");
-	var Dossenheim =L.marker([49.448138, 8.689243]).addTo(mymap).bindPopup("<a href='https://www.steinbrecher-trails.de/'>"+"Steinbrecher Trails - Dossenheim"+"</a>");
-	var Eberbach =L.marker([49.4640504,8.9882238]).addTo(mymap).bindPopup("<a href='https://bikeländ.de/'>"+"Bikeländ Eberbach"+"</a>");
-	var Donnersberg =L.marker([49.555285,7.9093226]).addTo(mymap).bindPopup("<a href='https://www.mtb-donnersberger-land.de/portfolio_trail.html'>"+"Donnersberger Trails"+"</a>");
-	var Landstuhl =L.marker([49.4007366,7.5862567]).addTo(mymap).bindPopup("<a href='https://flowtrail-landstuhl.de/mtb-strecke-flowtrail-landstuhl/'>"+"Flowtrail Landstuhl"+"</a>");
-	var Ilmenau =L.marker([50.6688028,10.9005304]).addTo(mymap).bindPopup("<a href='https://ilrc.de/'>"+"Ilmenau - Trailpark Lindenberg"+"</a>");
-	var Ulm =L.marker([48.414092, 9.890418]).addTo(mymap).bindPopup("<a href='https://www.dav-trailpark-ulm.de/neuigkeiten/2024/10/die-klingen-trails/'>"+"Klingenstein Trails"+"</a>");
-	var Driedorf =L.marker([50.6442598,8.1555835]).addTo(mymap).bindPopup("<a href='https://www.driedorf.de/mtb-bikepark.html'>"+"MTB Park Driedorf"+"</a>");
-	var Albtal =L.marker([48.954623, 8.445719]).addTo(mymap).bindPopup("<a href='https://www.albtal-tourismus.de/tour/from-dachs-till-dawn-downhill-d76f8b4a7f'>"+"From Dachs till dawn"+"</a>");
+      #mapid {
+        flex: 1;
+        min-height: 300px;
+        border-radius: 12px;
+		border-color: #333;
+		border-style: solid;
+        box-shadow: 2 6px 10px rgba(0, 0, 0, 00.1);
+        overflow: hidden;
+      }
 
-	var Osternohe =L.marker([49.58442,11.381138], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-osternohe.de/'>"+"Bikepark Osternohe"+"</a>");
-	var Ochsenkopf =L.marker([50.013203,11.808467], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bullheadbike.de/angebot/bikepark-bilder/'>"+"Bikepark Ochsenkopf"+"</a>");
-	var Schwarzenbruck =L.marker([49.3607453,11.248021]).addTo(mymap).bindPopup("<a href='https://www.komoot.de/highlight/1175858'>"+"X-Trail Schwarzenbruck"+"</a>");
-	var Treuchtlingen =L.marker([48.955951,10.897349]).addTo(mymap).bindPopup("<a href='https://heumoederntrails.de/'>"+"Heumöderntrails Treuchtlingen"+"</a>");
-	var Herrieden =L.marker([49.246045581019224,10.49929811985168]).addTo(mymap).bindPopup("<a href='https://www.bärenlochbikeherrieden.de/'>"+"Bärenloch Trails Herrieden"+"</a>");
-	var Eibelstadt =L.marker([49.731114,10.00406]).addTo(mymap).bindPopup("<a href='http://www.flowtrail-eibelstadt.de/'>"+"Flowtrail Eibelstadt"+"</a>");
-	var Kreuzberg =L.marker([50.37511,10.00189]).addTo(mymap).bindPopup("<a href='https://flowtrail-kreuzberg.com/herzliche-willkommen/'>"+"Flowtrail Kreuzberg"+"</a>");
+      footer {
+        font-size: 0.9rem;
+        color: #666;
+        line-height: 1.4;
+      }
 
-	var Kreuth =L.marker([47.62705824083914,11.753131401779736]).addTo(mymap).bindPopup("<a href='https://www.baysf.de/de/wald-erkunden/ausflugsziele-tipps/baysf-bike-trail.html'>"+"BaySF - Trail Kreuth"+"</a>");
-	var Geisskopf =L.marker([48.93424512789349,13.04247463464544], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.mtbzone-bikepark.com/geisskopf/'>"+"Bikepark Geisskopf"+"</a>");
-	var Samerberg =L.marker([47.77116168418537,12.23684692787697], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-samerberg.de/'>"+"Bikepark Samerberg"+"</a>");
-	var Schöneck =L.marker([50.38826388987421,12.34423764327437], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://schoeneck-vogtland.de/sommer/radfahren/bikepark.html'>"+"Bikepark Schöneck"+"</a>");
-	var Bopfingen =L.marker([48.851728,10.334484]).addTo(mymap).bindPopup("<a href='https://www.bopfinger-bike-connection.de/'>"+"Sandbergtrails Bopfingen"+"</a>");
-	var Breitenbrunn =L.marker([50.45409852063358,12.740969692348623]).addTo(mymap).bindPopup("<a href='https://www.trailcenter-rabenberg.de/'>"+"Trailcenter Rabenberg"+"</a>");
-	var Hahnenkamm =L.marker([50.0789407140207,9.109909269071622]).addTo(mymap).bindPopup("<a href='https://www.kammtrails.de/'>"+"Kammtrails Aschaffenburg"+"</a>");
-	var Mutlangen =L.marker([48.82009730965284,9.808781000000002]).addTo(mymap).bindPopup("<a href='https://l.facebook.com/l.php?u=https%3A%2F%2Fwww.instagram.com%2Fmoemoeatrails%2F%3Ffbclid%3DIwAR2KWa2SsY8RHZu2GKvt80Dy2yUXUYjx6bKv0EKkIKyYp1ydkOhqrvC91XA&h=AT2fI5OYwNYCiF74MuvOb8FK2oUV9zrmbgGHYZM_EcLR2kngAR-hRkAHYIdJp9NzeNH0yulOoMMceycDlUxrl_eZm_IjX6cZ5IS_aJuTcwKKambIzlBvfPMjwNvTsILV8fix'>"+"MoeMoea Trails"+"</a>");
-	var Nagold =L.marker([48.56071106731788,8.741271000000001]).addTo(mymap).bindPopup("<a href='https://www.bikemaster-trail-nagold.de/'>"+"Bikemaster-Trail Nagold"+"</a>");
-	var Freiburg =L.marker([47.99129876369943,7.854909999045006]).addTo(mymap).bindPopup("<a href='https://www.mountainbike-freiburg.com/content/mountainbike-freiburg-ev'>"+"Mountainbike Freiburg e.V."+"</a>");
-	var Stuttgart =L.marker([48.74993628971888,9.168207485568939]).addTo(mymap).bindPopup("<a href='https://www.stuttgart.de/leben/sport/sportstaetten/downhill-strecke.php'>"+"Woodpecker - Trail"+"</a>");
-	var Stromberg =L.marker([49.941644618623876,7.751536626982046]).addTo(mymap).bindPopup("<a href='https://www.flowtrail-stromberg.de/'>"+"Flowtrail Stromberg"+"</a>");
-	var BadOrb =L.marker([50.22477196835828,9.406839099488948]).addTo(mymap).bindPopup("<a href='http://www.flowtrail-badorb.de'>"+"Flowtrail Bad Orb"+"</a>");
-	var Badendbach =L.marker([50.75581729774719,8.48128706975293]).addTo(mymap).bindPopup("<a href='https://www.flowtrail-bad-endbach.de/flowtrail'>"+"Flowtrail Bad Endbach"+"</a>");
-	var Ottweiler =L.marker([49.408703068713024,7.171953802696851]).addTo(mymap).bindPopup("<a href='https://www.facebook.com/Flowtrail-Ottweiler-Saar-167612833325793/'>"+"Flowtrail Ottweiler"+"</a>");
-	var Dischingen =L.marker([48.715739,10.325062]).addTo(mymap).bindPopup("<a href='https://www.sv-dischingen.de/mountainbiking.html'>"+"Zapfentrail Dischingen"+"</a>");
-	var Pluederhausen =L.marker([48.792556,9.567583]).addTo(mymap).bindPopup("<a href='https://kinder.pluederhausen.de/index.php?id=263'>"+"D r Flowing Fuxx"+"</a>");
-	var StEngelmar =L.marker([49.00567735565874,12.83577828810204]).addTo(mymap).bindPopup("<a href='https://maps.urlaubsregion-sankt-englmar.de/sankt-englmar/details.php?id=92110#mapanchor'>"+"Single-Trail Runde Sankt Englmar"+"</a>");
-	var Schwarzwaldtrail =L.marker([48.6116527074898,8.170053121739237]).addTo(mymap).bindPopup("<a href='https://bikesport-sasbachwalden.de/schaeffler-mtb-arena/alpirsbacher-schwarzwaldtrail/'>"+"Alpirsbacher Klosterbräu Schwarzwaldtrail"+"</a>");
-	var Baiersbronn =L.marker([48.50434749381169,8.372128793906946]).addTo(mymap).bindPopup("<a href='https://www.baiersbronn.de/de-de/natur/mountainbiking/touren#cat=Mountainbike&filter=r-fullyTranslatedLangus-,sb-sortedBy--1&ov=mtb'>"+"Mountainbiketouren in Baiersbronn"+"</a>");
-	var Königsfeld =L.marker([48.16748317068864,8.433077207489777]).addTo(mymap).bindPopup("<a href='https://www.koenigsfeld.de/de/Tourismus,-Kultur-Gesundheit/Natur-Sport/Downhill-Drop-Koenigsfeld'>"+"Drop Königsfeld"+"</a>");
-	var Lochen =L.marker([48.217999146026756,8.85323737021306]).addTo(mymap).bindPopup("<a href='https://www.skiclubweilstetten.de/index.php/mtb/lochen-trail'>"+"Lochentrail"+"</a>");
-	var Feldberg =L.marker([50.21545875322292,8.53763609833336]).addTo(mymap).bindPopup("<a href='https://flowtrail-feldberg.de/'>"+"Flowtrail Feldberg"+"</a>");
-	var Wiesbaden =L.marker([50.10915307108854,8.167171088243858]).addTo(mymap).bindPopup("<a href='http://www.gravitypilots.de/gravity-trail-schlaeferskopf-wiesbaden/'>"+"gravitytrail Schläferskopf Wiesbaden"+"</a>");
-	var Boppard =L.marker([50.24771731259078,7.569856427926272]).addTo(mymap).bindPopup("<a href='https://www.boppard-tourismus.de/42-0-MountainbikeBikepark-Boppard.html'>"+"Bikepark Boppard"+"</a>");
-	var Beerfelden =L.marker([49.563229550024964,8.988311841403457], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-beerfelden.de/de/'>"+"Bikepark Beerfelden"+"</a>");
-	var Hindelang =L.marker([47.49989639058956,10.365824804598265], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.hornbahn-hindelang.de/bikepark-allgaeu/'>"+"Bikepark Bad Hindelang"+"</a>");
-	var Ulm =L.marker([48.425560161228816,9.922894544851752]).addTo(mymap).bindPopup("<a href='https://www.swu-trail-blaustein.de/'>"+"SWU-Trail Blaustein"+"</a>");
-	var Ettlingen =L.marker([48.9543,8.4463]).addTo(mymap).bindPopup("<a href='https://www.trailcenteralbtal.de/?fbclid=IwAR3i6ok2nP9nhnT5jGMYImdqd3evGtsfC8F1RfZ2NaXa7HdztPBPnMMz3Fo'>"+"Strommasten-Downhill Ettlingen / Karlsruhe"+"</a>");
-	var BadWaldsee =L.marker([47.92353571563667,9.78295710089788]).addTo(mymap).bindPopup("<a href='https://www.sportpark-badwaldsee.de/mountainbike'>"+"Saubadtrail Bad Waldsee"+"</a>");
-	var Teterow =L.marker([53.78413728501196,12.550579660824729]).addTo(mymap).bindPopup("<a href='53.78413728501196, 12.550579660824729'>"+"Downhilltrail Teterow"+"</a>");
-	var Kothen =L.marker([51.2511436850534,7.186897312601438]).addTo(mymap).bindPopup("<a href='https://www.rv-adler.de/downhill/downhill-strecke'>"+"RV Adler Downhillstrecke Kothen"+"</a>");
-	var Klingentrail =L.marker([51.191279,7.104465]).addTo(mymap).bindPopup("<a href='http://klingentrail.de/'>"+"Klingentrail"+"</a>");
-	var Brilon =L.marker([51.377944154239394,8.58980625071175]).addTo(mymap).bindPopup("<a href='https://www.trailgroundbrilon.de/index.php?id=2'>"+"Trailground Brilon"+"</a>");
-	var Olpe =L.marker([51.05456787050615,7.953447999872142], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='http://froerider.de/'>"+"Bikepark Olpe"+"</a>");
-	var Haard =L.marker([51.70780033564856,7.21863296371885]).addTo(mymap).bindPopup("<a href='https://www.rvr.ruhr/themen/tourismus-freizeit/waldband/mtb-haard-on-tour/'>"+"Haard on Tour"+"</a>");
-	var Siegen =L.marker([50.87584576791424,7.990275199102756]).addTo(mymap).bindPopup("<a href='https://www.mtbsiegerland.de/flowtrail/'>"+"Flowtrail Siegen"+"</a>");
-	var Winterberg =L.marker([51.18537082638178,8.5045677279454], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-winterberg.de/downhill-bike-trail-mountainbike/'>"+"Bikepark Winterberg"+"</a>");
-	var Willingen =L.marker([51.289744991573336,8.593488827947578], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.mtbzone-bikepark.com/willingen/'>"+"Bikepark Willingen"+"</a>");
-	var Weingarten =L.marker([47.804526503248596,9.657833541112758]).addTo(mymap).bindPopup("<a href='https://www.rv-weingarten.de/bikepark-weingarten/'>"+"Flowtrail Weingarten"+"</a>");
-	
-	var Frammersbach =L.marker([50.11928049210075,9.46671899816584], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-info.com/bikeparks/de/bikepark-frammersbach/'>"+"Bikepark Frammersbach"+"</a>");	
-	var Albstadt =L.marker([48.22070674036779,9.038041920443405]).addTo(mymap).bindPopup("<a href='https://www.bikezone-albstadt.de/MTB-Strecken/MTB-Tour-ALB-GOLD-Wadenbeisser-Albstadt'>"+"ALB-GOLD Wadenbeißer"+"</a>");
-	var AlbstadtBike =L.marker([48.25425428093384,9.030680727351019], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://bikepark-albstadt.de/ueber-uns/'>"+"Bikepark Albstadt"+"</a>");
-	var Burladingen =L.marker([48.29190296375067,9.097617578186783], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://bikepark-burladingen.de/de/'>"+"Bikepark Burladingen"+"</a>");
-	var BadWildbad =L.marker([48.75103193071928,8.537126627364584], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://adventure-bikepark.com/'>"+"Adventure-Bikepark Bad Wildbad"+"</a>");
-	var Todtnau =L.marker([47.8292164614344,7.948043083161493], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://2-cycle.de/bikepark-todtnau/'>"+"Bikepark Todtnau"+"</a>");
-	var Oberammergau =L.marker([47.597409450442726,11.050043940826436], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-oberammergau.de/'>"+"Bikepark Oberammergau"+"</a>");
-	var Salzdetfurth =L.marker([52.05825770480272,10.000078998400769]).addTo(mymap).bindPopup("<a href='https://sportstadt.bad-salzdetfurth.de/Bike-Outdoor-Park'>"+"Bike Outdoor Park Bad Salzdetfurth"+"</a>");
-	var Deister =L.marker([52.282904559508964,9.420511113970806]).addTo(mymap).bindPopup("<a href='https://www.deisterfreun.de/#TRAILS'>"+"Deisterfreun.de"+"</a>");
-	var Esnos =L.marker([48.76287335682715,9.328613227364924]).addTo(mymap).bindPopup("<a href='https://www.esnos.de/'>"+"EsNos"+"</a>");
-	var Krefeld =L.marker([51.363846154444914,6.544064756273225]).addTo(mymap).bindPopup("<a href='http://www.home-trail.de/'>"+"HomeTrail Krefeld"+"</a>");
-	var Hoheward =L.marker([51.571809139858054,7.149901251517359]).addTo(mymap).bindPopup("<a href='https://www.hoheward.rvr.ruhr/erlebnis-hoheward/mountainbike-trails/'>"+"Hoheward Flow"+"</a>");
-	
-	
-	var Hahnenklee =L.marker([51.859288026253175,10.341463988523842], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-hahnenklee.de/'>"+"Bikepark Hahnenklee"+"</a>");
-	var Schulenberg =L.marker([51.84108082765715,10.4437279986157], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.outdoorwerkstatt.eu/racepark-schulenberg/'>"+"Racepark Schulenberg"+"</a>");
-	var Braunlage =L.marker([51.73194900712909,10.612948785119366], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-braunlage.de/'>"+"Bikepark Braunlage"+"</a>");
-	var StAndreasberg =L.marker([51.70739689983342,10.521287612105091], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='http://alberti-lift.de/index.php/main-xtrail'>"+"MSB-X-Trail"+"</a>");
-	var Bodetal =L.marker([51.741396518647726,11.015893458129646], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://bikepark-bodetal.de/'>"+"Bikepark Bodetal"+"</a>");
-	var Oberhof =L.marker([50.7096571486292,10.706199512076715], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://bikepark-oberhof.de/'>"+"Bikepark Oberhof"+"</a>");
-	
-	
-	var Bielefeld =L.marker([52.020653827043155,8.580377775635599]).addTo(mymap).bindPopup("<a href='http://naturfreunde-bielefeld.de/index.php/trail-eroeffnung-am-monte-scherbelino'>"+"Monte Scherbelino"+"</a>");
-var Gehrenberg =L.marker([47.73469790707181,9.419839311994526]).addTo(mymap).bindPopup("<a href='https://www.gehrenberg-bodensee.de/tour/gehrotrail/'>"+"Gehrotrail"+"</a>");
-var Schienerberg =L.marker([47.69919813597328,8.909232127335994], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikeparkschienerberg.de/'>"+"Schienerberg"+"</a>");
-var Trailsurfers =L.marker([49.0600856148683,9.339290498537528]).addTo(mymap).bindPopup("<a href='https://trailsurfers-bw.de/'>"+"Trailsurfers Baden Württemberg"+"</a>");
-var Huertgenwald =L.marker([50.67307986585335,6.352271542760435], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.mtb-park-huertgenwald.de/'>"+"Mountainbike-Park Hürtgenwald"+"</a>");
-var Heilbronn =L.marker([49.147557904081296,9.253560346194531]).addTo(mymap).bindPopup("<a href='https://www.dav-heilbronn.de/de/aktiv/mountainbike-1/trails-am-schweinsberg.html'>"+"Trails am Schweinsberg"+"</a>");
-var Heilbronn2 =L.marker([49.137351056078984,9.228002813881979]).addTo(mymap).bindPopup("<a href='https://www.heilbronnerland.de/de/mountainbike-touren'>"+"Mountainbike-Touren rund um Heilbronn"+"</a>");
+      a {
+        color: #0077cc;
+        text-decoration: none;
+      }
 
-	var Freisen =L.marker([49.54606417246228,7.254271970239458]).addTo(mymap).bindPopup("<a href='https://www.g-h-f.org/'>"+"Grüne Hölle Freisen"+"</a>");
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
 
+  <body>
+    <main>
+      <header>
+        <h1>
+          <span style="color: grey;">trails</span>trails<span style="color: grey;">trails</span>
+        </h1>
+        <p>
+          Hier sammle ich legale, extra fürs Mountainbike angelegte Trails.
+        </p>
+      </header>
 
-	var Schongau =L.marker([47.80620489778162,10.893371285550298]).addTo(mymap).bindPopup("<a href='https://www.schongau.de/de/Mein-Schongau/Sport-Freizeit/Bikepark?fbclid=IwAR1lNwRc-UtBtcPmJ1kbmDpqvNxGjPgsv4NM_KhtCjGpkbcRbJARELE6XMI'>"+"Bikepark Schärfshalde"+"</a>");
-	var Hoxberg =L.marker([ 49.3905390,6.8474761]).addTo(mymap).bindPopup("<a href='https://m.facebook.com/GravityTeamHoxberg/?ref=page_internal&mt_nav=0'>"+"Gravity Team Hoxberg e. V."+"</a>");
+      <div id="mapid"></div>
 
-	var Trippstadt =L.marker([49.37007853977805, 7.76424367723757]).addTo(mymap).bindPopup("<a href='https://www.bikepark-trippstadt.de/'>"+"Bikepark Trippstadt"+"</a>");
-	var TrailparkWinterberg =L.marker([51.18675028700783,8.499899347600408]).addTo(mymap).bindPopup("<a href='http://www.trailpark-winterberg.de/'>"+"Trailpark Winterberg"+"</a>");
-	var Herbolzheim =L.marker([48.22274811843427,7.882536568485206]).addTo(mymap).bindPopup("<a href='https://www.rsv-herbolzheim.de/content/Hoefle_Trail'>"+"Höfletrail Herbolzheim"+"</a>");
-	var Luenen =L.marker([51.589216931418036,7.517589112680987]).addTo(mymap).bindPopup("<a href='https://www.facebook.com/bikeparkluenen/'>"+"Bike Park Lünen"+"</a>");
-	var Neubrandenburg =L.marker([53.53717924009085,13.297963]).addTo(mymap).bindPopup("<a href='https://dirtforce.de/'>"+"Dirt Force Bike Park Neubrandenburg"+"</a>");
-	var Koenigstuhl =L.marker([49.39849570871517,8.725845311529532]).addTo(mymap).bindPopup("<a href='https://www.hd-freeride.de/strecken/'>"+"HD-Freeride Königstuhl"+"</a>");
-	var Ems =L.marker([50.346752395674336,7.747537812582996]).addTo(mymap).bindPopup("<a href='http://www.emserbikepark.de/'>"+"Emser Bikepark"+"</a>");
-	var Eschach =L.marker([47.71964296881257,10.194879407525534]).addTo(mymap).bindPopup("<a href='https://www.buchenberg.de/sport_freizeit/panoramaikeparkschach.htm'>"+"Panorama Bikepark Eschach"+"</a>");
-	var Kempten =L.marker([47.72006185451082,10.289851045075615]).addTo(mymap).bindPopup("<a href='https://www.dav-kempten.de/swoboda-alpin/alpinzentrum/dav-bike-garden/'>"+"DAV Bike Garden Kempten"+"</a>");
-	var Mehring =L.marker([49.78345959969201,6.8315792990805555]).addTo(mymap).bindPopup("<a href='https://trailpark-mehring.de/'>"+"Trailpark Mehring"+"</a>");
+      <footer>
+        <p>
+          Vorschläge für weitere Strecken könnt ihr gerne im
+          <a
+            href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/"
+            >mtb-news Forum-Thread</a
+          >
+          oder über
+          <a href="https://github.com/fabianeichfeldt/trailstrailstrails/issues"
+            >Github</a
+          >
+          melden.
+        </p>
+        <p>
+          Diese Website nutzt Kartendienste, die von der OpenStreetMap Foundation
+          bereitgestellt werden. Weitere Informationen findet ihr in den
+          <a
+            href="https://wiki.osmfoundation.org/wiki/Privacy_Policy"
+            >Datenschutzbestimmungen der OSMF</a
+          >.
+        </p>
+      </footer>
+    </main>
 
-	var Herrenberg =L.marker([48.60355,8.889908]).addTo(mymap).bindPopup("<a href='https://radsport.vfl-herrenberg.de/die-strecke'>"+"Winding Trails Herrenberg"+"</a>");
-	var Elstra =L.marker([51.21798826174179,14.1160473567824], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='http://www.black-mountain-bikepark.de/'>"+"Black Mountain Bike Park Elstra"+"</a>");
-	var Urbach =L.marker([48.83238517734303,9.587230341388834]).addTo(mymap).bindPopup("<a href='https://www.facebook.com/flowtrailurbach'>"+"Flowtrail Urbach"+"</a>");
-	var Hochspeyer =L.marker([49.436638361470315,7.887830450669427]).addTo(mymap).bindPopup("<a href='https://www.singletrail.cc/sonstiges/singletrail-parcours-hochspeyer'>"+"Singletrail Parcours Hochspeyer"+"</a>");
-	var Wutach =L.marker([47.83789631633433,8.445770923586897]).addTo(mymap).bindPopup("<a href='http://flowtrail-wutach.de/'>"+"Flowtrail Wutach"+"</a>");
-
-	var Schellenberg =L.marker([47.9366754427867,8.457278113577326]).addTo(mymap).bindPopup("<a href='https://braeunlingen-tourismus.de/schellenberg-trail/'>"+"Schellenberg-Trail"+"</a>");
-	var Braeunlingen =L.marker([47.93714763409646,8.349461756716549]).addTo(mymap).bindPopup("<a href='https://heidenloch-bikepark.de/'>"+"Bikepark Heidenloch"+"</a>");
-	var Hamburg =L.marker([53.46399692868762,9.91177578898078]).addTo(mymap).bindPopup("<a href='https://www.habemtb.de/'>"+"HaBe MTB"+"</a>");
-	var Erbeskopf =L.marker([49.73521753070273,7.082766743261283], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://trailpark-erbeskopf.de/'>"+"Trailpark Erbeskopf"+"</a>");
-	var Heidenheim =L.marker([48.677488579551174,10.115587299058491], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-hochberg.de/index.htm'>"+"Bikepark Heidenheim"+"</a>");
-	var Steinach =L.marker([50.43654137,11.13538878253615], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.thueringen-alpin.de/'>"+"Rennsteig Bikearena Steinach"+"</a>");
-	var Winterstein =L.marker([50.33400010331405,8.667232386087251]).addTo(mymap).bindPopup("<a href='https://taunus.info/angebote/sport-und-outdoor/mountainbiking/mtb-trail-winterstein-ebbelwoi/r-102/'>"+"Ebblwoi und Handkäs"+"</a>");
-
-	var Iserlohn =L.marker([51.360036,7.693374]).addTo(mymap).bindPopup("<a href='https://www.iserlohn.de/stadtmarketing-tourismus/mountainbiking'>"+"Eisenwald Trails"+"</a>");
-	var Hochproeller =L.marker([49.02492136933321,12.824247868697066], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.kollnburg.de/tourismus/sommer/biken-motorradfahren/bikepark-hochproeller/'>"+"Bikepark Hochproeller"+"</a>");
-	
-	var Baerenleite =L.marker([49.91285,11.56045]).addTo(mymap).bindPopup("<a href='https://baerenleite-trails.de/#area'>"+"Bärenleite - Trails"+"</a>");
-	
-	var Kirchzarten =L.marker([47.952787290608065,7.961046414389517]).addTo(mymap).bindPopup("<a href='http://hexenwald-trailpark.de/'>"+"Hexenwald Trailpark"+"</a>");
-	var Hornberg =L.marker([48.21420796286827,8.229425290917252]).addTo(mymap).bindPopup("<a href='https://www.hornberg.de/de/Tourismus-Freizeit/Sport-Natur/Mountainbiking'>"+"Felsentrail Hornberg"+"</a>");
-	var Freudenstadt =L.marker([48.460801686856385,8.405058385563205]).addTo(mymap).bindPopup("<a href='https://www.facebook.com/mtbfreudenstadt/'>"+"Bundesligastrecke Freudenstadt"+"</a>");
-	var Schonach =L.marker([48.13898097628654,8.203785982224495]).addTo(mymap).bindPopup("<a href='https://www.bike-ranch.com/trail.html'>"+"Bike Ranch Trail Schonach"+"</a>");
-	var Attendorn =L.marker([51.11887283793211,7.910299877567819]).addTo(mymap).bindPopup("<a href='https://www.bike-arena.de/de/Toubiz-POI/Mountainbikepark-Attendorn'>"+"Mountainbikepark Attendorn"+"</a>");
-	var Warstein =L.marker([51.438681012331806,8.432586227950624], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.warsteiner-bikepark.de/'>"+"Warsteiner Bikepark"+"</a>");
-	var Geeste =L.marker([52.593615662540586,7.286357256093327]).addTo(mymap).bindPopup("<a href='https://wsce.de/sportangebot/mountainbiken/mtb-trailpark/'>"+"MTB-Trailpark "+"</a>");
-	var Schwarzenbach =L.marker([50.26714602646760,11.620964850394500]).addTo(mymap).bindPopup("<a href='https://www.schwarzenbach-wald.de/unsere-buerger/sport-und-freizeit/bike-fun-trails/'>"+"Bike Fun Trails am Döbraberg"+"</a>");
-	var Schoenbuch =L.marker([48.56574767280515,9.070263885385515]).addTo(mymap).bindPopup("<a href='https://www.naturpark-schoenbuch.de/entdecken/mtb/'>"+"Spitztour im Schönbuch"+"</a>");
-	var Schurenbach =L.marker([51.51456153755389,7.023035770279516]).addTo(mymap).bindPopup("<a href='https://www.lifepr.de/inaktiv/regionalverband-ruhr/RVR-eroeffnet-Brammen/boxid/849502'>"+"Brammen Trail"+"</a>");
-	var Aachen =L.marker([50.75596335310777,6.025150957993773]).addTo(mymap).bindPopup("<a href='https://gelaendefahrrad-aachen.de/'>"+"Geländefahrrad Aachen"+"</a>");
-	var Birkenfeld =L.marker([49.69715778372670,7.152948866221360]).addTo(mymap).bindPopup("<a href='https://www.birkenfelder-land.de/waldmeister.html'>"+"RadLust MTB-Trail Waldmeister"+"</a>");
-	var Huetti =L.marker([54.41050701979618,9.641117683029877]).addTo(mymap).bindPopup("<a href='https://huettitrail.home.blog/'>"+"Hütti-Trail"+"</a>");
-	var Wuerzburg =L.marker([49.795630642649904,9.965989443670386]).addTo(mymap).bindPopup("<a href='https://www.google.com/url?sa=t&source=web&rct=j&url=https://www.wuerzburg.de/m_549230_dl&ved=2ahUKEwih2qm9op_xAhVGCuwKHQ3eAPAQFjAAegQIAxAC&usg=AOvVaw24uNTx8Rkkrf_ce9meNQF0 '>"+"querfeldein zu Main und Wein "+"</a>");
-	var Kernen =L.marker([48.77581480873135,9.317969022976957]).addTo(mymap).bindPopup("<a href='https://dimb-ig-remsmurr.de/katzenkopf-trail-in-kernen-wird-erster-legaler-trail-im-rems-murr-kreis/?fbclid=IwAR2B5eLwkYhZzOnU4Kck45Yp39ELqihO21Wtz6dp9hcZYwuiEFX2zlnvJ0o'>"+"Katzenkopf-Trail"+"</a>");
-	var Trailorado =L.marker([50.945170919767556,11.883081838693531]).addTo(mymap).bindPopup("<a href='https://rederberch.de/trailorado/'>"+"Trailorado"+"</a>");
-
-	var MTB_Trail_Laichingen =L.marker([48.49015630247464, 9.67277207882329]).addTo(mymap).bindPopup("<a href='http://bike.tsv-laichingen.de/startseite/trainingsgelaende/'>"+"MTB Trail Laichingen"+"</a>");
-
-	var Lenggries =L.marker([47.67704316467411,11.555533628702321], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='http://www.bikepark-lenggries.com/'>"+"Bikepark Lenggries"+"</a>");
-
-var Collenberg =L.marker([49.770194,9.322761]).addTo(mymap).bindPopup("<a href='https://www.bike-und-burg.de/'>"+"Co1 Collenberg"+"</a>");
-var Grasellenbach =L.marker([49.62739,8.85848]).addTo(mymap).bindPopup("<a href='https://www.mtb-geo-naturpark.de/index.php'>"+"Gr1 Grasellenbach"+"</a>");
-var Miltenberg =L.marker([49.69656,9.27390]).addTo(mymap).bindPopup("<a href='https://www.mountainbike-miltenberg.de/'>"+"Mil1 Miltenberg"+"</a>");
-var Großheubach =L.marker([49.723792,9.220802]).addTo(mymap).bindPopup("<a href='https://www.mountainbike-miltenberg.de'>"+"GH1 Großheubach"+"</a>");
-var Bensheim =L.marker([49.70761,8.64749]).addTo(mymap).bindPopup("<a href='https://fuchstrail.clubdesk.com//'>"+"Fuchstrail Bensheim"+"</a>");
-var Michelstadt =L.marker([49.684589,9.021023]).addTo(mymap).bindPopup("<a href='https://www.muemlingtalradler.de/'>"+"Mi1 Michelstadt"+"</a>");
-var Erbach =L.marker([49.662377,8.995754]).addTo(mymap).bindPopup("<a href='https://www.muemlingtalradler.de/'>"+"Erb1 Erbach"+"</a>");
-var Gorxheimertal =L.marker([49.548381,8.728030]).addTo(mymap).bindPopup("<a href='https://www.muemlingtalradler.de/'>"+"Go1 Gorxheimertal"+"</a>");
-var Gorxheimertal2 =L.marker([49.533137,8.723311]).addTo(mymap).bindPopup("<a href='https://www.mtb-geo-naturpark.de/index.php'>"+"Go1 Gorxheimertal"+"</a>");
-
-var Spaichingen =L.marker([48.0594763415417,8.736717108065005]).addTo(mymap).bindPopup("<a href='https://www.mtb-spaichingen.de/'>"+"MTB-Spaichingen"+"</a>");
-
-
-
-var Messingschlager =L.marker([49.99014182621067,10.844784607690917]).addTo(mymap).bindPopup("<a href='https://www.bike-cafe-messingschlager.de/bike-park'>"+"Bikepark Messingschlager"+"</a>");
-
-	
-var Katzenkopf =L.marker([47.36567448830431,11.165597666400394], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.katzenkopf-leutasch.at/de/bikepark-katzenkopf-leutasch-tirol/'>"+"Bikepark Katzenkopf Leutasch"+"</a>");
-var Wurfbauerkogel =L.marker([47.72346515991643,14.329413357359297], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.trailogie.at/'>"+"Bikepark Wurbauerkogel"+"</a>");
-var Miesenbach =L.marker([47.36392805352366,15.755981082730878], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.trailland.at/'>"+"Trailland in Miesenbach"+"</a>");
-
-	
-var Eiben =L.marker([46.71557114448424,15.228558141327126]).addTo(mymap).bindPopup("<a href='https://www.radclub-eibiswald.at/3eiben-kids-bike-park/'>"+"3 Eiben Kidspark"+"</a>");
-	
-var Wexl =L.marker([47.579712714552066,16.021694692337487]).addTo(mymap).bindPopup("<a href='https://www.wexltrails.at/de/trailmap'>"+"Wexl Trails"+"</a>");
-var Trailcenter_Wien =L.marker([48.229829712426856,16.202498298104864]).addTo(mymap).bindPopup("<a href='https://www.hohewandwiese.com/'>"+"Trailcenter Wien / Hohewand Wiese"+"</a>");
-var Bamberg =L.marker([49.88878885460934,10.862587180813987]).addTo(mymap).bindPopup("<a href='https://zrs-bamberg.de/trails/'>"+"MTB Trails Michelsberg"+"</a>");
-var Neumarkt =L.marker([49.251625829890656,11.498314012126126]).addTo(mymap).bindPopup("<a href='https://www.juratrails.de/'>"+"Juratrails"+"</a>");
-var Nürnberg =L.marker([49.4498519420661,11.155251583350916]).addTo(mymap).bindPopup("<a href='https://schmausenbuck.de/'>"+"Schmausenbuck"+"</a>");
-var GreenHill =L.marker([51.235388231065414,8.356853041258871], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://greenhill-bikepark.de/'>"+"Green Hill Bikepark"+"</a>");
-var Piesberg =L.marker([52.322218848991945,8.030017783607196], {icon: Bikepark}).addTo(mymap).bindPopup("<a href='https://www.bikepark-piesberg.de/'>"+"BikePark Piesberg"+"</a>");
-var Harz =L.marker([51.86425922324524,10.67745074911537]).addTo(mymap).bindPopup("<a href='https://www.ilsenburg-tourismus.de/erlebnisse/trailpark-harz.html'>"+"Trailpark Harz"+"</a>");
-var Einkorn =L.marker([49.09467,9.77352]).addTo(mymap).bindPopup("<a href='https://trailsofhall.de/trails-am-einkorn/'>"+"Trails am Einkorn"+"</a>");
-var Bernkastel =L.marker([49.91609555887832,7.075060894554817]).addTo(mymap).bindPopup("<a href='https://www.bernkastel.de/aktivunterwegs/radfahren-und-mountainbiken/mountainbiken/zwei-schanzen-tour'>"+"Zwei-Schanzen-Tour"+"</a>");
-var Thanheim =L.marker([48.293833414370745, 8.94051728121566]).addTo(mymap).bindPopup("<a href='https://www.thanheim-trail.com/'>"+"Thanheim Trail"+"</a>");
-var BadWuenneberg =L.marker([51.51297080249547, 8.708040485218442]).addTo(mymap).bindPopup("<a href='https://www.bad-wuennenberg.de/de/freizeit/aktivitaeten/bikepark.php'>"+"Bikepark Bad-Wünneberg"+"</a>");
-var Habichtswald =L.marker([51.31148299433546, 9.360453242317064]).addTo(mymap).bindPopup("<a href='https://www.naturpark-habichtswald.de/erleben/mountainbiken-nph/trailpark-mtb'>"+"Trailpark Habichtswald"+"</a>");
-var Klostertrails = L.marker([50.55820486376034, 8.723969999455317]).addTo(mymap).bindPopup("<a href='https://giessen-entdecken.de/mountainbike/'>"+"Klostertrails Schiffenberg"+"</a>");
-var Dünsberg = L.marker([50.65023626502425, 8.580574534310283]).addTo(mymap).bindPopup("<a href='https://medien.biebertal.tv/tourismus/mountainbiking/mountainbike-trails'>"+"Dünsberg Trails"+"</a>");
-var Hoherodskopf = L.marker([50.510752519590106, 9.22729871192674]).addTo(mymap).bindPopup("<a href='https://www.koko-pelli.de/trails-tracks-tours/'>"+"Hoherodskopf Trails"+"</a>");
-</script>
-
-</body>
+    <script type="module">
+      import { init } from "./trails.js";
+      init();
+    </script>
+  </body>
+</html>
