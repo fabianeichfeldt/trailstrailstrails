@@ -1,6 +1,51 @@
 import * as L from "leaflet";
 import { bikeparks } from "./data/bikeparks.js";
 import { trails } from "./data/trails.js";
+
+function generateNews(){
+  const container = document.getElementById("news");
+  if (!container) return;
+
+  try {
+    const news = [];
+    news.push({
+      title: "Website redesign",
+      date: "2025-10-08",
+      text: "Neues Design und neue Funktionen.",
+    });
+    news.push({
+      title: "Neue Trails!",
+      date: "2025-10-07",
+      text: `Neuer Trail hinzugefügt: <a href="${trails.at(-1).url}">${trails.at(-1).name}</a>`,
+    });
+    container.innerHTML = "<h2>Neuigkeiten</h2>";
+
+    for (const item of news) {
+      const el = document.createElement("div");
+      el.className = "news-item";
+      el.innerHTML = `
+        <strong>${item.title}</strong>
+        <time datetime="${item.date}">${formatDate(item.date)}</time>
+        <p>${item.text}</p>
+      `;
+      container.appendChild(el);
+    }
+  } catch (err) {
+    console.error("Error loading news:", err);
+    container.innerHTML =
+      "<p>⚠️ Neuigkeiten konnten nicht geladen werden.</p>";
+  }
+}
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("de-DE", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function init() {
   console.log("init map");
   const el = document.getElementById("mapid");
@@ -21,9 +66,11 @@ export function init() {
   });
 
   for (const park of bikeparks)
-    L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "'>" + park.name + "</a>");
+    L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>");
 
 
   for (const trail of trails)
-    L.marker(trail.coords).addTo(mymap).bindPopup("<a href='" + trail.url + "'>" + trail.name + "</a>");
+    L.marker(trail.coords).addTo(mymap).bindPopup("<a href='" + trail.url + "' target=blank>" + trail.name + "</a>");
+
+  generateNews();
 }

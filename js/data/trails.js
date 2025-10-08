@@ -95,11 +95,6 @@ export const trails = [
     "name": "MTB Park Driedorf"
   },
   { 
-    "coords": [48.954623, 8.445719],
-    "url": "https://www.albtal-tourismus.de/tour/from-dachs-till-dawn-downhill-d76f8b4a7f",
-    "name": "From Dachs till dawn"
-  },
-  { 
     "coords": [49.3607453, 11.248021],
     "url": "https://www.komoot.de/highlight/1175858",
     "name": "X-Trail Schwarzenbruck"
@@ -664,5 +659,9 @@ export const trails = [
     "url": "https://www.koko-pelli.de/trails-tracks-tours/",
     "name": "Hoherodskopf Trails"
   },
-  
+  { 
+    "coords": [48.954623, 8.445719],
+    "url": "https://www.albtal-tourismus.de/tour/from-dachs-till-dawn-downhill-d76f8b4a7f",
+    "name": "From Dachs till dawn"
+  },
 ];
