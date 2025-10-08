@@ -47,14 +47,28 @@
         font-size: 2rem;
       }
 
+      /* --- New section for map + text --- */
+      .content {
+        display: flex;
+        flex-direction: column; /* default: stacked for small screens */
+        gap: 1rem;
+        flex: 1;
+      }
+
       #mapid {
         flex: 1;
         min-height: 300px;
         border-radius: 12px;
-		border-color: #333;
-		border-style: solid;
-        box-shadow: 2 6px 10px rgba(0, 0, 0, 00.1);
+        border: 1px solid #333;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         overflow: hidden;
+      }
+
+      .text-section {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #555;
+        line-height: 1.4;
       }
 
       footer {
@@ -71,6 +85,32 @@
       a:hover {
         text-decoration: underline;
       }
+
+      @media (min-width: 1200px) {
+        .content {
+          flex-direction: row; /* side by side on wide screens */
+          align-items: stretch;
+        }
+	
+        #mapid {
+          flex: 4; /* map takes about 4/5 width */
+        }
+
+        .text-section {
+          flex: 1; 
+          padding: 0 1rem;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+        }
+      }
+
+	  /* Make map taller on small screens */
+		@media (max-width: 1199px) {
+		#mapid {
+			min-height: 80vh; /* take most of the viewport height */
+		}
+		}
     </style>
   </head>
 
@@ -85,29 +125,36 @@
         </p>
       </header>
 
-      <div id="mapid"></div>
+      <section class="content">
+        <div id="mapid"></div>
+
+        <div class="text-section">
+          <p>
+            Vorschläge für weitere Strecken könnt ihr gerne im
+            <a
+              href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/"
+              >mtb-news Forum-Thread</a
+            >
+            oder über
+            <a href="https://github.com/fabianeichfeldt/trailstrailstrails/issues"
+              >Github</a
+            >
+            melden.
+          </p>
+          <p>
+            Diese Website nutzt Kartendienste, die von der OpenStreetMap
+            Foundation bereitgestellt werden. Weitere Informationen findet ihr
+            in den
+            <a
+              href="https://wiki.osmfoundation.org/wiki/Privacy_Policy"
+              >Datenschutzbestimmungen der OSMF</a
+            >.
+          </p>
+        </div>
+      </section>
 
       <footer>
-        <p>
-          Vorschläge für weitere Strecken könnt ihr gerne im
-          <a
-            href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/"
-            >mtb-news Forum-Thread</a
-          >
-          oder über
-          <a href="https://github.com/fabianeichfeldt/trailstrailstrails/issues"
-            >Github</a
-          >
-          melden.
-        </p>
-        <p>
-          Diese Website nutzt Kartendienste, die von der OpenStreetMap Foundation
-          bereitgestellt werden. Weitere Informationen findet ihr in den
-          <a
-            href="https://wiki.osmfoundation.org/wiki/Privacy_Policy"
-            >Datenschutzbestimmungen der OSMF</a
-          >.
-        </p>
+        <p>© 2025 trails·trails·trails</p>
       </footer>
     </main>
 
