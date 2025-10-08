@@ -16,7 +16,7 @@ function generateNews(){
     news.push({
       title: "Neue Trails!",
       date: "2025-10-07",
-      text: `Neuer Trail hinzugefügt: <a href="${trails.at(-1).url}">${trails.at(-1).name}</a>`,
+      text: `Neuer Trail hinzugefügt: <a id='show-last'>${trails.at(-1).name}</a>`,
     });
     container.innerHTML = "<h2>Neuigkeiten</h2>";
 
@@ -65,12 +65,18 @@ export function init() {
     iconSize: [35, 22]
   });
 
+  const parkMarkers = [];
   for (const park of bikeparks)
-    L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>");
+    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>"));
 
 
+  const trailMarkers = [];
   for (const trail of trails)
-    L.marker(trail.coords).addTo(mymap).bindPopup("<a href='" + trail.url + "' target=blank>" + trail.name + "</a>");
+    trailMarkers.push(L.marker(trail.coords).addTo(mymap).bindPopup("<a href='" + trail.url + "' target=blank>" + trail.name + "</a>"));
 
   generateNews();
+
+  document.getElementById("show-last").addEventListener("click", () => {
+    trailMarkers.at(-1).openPopup();
+  });
 }
