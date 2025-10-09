@@ -9,9 +9,9 @@ function generateNews(){
   try {
     const news = [];
     news.push({
-      title: "Bikepark Arber hinzugefügt",
+      title: "Bikepark Arber",
       date: "2025-10-09",
-      text: `Bikepark Arber wurde hinzugefügt!: <a id='show-last'>${bikeparks.at(-1).name}</a>`,
+      text: `Neu bei uns in der Karte - Bikepark Arber!: <a id='show-last-park'>${bikeparks.at(-1).name}</a>`,
     });
     news.push({
       title: "Website redesign",
@@ -83,5 +83,9 @@ export function init() {
 
   document.getElementById("show-last").addEventListener("click", () => {
     trailMarkers.at(-1).openPopup();
+  });
+
+  document.getElementById("show-last-park").addEventListener("click", () => {
+    parkMarkers.at(-1).openPopup();
   });
 }
