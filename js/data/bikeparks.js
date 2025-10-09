@@ -179,4 +179,9 @@ export const bikeparks = [
     "name": "BikePark Piesberg",
     "url": "https://www.bikepark-piesberg.de/"
   },
+  {
+    "coords": [49.129040, 13.140852],
+    "name": "Bikepark Arber",
+    "url": "https://bikepark-arber.de/"
+  }
 ]

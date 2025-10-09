@@ -9,6 +9,11 @@ function generateNews(){
   try {
     const news = [];
     news.push({
+      title: "Bikepark Arber hinzugefügt",
+      date: "2025-10-09",
+      text: `Bikepark Arber wurde hinzugefügt!: <a id='show-last'>${bikeparks.at(-1).name}</a>`,
+    });
+    news.push({
       title: "Website redesign",
       date: "2025-10-08",
       text: "Neues Design und neue Funktionen.",
