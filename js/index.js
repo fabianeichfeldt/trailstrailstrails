@@ -14,6 +14,11 @@ function generateNews(){
       text: `Neu bei uns in der Karte - Bikepark Arber!: <a id='show-last-park'>${bikeparks.at(-1).name}</a>`,
     });
     news.push({
+      title: "Jetzt auch auf Instagram",
+      date: "2025-10-09",
+      text: `Trailradar ist jetzt auch auf Instagram zu finden: <a href="https://www.instagram.com/trailradar.germany">@trailradar.germany</a>`,
+    });
+    news.push({
       title: "Website redesign",
       date: "2025-10-08",
       text: "Neues Design und neue Funktionen.",
