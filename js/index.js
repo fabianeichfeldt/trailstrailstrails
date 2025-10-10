@@ -9,6 +9,11 @@ function generateNews(){
   try {
     const news = [];
     news.push({
+      title: "Neue Trails!",
+      date: "2025-10-10",
+      text: `Neuer Trail hinzugefügt: <a id='show-last'>${trails.at(-1).name}</a>`,
+    });
+    news.push({
       title: "Bikepark Arber",
       date: "2025-10-09",
       text: `Neu bei uns in der Karte - Bikepark Arber!: <a id='show-last-park'>${bikeparks.at(-1).name}</a>`,
@@ -22,11 +27,6 @@ function generateNews(){
       title: "Website redesign",
       date: "2025-10-08",
       text: "Neues Design und neue Funktionen.",
-    });
-    news.push({
-      title: "Neue Trails!",
-      date: "2025-10-07",
-      text: `Neuer Trail hinzugefügt: <a id='show-last'>${trails.at(-1).name}</a>`,
     });
     container.innerHTML = "<h2>Neuigkeiten</h2>";
 

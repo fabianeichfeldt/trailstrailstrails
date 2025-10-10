@@ -26,7 +26,7 @@ export const trails = [
   },
   { 
     "coords": [50.013441, 12.294832],
-    "url": "https://www.oberpfaelzerwald.de/wasa-trails-mtb/",
+    "url": "https://www.oberpfaelzerwald.de/wasa-trails-mtb",
     "name": "Wasa Trails"
   },
   { 
@@ -663,5 +663,10 @@ export const trails = [
     "coords": [48.954623, 8.445719],
     "url": "https://www.albtal-tourismus.de/tour/from-dachs-till-dawn-downhill-d76f8b4a7f",
     "name": "From Dachs till dawn"
+  },
+  { 
+    "coords": [47.544569, 10.174118],
+    "url": "https://www.mtballgaeu.de/offizielle-Trails",
+    "name": "Neuland - Trails in Immenstadt"
   },
 ];
