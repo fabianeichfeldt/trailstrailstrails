@@ -447,7 +447,12 @@ export const trails = [
   { 
     "coords": [49.91285, 11.56045],
     "url": "https://baerenleite-trails.de/#area",
-    "name": "Bärenleite - Trails"
+    "name": "Bärenleite - Trails",
+    "news": {
+      date: "2025-10-11",
+      title: "Trailbautag und 5 Jähriges Jubiläum",
+      subtitle: "An allen 4 Strecken und dem Easy Uphill wurden anlässlich des Jubiläums einige Stellen ausgebessert und die Enduro hat einen neuen Drop bekommen."
+    }
   },
   { 
     "coords": [47.952787290608065, 7.961046414389517],
@@ -607,7 +612,12 @@ export const trails = [
   { 
     "coords": [49.251625829890656, 11.498314012126126],
     "url": "https://www.juratrails.de/",
-    "name": "Juratrails"
+    "name": "Juratrails",
+    "news": {
+      date: "2025-10-11",
+      title: "Trailbautag",
+      subtitle: "Der Diavolo Snake hat unter anderem neuen Hasendraht bekommen."
+    }
   },
   { 
     "coords": [49.4498519420661, 11.155251583350916],

@@ -80,10 +80,7 @@ export function init() {
     parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>"));
 
 
-  const trailMarkers = [];
-  for (const trail of trails)
-    trailMarkers.push(L.marker(trail.coords).addTo(mymap).bindPopup("<a href='" + trail.url + "' target=blank>" + trail.name + "</a>"));
-
+  const trailMarkers = getTrailMarkers(mymap, trails);
   generateNews();
 
   document.getElementById("show-last").addEventListener("click", () => {
@@ -93,4 +90,39 @@ export function init() {
   document.getElementById("show-last-park").addEventListener("click", () => {
     parkMarkers.at(-1).openPopup();
   });
+}
+
+function getTrailMarkers(mymap, trails) {
+  const trailMarkers = [];
+  for (const trail of trails) {
+    // Base popup content (always present)
+    let popupHtml = `
+      <div class="popup-content">
+        <a href="${trail.url}" target="_blank">${trail.name}</a>
+    `;
+
+    // Add optional news block if available
+    if (trail.news) {
+      popupHtml += `
+        <div class="popup-news">
+        <strong>News:</strong><br>
+          <time datetime="${trail.news.date}">
+            <i>${formatDate(trail.news.date)}:</i>
+          </time>
+          <strong>${trail.news.title}</strong>
+          <p>${trail.news.subtitle}</p>
+        </div>
+      `;
+    }
+
+    popupHtml += "</div>";
+
+    const marker = L.marker(trail.coords)
+      .addTo(mymap)
+      .bindPopup(popupHtml);
+
+    trailMarkers.push(marker);
+  }
+
+  return trailMarkers;
 }
