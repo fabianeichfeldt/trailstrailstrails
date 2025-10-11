@@ -10,8 +10,8 @@ function generateNews(){
     const news = [];
     news.push({
       title: "Neue Trails!",
-      date: "2025-10-10",
-      text: `Neuer Trail hinzugefügt: <a id='show-last'>${trails.at(-1).name}</a>`,
+      date: "2025-10-11",
+      text: `<strong>Fürth</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last'>${trails.at(-1).name}</a>`,
     });
     news.push({
       title: "Bikepark Arber",

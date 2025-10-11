@@ -679,4 +679,9 @@ export const trails = [
     "url": "https://www.mtballgaeu.de/offizielle-Trails",
     "name": "Neuland - Trails in Immenstadt"
   },
+  { 
+    "coords": [49.472294, 10.931182],
+    "url": "https://trailworks-fuerth.de/",
+    "name": "Trailworks Fürth"
+  },
 ];
