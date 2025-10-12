@@ -81,7 +81,7 @@ export const trails = [
   },
   { 
     "coords": [50.6688028, 10.9005304],
-    "url": "https://ilrc.de/",
+    "url": "www.trailpark-lindenberg.de",
     "name": "Ilmenau - Trailpark Lindenberg"
   },
   { 
@@ -703,6 +703,12 @@ export const trails = [
     "coords": [48.745280, 9.992490],
     "url": "https://www.radsportfreunde-bartholomae.de/index.php/radfahren/bike-trails",
     "name": "Bartholomae Bike Trails",
+    "date": "2025-10-12",
+  },
+  { 
+    "coords": [50.2075988, 8.0125992],
+    "url": "https://www.flowtrailheidenrod.de/",
+    "name": "Heidenride Trail",
     "date": "2025-10-12",
   },
   
