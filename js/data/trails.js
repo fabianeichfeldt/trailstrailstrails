@@ -682,12 +682,28 @@ export const trails = [
   { 
     "coords": [49.472294, 10.931182],
     "url": "https://trailworks-fuerth.de/",
-    "name": "Trailworks Fürth"
+    "name": "Trailworks Fürth",
+    "date": "2025-10-11",
   },
   { 
     "coords": [50.876069, 10.516188],
     "url": "https://www.mtb-bad-tabarz.de/",
     "name": "MTB Bad Tabarz",
-    "instagram": "mountainbiketabarz"
+    "instagram": "mountainbiketabarz",
+    "date": "2025-10-12",
   },
+  { 
+    "coords": [48.780119,9.956993],
+    "url": "https://www.heubach.de/22587121.html",
+    "name": "Bike The Rock, Heubach",
+    "instagram": "biketherock",
+    "date": "2025-10-12",
+  },
+  { 
+    "coords": [48.745280, 9.992490],
+    "url": "https://www.radsportfreunde-bartholomae.de/index.php/radfahren/bike-trails",
+    "name": "Bartholomae Bike Trails",
+    "date": "2025-10-12",
+  },
+  
 ];

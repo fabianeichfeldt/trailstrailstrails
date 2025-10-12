@@ -8,33 +8,20 @@ function generateNews(){
 
   try {
     const news = [];
-    news.push({
-      title: "Neue Trails!",
-      date: "2025-10-11",
-      text: `<strong>Fürth</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last'>${trails.at(-2).name}</a>`,
-    });
-    news.push({
-      title: "Bikepark Arber",
-      date: "2025-10-09",
-      text: `Neu bei uns in der Karte - Bikepark Arber!: <a id='show-last-park'>${bikeparks.at(-1).name}</a>`,
-    });
-    news.push({
-      title: "Jetzt auch auf Instagram",
-      date: "2025-10-09",
-      text: `Trailradar ist jetzt auch auf Instagram zu finden: <a href="https://www.instagram.com/trailradar.germany">@trailradar.germany</a>`,
-    });
-    news.push({
-      title: "Website redesign",
-      date: "2025-10-08",
-      text: "Neues Design und neue Funktionen.",
-    });
+    for(let i = 1; i < 5; i++){
+      const newsItem = trails.at(-i);
+      news.push({
+        title: "Neue Trails!",
+        date: newsItem.date,
+        text: `<strong>${newsItem.name}</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last-${i}'>Link</a>`,
+      });
+    }
     container.innerHTML = "<h2>Neuigkeiten</h2>";
 
     for (const item of news) {
       const el = document.createElement("div");
       el.className = "news-item";
       el.innerHTML = `
-        <strong>${item.title}</strong>
         <time datetime="${item.date}">${formatDate(item.date)}</time>
         <p>${item.text}</p>
       `;
@@ -82,12 +69,18 @@ function init() {
   const trailMarkers = getTrailMarkers(mymap, trails);
   generateNews();
 
-  document.getElementById("show-last").addEventListener("click", () => {
+  document.getElementById("show-last-1").addEventListener("click", () => {
     trailMarkers.at(-1).openPopup();
   });
 
-  document.getElementById("show-last-park").addEventListener("click", () => {
-    parkMarkers.at(-1).openPopup();
+  document.getElementById("show-last-2").addEventListener("click", () => {
+    trailMarkers.at(-2).openPopup();
+  });
+  document.getElementById("show-last-3").addEventListener("click", () => {
+    trailMarkers.at(-3).openPopup();
+  });
+  document.getElementById("show-last-4").addEventListener("click", () => {
+    trailMarkers.at(-4).openPopup();
   });
 }
 
