@@ -684,4 +684,10 @@ export const trails = [
     "url": "https://trailworks-fuerth.de/",
     "name": "Trailworks Fürth"
   },
+  { 
+    "coords": [50.876069, 10.516188],
+    "url": "https://www.mtb-bad-tabarz.de/",
+    "name": "MTB Bad Tabarz",
+    "instagram": "mountainbiketabarz"
+  },
 ];

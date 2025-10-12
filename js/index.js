@@ -11,7 +11,7 @@ function generateNews(){
     news.push({
       title: "Neue Trails!",
       date: "2025-10-11",
-      text: `<strong>Fürth</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last'>${trails.at(-1).name}</a>`,
+      text: `<strong>Fürth</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last'>${trails.at(-2).name}</a>`,
     });
     news.push({
       title: "Bikepark Arber",
