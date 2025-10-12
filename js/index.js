@@ -56,8 +56,7 @@ function formatDate(dateStr) {
   });
 }
 
-export function init() {
-  console.log("init map");
+function init() {
   const el = document.getElementById("mapid");
   if (!el) {
     console.error("Map div not found!");
@@ -126,3 +125,5 @@ function getTrailMarkers(mymap, trails) {
 
   return trailMarkers;
 }
+
+init();
