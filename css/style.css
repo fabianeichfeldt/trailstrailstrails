@@ -22,6 +22,22 @@ header {
   position: relative;
 }
 
+header .logo {
+  position: absolute;
+  top: 0.8rem;
+  left: 1rem;
+  height: 100px;
+  width: auto;
+}
+
+@media (max-width: 600px) {
+  header .logo {
+    height: 36px;
+    top: 0.6rem;
+    left: 0.8rem;
+  }
+}
+
 header h1 {
   font-weight: normal;
   color: #444;

@@ -71,7 +71,7 @@ export function init() {
   }).addTo(mymap);
 
   var Bikepark = L.icon({
-    iconUrl: 'bikepark.png',
+    iconUrl: './assets/bikepark.png',
     iconSize: [35, 22]
   });
 
