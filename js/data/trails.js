@@ -711,5 +711,22 @@ export const trails = [
     "name": "Heidenride Trail",
     "date": "2025-10-12",
   },
-  
+  { 
+    "coords": [49.779709, 6.638569],
+    "url": "https://www.mtb-trier.de/",
+    "name": "Trails Weißhauswald",
+    "date": "2025-10-13",
+  },
+  { 
+    "coords": [49.741219, 6.729512],
+    "url": "https://www.mtb-trier.de/gotterhuttentrail/",
+    "name": "Götterhüttentrail",
+    "date": "2025-10-13",
+  },
+  {
+    "coords": [48.038461217279426, 11.370486635855443],
+    "url": "https://www.dimb.de/trails/dimb-wuermtal-trails/",
+    "name": "Würmtaltrails",
+    "date": "2025-10-13",
+  }
 ];
