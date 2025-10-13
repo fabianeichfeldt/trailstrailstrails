@@ -81,7 +81,7 @@ export const trails = [
   },
   { 
     "coords": [50.6688028, 10.9005304],
-    "url": "www.trailpark-lindenberg.de",
+    "url": "https://www.trailpark-lindenberg.de",
     "name": "Ilmenau - Trailpark Lindenberg"
   },
   { 
