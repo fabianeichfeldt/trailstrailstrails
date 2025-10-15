@@ -728,5 +728,19 @@ export const trails = [
     "url": "https://www.dimb.de/trails/dimb-wuermtal-trails/",
     "name": "Würmtaltrails",
     "date": "2025-10-13",
+  },
+  {
+    "coords": [51.833109, 9.901984],
+    "url": "https://trailriderz.de/",
+    "name": "Blackberry Trails",
+    "date": "2025-10-15",
+    "instagram": "trailriderz_einbeck",
+  },
+  {
+    "coords": [47.772705,9.183764],
+    "url": "https://www.dav-ueberlingen.de/dav-bikepark-ueberlingen/",
+    "name": "DAV Bikepark Überlingen",
+    "date": "2025-10-15",
+    "instagram": "davueberlingen",
   }
 ];
