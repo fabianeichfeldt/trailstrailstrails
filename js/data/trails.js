@@ -791,5 +791,12 @@ export const trails = [
     "name": "DIMB Himmelsleiter Trails",
     "date": "2025-10-16",
     "instagram": "dimb.de",
+  },
+  {
+    "coords": [49.286445, 10.978816],
+    "url": "https://ig-heidenberg.de/",
+    "name": "IG Heidenberg",
+    "date": "2025-10-16",
+    "instagram": "ig_heidenberg_e.v",
   }
 ];
