@@ -932,5 +932,12 @@ export const trails = [
     "name": "IG Heidenberg",
     "date": "2025-10-16",
     "instagram": "ig_heidenberg_e.v",
+  },
+  {
+    "coords": [49.876910, 12.041071],
+    "url": "https://www.oberpfaelzerwald.de/steinwald-trailrunde",
+    "name": "Steinwald Trailrunde",
+    "date": "2025-10-16",
+    "instagram": "oberpfaelzer_wald",
   }
 ];
