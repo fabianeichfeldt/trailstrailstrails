@@ -326,12 +326,12 @@ export const trails = [
   },
   { 
     "coords": [49.147557904081296, 9.253560346194531],
-    "url": "https://www.dav-heilbronn.de/de/aktiv/mountainbike-1/trails-am-schweinsberg.html",
+    "url": "https://www.dav-heilbronn.de/mountainbike-trails",
     "name": "Trails am Schweinsberg"
   },
   { 
     "coords": [49.137351056078984, 9.228002813881979],
-    "url": "https://www.heilbronnerland.de/de/mountainbike-touren",
+    "url": "https://www.heilbronnerland.de/radfahren/radwege-radtouren/mountainbike",
     "name": "Mountainbike-Touren rund um Heilbronn"
   },
   { 
@@ -742,5 +742,54 @@ export const trails = [
     "name": "DAV Bikepark Überlingen",
     "date": "2025-10-15",
     "instagram": "davueberlingen",
+  },
+  {
+    "coords": [48.85622, 9.42369],
+    "url": "https://dimb-ig-remsmurr.de/region/?county=1",
+    "name": "Birkmannsweiler Trails",
+    "date": "2025-10-16",
+    "instagram": "dimb_ig_rems_murr",
+  },
+  {
+    "coords": [49.017674, 8.704143],
+    "url": "https://www.rsc-bretten.de/disziplinen/bikepark.html",
+    "name": "Bikepark Bretten",
+    "date": "2025-10-16",
+    "instagram": "rscbretten",
+  },
+  {
+    "coords": [50.01485310004681, 9.299124750995599],
+    "url": "http://www.waldeslust-laufach.de/Gruppen/LA-Trails/",
+    "name": "LA Trails Laufach",
+    "date": "2025-10-16",
+    "instagram": "la.trails",
+  },
+  {
+    "coords": [48.9185281243564, 11.872186773774397],
+    "url": "https://www.herzstueck.bayern/de/urlaubserlebnisse/radfahren/mountainbike",
+    "name": "Urtrails Altmühltal",
+    "date": "2025-10-16",
+    "instagram": "bayernsherzstueck",
+  },
+  {
+    "coords": [48.505649928505704, 9.078934505238625],
+    "url": "https://www.dav-tuebingen.de/Bergsport/Mountainbike/Legale-Trails-um-Tuebingen/",
+    "name": "Franztrail Tübingen",
+    "date": "2025-10-16",
+    "instagram": "davtuebingen",
+  },
+  {
+    "coords": [49.365012, 11.683810],
+    "url": "https://www.tuskastl.de/sparten/mountainbike/",
+    "name": "Bikezone Mt. Bucherl",
+    "date": "2025-10-16",
+    "instagram": "tus_kastl1924",
+  },
+  {
+    "coords": [50.9535128, 6.7442553],
+    "url": "http://dimb-himmelsleiter-trails.de/",
+    "name": "DIMB Himmelsleiter Trails",
+    "date": "2025-10-16",
+    "instagram": "dimb.de",
   }
 ];
