@@ -183,5 +183,15 @@ export const bikeparks = [
     "coords": [49.129040, 13.140852],
     "name": "Bikepark Arber",
     "url": "https://bikepark-arber.de/"
-  }
+  },
+  {
+    "coords": [50.7694996, 7.7462056],
+    "name": "Bikepark Wissen",
+    "url": "https://bikepark-wissen.de/"
+  },
+  {
+    "coords": [50.6486905, 7.9602844],
+    "name": "Bikepark Bad Marienberg",
+    "url": "https://scbmu.de/willkommen-bikepark"
+  },
 ]

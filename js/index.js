@@ -8,7 +8,7 @@ function generateNews(){
 
   try {
     const news = [];
-    for(let i = 1; i < 5; i++){
+    for(let i = 1; i < 7; i++){
       const newsItem = trails.at(-i);
       news.push({
         title: "Neue Trails!",
@@ -80,6 +80,12 @@ function init() {
     trailMarkers.at(-3).openPopup();
   });
   document.getElementById("show-last-4").addEventListener("click", () => {
+    trailMarkers.at(-4).openPopup();
+  });
+  document.getElementById("show-last-5").addEventListener("click", () => {
+    trailMarkers.at(-4).openPopup();
+  });
+  document.getElementById("show-last-6").addEventListener("click", () => {
     trailMarkers.at(-4).openPopup();
   });
 }
