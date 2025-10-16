@@ -63,7 +63,7 @@ function init() {
 
   const parkMarkers = [];
   for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>"));
+    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
   const trailMarkers = getTrailMarkers(mymap, trails);
@@ -95,17 +95,17 @@ function getTrailMarkers(mymap, trails) {
 
   for (const trail of trails) {
     let popupHtml = `
-    <div class="popup-content" style="font-family: sans-serif; line-height: 1.4;">
-      <a href="${trail.url}" target="_blank" style="font-weight: bold; font-size: 15px; color: #2b2b2b; text-decoration: none;">
+    <div class="popup-content">
+      <a href="${trail.url}" target="_blank">
         ${trail.name}
+        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
       </a>
   `;
 
     if (trail.instagram && trail.instagram.trim() !== "") {
       popupHtml += `
       <div class="popup-instagram" style="margin-top: 6px;">
-        <a href="https://instagram.com/${trail.instagram}" target="_blank"
-           style="display: inline-flex; align-items: center; color: #E4405F; text-decoration: none; font-size: 14px;">
+        <a href="https://instagram.com/${trail.instagram}" target="_blank">
           <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
           <span>${trail.instagram}</span>
         </a>
