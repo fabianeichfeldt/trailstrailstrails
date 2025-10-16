@@ -2,13 +2,13 @@ import * as L from "leaflet";
 import { bikeparks } from "./data/bikeparks.js";
 import { trails } from "./data/trails.js";
 
-function generateNews(){
+function generateNews() {
   const container = document.getElementById("news");
   if (!container) return;
 
   try {
     const news = [];
-    for(let i = 1; i < 7; i++){
+    for (let i = 1; i < 7; i++) {
       const newsItem = trails.at(-i);
       news.push({
         title: "Neue Trails!",
@@ -92,25 +92,39 @@ function init() {
 
 function getTrailMarkers(mymap, trails) {
   const trailMarkers = [];
+
   for (const trail of trails) {
-    // Base popup content (always present)
     let popupHtml = `
-      <div class="popup-content">
-        <a href="${trail.url}" target="_blank">${trail.name}</a>
+    <div class="popup-content" style="font-family: sans-serif; line-height: 1.4;">
+      <a href="${trail.url}" target="_blank" style="font-weight: bold; font-size: 15px; color: #2b2b2b; text-decoration: none;">
+        ${trail.name}
+      </a>
+  `;
+
+    if (trail.instagram && trail.instagram.trim() !== "") {
+      popupHtml += `
+      <div class="popup-instagram" style="margin-top: 6px;">
+        <a href="https://instagram.com/${trail.instagram}" target="_blank"
+           style="display: inline-flex; align-items: center; color: #E4405F; text-decoration: none; font-size: 14px;">
+          <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
+          <span>${trail.instagram}</span>
+        </a>
+      </div>
     `;
+    }
 
     // Add optional news block if available
     if (trail.news) {
       popupHtml += `
-        <div class="popup-news">
+      <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
         <strong>News:</strong><br>
-          <time datetime="${trail.news.date}">
-            <i>${formatDate(trail.news.date)}:</i>
-          </time>
-          <strong>${trail.news.title}</strong>
-          <p>${trail.news.subtitle}</p>
-        </div>
-      `;
+        <time datetime="${trail.news.date}">
+          <i>${formatDate(trail.news.date)}:</i>
+        </time>
+        <strong>${trail.news.title}</strong>
+        <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
+      </div>
+    `;
     }
 
     popupHtml += "</div>";
