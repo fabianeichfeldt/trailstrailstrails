@@ -172,3 +172,26 @@ a:hover {
     font-weight: 400;
   }
 }
+
+.popup-content a {
+  color: #2b2b2b;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.popup-instagram a {
+  color: #E4405F;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.popup-news {
+  background: #f9f9f9;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
