@@ -1,185 +1,222 @@
 export const bikeparks = [
   {
+    "id": "park_a9f0c1e3",
     "coords": [49.58442, 11.381138],
     "name": "Bikepark Osternohe",
     "url": "https://www.bikepark-osternohe.de/"
   },
   {
+    "id": "park_b2e9d0a4",
     "coords": [50.013203, 11.808467],
     "name": "Bikepark Ochsenkopf",
     "url": "https://www.bullheadbike.de/angebot/bikepark-bilder/"
   },
   {
+    "id": "park_c3a1f9e0",
     "coords": [48.93424512789349, 13.04247463464544],
     "name": "Bikepark Geisskopf",
     "url": "https://www.mtbzone-bikepark.com/geisskopf/"
   },
   {
+    "id": "park_d4b0e2a3",
     "coords": [47.77116168418537, 12.23684692787697],
     "name": "Bikepark Samerberg",
     "url": "https://www.bikepark-samerberg.de/"
   },
   {
+    "id": "park_e5a3c0b9",
     "coords": [50.38826388987421, 12.34423764327437],
     "name": "Bikepark Schöneck",
     "url": "https://schoeneck-vogtland.de/sommer/radfahren/bikepark.html"
   },
   {
+    "id": "park_f6b2a1d0",
     "coords": [49.563229550024964, 8.988311841403457],
     "name": "Bikepark Beerfelden",
     "url": "https://www.bikepark-beerfelden.de/de/"
   },
   {
+    "id": "park_0a9c3f2e",
     "coords": [47.49989639058956, 10.365824804598265],
     "name": "Bikepark Bad Hindelang",
     "url": "https://www.hornbahn-hindelang.de/bikepark-allgaeu/"
   },
   {
+    "id": "park_1b0e4a9d",
     "coords": [51.05456787050615, 7.953447999872142],
     "name": "Bikepark Olpe",
     "url": "http://froerider.de/"
   },
   {
+    "id": "park_2c9a0b3f",
     "coords": [51.18537082638178, 8.5045677279454],
     "name": "Bikepark Winterberg",
     "url": "https://www.bikepark-winterberg.de/downhill-bike-trail-mountainbike/"
   },
   {
+    "id": "park_3d0f2a9c",
     "coords": [51.289744991573336, 8.593488827947578],
     "name": "Bikepark Willingen",
     "url": "https://www.mtbzone-bikepark.com/willingen/"
   },
   {
+    "id": "park_4e9b0a3d",
     "coords": [50.11928049210075, 9.46671899816584],
     "name": "Bikepark Frammersbach",
     "url": "https://www.bikepark-info.com/bikeparks/de/bikepark-frammersbach/"
   },
   {
+    "id": "park_5f0a9e1b",
     "coords": [48.25425428093384, 9.030680727351019],
     "name": "Bikepark Albstadt",
     "url": "https://bikepark-albstadt.de/ueber-uns/"
   },
   {
+    "id": "park_6a3d9b0e",
     "coords": [48.29190296375067, 9.097617578186783],
     "name": "Bikepark Burladingen",
     "url": "https://bikepark-burladingen.de/de/"
   },
   {
+    "id": "park_7b0a4e9c",
     "coords": [48.75103193071928, 8.537126627364584],
     "name": "Adventure-Bikepark Bad Wildbad",
     "url": "https://adventure-bikepark.com/"
   },
   {
+    "id": "park_8c1e0b9f",
     "coords": [47.8292164614344, 7.948043083161493],
     "name": "Bikepark Todtnau",
     "url": "https://2-cycle.de/bikepark-todtnau/"
   },
   {
+    "id": "park_9d2a3e0b",
     "coords": [47.597409450442726, 11.050043940826436],
     "name": "Bikepark Oberammergau",
     "url": "https://www.bikepark-oberammergau.de/"
   },
   {
+    "id": "park_b0e1a9f3",
     "coords": [51.859288026253175, 10.341463988523842],
     "name": "Bikepark Hahnenklee",
     "url": "https://www.bikepark-hahnenklee.de/"
   },
   {
+    "id": "park_c1a0f2b9",
     "coords": [51.84108082765715, 10.4437279986157],
     "name": "Racepark Schulenberg",
     "url": "https://www.outdoorwerkstatt.eu/racepark-schulenberg/"
   },
   {
+    "id": "park_d2b3a0e1",
     "coords": [51.73194900712909, 10.612948785119366],
     "name": "Bikepark Braunlage",
     "url": "https://www.bikepark-braunlage.de/"
   },
   {
+    "id": "park_e3f9a0b2",
     "coords": [51.70739689983342, 10.521287612105091],
     "name": "MSB-X-Trail",
     "url": "http://alberti-lift.de/index.php/main-xtrail"
   },
   {
+    "id": "park_f4a1b0e3",
     "coords": [51.741396518647726, 11.015893458129646],
     "name": "Bikepark Bodetal",
     "url": "https://bikepark-bodetal.de/"
   },
   {
+    "id": "park_0b9a3f2c",
     "coords": [50.7096571486292, 10.706199512076715],
     "name": "Bikepark Oberhof",
     "url": "https://bikepark-oberhof.de/"
   },
   {
+    "id": "park_1c0b9e4a",
     "coords": [47.69919813597328, 8.909232127335994],
     "name": "Schienerberg",
     "url": "https://www.bikeparkschienerberg.de"
   },
   {
+    "id": "park_2d9f0a3b",
     "coords": [50.67307986585335, 6.352271542760435],
     "name": "Mountainbike-Park Hürtgenwald",
     "url": "https://www.mtb-park-huertgenwald.de/"
   },
   {
+    "id": "park_3e0a9c4d",
     "coords": [51.21798826174179, 14.1160473567824],
     "name": "Black Mountain Bike Park Elstra",
     "url": "http://www.black-mountain-bikepark.de/"
   },
   {
+    "id": "park_4f3a0b9e",
     "coords": [49.73521753070273, 7.082766743261283],
     "name": "Trailpark Erbeskopf",
     "url": "https://trailpark-erbeskopf.de/"
   },
   {
+    "id": "park_5a9d0e3b",
     "coords": [48.677488579551174, 10.115587299058491],
     "name": "Bikepark Heidenheim",
     "url": "https://www.bikepark-hochberg.de/index.htm"
   },
   {
+    "id": "park_6b0a1f9c",
     "coords": [50.43654137, 11.13538878253615],
     "name": "Rennsteig Bikearena Steinach",
     "url": "https://www.thueringen-alpin.de/"
   },
   {
+    "id": "park_7c9e0b2d",
     "coords": [49.02492136933321, 12.824247868697066],
     "name": "Bikepark Hochproeller",
     "url": "https://www.kollnburg.de/tourismus/sommer/biken-motorradfahren/bikepark-hochproeller/"
   },
   {
+    "id": "park_8d0a9c3e",
     "coords": [51.438681012331806, 8.432586227950624],
     "name": "Warsteiner Bikepark",
     "url": "https://www.warsteiner-bikepark.de/"
   },
   {
+    "id": "park_9e3b0a4f",
     "coords": [47.67704316467411, 11.555533628702321],
     "name": "Bikepark Lenggries",
     "url": "http://www.bikepark-lenggries.com/"
   },
   {
+    "id": "park_a0f9b3e1",
     "coords": [47.36567448830431, 11.165597666400394],
     "name": "Bikepark Katzenkopf Leutasch",
     "url": "https://www.katzenkopf-leutasch.at/de/bikepark-katzenkopf-leutasch-tirol/"
   },
   {
+    "id": "park_b1e0a9c4",
     "coords": [51.235388231065414, 8.356853041258871],
     "name": "Green Hill Bikepark",
     "url": "https://greenhill-bikepark.de/"
   },
   {
+    "id": "park_c2a3f1b0",
     "coords": [52.322218848991945, 8.030017783607196],
     "name": "BikePark Piesberg",
     "url": "https://www.bikepark-piesberg.de/"
   },
   {
+    "id": "park_d3b0a9e2",
     "coords": [49.129040, 13.140852],
     "name": "Bikepark Arber",
     "url": "https://bikepark-arber.de/"
   },
   {
+    "id": "park_e4a1b0f3",
     "coords": [50.7694996, 7.7462056],
     "name": "Bikepark Wissen",
     "url": "https://bikepark-wissen.de/"
   },
   {
+    "id": "park_f5a9e0b2",
     "coords": [50.6486905, 7.9602844],
     "name": "Bikepark Bad Marienberg",
     "url": "https://scbmu.de/willkommen-bikepark"
