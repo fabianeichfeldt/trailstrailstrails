@@ -160,16 +160,6 @@ export const bikeparks = [
     "url": "https://www.katzenkopf-leutasch.at/de/bikepark-katzenkopf-leutasch-tirol/"
   },
   {
-    "coords": [47.72346515991643, 14.329413357359297],
-    "name": "Bikepark Wurbauerkogel",
-    "url": "https://www.trailogie.at/"
-  },
-  {
-    "coords": [47.36392805352366, 15.755981082730878],
-    "name": "Trailland in Miesenbach",
-    "url": "https://www.trailland.at/"
-  },
-  {
     "coords": [51.235388231065414, 8.356853041258871],
     "name": "Green Hill Bikepark",
     "url": "https://greenhill-bikepark.de/"
