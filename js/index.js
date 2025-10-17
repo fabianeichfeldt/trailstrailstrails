@@ -1,4 +1,3 @@
-import * as L from "leaflet";
 import { bikeparks } from "./data/bikeparks.js";
 import { trails } from "./data/trails.js";
 
@@ -50,11 +49,14 @@ function init() {
     return;
   }
   var mymap = L.map(el).setView([49.505, 11.09], 9);
+  mymap._layersMaxZoom = 19;
+
+  var markers = L.markerClusterGroup();
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(mymap);
+  }).addTo(markers);
 
   var Bikepark = L.icon({
     iconUrl: './assets/bikepark.png',
@@ -63,10 +65,11 @@ function init() {
 
   const parkMarkers = [];
   for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
+    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
-  const trailMarkers = getTrailMarkers(mymap, trails);
+  const trailMarkers = getTrailMarkers(markers, trails);
+  mymap.addLayer(markers);
   generateNews();
 
   document.getElementById("show-last-1").addEventListener("click", () => {
