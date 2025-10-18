@@ -44,7 +44,6 @@ header h1 {
   font-size: 2rem;
 }
 
-/* Mobile "News" link */
 .news-link {
   position: absolute;
   right: 1rem;
@@ -64,7 +63,6 @@ header h1 {
   }
 }
 
-/* --- Layout for map + side section --- */
 .content {
   display: flex;
   flex-direction: column;
@@ -171,4 +169,31 @@ a:hover {
     font-size: 2rem;
     font-weight: 400;
   }
+}
+
+.popup-content a {
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.popup-content a i{
+  margin-left: 10px;
+}
+
+.popup-instagram a {
+  color: #E4405F;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.popup-news {
+  background: #f9f9f9;
+  padding: 6px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
 }

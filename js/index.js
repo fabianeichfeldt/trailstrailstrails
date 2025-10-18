@@ -1,14 +1,13 @@
-import * as L from "leaflet";
 import { bikeparks } from "./data/bikeparks.js";
 import { trails } from "./data/trails.js";
 
-function generateNews(){
+function generateNews() {
   const container = document.getElementById("news");
   if (!container) return;
 
   try {
     const news = [];
-    for(let i = 1; i < 5; i++){
+    for (let i = 1; i < 7; i++) {
       const newsItem = trails.at(-i);
       news.push({
         title: "Neue Trails!",
@@ -43,6 +42,16 @@ function formatDate(dateStr) {
   });
 }
 
+function pageCounter() {
+  return fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-visit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4YWZlZ214a2FkYnpoeG1lcHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Mjc1MzAsImV4cCI6MjA3NjIwMzUzMH0.BRbdccgrW7aZpvB_S4_qKn_BRcfPMyWjQAVuVuy2wyQ",
+    },
+  });
+}
+
 function init() {
   const el = document.getElementById("mapid");
   if (!el) {
@@ -50,11 +59,14 @@ function init() {
     return;
   }
   var mymap = L.map(el).setView([49.505, 11.09], 9);
+  mymap._layersMaxZoom = 19;
+
+  var markers = L.markerClusterGroup();
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(mymap);
+  }).addTo(markers);
 
   var Bikepark = L.icon({
     iconUrl: './assets/bikepark.png',
@@ -63,10 +75,11 @@ function init() {
 
   const parkMarkers = [];
   for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(mymap).bindPopup("<a href='" + park.url + "' target=blank>" + park.name + "</a>"));
+    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
-  const trailMarkers = getTrailMarkers(mymap, trails);
+  const trailMarkers = getTrailMarkers(markers, trails);
+  mymap.addLayer(markers);
   generateNews();
 
   document.getElementById("show-last-1").addEventListener("click", () => {
@@ -82,29 +95,49 @@ function init() {
   document.getElementById("show-last-4").addEventListener("click", () => {
     trailMarkers.at(-4).openPopup();
   });
+  document.getElementById("show-last-5").addEventListener("click", () => {
+    trailMarkers.at(-4).openPopup();
+  });
+  document.getElementById("show-last-6").addEventListener("click", () => {
+    trailMarkers.at(-4).openPopup();
+  });
 }
 
 function getTrailMarkers(mymap, trails) {
   const trailMarkers = [];
+
   for (const trail of trails) {
-    // Base popup content (always present)
     let popupHtml = `
-      <div class="popup-content">
-        <a href="${trail.url}" target="_blank">${trail.name}</a>
+    <div class="popup-content">
+      <a href="${trail.url}" target="_blank">
+        ${trail.name}
+        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
+      </a>
+  `;
+
+    if (trail.instagram && trail.instagram.trim() !== "") {
+      popupHtml += `
+      <div class="popup-instagram" style="margin-top: 6px;">
+        <a href="https://instagram.com/${trail.instagram}" target="_blank">
+          <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
+          <span>${trail.instagram}</span>
+        </a>
+      </div>
     `;
+    }
 
     // Add optional news block if available
     if (trail.news) {
       popupHtml += `
-        <div class="popup-news">
+      <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
         <strong>News:</strong><br>
-          <time datetime="${trail.news.date}">
-            <i>${formatDate(trail.news.date)}:</i>
-          </time>
-          <strong>${trail.news.title}</strong>
-          <p>${trail.news.subtitle}</p>
-        </div>
-      `;
+        <time datetime="${trail.news.date}">
+          <i>${formatDate(trail.news.date)}:</i>
+        </time>
+        <strong>${trail.news.title}</strong>
+        <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
+      </div>
+    `;
     }
 
     popupHtml += "</div>";
@@ -119,4 +152,5 @@ function getTrailMarkers(mymap, trails) {
   return trailMarkers;
 }
 
+pageCounter();
 init();
