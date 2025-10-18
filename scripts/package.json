@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node --env-file=.env index.js"
+    "geo": "node --env-file=.env geo.js",
+    "add-trails": "node --env-file=.env add-trails.js"
   },
   "author": "",
   "license": "ISC",
