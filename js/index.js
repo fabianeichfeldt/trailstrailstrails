@@ -1,7 +1,7 @@
 import { bikeparks } from "./data/bikeparks.js";
-import { trails } from "./data/trails.js";
+import { getTrails } from "./data/trails.js";
 
-function generateNews() {
+function generateNews(trails) {
   const container = document.getElementById("news");
   if (!container) return;
 
@@ -52,7 +52,7 @@ function pageCounter() {
   });
 }
 
-function init() {
+async function init() {
   const el = document.getElementById("mapid");
   if (!el) {
     console.error("Map div not found!");
@@ -78,9 +78,10 @@ function init() {
     parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
+  const trails = await getTrails();
   const trailMarkers = getTrailMarkers(markers, trails);
   mymap.addLayer(markers);
-  generateNews();
+  generateNews(trails);
 
   document.getElementById("show-last-1").addEventListener("click", () => {
     trailMarkers.at(-1).openPopup();
@@ -142,7 +143,7 @@ function getTrailMarkers(mymap, trails) {
 
     popupHtml += "</div>";
 
-    const marker = L.marker(trail.coords)
+    const marker = L.marker([trail.latitude, trail.longitude])
       .addTo(mymap)
       .bindPopup(popupHtml);
 
@@ -153,4 +154,4 @@ function getTrailMarkers(mymap, trails) {
 }
 
 pageCounter();
-init();
+await init();
