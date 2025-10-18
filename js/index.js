@@ -102,6 +102,39 @@ async function init() {
   document.getElementById("show-last-6").addEventListener("click", () => {
     trailMarkers.at(-4).openPopup();
   });
+
+  let addMode = false;
+
+    const addBtn = document.getElementById('addTrailBtn');
+
+    addBtn.addEventListener('click', () => {
+      addMode = !addMode;
+      if (addMode) {
+        addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
+        addBtn.style.background = '#38a169';
+        mymap.getContainer().classList.add('crosshair-cursor');
+      } else {
+        addBtn.textContent = '+ Trail hinzufügen';
+        addBtn.style.background = '#2b6cb0';
+        mymap.getContainer().classList.remove('crosshair-cursor');
+      }
+    });
+
+    mymap.on('click', (e) => {
+      if (!addMode) return;
+
+      const { lat, lng } = e.latlng;
+      
+      const marker = L.marker([lat, lng]).addTo(mymap);
+      marker.bindPopup(
+        `<b>Neuer Trail</b><br>Lat: ${lat.toFixed(5)}<br>Lng: ${lng.toFixed(5)}`
+      ).openPopup();
+
+      addMode = false;
+      addBtn.textContent = '+ Trail hinzufügen';
+      addBtn.style.background = '#2b6cb0';
+      mymap.getContainer().classList.remove('crosshair-cursor');
+    });
 }
 
 function getTrailMarkers(mymap, trails) {
