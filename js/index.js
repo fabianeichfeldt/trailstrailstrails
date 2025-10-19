@@ -256,8 +256,7 @@ function getTrailPopup(trail) {
     `;
   }
 
-  // Add optional news block if available
-  if (trail.news) {
+  if (trail.news) 
     popupHtml += `
       <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
         <strong>News:</strong><br>
@@ -268,7 +267,15 @@ function getTrailPopup(trail) {
         <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
       </div>
     `;
-  }
+
+    if (trail.creator && trail.creator.trim() !== "")
+      popupHtml += `
+        <div class="popup-creator" style="margin-top: 10px; font-size: 12px; color: #555;">
+          <i class="fa-regular fa-user" style="margin-right: 4px;"></i>
+          <span>Eingetragen von <strong>${trail.creator}</strong></span>
+        </div>
+      `;
+  
 
   popupHtml += "</div>";
   return popupHtml;
