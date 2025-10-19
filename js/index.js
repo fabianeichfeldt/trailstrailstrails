@@ -126,9 +126,32 @@ async function init() {
       const { lat, lng } = e.latlng;
       
       const marker = L.marker([lat, lng]).addTo(mymap);
-      marker.bindPopup(
-        `<b>Neuer Trail</b><br>Lat: ${lat.toFixed(5)}<br>Lng: ${lng.toFixed(5)}`
-      ).openPopup();
+      const popupContent = `
+      <div class="popup-form">
+        <h3>Neuer Trail</h3>
+        <label>
+          <span>Name*</span>
+          <input type="text" id="trailName" placeholder="Trailname" required>
+        </label>
+        <label>
+          <span>Website</span>
+          <input type="url" id="trailUrl" placeholder="https://...">
+        </label>
+        <label>
+          <span>Instagram vom Verein/Trailbauer</span><span class="optional"> (optional)</span>
+          <input type="text" id="trailInsta" placeholder="@username">
+        </label>
+        <label>
+          <span>Ersteller / Nickname etc.</span><span class="optional"> (optional)</span>
+          <input type="text" id="trailCreator" placeholder="Dein Name oder Nick, Instagram etc.">
+        </label>
+        <div class="popup-actions">
+          <button id="saveTrailBtn" class="save">Speichern</button>
+          <button id="cancelTrailBtn" class="cancel">Abbrechen</button>
+        </div>
+      </div>
+    `;
+      marker.bindPopup(popupContent).openPopup();
 
       addMode = false;
       addBtn.textContent = '+ Trail hinzufügen';

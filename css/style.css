@@ -224,3 +224,82 @@ a:hover {
 .crosshair-cursor {
   cursor: crosshair !important;
 }
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.popup-form {
+  font-family: system-ui, sans-serif;
+  padding: 1rem;
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.popup-form h3 {
+  margin: 0 0 0.3rem 0;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.popup-form label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.popup-form input {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.popup-form input:focus {
+  border-color: #2b6cb0;
+}
+
+.popup-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.3rem;
+}
+
+.popup-actions button {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.popup-actions button.save {
+  background: #2b6cb0;
+  color: white;
+  margin-right: 0.3rem;
+}
+
+.popup-actions button.save:hover {
+  background: #3182ce;
+}
+
+.popup-actions button.cancel {
+  background: #e2e8f0;
+}
+
+.popup-actions button.cancel:hover {
+  background: #cbd5e1;
+}
+
+.optional {
+  color: #999;
+}
