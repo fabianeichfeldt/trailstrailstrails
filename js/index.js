@@ -150,7 +150,7 @@ async function init() {
           <input type="text" id="trailInsta" placeholder="@username">
         </label>
         <label>
-          <span>Ersteller / Nickname etc.</span><span class="optional"> (optional)</span>
+          <span>Eingetragen von... (Nickname etc.)</span><span class="optional"> (optional)</span>
           <input type="text" id="trailCreator" placeholder="Dein Name oder Nick, Instagram etc.">
         </label>
         <div class="popup-actions">
