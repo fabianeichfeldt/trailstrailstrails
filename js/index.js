@@ -1,5 +1,6 @@
 import { bikeparks } from "./data/bikeparks.js";
 import { getTrails } from "./data/trails.js";
+import { showToast } from "./toast.js";
 
 function generateNews(trails) {
   const container = document.getElementById("news");
@@ -53,6 +54,13 @@ function pageCounter() {
 }
 
 async function init() {
+  function resetAddMode() {
+    addMode = false;
+    addBtn.textContent = "+ Trail hinzufügen";
+    addBtn.style.background = "#2b6cb0";
+    mymap._container.classList.remove("crosshair-cursor");
+  }
+
   const el = document.getElementById("mapid");
   if (!el) {
     console.error("Map div not found!");
@@ -151,12 +159,64 @@ async function init() {
         </div>
       </div>
     `;
-      marker.bindPopup(popupContent).openPopup();
+      marker.bindPopup(popupContent);
 
       addMode = false;
       addBtn.textContent = '+ Trail hinzufügen';
       addBtn.style.background = '#2b6cb0';
       mymap.getContainer().classList.remove('crosshair-cursor');
+
+      
+      marker.on("popupopen", () => {
+        const saveBtn = document.getElementById("saveTrailBtn");
+        const cancelBtn = document.getElementById("cancelTrailBtn");
+  
+        saveBtn.addEventListener("click", async () => {
+          const trail = {
+            name: document.getElementById("trailName").value.trim(),
+            url: document.getElementById("trailUrl").value.trim(),
+            instagram: document.getElementById("trailInsta").value.trim(),
+            creator: document.getElementById("trailCreator").value.trim(),
+            latitude: lat,
+            longitude: lng,
+          };
+  
+          if (!trail.name) {
+            alert("Bitte gib einen Namen ein.");
+            return;
+          }
+  
+          saveBtn.classList.add("loading");
+          try {
+            await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-trail", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4YWZlZ214a2FkYnpoeG1lcHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Mjc1MzAsImV4cCI6MjA3NjIwMzUzMH0.BRbdccgrW7aZpvB_S4_qKn_BRcfPMyWjQAVuVuy2wyQ",
+              },
+              body: JSON.stringify(trail),
+            });
+
+            marker.bindPopup(getTrailPopup(trail));
+            showToast("Trail erfolgreich gespeichert ✅", "success");
+          } catch (err) {
+            console.error("Error saving trail:", err);
+            showToast("Fehler beim Speichern ❌", "error");
+            return;            
+          }finally {
+            saveBtn.classList.remove("loading");
+            marker.closePopup();
+            resetAddMode();
+          }          
+        });
+  
+        cancelBtn.addEventListener("click", () => {
+          mymap.removeLayer(marker);
+          resetAddMode();
+        });
+      });
+
+      marker.openPopup();
     });
 }
 
@@ -164,40 +224,7 @@ function getTrailMarkers(mymap, trails) {
   const trailMarkers = [];
 
   for (const trail of trails) {
-    let popupHtml = `
-    <div class="popup-content">
-      <a href="${trail.url}" target="_blank">
-        ${trail.name}
-        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
-      </a>
-  `;
-
-    if (trail.instagram && trail.instagram.trim() !== "") {
-      popupHtml += `
-      <div class="popup-instagram" style="margin-top: 6px;">
-        <a href="https://instagram.com/${trail.instagram}" target="_blank">
-          <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
-          <span>${trail.instagram}</span>
-        </a>
-      </div>
-    `;
-    }
-
-    // Add optional news block if available
-    if (trail.news) {
-      popupHtml += `
-      <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
-        <strong>News:</strong><br>
-        <time datetime="${trail.news.date}">
-          <i>${formatDate(trail.news.date)}:</i>
-        </time>
-        <strong>${trail.news.title}</strong>
-        <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
-      </div>
-    `;
-    }
-
-    popupHtml += "</div>";
+    const popupHtml = getTrailPopup(trail);
 
     const marker = L.marker([trail.latitude, trail.longitude])
       .addTo(mymap)
@@ -207,6 +234,44 @@ function getTrailMarkers(mymap, trails) {
   }
 
   return trailMarkers;
+}
+
+function getTrailPopup(trail) {
+  let popupHtml = `
+    <div class="popup-content">
+      <a href="${trail.url}" target="_blank">
+        ${trail.name}
+        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
+      </a>
+  `;
+
+  if (trail.instagram && trail.instagram.trim() !== "") {
+    popupHtml += `
+      <div class="popup-instagram" style="margin-top: 6px;">
+        <a href="https://instagram.com/${trail.instagram}" target="_blank">
+          <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
+          <span>${trail.instagram}</span>
+        </a>
+      </div>
+    `;
+  }
+
+  // Add optional news block if available
+  if (trail.news) {
+    popupHtml += `
+      <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
+        <strong>News:</strong><br>
+        <time datetime="${trail.news.date}">
+          <i>${formatDate(trail.news.date)}:</i>
+        </time>
+        <strong>${trail.news.title}</strong>
+        <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
+      </div>
+    `;
+  }
+
+  popupHtml += "</div>";
+  return popupHtml;
 }
 
 pageCounter();

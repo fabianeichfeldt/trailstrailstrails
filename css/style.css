@@ -292,6 +292,33 @@ a:hover {
   background: #3182ce;
 }
 
+button.save.loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+button.save.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin-top: -8px;
+  margin-left: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .popup-actions button.cancel {
   background: #e2e8f0;
 }
@@ -302,4 +329,41 @@ a:hover {
 
 .optional {
   color: #999;
+}
+
+#toast-container {
+  position: fixed;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 9999;
+}
+
+.toast {
+  background: #2b6cb0;
+  color: #fff;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.error {
+  background: #e53e3e;
+}
+
+.toast.success {
+  background: #38a169;
 }

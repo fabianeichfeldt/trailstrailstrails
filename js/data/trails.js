@@ -12,6 +12,5 @@ export async function getTrails() {
   }
 
   const json = await response.json();
-  console.log(response.status, json);
   return json.data;
 }
