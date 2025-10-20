@@ -74,15 +74,44 @@ async function init() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(mymap);
 
-  var clusterGroup = L.markerClusterGroup();
+  const clusterToggle = document.getElementById("clusterToggle");
 
-  const parkMarkers = [];
-  for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: createCustomIcon("bikepark") }).addTo(clusterGroup).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
+  clusterToggle.addEventListener("change", (e) => {
+    const useCluster = e.target.checked;
+  
+    mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
+    mymap.addLayer(useCluster ? clusterGroup : markerGroup);
+  
+    // ensure markers are in both layers
+    if (useCluster && clusterGroup.getLayers().length === 0) {
+      renderMarkers(clusterGroup, trails, bikeparks);
+    } else if (!useCluster && markerGroup.getLayers().length === 0) {
+      renderMarkers(markerGroup, trails, bikeparks);
+    }
+  });
 
+  const clusterGroup = L.markerClusterGroup();
+  const markerGroup = L.layerGroup();
+
+  function renderMarkers(targetGroup, trails, parks) {
+    targetGroup.clearLayers();
+  
+    for (const park of parks)
+      L.marker(park.coords, { icon: createCustomIcon("bikepark") })
+        .addTo(targetGroup)
+        .bindPopup(
+          `<div class="popup-content">
+            <a href="${park.url}" target="_blank">${park.name}
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          </div>`
+        );
+  
+    trailMarkers = getTrailMarkers(targetGroup, trails);
+  }
 
   const trails = await getTrails();
-  const trailMarkers = getTrailMarkers(clusterGroup, trails);
+  let trailMarkers = []
+  renderMarkers(clusterGroup, trails, bikeparks);
   mymap.addLayer(clusterGroup);
   generateNews(trails);
 

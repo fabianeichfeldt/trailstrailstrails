@@ -47,7 +47,15 @@
         </p>
       </header>
 
-      <button class="add-trail-btn" id="addTrailBtn">+ Trail hinzufügen</button>
+      <div class="map-controls">
+        <button class="add-trail-btn" id="addTrailBtn">+ Trail hinzufügen</button>
+      
+        <label class="cluster-switch">
+          <input type="checkbox" id="clusterToggle" checked />
+          <span class="slider"></span>
+          <span class="switch-label">Gruppierung</span>
+        </label>
+      </div>
       <section class="content">
         <div id="mapid"></div>
 
