@@ -234,7 +234,7 @@ function getTrailMarkers(mymap, trails) {
 function getTrailPopup(trail) {
   let popupHtml = `
     <div class="popup-content">
-      <a href="${trail.url}" target="_blank">
+      <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
         ${trail.name}
         <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
       </a>
@@ -243,7 +243,7 @@ function getTrailPopup(trail) {
   if (trail.instagram && trail.instagram.trim() !== "") {
     popupHtml += `
       <div class="popup-instagram" style="margin-top: 6px;">
-        <a href="https://instagram.com/${trail.instagram}" target="_blank">
+        <a href="https://instagram.com/${trail.approved ? trail.instagram : ''}" target="_blank">
           <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
           <span>${trail.instagram}</span>
         </a>
