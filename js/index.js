@@ -12,8 +12,8 @@ function generateNews(trails) {
       const newsItem = trails.at(-i);
       news.push({
         title: "Neue Trails!",
-        date: newsItem.date,
-        text: `<strong>${newsItem.name}</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last-${i}'>Link</a>`,
+        date: newsItem.created_at,
+        text: `<strong>${newsItem.name}</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last-${i}' href='#'>Link</a>`,
       });
     }
     container.innerHTML = "<h2>Neuigkeiten</h2>";
@@ -69,42 +69,30 @@ async function init() {
   var mymap = L.map(el).setView([49.505, 11.09], 9);
   mymap._layersMaxZoom = 19;
 
-  var markers = L.markerClusterGroup();
-
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-  }).addTo(markers);
+  }).addTo(mymap);
+
+  var clusterGroup = L.markerClusterGroup();
 
   const parkMarkers = [];
   for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: createCustomIcon("bikepark") }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
+    parkMarkers.push(L.marker(park.coords, { icon: createCustomIcon("bikepark") }).addTo(clusterGroup).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
   const trails = await getTrails();
-  const trailMarkers = getTrailMarkers(markers, trails);
-  mymap.addLayer(markers);
+  const trailMarkers = getTrailMarkers(clusterGroup, trails);
+  mymap.addLayer(clusterGroup);
   generateNews(trails);
 
-  document.getElementById("show-last-1").addEventListener("click", () => {
-    trailMarkers.at(-1).openPopup();
-  });
-
-  document.getElementById("show-last-2").addEventListener("click", () => {
-    trailMarkers.at(-2).openPopup();
-  });
-  document.getElementById("show-last-3").addEventListener("click", () => {
-    trailMarkers.at(-3).openPopup();
-  });
-  document.getElementById("show-last-4").addEventListener("click", () => {
-    trailMarkers.at(-4).openPopup();
-  });
-  document.getElementById("show-last-5").addEventListener("click", () => {
-    trailMarkers.at(-4).openPopup();
-  });
-  document.getElementById("show-last-6").addEventListener("click", () => {
-    trailMarkers.at(-4).openPopup();
-  });
+  for(let i = 1; i <= 6; i++)
+    document.getElementById(`show-last-${i}`).addEventListener("click", () => {
+      const newsMarker = trailMarkers.at(-i);
+      clusterGroup.zoomToShowLayer(newsMarker, () => {
+        newsMarker.openPopup();
+      });
+    });
 
   let addMode = false;
 
@@ -215,14 +203,14 @@ async function init() {
     });
 }
 
-function getTrailMarkers(mymap, trails) {
+function getTrailMarkers(cluster, trails) {
   const trailMarkers = [];
 
   for (const trail of trails) {
     const popupHtml = getTrailPopup(trail);
 
     const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved ? "verified" : "unverified") })
-      .addTo(mymap)
+      .addTo(cluster)
       .bindPopup(popupHtml);
 
     trailMarkers.push(marker);
