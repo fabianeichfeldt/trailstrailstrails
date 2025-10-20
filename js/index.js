@@ -1,5 +1,5 @@
 import { bikeparks } from "./data/bikeparks.js";
-import { getTrails } from "./data/trails.js";
+import { getTrails, createCustomIcon } from "./data/trails.js";
 import { showToast } from "./toast.js";
 
 function generateNews(trails) {
@@ -76,14 +76,9 @@ async function init() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(markers);
 
-  var Bikepark = L.icon({
-    iconUrl: './assets/bikepark.png',
-    iconSize: [35, 22]
-  });
-
   const parkMarkers = [];
   for (const park of bikeparks)
-    parkMarkers.push(L.marker(park.coords, { icon: Bikepark }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
+    parkMarkers.push(L.marker(park.coords, { icon: createCustomIcon("bikepark") }).addTo(markers).bindPopup("<div class=\"popup-content\"><a href='" + park.url + "' target=blank>" + park.name + "<i class=\"fa-solid fa-arrow-up-right-from-square\"></i></a></div>"));
 
 
   const trails = await getTrails();
@@ -226,7 +221,7 @@ function getTrailMarkers(mymap, trails) {
   for (const trail of trails) {
     const popupHtml = getTrailPopup(trail);
 
-    const marker = L.marker([trail.latitude, trail.longitude])
+    const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved ? "verified" : "unverified") })
       .addTo(mymap)
       .bindPopup(popupHtml);
 

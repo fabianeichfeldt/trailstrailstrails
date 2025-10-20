@@ -36,6 +36,17 @@ header .logo {
     top: 0.6rem;
     left: 0.8rem;
   }
+
+  footer {
+    font-size: 0.8rem;
+  }
+  .map-legend {
+    gap: 0.6rem;
+  }
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 header h1 {
@@ -118,9 +129,16 @@ header h1 {
 }
 
 footer {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1rem 0 1.5rem;
+  background: #f9f9f9;
+  color: #555;
   font-size: 0.9rem;
-  color: #666;
-  line-height: 1.4;
+  border-top: 1px solid #e5e7eb;
 }
 
 a {
@@ -367,3 +385,46 @@ button.save.loading::after {
 .toast.success {
   background: #38a169;
 }
+
+.leaflet-marker-icon {
+  transition: transform 0.2s, filter 0.2s;
+}
+
+img.leaflet-marker-icon.marker-verified {
+  filter: hue-rotate(0deg);
+}
+
+img.leaflet-marker-icon.marker-unverified {
+  filter: hue-rotate(160deg);
+}
+
+img.leaflet-marker-icon.marker-bikepark {
+  filter: hue-rotate(270deg);
+}
+
+
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.map-legend div {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+
