@@ -71,6 +71,8 @@ async function init() {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
+    tileSize: window.innerWidth < 600? 512: 256,
+    zoomOffset: window.innerWidth < 600? -1 : 0,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(mymap);
 
@@ -82,7 +84,6 @@ async function init() {
     mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
     mymap.addLayer(useCluster ? clusterGroup : markerGroup);
   
-    // ensure markers are in both layers
     if (useCluster && clusterGroup.getLayers().length === 0) {
       renderMarkers(clusterGroup, trails, bikeparks);
     } else if (!useCluster && markerGroup.getLayers().length === 0) {
