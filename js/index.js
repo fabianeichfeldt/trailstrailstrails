@@ -69,7 +69,7 @@ async function init() {
   var mymap = L.map(el).setView([49.505, 11.09], 9);
   mymap._layersMaxZoom = 19;
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251020', {
     maxZoom: 19,
     tileSize: 512,
     zoomOffset: -1,
