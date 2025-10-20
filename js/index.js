@@ -71,8 +71,8 @@ async function init() {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
-    tileSize: window.innerWidth < 1000? 512: 256,
-    zoomOffset: window.innerWidth < 1000? -1 : 0,
+    tileSize: 512,
+    zoomOffset: -1,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(mymap);
 
