@@ -421,7 +421,6 @@ a:hover {
 .popup-form {
   font-family: system-ui, sans-serif;
   padding: 1rem;
-  width: 220px;
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
