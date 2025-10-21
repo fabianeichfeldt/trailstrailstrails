@@ -69,10 +69,10 @@ async function init() {
   var mymap = L.map(el).setView([49.505, 11.09], 9);
   mymap._layersMaxZoom = 19;
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251020', {
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
     maxZoom: 19,
-    tileSize: 512,
-    zoomOffset: -1,
+    tileSize: window.screen.availWidth < 600 ? 512 : 256,
+    zoomOffset: window.screen.availWidth < 600 ? -1 : 0,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(mymap);
 
