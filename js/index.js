@@ -105,7 +105,9 @@ async function init() {
             <a href="${park.url}" target="_blank">${park.name}
             <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
           </div>`
-        );
+        ,{
+          maxWidth: "auto"
+        });
   
     trailMarkers = getTrailMarkers(targetGroup, trails);
   }
@@ -172,7 +174,9 @@ async function init() {
         </div>
       </div>
     `;
-      marker.bindPopup(popupContent);
+      marker.bindPopup(popupContent, {
+        maxWidth: "auto"
+      });
 
       addMode = false;
       addBtn.textContent = '+ Trail hinzufügen';
@@ -241,7 +245,9 @@ function getTrailMarkers(cluster, trails) {
 
     const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved ? "verified" : "unverified") })
       .addTo(cluster)
-      .bindPopup(popupHtml);
+      .bindPopup(popupHtml, {
+        maxWidth: "auto"
+      });
 
     marker.on("popupopen", () => getTrailDetails(trail.id));
     trailMarkers.push(marker);
@@ -284,7 +290,7 @@ function getTrailPopup(trail) {
 
     if (trail.creator && trail.creator.trim() !== "")
       popupHtml += `
-        <div class="popup-creator" style="margin-top: 10px; font-size: 12px; color: #555;">
+        <div class="popup-creator">
           <i class="fa-regular fa-user" style="margin-right: 4px;"></i>
           <span>Eingetragen von <strong>${trail.creator}</strong></span>
         </div>

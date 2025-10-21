@@ -30,22 +30,100 @@ header .logo {
   width: auto;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
+  html, body {
+    font-size: 26px; 
+  }
+
+  main {
+    padding: 0.5rem;
+    gap: 0.8rem;
+  }
+
+  header {
+    padding: 0.1rem 0 0.1rem;
+  }
+
   header .logo {
-    height: 36px;
+    height: 50px;
     top: 0.6rem;
     left: 0.8rem;
   }
 
+  header h1 {
+    font-size: 2.4rem;
+    margin: 0.4rem 0 0.2rem;
+  }
+
+  .news-link {
+    top: 2rem;
+    right: 0.8rem;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 6px;
+  }
+
+  .map-controls {
+    gap: 0.8rem;
+  }
+
+  .add-trail-btn {
+    width: 90%;
+    max-width: 320px;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    border-radius: 10px;
+  }
+
+  .cluster-switch {
+    gap: 0.8rem;
+    font-size: 1.1rem;
+  }
+
+  .cluster-switch .slider {
+    width: 54px;
+    height: 30px;
+  }
+
+  .cluster-switch .slider::before {
+    width: 22px;
+    height: 22px;
+    top: 4px;
+    left: 4px;
+  }
+
+  .cluster-switch input:checked + .slider::before {
+    transform: translateX(24px);
+  }
+
+  #mapid {
+    min-height: 75vh;
+    border-width: 1px;
+    border-radius: 10px;
+  }
+
   footer {
-    font-size: 0.8rem;
+    font-size: 1rem;
+    padding: 1rem 0;
   }
+
   .map-legend {
-    gap: 0.6rem;
+    gap: 0.8rem;
+    font-size: 1rem;
   }
+
   .legend-dot {
-    width: 12px;
-    height: 12px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .leaflet-popup-content {
+    font-size: 1.4rem;
+    line-height: 1.6;
+  }
+  
+  .leaflet-popup-content a {
+    font-weight: 400;
   }
 }
 
@@ -199,26 +277,28 @@ a:hover {
   }
 }
 
-.leaflet-popup-content {
-  font-size: 1.2rem;
-  line-height: 1.4;
+.popup-creator {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #555;
 }
 
-@media (max-width: 1000px) {
-  .leaflet-popup-content {
-    font-size: 1.8rem;
-  }
-
-  .leaflet-popup-content a {
-    font-size: 2rem;
-    font-weight: 400;
-  }
+.leaflet-popup-content {
+  width:auto !important; 
+  white-space: nowrap;
+  font-size: 1.2rem;
+  line-height: 1.4;
 }
 
 .popup-content a {
   text-decoration: none;
   font-weight: bold;
-  font-size: 1.5rem;
+}
+
+.popup-creator {
+  margin-top: 10px;
+  font-size: 0.8rem;
+  color: #555;
 }
 
 .popup-content a.disabled {
@@ -235,9 +315,7 @@ a:hover {
   color: #E4405F;
   display: inline-flex;
   align-items: center;
-  gap: 3px;
   text-decoration: none;
-  font-size: 18px;
 }
 
 .popup-news {
@@ -249,7 +327,6 @@ a:hover {
 }
 
 .add-trail-btn {
-  width: 200px;
   z-index: 1000;
   background: #2b6cb0;
   color: white;
