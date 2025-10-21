@@ -1,5 +1,5 @@
 import { bikeparks } from "./data/bikeparks.js";
-import { getTrails, createCustomIcon } from "./data/trails.js";
+import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
 
 function generateNews(trails) {
@@ -243,6 +243,7 @@ function getTrailMarkers(cluster, trails) {
       .addTo(cluster)
       .bindPopup(popupHtml);
 
+    marker.on("popupopen", () => getTrailDetails(trail.id));
     trailMarkers.push(marker);
   }
 
