@@ -1,4 +1,4 @@
-import { bikeparks } from "./data/bikeparks.js";
+import { getParks } from "./data/bikeparks.js";
 import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
 
@@ -98,7 +98,7 @@ async function init() {
     targetGroup.clearLayers();
   
     for (const park of parks)
-      L.marker(park.coords, { icon: createCustomIcon("bikepark") })
+      L.marker([park.latitude, park.longitude], { icon: createCustomIcon("bikepark") })
         .addTo(targetGroup)
         .bindPopup(
           `<div class="popup-content">
@@ -113,6 +113,7 @@ async function init() {
   }
 
   const trails = await getTrails();
+  const bikeparks = await getParks();
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks);
   mymap.addLayer(clusterGroup);
