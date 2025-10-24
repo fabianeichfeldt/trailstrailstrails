@@ -1,0 +1,49 @@
+.type-switch {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    padding: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    font-family: system-ui, sans-serif;
+    gap: 0.25rem;
+    width: auto;               /* wichtig: verhindert 100% Breite */
+    align-self: center;        /* zentriert im Formular */
+    margin-top: 0.3rem;
+  }
+  
+  .type-option {
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .type-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  
+  .switch-btn {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #333;
+    background: transparent;
+    transition: all 0.2s ease;
+  }
+  
+  /* Hover */
+  .type-option:hover .switch-btn {
+    background: #e2e8f0;
+  }
+  
+  /* Checked */
+  .type-option input:checked + .switch-btn {
+    background: #2b6cb0;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }

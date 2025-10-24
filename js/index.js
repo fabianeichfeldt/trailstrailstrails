@@ -153,7 +153,18 @@ async function init() {
       const marker = L.marker([lat, lng]).addTo(mymap);
       const popupContent = `
       <div class="popup-form">
-        <h3>Neuer Trail</h3>
+        <h3>Neuer Eintrag</h3>
+        <div class="type-switch">
+          <label class="type-option">
+            <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" checked>
+            <span class="switch-btn">Trail</span>
+          </label>
+
+          <label class="type-option">
+            <input type="radio" name="trailType" value="bikepark">
+            <span class="switch-btn">Bike Park</span>
+          </label>
+        </div>
         <label>
           <span>Name*</span>
           <input type="text" id="trailName" placeholder="Trailname" required>
@@ -191,6 +202,7 @@ async function init() {
         const cancelBtn = document.getElementById("cancelTrailBtn");
   
         saveBtn.addEventListener("click", async () => {
+          const isTrail = document.getElementById("trailTypeSwitch").checked;
           const trail = {
             name: document.getElementById("trailName").value.trim(),
             url: document.getElementById("trailUrl").value.trim(),
@@ -207,7 +219,7 @@ async function init() {
   
           saveBtn.classList.add("loading");
           try {
-            await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-trail", {
+            await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${isTrail? 'add-trail' : 'bike-parks'}`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
