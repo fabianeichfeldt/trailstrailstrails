@@ -6,6 +6,7 @@
   "scripts": {
     "geo": "node --env-file=.env geo.js",
     "add-trails": "node --env-file=.env add-trails.js",
+    "add-trail-details": "node --env-file=.env add-trail-details.js",
     "add-parks": "node --env-file=.env add-parks.js"
   },
   "author": "",
