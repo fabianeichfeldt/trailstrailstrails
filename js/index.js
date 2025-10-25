@@ -263,7 +263,35 @@ function getTrailMarkers(cluster, trails) {
         maxWidth: "auto"
       });
 
-    marker.on("popupopen", () => getTrailDetails(trail.id));
+    marker.on("popupopen", async (e) => {
+      try {
+        const popup = e.popup;
+        const details = await getTrailDetails(trail.id);
+    
+        const rules = (details.rules && details.rules.length > 0)? details.rules : ["Keine besonderen Regeln bekannt."];
+        const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
+    
+        const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
+        const detailsHTML = `
+          <div class="popup-section">
+            <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
+            <p>${hours}</p>
+          </div>
+          <div class="popup-section">
+            <h4>📜 Nutzungsregeln</h4>
+            ${rulesHTML}
+          </div>
+        `;
+    
+        const container = popup.getElement()?.querySelector('.popup-section.loading');
+        if (container) container.outerHTML = detailsHTML;
+    
+      } catch (err) {
+        console.error("Fehler beim Laden der Details:", err);
+        const container = popup.getElement()?.querySelector('.popup-section.loading');
+        if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
+      }
+    });
     trailMarkers.push(marker);
   }
 
@@ -290,17 +318,11 @@ function getTrailPopup(trail) {
     `;
   }
 
-  if (trail.news) 
-    popupHtml += `
-      <div class="popup-news" style="margin-top: 10px; font-size: 13px; background: #f9f9f9; padding: 6px; border-radius: 8px;">
-        <strong>News:</strong><br>
-        <time datetime="${trail.news.date}">
-          <i>${formatDate(trail.news.date)}:</i>
-        </time>
-        <strong>${trail.news.title}</strong>
-        <p style="margin: 4px 0 0;">${trail.news.subtitle}</p>
-      </div>
-    `;
+  popupHtml += `
+    <div class="popup-section loading">
+      <p>Lade Details …</p>
+    </div>
+  `;
 
     if (trail.creator && trail.creator.trim() !== "")
       popupHtml += `

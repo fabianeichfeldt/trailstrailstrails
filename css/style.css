@@ -318,12 +318,36 @@ a:hover {
   text-decoration: none;
 }
 
-.popup-news {
-  background: #f9f9f9;
-  padding: 6px;
+.popup-section p {
+  white-space: pre-wrap;      
+  word-wrap: break-word;      
+  overflow-wrap: anywhere;   
+  line-height: 1.0;
+  font-size: 0.8rem;
+  color: #333;
+}
+
+.popup-section.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #666;
+  font-size: 0.9rem;
+  min-height: 50px;
+  background: repeating-linear-gradient(
+    45deg,
+    #f0f0f0,
+    #f0f0f0 10px,
+    #f9f9f9 10px,
+    #f9f9f9 20px
+  );
   border-radius: 8px;
-  margin-top: 10px;
-  font-size: 13px;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 0 0; }
+  to { background-position: 100px 0; }
 }
 
 .add-trail-btn {
@@ -415,8 +439,27 @@ a:hover {
 .leaflet-popup-content-wrapper {
   border-radius: 12px;
   padding: 0;
-  overflow: hidden;
+  max-height: 50vh;          
+  overflow-y: auto;          
+  overflow-x: hidden;        
+  scrollbar-width: thin;     
+  scrollbar-color: #aaa #f1f1f1; 
 }
+
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb {
+  background: #aaa;
+  border-radius: 3px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
 
 .popup-form {
   font-family: system-ui, sans-serif;

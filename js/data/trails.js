@@ -30,7 +30,7 @@ export async function getTrailDetails(trail) {
   }
 
   const json = await response.json();
-  return json.data;
+  return json.data[0];
 }
 
 export function createCustomIcon(category) {
