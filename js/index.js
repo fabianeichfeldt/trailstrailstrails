@@ -74,6 +74,7 @@ async function init() {
   var mymap = L.map(el);
 
   if (match) {
+    console.log("Focusing on location:", match[1]);
     locations.find(loc => {
       if (loc.name.toLowerCase() === match[1].toLowerCase()) {
         mymap.setView([loc.lat, loc.lng], 9);
