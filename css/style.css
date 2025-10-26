@@ -649,3 +649,12 @@ img.leaflet-marker-icon.marker-bikepark {
   display: inline-block;
   box-shadow: 0 0 3px rgba(0,0,0,0.2);
 }
+.seo-text {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 1rem;
+  line-height: 1.4;
+}
+.seo-text a {
+  color: #2b6cb0;
+}
