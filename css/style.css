@@ -283,6 +283,17 @@ a:hover {
   color: #555;
 }
 
+.leaflet-popup-content .popup-header {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #ddd;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
 .leaflet-popup-content {
   width:auto !important; 
   white-space: nowrap;
