@@ -1,6 +1,7 @@
 import { getParks } from "./data/bikeparks.js";
 import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
+import { getApproxLocation, locations } from "./locations.js";
 
 function generateNews(trails) {
   const container = document.getElementById("news");
@@ -67,7 +68,24 @@ async function init() {
     console.error("Map div not found!");
     return;
   }
-  var mymap = L.map(el).setView([49.505, 11.09], 9);
+
+  const path = window.location.pathname;
+  const match = path.match(/^\/trails\/([^/]+)/);
+  var mymap = L.map(el);
+
+  if (match) {
+    locations.find(loc => {
+      if (loc.name.toLowerCase() === match[1].toLowerCase()) {
+        mymap.setView([loc.lat, loc.lng], 9);
+        return true;
+      }
+      return false;
+    });
+  } else {
+    const loc = await getApproxLocation();
+    mymap.setView(loc, 9)
+  }
+
   mymap._layersMaxZoom = 19;
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
@@ -301,10 +319,12 @@ function getTrailMarkers(cluster, trails) {
 function getTrailPopup(trail) {
   let popupHtml = `
     <div class="popup-content">
+    <div class="popup-header">
       <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
         ${trail.name}
         <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
       </a>
+      </div>
   `;
 
   if (trail.instagram && trail.instagram.trim() !== "") {
