@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="/css/style.css" rel="stylesheet" />
     <link href="/css/switch.css" rel="stylesheet" />
+    <link href="/css/community.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
@@ -49,6 +50,8 @@
       </header>
 
       <div class="map-controls">
+        <button id="communityBtn" class="btn-community-top">💪 Community</button>
+
         <button class="add-trail-btn" id="addTrailBtn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
       
         <label class="cluster-switch">
@@ -56,6 +59,7 @@
           <span class="slider"></span>
           <span class="switch-label">Gruppierung</span>
         </label>
+
       </div>
       <section class="content">
         <div id="mapid"></div>
@@ -98,6 +102,38 @@
         </div>
         <p>© 2025 trails·trails·trails</p>
       </footer>
+      <section id="community" class="community-section">
+        <h2>Trailradar Community 💪</h2>
+        <p>
+          Gemeinsam sammeln wir legale MTB-Trails – schon <strong>168 Trails</strong> aus 3 Ländern!
+        </p>
+        <p>
+          Die aktivsten Trailradar Mitglieder:
+        </p>
+      
+        <div class="leaderboard-mini">
+          <div class="leaderboard-entry">
+            🥇 <strong>StelioKontos</strong> <span>35 Trails</span>
+          </div>
+          <div class="leaderboard-entry">
+            🥇 <strong>Florian</strong> <span>35 Trails</span>
+          </div>
+          <div class="leaderboard-entry">
+            🥈 <strong>Poacher-79</strong> <span>8 Trails</span>
+          </div>
+          <div class="leaderboard-entry">
+            🥉 <strong>thegab</strong> <span>7 Trails</span>
+          </div>
+          <div class="leaderboard-entry">
+            💪 <strong>Magster</strong> <span>6 Trails</span>
+          </div>
+          <div class="leaderboard-entry">
+            💪 <strong>ciao heiko</strong> <span>6 Trails</span>
+          </div>
+        </div>
+      
+        <!-- <a href="/community" class="btn-community">Mehr erfahren →</a> -->
+      </section>
       <section class="seo-text">
         <h2>Entdecke legale MTB Trails in deiner Nähe</h2>
         <p>

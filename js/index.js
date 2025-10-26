@@ -136,6 +136,7 @@ async function init() {
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks);
   mymap.addLayer(clusterGroup);
+
   generateNews(trails);
 
   for(let i = 1; i <= 6; i++)
@@ -160,6 +161,13 @@ async function init() {
         addBtn.textContent = '+ Trail hinzufügen';
         addBtn.style.background = '#2b6cb0';
         mymap.getContainer().classList.remove('crosshair-cursor');
+      }
+    });
+
+    document.getElementById("communityBtn")?.addEventListener("click", () => {
+      const section = document.getElementById("community");
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth" });
       }
     });
 

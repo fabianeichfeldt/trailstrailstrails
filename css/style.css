@@ -148,33 +148,31 @@ header h1 {
 
 @media (min-width: 1200px) {
   .content {
+    display: flex;
     flex-direction: row;
-    align-items: stretch;
+    align-items: flex-start; 
+    gap: 1rem;
     flex: 1;
-    overflow: hidden;
   }
 
   #mapid {
     flex: 4;
+    min-height: 80vh; 
   }
 
   .side-section {
     flex: 1;
-    padding: 0 1rem;
     display: flex;
     flex-direction: column;
-    overflow: hidden;     
-  }
-
-  .news {
-    flex: 1;
+    gap: 1rem;
+    max-height: 80vh; 
+    min-height: 80vh;
     overflow-y: auto;
-    max-height: none;     
   }
+}
   .news-link {
     display: none;
   }
-}
 
 .content {
   display: flex;
@@ -359,6 +357,27 @@ a:hover {
 @keyframes shimmer {
   from { background-position: 0 0; }
   to { background-position: 100px 0; }
+}
+
+.btn-community-top {
+  background: #2b6cb0; /* Grüner Akzent für Community */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-community-top:hover {
+  background: #3182ce;
+}
+
+.btn-community-top:active {
+  opacity: 0.8;
+  transform: scale(0.98);
 }
 
 .add-trail-btn {
