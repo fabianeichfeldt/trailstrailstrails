@@ -73,8 +73,7 @@ async function init() {
   const match = path.match(/^\/trails\/([^/]+)/);
   var mymap = L.map(el);
 
-  if (match) {
-    console.log("Focusing on location:", match[1]);
+  if (match && match[1] && match[1].length > 0 && match[1].toLowerCase() !== "nearby") {
     locations.find(loc => {
       if (loc.name.toLowerCase() === match[1].toLowerCase()) {
         mymap.setView([loc.lat, loc.lng], 9);
