@@ -342,7 +342,7 @@ a:hover {
   align-items: center;
   color: #666;
   font-size: 0.9rem;
-  min-height: 80vh;
+  min-height: 65vh;
   background: repeating-linear-gradient(
     45deg,
     #f0f0f0,
