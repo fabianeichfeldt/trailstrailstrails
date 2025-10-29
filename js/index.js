@@ -2,6 +2,16 @@ import { getParks } from "./data/bikeparks.js";
 import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
 import { getApproxLocation, locations } from "./locations.js";
+import { upVote, downVote } from './feedback.js';
+
+window.downVote = async function(trailID, el) {
+  await downVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+};
+window.upVote = async function(trailID, el) {
+  await upVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+};
 
 function generateNews(trails) {
   const container = document.getElementById("news");
@@ -306,6 +316,17 @@ function getTrailMarkers(cluster, trails) {
           <div class="popup-section">
             <h4>📜 Nutzungsregeln</h4>
             ${rulesHTML}
+          </div>
+          <div class="popup-feedback" data-trail-id="${trail.id}">
+            <span class="feedback-label">Sind diese Infos hilfreich?</span>
+            <div class="feedback-buttons">
+              <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
+                <i class="fa-solid fa-thumbs-up"></i>
+              </button>
+              <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
+                <i class="fa-solid fa-thumbs-down"></i>
+              </button>
+            </div>
           </div>
         `;
     

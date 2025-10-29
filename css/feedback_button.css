@@ -1,0 +1,49 @@
+.popup-feedback {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    color: #555;
+    margin-bottom: 0.3rem;
+    opacity: 0.9;
+  }
+  
+  .feedback-label {
+    font-weight: 400;
+  }
+  
+  .feedback-buttons {
+    display: flex;
+    gap: 0.25rem;
+  }
+  
+  .thumb-btn {
+    background: #f2f2f2;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    color: #333;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+  
+  .thumb-btn:hover {
+    background: #e0e0e0;
+  }
+  
+  .thumb-btn:active {
+    transform: scale(0.95);
+  }
+  
+  .thumb-btn.selected.up {
+    background: #333;
+    color: white;
+  }
+  
+  .thumb-btn.selected.down {
+    background: #777;
+    color: white;
+  }
+  
