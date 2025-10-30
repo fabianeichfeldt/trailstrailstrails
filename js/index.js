@@ -190,6 +190,7 @@ async function init() {
       const popupContent = `
       <div class="popup-form">
         <h3>Neuer Eintrag</h3>
+        <p>Bitte Trailcenter einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
         <div class="type-switch">
           <label class="type-option">
             <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" checked>
