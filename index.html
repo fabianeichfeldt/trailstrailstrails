@@ -29,6 +29,7 @@
     <link href="/css/switch.css" rel="stylesheet" />
     <link href="/css/community.css" rel="stylesheet" />
     <link href="/css/feedback_button.css" rel="stylesheet" />
+    <link href="/css/nearby_modal.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
@@ -177,6 +178,20 @@
       </section>
     </main>
 
+    <div id="nearby-modal" class="nearby-modal hidden">
+      <div class="nearby-box">
+        <h3>Es gibt schon einen Eintrag in der Nähe 🤔</h3>
+        <p>
+          Im Umkreis von ~3 km gibt es schon „<span id="nearby-name"></span>“.
+        </p>
+        <p>Ist dein Eintrag ein anderer Typ bzw. ein anderes Trailcenter?</p>
+    
+        <div class="nearby-actions">
+          <button id="nearby-cancel">Nein</button>
+          <button id="nearby-continue" class="primary">Ja</button>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/js/index.js?v=20251030"></script>
   </body>
 </html>

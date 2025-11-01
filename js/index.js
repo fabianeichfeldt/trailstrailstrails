@@ -3,6 +3,8 @@ import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
 import { getApproxLocation, locations } from "./locations.js";
 import { upVote, downVote } from './feedback.js';
+import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails.js";
+import { anon } from "./anon.js";
 
 window.downVote = async function(trailID, el) {
   await downVote(trailID, el);
@@ -12,6 +14,9 @@ window.upVote = async function(trailID, el) {
   await upVote(trailID, el);
   showToast("Danke für dein Feedback! 🙏", "success");
 };
+
+let addMode = false;
+let addBtn;
 
 function generateNews(trails) {
   const container = document.getElementById("news");
@@ -65,14 +70,14 @@ function pageCounter() {
   });
 }
 
-async function init() {
-  function resetAddMode() {
-    addMode = false;
-    addBtn.textContent = "+ Trail hinzufügen";
-    addBtn.style.background = "#2b6cb0";
-    mymap._container.classList.remove("crosshair-cursor");
-  }
+function resetAddMode(map) {
+  addMode = false;
+  addBtn.textContent = "+ Trail hinzufügen";
+  addBtn.style.background = "#2b6cb0";
+  map._container.classList.remove("crosshair-cursor");
+}
 
+async function init() {
   const el = document.getElementById("mapid");
   if (!el) {
     console.error("Map div not found!");
@@ -157,9 +162,9 @@ async function init() {
       });
     });
 
-  let addMode = false;
+  addMode = false;
 
-    const addBtn = document.getElementById('addTrailBtn');
+    addBtn = document.getElementById('addTrailBtn');
 
     addBtn.addEventListener('click', () => {
       addMode = !addMode;
@@ -184,108 +189,116 @@ async function init() {
     mymap.on('click', (e) => {
       if (!addMode) return;
 
-      const { lat, lng } = e.latlng;
-      
-      const marker = L.marker([lat, lng]).addTo(mymap);
-      const popupContent = `
-      <div class="popup-form">
-        <h3>Neuer Eintrag</h3>
-        <p>Bitte Trailcenter einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
-        <div class="type-switch">
-          <label class="type-option">
-            <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" checked>
-            <span class="switch-btn">Trail</span>
-          </label>
-
-          <label class="type-option">
-            <input type="radio" name="trailType" value="bikepark">
-            <span class="switch-btn">Bike Park</span>
-          </label>
-        </div>
-        <label>
-          <span>Name*</span>
-          <input type="text" id="trailName" placeholder="Trailname" required>
-        </label>
-        <label>
-          <span>Website</span>
-          <input type="url" id="trailUrl" placeholder="https://...">
-        </label>
-        <label>
-          <span>Instagram vom Verein/Trailbauer</span><span class="optional"> (optional)</span>
-          <input type="text" id="trailInsta" placeholder="@username">
-        </label>
-        <label>
-          <span>Eingetragen von... (Nickname etc.)</span><span class="optional"> (optional)</span>
-          <input type="text" id="trailCreator" placeholder="Dein Name oder Nick, Instagram etc.">
-        </label>
-        <div class="popup-actions">
-          <button id="saveTrailBtn" class="save">Speichern</button>
-          <button id="cancelTrailBtn" class="cancel">Abbrechen</button>
-        </div>
-      </div>
-    `;
-      marker.bindPopup(popupContent, {
-        maxWidth: "auto"
-      });
-
-      addMode = false;
-      addBtn.textContent = '+ Trail hinzufügen';
-      addBtn.style.background = '#2b6cb0';
-      mymap.getContainer().classList.remove('crosshair-cursor');
-
-      
-      marker.on("popupopen", () => {
-        const saveBtn = document.getElementById("saveTrailBtn");
-        const cancelBtn = document.getElementById("cancelTrailBtn");
-  
-        saveBtn.addEventListener("click", async () => {
-          const isTrail = document.getElementById("trailTypeSwitch").checked;
-          const trail = {
-            name: document.getElementById("trailName").value.trim(),
-            url: document.getElementById("trailUrl").value.trim(),
-            instagram: document.getElementById("trailInsta").value.trim(),
-            creator: document.getElementById("trailCreator").value.trim(),
-            latitude: lat,
-            longitude: lng,
-          };
-  
-          if (!trail.name) {
-            alert("Bitte gib einen Namen ein.");
-            return;
-          }
-  
-          saveBtn.classList.add("loading");
-          try {
-            await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${isTrail? 'add-trail' : 'bike-parks'}`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4YWZlZ214a2FkYnpoeG1lcHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Mjc1MzAsImV4cCI6MjA3NjIwMzUzMH0.BRbdccgrW7aZpvB_S4_qKn_BRcfPMyWjQAVuVuy2wyQ",
-              },
-              body: JSON.stringify(trail),
-            });
-
-            marker.bindPopup(getTrailPopup(trail));
-            showToast("Trail erfolgreich gespeichert ✅", "success");
-          } catch (err) {
-            console.error("Error saving trail:", err);
-            showToast("Fehler beim Speichern ❌", "error");
-            return;            
-          }finally {
-            saveBtn.classList.remove("loading");
-            marker.closePopup();
-            resetAddMode();
-          }          
-        });
-  
-        cancelBtn.addEventListener("click", () => {
-          mymap.removeLayer(marker);
-          resetAddMode();
-        });
-      });
-
-      marker.openPopup();
+      const nearByTrail = giveTrailNearBy(e.latlng, trails);
+      if(nearByTrail)
+        askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng), () => reportAbort());        
+      else
+        openCreateTrailPopup(mymap, e.latlng);      
     });
+}
+
+function openCreateTrailPopup(mymap, latlng) {
+  const { lat, lng } = latlng;
+      
+  const marker = L.marker([lat, lng]).addTo(mymap);
+  const popupContent = `
+  <div class="popup-form">
+    <h3>Neuer Eintrag</h3>
+    <p>Bitte Trailcenter einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
+    <div class="type-switch">
+      <label class="type-option">
+        <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" checked>
+        <span class="switch-btn">Trail</span>
+      </label>
+
+      <label class="type-option">
+        <input type="radio" name="trailType" value="bikepark">
+        <span class="switch-btn">Bike Park</span>
+      </label>
+    </div>
+    <label>
+      <span>Name*</span>
+      <input type="text" id="trailName" placeholder="Trailname" required>
+    </label>
+    <label>
+      <span>Website</span>
+      <input type="url" id="trailUrl" placeholder="https://...">
+    </label>
+    <label>
+      <span>Instagram vom Verein/Trailbauer</span><span class="optional"> (optional)</span>
+      <input type="text" id="trailInsta" placeholder="@username">
+    </label>
+    <label>
+      <span>Eingetragen von... (Nickname etc.)</span><span class="optional"> (optional)</span>
+      <input type="text" id="trailCreator" placeholder="Dein Name oder Nick, Instagram etc.">
+    </label>
+    <div class="popup-actions">
+    <button id="cancelTrailBtn" class="cancel">Abbrechen</button>
+    <button id="saveTrailBtn" class="save">Speichern</button>
+    </div>
+  </div>
+`;
+  marker.bindPopup(popupContent, {
+    maxWidth: "auto"
+  });
+
+  addMode = false;
+  addBtn.textContent = '+ Trail hinzufügen';
+  addBtn.style.background = '#2b6cb0';
+  mymap.getContainer().classList.remove('crosshair-cursor');
+
+  
+  marker.on("popupopen", () => {
+    const saveBtn = document.getElementById("saveTrailBtn");
+    const cancelBtn = document.getElementById("cancelTrailBtn");
+
+    saveBtn.addEventListener("click", async () => {
+      const isTrail = document.getElementById("trailTypeSwitch").checked;
+      const trail = {
+        name: document.getElementById("trailName").value.trim(),
+        url: document.getElementById("trailUrl").value.trim(),
+        instagram: document.getElementById("trailInsta").value.trim(),
+        creator: document.getElementById("trailCreator").value.trim(),
+        latitude: lat,
+        longitude: lng,
+      };
+
+      if (!trail.name) {
+        alert("Bitte gib einen Namen ein.");
+        return;
+      }
+
+      saveBtn.classList.add("loading");
+      try {
+        await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${isTrail? 'add-trail' : 'bike-parks'}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${anon}`,
+          },
+          body: JSON.stringify(trail),
+        });
+
+        marker.bindPopup(getTrailPopup(trail));
+        showToast("Trail erfolgreich gespeichert ✅", "success");
+      } catch (err) {
+        console.error("Error saving trail:", err);
+        showToast("Fehler beim Speichern ❌", "error");
+        return;            
+      }finally {
+        saveBtn.classList.remove("loading");
+        marker.closePopup();
+        resetAddMode(mymap);
+      }          
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      mymap.removeLayer(marker);
+      resetAddMode(mymap);
+    });
+  });
+
+  marker.openPopup();
 }
 
 function getTrailMarkers(cluster, trails) {
