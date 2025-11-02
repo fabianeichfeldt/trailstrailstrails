@@ -643,6 +643,10 @@ img.leaflet-marker-icon.marker-bikepark {
   filter: hue-rotate(270deg);
 }
 
+img.leaflet-marker-icon.marker-dirtpark {
+  filter: hue-rotate(90deg);
+}
+
 
 .map-legend {
   display: flex;

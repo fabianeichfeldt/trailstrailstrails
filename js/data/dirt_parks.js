@@ -1,7 +1,7 @@
 import { anon } from "../anon.js";
 
-export async function getParks() {
-  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/bike-parks", {
+export async function getDirtParks() {
+  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-parks", {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -16,3 +16,4 @@ export async function getParks() {
   const json = await response.json();
   return json.data;
 }
+

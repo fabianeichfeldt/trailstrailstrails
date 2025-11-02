@@ -1,4 +1,5 @@
 import { getParks } from "./data/bikeparks.js";
+import { getDirtParks } from "./data/dirt_parks.js";
 import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
 import { showToast } from "./toast.js";
 import { getApproxLocation, locations } from "./locations.js";
@@ -119,20 +120,32 @@ async function init() {
     mymap.addLayer(useCluster ? clusterGroup : markerGroup);
   
     if (useCluster && clusterGroup.getLayers().length === 0) {
-      renderMarkers(clusterGroup, trails, bikeparks);
+      renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
     } else if (!useCluster && markerGroup.getLayers().length === 0) {
-      renderMarkers(markerGroup, trails, bikeparks);
+      renderMarkers(markerGroup, trails, bikeparks, dirtparks);
     }
   });
 
   const clusterGroup = L.markerClusterGroup();
   const markerGroup = L.layerGroup();
 
-  function renderMarkers(targetGroup, trails, parks) {
+  function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
   
     for (const park of parks)
-      L.marker([park.latitude, park.longitude], { icon: createCustomIcon("bikepark") })
+      L.marker([park.latitude, park.longitude], { icon: createCustomIcon(park.approved ? "bikepark" : "unverified") })
+        .addTo(targetGroup)
+        .bindPopup(
+          `<div class="popup-content">
+            <a href="${park.url}" target="_blank">${park.name}
+            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+          </div>`
+        ,{
+          maxWidth: "auto"
+        });
+
+    for (const park of dirtParks)
+      L.marker([park.latitude, park.longitude], { icon: createCustomIcon(park.approved ? "dirtpark" : "unverified") })
         .addTo(targetGroup)
         .bindPopup(
           `<div class="popup-content">
@@ -146,10 +159,14 @@ async function init() {
     trailMarkers = getTrailMarkers(targetGroup, trails);
   }
 
-  const trails = await getTrails();
-  const bikeparks = await getParks();
+  const [trails, bikeparks, dirtparks] = await Promise.all([
+    getTrails(),
+    getParks(),
+    getDirtParks()
+  ]);
+  
   let trailMarkers = []
-  renderMarkers(clusterGroup, trails, bikeparks);
+  renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
   mymap.addLayer(clusterGroup);
 
   generateNews(trails);
