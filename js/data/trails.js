@@ -28,7 +28,13 @@ export async function getTrailDetails(id, type) {
     });
   }
   else if(type === 'bikepark') {
-    return {};
+    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/bike-parks-details?id=${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${anon}`,
+      },
+    });
   }
   else {
     response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details?trail=${id}`, {
