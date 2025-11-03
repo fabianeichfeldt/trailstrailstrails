@@ -132,31 +132,10 @@ async function init() {
   function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
   
-    for (const park of parks)
-      L.marker([park.latitude, park.longitude], { icon: createCustomIcon(park.approved ? "bikepark" : "unverified") })
-        .addTo(targetGroup)
-        .bindPopup(
-          `<div class="popup-content">
-            <a href="${park.url}" target="_blank">${park.name}
-            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-          </div>`
-        ,{
-          maxWidth: "auto"
-        });
-
-    for (const park of dirtParks)
-      L.marker([park.latitude, park.longitude], { icon: createCustomIcon(park.approved ? "dirtpark" : "unverified") })
-        .addTo(targetGroup)
-        .bindPopup(
-          `<div class="popup-content">
-            <a href="${park.url}" target="_blank">${park.name}
-            <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-          </div>`
-        ,{
-          maxWidth: "auto"
-        });
+    getMarkers(targetGroup, parks, "bikepark");
+    getMarkers(targetGroup, dirtParks, "dirtpark");
   
-    trailMarkers = getTrailMarkers(targetGroup, trails);
+    trailMarkers = getMarkers(targetGroup, trails, "trail");
   }
 
   const [trails, bikeparks, dirtparks] = await Promise.all([
@@ -318,13 +297,13 @@ function openCreateTrailPopup(mymap, latlng) {
   marker.openPopup();
 }
 
-function getTrailMarkers(cluster, trails) {
+function getMarkers(cluster, trails, type) {
   const trailMarkers = [];
 
   for (const trail of trails) {
     const popupHtml = getTrailPopup(trail);
 
-    const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved ? "verified" : "unverified") })
+    const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved, type) })
       .addTo(cluster)
       .bindPopup(popupHtml, {
         maxWidth: "auto"
@@ -333,7 +312,7 @@ function getTrailMarkers(cluster, trails) {
     marker.on("popupopen", async (e) => {
       try {
         const popup = e.popup;
-        const details = await getTrailDetails(trail.id);
+        const details = await getTrailDetails(trail.id, type);
     
         const rules = (details.rules && details.rules.length > 0)? details.rules : ["Keine besonderen Regeln bekannt."];
         const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
