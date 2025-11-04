@@ -310,8 +310,8 @@ function getMarkers(cluster, trails, type) {
       });
 
     marker.on("popupopen", async (e) => {
+      const popup = e.popup;
       try {
-        const popup = e.popup;
         const details = await getTrailDetails(trail.id, type);
     
         const rules = (details.rules && details.rules.length > 0)? details.rules : ["Keine besonderen Regeln bekannt."];
