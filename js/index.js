@@ -16,8 +16,14 @@ window.upVote = async function(trailID, el) {
   showToast("Danke für dein Feedback! 🙏", "success");
 };
 
-let addMode = false;
+let addMode = undefined;
 let addBtn;
+
+const types = {
+  trail: "Trail",
+  bikepark: "Bike Park",
+  dirtpark: "Dirtpark/Pumptrack"
+}
 
 function generateNews(trails) {
   const container = document.getElementById("news");
@@ -72,7 +78,7 @@ function pageCounter() {
 }
 
 function resetAddMode(map) {
-  addMode = false;
+  addMode = undefined;
   addBtn.textContent = "+ Trail hinzufügen";
   addBtn.style.background = "#2b6cb0";
   map._container.classList.remove("crosshair-cursor");
@@ -158,13 +164,25 @@ async function init() {
       });
     });
 
-  addMode = false;
+  addMode = undefined;
 
-    addBtn = document.getElementById('addTrailBtn');
-
-    addBtn.addEventListener('click', () => {
-      addMode = !addMode;
-      if (addMode) {
+  addBtn = document.getElementById('add-btn');
+  const fabMenu = document.getElementById('fab-menu');
+  
+  addBtn.addEventListener('click', () => {
+    fabMenu.classList.toggle('hidden');
+    addBtn.classList.toggle('active');
+    if(!!addMode)
+      resetAddMode(mymap);
+  });
+  
+  fabMenu.addEventListener('click', (e) => {
+    if (e.target.classList.contains('fab-item')) {
+      const type = e.target.dataset.type;
+      fabMenu.classList.add('hidden');
+  
+      addMode = type;
+      if (!!addMode) {
         addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
         addBtn.style.background = '#38a169';
         mymap.getContainer().classList.add('crosshair-cursor');
@@ -173,7 +191,16 @@ async function init() {
         addBtn.style.background = '#2b6cb0';
         mymap.getContainer().classList.remove('crosshair-cursor');
       }
-    });
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    const inWrapper = e.target.closest('.add-wrapper');
+    if (!inWrapper) {
+      fabMenu.classList.add('hidden');
+      addBtn.classList.remove('active');
+    }
+  });
 
     document.getElementById("communityBtn")?.addEventListener("click", () => {
       const section = document.getElementById("community");
@@ -187,30 +214,49 @@ async function init() {
 
       const nearByTrail = giveTrailNearBy(e.latlng, trails);
       if(nearByTrail)
-        askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng), () => reportAbort());        
+        askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng, addMode), () => reportAbort());        
       else
-        openCreateTrailPopup(mymap, e.latlng);      
+        openCreateTrailPopup(mymap, e.latlng, addMode);      
     });
 }
 
-function openCreateTrailPopup(mymap, latlng) {
+function openCreateTrailPopup(mymap, latlng, type) {
+  console.log(type);
   const { lat, lng } = latlng;
       
   const marker = L.marker([lat, lng]).addTo(mymap);
   const popupContent = `
   <div class="popup-form">
     <h3>Neuer Eintrag</h3>
-    <p>Bitte Trailcenter einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
+    <p>Bitte ${types[type]} einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
     <div class="type-switch">
       <label class="type-option">
-        <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" checked>
+        <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" ${type === 'trail' ? 'checked' : ''} disabled>
         <span class="switch-btn">Trail</span>
       </label>
 
       <label class="type-option">
-        <input type="radio" name="trailType" value="bikepark">
+        <input type="radio" name="trailType" value="bikepark" ${type === 'bikepark' ? 'checked' : ''} disabled>
         <span class="switch-btn">Bike Park</span>
       </label>
+      <label class="type-option">
+        <input type="radio" id="trailTypeSwitch" name="trailType" value="dirtpark" ${type === 'dirtpark' ? 'checked' : ''} disabled>
+        <span class="switch-btn">Dirtpark/Pumptrack</span>
+      </label>
+    </div>
+    <div style="display:${type === 'dirtpark' ? 'block' : 'none'};">
+      <label class="checkbox-label-explain">Was findest du hier?</label>
+      <div class="multi-select">
+        <label class="multi-option">
+        <input type="checkbox" id="hasPumprack" name="subType" value="pumptrack">
+        <span class="multi-btn">Pumptrack</span>
+        </label>
+        
+        <label class="multi-option">
+        <input type="checkbox" name="subType" id="hasDirtpark" value="dirtpark">
+        <span class="multi-btn">Dirtpark</span>
+        </label>
+      </div>
     </div>
     <label>
       <span>Name*</span>
@@ -237,19 +283,12 @@ function openCreateTrailPopup(mymap, latlng) {
   marker.bindPopup(popupContent, {
     maxWidth: "auto"
   });
-
-  addMode = false;
-  addBtn.textContent = '+ Trail hinzufügen';
-  addBtn.style.background = '#2b6cb0';
-  mymap.getContainer().classList.remove('crosshair-cursor');
-
   
   marker.on("popupopen", () => {
     const saveBtn = document.getElementById("saveTrailBtn");
     const cancelBtn = document.getElementById("cancelTrailBtn");
 
     saveBtn.addEventListener("click", async () => {
-      const isTrail = document.getElementById("trailTypeSwitch").checked;
       const trail = {
         name: document.getElementById("trailName").value.trim(),
         url: document.getElementById("trailUrl").value.trim(),
@@ -263,10 +302,20 @@ function openCreateTrailPopup(mymap, latlng) {
         alert("Bitte gib einen Namen ein.");
         return;
       }
+      if (addMode === 'dirtpark') {
+        trail.dirtpark = document.getElementById("hasDirtpark").checked;
+        trail.pumptrack = document.getElementById("hasPumprack").checked;
+
+        if(!trail.pumptrack && !trail.dirtpark) {
+          alert("Bitte wähle aus ob Pumptrack oder Dirtpark vorzufinden sind.");
+          return;
+        }
+      }
 
       saveBtn.classList.add("loading");
       try {
-        await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${isTrail? 'add-trail' : 'bike-parks'}`, {
+        const endpoint = addMode === 'trail'? 'add-trail' : (addMode === 'bikepark' ? 'bike-parks' : 'dirt-parks');
+        await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${endpoint}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

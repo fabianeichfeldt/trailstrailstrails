@@ -30,6 +30,7 @@
     <link href="/css/community.css" rel="stylesheet" />
     <link href="/css/feedback_button.css" rel="stylesheet" />
     <link href="/css/nearby_modal.css" rel="stylesheet" />
+    <link href="/css/add_btn.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
@@ -51,8 +52,15 @@
 
       <div class="map-controls">
         <button id="communityBtn" class="btn-community-top">💪 Community</button>
-
-        <button class="add-trail-btn" id="addTrailBtn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
+        
+        <div class="add-wrapper">
+          <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
+          <div id="fab-menu" class="fab-menu hidden">
+            <button class="fab-item" data-type="trail"><img src="./assets/trail.png" width="20"/> Trail </button>
+            <button class="fab-item" data-type="bikepark"><img src="./assets/bike_park.png" width="20"/> Bikepark </button>
+            <button class="fab-item" data-type="dirtpark"><img src="./assets/bmx_bike.png" width="20"/> Dirtpark/Pumptrack</button>
+          </div>
+      </div>
       
         <label class="cluster-switch">
           <input type="checkbox" id="clusterToggle" checked />
@@ -135,6 +143,8 @@
         </div>
       
         <!-- <a href="/community" class="btn-community">Mehr erfahren →</a> -->
+        <a href="https://www.flaticon.com/free-icons/bmx-bike" title="bmx bike icons">Bmx bike icons created by gravisio - Flaticon</a>
+        <a href="https://www.flaticon.com/free-icons/mtb" title="mtb icons">Mtb icons created by gravisio - Flaticon</a>
       </section>
       <section class="seo-text">
         <h2>Entdecke legale MTB Trails in deiner Nähe</h2>

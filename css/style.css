@@ -67,14 +67,6 @@ header .logo {
     gap: 0.8rem;
   }
 
-  .add-trail-btn {
-    width: 90%;
-    max-width: 320px;
-    font-size: 1.2rem;
-    padding: 0.5rem;
-    border-radius: 10px;
-  }
-
   .cluster-switch {
     gap: 0.8rem;
     font-size: 1.1rem;
@@ -378,28 +370,6 @@ a:hover {
 .btn-community-top:active {
   opacity: 0.8;
   transform: scale(0.98);
-}
-
-.add-trail-btn {
-  z-index: 1000;
-  background: #2b6cb0;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.7rem 1.4rem;
-  cursor: pointer;
-  font-size: 1rem;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
-  transition: background 0.2s, transform 0.1s;
-}
-
-.add-trail-btn:hover {
-  background: #3182ce;
-}
-
-.add-trail-btn:active {
-  opacity: 0.8;
-  scale: 0.97;
 }
 
 .map-controls {

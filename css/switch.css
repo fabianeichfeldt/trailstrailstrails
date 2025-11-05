@@ -1,20 +1,20 @@
 .type-switch {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    background: #f1f5f9;
-    border-radius: 9999px;
-    padding: 0.25rem;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    font-family: system-ui, sans-serif;
-    gap: 0.25rem;
-    width: auto;               /* wichtig: verhindert 100% Breite */
-    align-self: center;        /* zentriert im Formular */
-    margin-top: 0.3rem;
-  }
-  
-  .type-option {
-    position: relative;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  padding: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  font-family: system-ui, sans-serif;
+  gap: 0.25rem;
+  width: auto;               
+  align-self: center;        
+  margin-top: 0.3rem;
+}
+
+.type-option {
+  position: relative;
     cursor: pointer;
     user-select: none;
   }
@@ -36,14 +36,61 @@
     transition: all 0.2s ease;
   }
   
-  /* Hover */
   .type-option:hover .switch-btn {
     background: #e2e8f0;
   }
   
-  /* Checked */
   .type-option input:checked + .switch-btn {
     background: #2b6cb0;
     color: white;
     box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  
+  .multi-select {
+    display:flex;
+    gap:6px;
+  }
+  
+  .multi-select .hidden {
+    display:none;
+  }
+  
+  .multi-btn {
+    display:inline-flex;
+    align-items:center;
+    padding:3px 10px;
+    border-radius:6px;
+    border:1px solid #2b6cb0;
+    font-size:0.8rem;
+    color:#2b6cb0;
+    background:#fff;
+    cursor:pointer;
+    transition:all 0.2s;
+  }
+  
+  .multi-option input:checked + .multi-btn {
+    background:#2b6cb0;
+    color:white;
+  }
+  
+  .multi-option input {
+    display:none;
+    pointer-events: none;
+  }
+
+  .multi-option {
+    outline: none;
+  }
+  
+  .multi-option * {
+    outline: none;
+  }
+  
+  .multi-option:focus-within {
+    outline: none;
+  }
+  
+  .multi-option span {
+    user-select: none;
+    pointer-events: none;
   }
