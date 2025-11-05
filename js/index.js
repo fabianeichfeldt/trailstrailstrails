@@ -360,14 +360,28 @@ function getMarkers(cluster, trails, type) {
 
     marker.on("popupopen", async (e) => {
       const popup = e.popup;
+      const dirtparkInfo = type === 'dirtpark' ? `<div class="popup-section">
+        <div class="multi-select">
+          <label class="multi-option">
+          <input type="checkbox" id="hasPumprack" name="subType" value="pumptrack" ${trail.pumptrack ? 'checked' : ''} disabled>
+          <span class="multi-btn">${trail.pumptrack ? '✅' : '❌'} Pumptrack</span>
+          </label>
+          
+          <label class="multi-option">
+          <input type="checkbox" name="subType" id="hasDirtpark" value="dirtpark" ${trail.dirtpark ? 'checked' : ''} disabled>
+          <span class="multi-btn">${trail.dirtpark ? '✅' : '❌'} Dirtpark</span>
+          </label>
+        </div>
+      </div>` : '';
       try {
+
         const details = await getTrailDetails(trail.id, type);
     
         const rules = (details.rules && details.rules.length > 0)? details.rules : ["Keine besonderen Regeln bekannt."];
         const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
     
         const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
-        const detailsHTML = `
+        const detailsHTML = `${dirtparkInfo}
           <div class="popup-section">
             <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
             <p>${hours}</p>
@@ -391,11 +405,11 @@ function getMarkers(cluster, trails, type) {
     
         const container = popup.getElement()?.querySelector('.popup-section.loading');
         if (container) container.outerHTML = detailsHTML;
-    
+
       } catch (err) {
         console.error("Fehler beim Laden der Details:", err);
         const container = popup.getElement()?.querySelector('.popup-section.loading');
-        if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
+        if (container) container.outerHTML = `${dirtparkInfo}<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
       }
     });
     trailMarkers.push(marker);
