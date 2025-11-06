@@ -93,7 +93,12 @@ async function init() {
 
   const path = window.location.pathname;
   const match = path.match(/^\/trails\/([^/]+)/);
-  var mymap = L.map(el);
+  var mymap = L.map(el, {
+    fullscreenControl: true,
+    fullscreenControlOptions: {
+        position: 'topleft'
+    }
+  });
 
   if (match && match[1] && match[1].length > 0 && match[1].toLowerCase() !== "nearby") {
     locations.find(loc => {
