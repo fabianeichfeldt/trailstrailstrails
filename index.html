@@ -7,11 +7,11 @@
     <link rel="apple-touch-icon" href="/assets/logo.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
     <meta name="theme-color" content="#0077cc">
-    <meta name="description" content="TrailRadar zeigt dir legale, offizielle MTB Trails in Deutschland – übersichtlich auf der Karte, mit Schließungen & Trailregeln.">
+    <meta name="description" content="TrailRadar zeigt dir legal gebaute, offizielle MTB Trails in Deutschland – übersichtlich auf der Karte, mit Schließungen & Trailregeln.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trailradar.org/">
     <meta property="og:title" content="Trailradar.org - trails·trails·trails">
-    <meta property="og:description" content="Hier findest du legale, extra fürs Mountainbike angelegte Trails – interaktive Karte inklusive.">
+    <meta property="og:description" content="Hier findest du offizielle genehmigte, extra fürs Mountainbike angelegte Trails – interaktive Karte inklusive.">
     <meta property="og:image" content="https://trailradar.org/assets/logo.png">
     <meta property="og:image_secure_url" content="https://trailradar.org/assets/logo.png" itemprop="image">
     <meta property="og:image:type" content="image/jpeg">
@@ -44,16 +44,39 @@
   <body>
     <main>
       <header>
+        <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
+          <i class="fas fa-bars"></i>
+        </button>
+        
+        <div id="drawerOverlay" class="drawer-overlay"></div>
+        
+        <nav id="drawer" class="drawer">
+          <div class="drawer-header">
+            <img src="/assets/logo.png" alt="Trailradar Logo" class="drawer-logo" />
+            <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
+          </div>
+        
+          <ul class="drawer-menu">
+            <li><label class="cluster-switch">
+              <input type="checkbox" id="clusterToggle" checked />
+              <span class="slider"></span>
+              <span class="switch-label">Gruppierung</span>
+            </label>
+            </li>
+            <li class="only-visible-on-mobile"><a href="#news">📆 News</a></li>
+            <li class="only-visible-on-mobile"><a href="#contact">📬 Kontakt</a></li>
+            <li><a href="#community">💪 Community</a></li>
+            <li><a href="/legal.html">⚖️ Was ist "offiziell"?</a></li>
+          </ul>
+        </nav>
         <img src="/assets/logo.png" alt="trails logo" class="logo" />
         <h1>Finde <span style="color: grey;">Offizielle </span>MTB Trails</h1>
-        <a href="#news" class="news-link">News</a>
         <p>
-          Legale Trails. Echter Fahrspaß. Community-powered.
+          Offizielle Trails. Echter Fahrspaß. Community-powered.
         </p>
       </header>
 
       <div class="map-controls">
-        <button id="communityBtn" class="btn-community-top">💪 Community</button>
         
         <div class="add-wrapper">
           <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
@@ -63,12 +86,6 @@
             <button class="fab-item" data-type="dirtpark"><img src="./assets/bmx_bike.png" width="20"/> Dirtpark/Pumptrack</button>
           </div>
       </div>
-      
-        <label class="cluster-switch">
-          <input type="checkbox" id="clusterToggle" checked />
-          <span class="slider"></span>
-          <span class="switch-label">Gruppierung</span>
-        </label>
 
       </div>
       <section class="content">
@@ -80,7 +97,7 @@
             <p>Lade Neuigkeiten...</p>
           </div>
 
-          <div class="text-section">
+          <div class="text-section" id="contact">
             <p>
               Vorschläge für weitere Strecken könnt ihr gerne im
               <a href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/"
@@ -164,9 +181,9 @@
         <a href="https://www.flaticon.com/free-icons/mtb" title="mtb icons">Mtb icons created by gravisio - Flaticon</a>
       </section>
       <section class="seo-text">
-        <h2>Entdecke legale MTB Trails in deiner Nähe</h2>
+        <h2>Entdecke offizielle MTB Trails in deiner Nähe</h2>
         <p>
-          TrailRadar zeigt offizielle, legale Mountainbike-Strecken – gesammelt von der Community.
+          TrailRadar zeigt offizielle, legal gebaute Mountainbike-Strecken – gesammelt von der Community.
           Finde <a href="/trails/pfalz">Trails in der Pfalz, </a>
           <a href="/trails/schwarzwald">Trails im Schwarzwald, </a>
           <a href="/trails/allgaeu">Trails im Allgaeu, </a>

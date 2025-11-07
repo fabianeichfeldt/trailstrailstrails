@@ -122,6 +122,7 @@ async function init() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(mymap);
 
+  initBurgerBtn();
   const clusterToggle = document.getElementById("clusterToggle");
 
   clusterToggle.addEventListener("change", (e) => {
@@ -223,6 +224,26 @@ async function init() {
       else
         openCreateTrailPopup(mymap, e.latlng, addMode);      
     });
+}
+
+function initBurgerBtn() {
+  const burgerBtn = document.getElementById('burgerBtn');
+  const drawer = document.getElementById('drawer');
+  const drawerOverlay = document.getElementById('drawerOverlay');
+  const drawerClose = document.getElementById('drawerClose');
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    drawerOverlay.classList.add('active');
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawerOverlay.classList.remove('active');
+  }
+
+  burgerBtn.addEventListener('click', openDrawer);
+  drawerClose.addEventListener('click', closeDrawer);
+  drawerOverlay.addEventListener('click', closeDrawer);
 }
 
 function openCreateTrailPopup(mymap, latlng, type) {
