@@ -416,17 +416,18 @@ function getMarkers(cluster, trails, type) {
             <h4>📜 Nutzungsregeln</h4>
             ${rulesHTML}
           </div>
-          <div class="popup-feedback" data-trail-id="${trail.id}">
-            <span class="feedback-label">Sind diese Infos hilfreich?</span>
-            <div class="feedback-buttons">
-              <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
-                <i class="fa-solid fa-thumbs-up"></i>
-              </button>
-              <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
-                <i class="fa-solid fa-thumbs-down"></i>
-              </button>
+            <div class="popup-feedback" data-trail-id="${trail.id}">
+              <span class="feedback-label">Sind diese Infos hilfreich?</span>
+              <div class="feedback-buttons">
+                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
+                  <i class="fa-solid fa-thumbs-up"></i>
+                </button>
+                <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
+                  <i class="fa-solid fa-thumbs-down"></i>
+                </button>
+              </div>
             </div>
-          </div>
+            <span style="font-size:0.75rem">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert von KI</span>
         `;
     
         const container = popup.getElement()?.querySelector('.popup-section.loading');
