@@ -5,92 +5,167 @@
   background: #f1f5f9;
   border-radius: 9999px;
   padding: 0.25rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-family: system-ui, sans-serif;
   gap: 0.25rem;
-  width: auto;               
-  align-self: center;        
+  width: auto;
+  align-self: center;
   margin-top: 0.3rem;
 }
 
 .type-option {
   position: relative;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  .type-option input {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .switch-btn {
-    display: inline-block;
-    padding: 0.35rem 0.8rem;
-    border-radius: 9999px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: #333;
-    background: transparent;
-    transition: all 0.2s ease;
-  }
-  
-  .type-option:hover .switch-btn {
-    background: #e2e8f0;
-  }
-  
-  .type-option input:checked + .switch-btn {
-    background: #2b6cb0;
-    color: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-  }
-  
-  .multi-select {
-    display:flex;
-    gap:6px;
-  }
-  
-  .multi-select .hidden {
-    display:none;
-  }
-  
-  .multi-btn {
-    display:inline-flex;
-    align-items:center;
-    padding:3px 10px;
-    border-radius:6px;
-    border:1px solid #2b6cb0;
-    font-size:0.8rem;
-    color:#2b6cb0;
-    background:#fff;
-    cursor:pointer;
-    transition:all 0.2s;
-  }
-  
-  .multi-option input:checked + .multi-btn {
-    background:#2b6cb0;
-    color:white;
-  }
-  
-  .multi-option input {
-    display:none;
-    pointer-events: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.type-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.switch-btn {
+  display: inline-block;
+  padding: 0.35rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #333;
+  background: transparent;
+  transition: all 0.2s ease;
+}
+
+.type-option:hover .switch-btn {
+  background: #e2e8f0;
+}
+
+.type-option input:checked+.switch-btn {
+  background: #2b6cb0;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.multi-select {
+  display: flex;
+  gap: 6px;
+}
+
+.multi-select .hidden {
+  display: none;
+}
+
+.multi-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 6px;
+  border: 1px solid #2b6cb0;
+  font-size: 0.8rem;
+  color: #2b6cb0;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.multi-option input:checked+.multi-btn {
+  background: #2b6cb0;
+  color: white;
+}
+
+.multi-option input {
+  display: none;
+  pointer-events: none;
+}
+
+.multi-option {
+  outline: none;
+}
+
+.multi-option * {
+  outline: none;
+}
+
+.multi-option:focus-within {
+  outline: none;
+}
+
+.multi-option span {
+  user-select: none;
+  pointer-events: none;
+}
+
+.cluster-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.95rem;
+  color: #444;
+  gap: 0.5rem;
+}
+
+.cluster-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cluster-switch .slider {
+  position: relative;
+  width: 42px;
+  height: 22px;
+  background-color: #ccc;
+  border-radius: 22px;
+  transition: background-color 0.3s ease;
+}
+
+.cluster-switch .slider::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.cluster-switch input:checked+.slider {
+  background-color: #0077cc;
+}
+
+.cluster-switch input:checked+.slider::before {
+  transform: translateX(20px);
+}
+
+.cluster-switch .switch-label {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+@media (max-width: 1000px) {
+  .cluster-switch {
+    gap: 0.8rem;
+    font-size: 1.1rem;
   }
 
-  .multi-option {
-    outline: none;
+  .cluster-switch .slider {
+    width: 54px;
+    height: 30px;
   }
-  
-  .multi-option * {
-    outline: none;
+
+  .cluster-switch .slider::before {
+    width: 22px;
+    height: 22px;
+    top: 4px;
+    left: 4px;
   }
-  
-  .multi-option:focus-within {
-    outline: none;
+
+  .cluster-switch input:checked+.slider::before {
+    transform: translateX(24px);
   }
-  
-  .multi-option span {
-    user-select: none;
-    pointer-events: none;
-  }
+}
