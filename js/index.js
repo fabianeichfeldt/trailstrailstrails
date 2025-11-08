@@ -7,11 +7,11 @@ import { upVote, downVote } from './feedback.js';
 import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails.js";
 import { anon } from "./anon.js";
 
-window.downVote = async function(trailID, el) {
+window.downVote = async function (trailID, el) {
   await downVote(trailID, el);
   showToast("Danke für dein Feedback! 🙏", "success");
 };
-window.upVote = async function(trailID, el) {
+window.upVote = async function (trailID, el) {
   await upVote(trailID, el);
   showToast("Danke für dein Feedback! 🙏", "success");
 };
@@ -94,9 +94,17 @@ async function init() {
   const path = window.location.pathname;
   const match = path.match(/^\/trails\/([^/]+)/);
   var mymap = L.map(el, {
+    gestureHandling: true,
+    gestureHandlingOptions: {
+      text: {
+        touch: "Benutze 2 Finger um die Karte zu bewegen",
+        scroll: "Benutze ctrl + scroll um die Karte zu zoomen",
+        scrollMac: "Benutze \u2318 + scroll um die Karte zu zoomen"
+      }
+    },
     fullscreenControl: true,
     fullscreenControlOptions: {
-        position: 'topleft'
+      position: 'topleft'
     }
   });
 
@@ -127,10 +135,10 @@ async function init() {
 
   clusterToggle.addEventListener("change", (e) => {
     const useCluster = e.target.checked;
-  
+
     mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
     mymap.addLayer(useCluster ? clusterGroup : markerGroup);
-  
+
     if (useCluster && clusterGroup.getLayers().length === 0) {
       renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
     } else if (!useCluster && markerGroup.getLayers().length === 0) {
@@ -143,10 +151,10 @@ async function init() {
 
   function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
-  
+
     getMarkers(targetGroup, parks, "bikepark");
     getMarkers(targetGroup, dirtParks, "dirtpark");
-  
+
     trailMarkers = getMarkers(targetGroup, trails, "trail");
   }
 
@@ -155,14 +163,14 @@ async function init() {
     getParks(),
     getDirtParks()
   ]);
-  
+
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
   mymap.addLayer(clusterGroup);
 
   generateNews(trails);
 
-  for(let i = 1; i <= 6; i++)
+  for (let i = 1; i <= 6; i++)
     document.getElementById(`show-last-${i}`).addEventListener("click", () => {
       const newsMarker = trailMarkers.at(-i);
       clusterGroup.zoomToShowLayer(newsMarker, () => {
@@ -174,19 +182,19 @@ async function init() {
 
   addBtn = document.getElementById('add-btn');
   const fabMenu = document.getElementById('fab-menu');
-  
+
   addBtn.addEventListener('click', () => {
     fabMenu.classList.toggle('hidden');
     addBtn.classList.toggle('active');
-    if(!!addMode)
+    if (!!addMode)
       resetAddMode(mymap);
   });
-  
+
   fabMenu.addEventListener('click', (e) => {
     if (e.target.classList.contains('fab-item')) {
       const type = e.target.dataset.type;
       fabMenu.classList.add('hidden');
-  
+
       addMode = type;
       if (!!addMode) {
         addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
@@ -208,22 +216,22 @@ async function init() {
     }
   });
 
-    document.getElementById("communityBtn")?.addEventListener("click", () => {
-      const section = document.getElementById("community");
-      if (section) {
-        section.scrollIntoView({ behavior: "smooth" });
-      }
-    });
+  document.getElementById("communityBtn")?.addEventListener("click", () => {
+    const section = document.getElementById("community");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  });
 
-    mymap.on('click', (e) => {
-      if (!addMode) return;
+  mymap.on('click', (e) => {
+    if (!addMode) return;
 
-      const nearByTrail = giveTrailNearBy(e.latlng, trails);
-      if(nearByTrail)
-        askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng, addMode), () => reportAbort());        
-      else
-        openCreateTrailPopup(mymap, e.latlng, addMode);      
-    });
+    const nearByTrail = giveTrailNearBy(e.latlng, trails);
+    if (nearByTrail)
+      askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng, addMode), () => reportAbort());
+    else
+      openCreateTrailPopup(mymap, e.latlng, addMode);
+  });
 }
 
 function initBurgerBtn() {
@@ -249,7 +257,7 @@ function initBurgerBtn() {
 function openCreateTrailPopup(mymap, latlng, type) {
   console.log(type);
   const { lat, lng } = latlng;
-      
+
   const marker = L.marker([lat, lng]).addTo(mymap);
   const popupContent = `
   <div class="popup-form">
@@ -309,7 +317,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
   marker.bindPopup(popupContent, {
     maxWidth: "auto"
   });
-  
+
   marker.on("popupopen", () => {
     const saveBtn = document.getElementById("saveTrailBtn");
     const cancelBtn = document.getElementById("cancelTrailBtn");
@@ -332,7 +340,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
         trail.dirtpark = document.getElementById("hasDirtpark").checked;
         trail.pumptrack = document.getElementById("hasPumprack").checked;
 
-        if(!trail.pumptrack && !trail.dirtpark) {
+        if (!trail.pumptrack && !trail.dirtpark) {
           alert("Bitte wähle aus ob Pumptrack oder Dirtpark vorzufinden sind.");
           return;
         }
@@ -340,7 +348,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
 
       saveBtn.classList.add("loading");
       try {
-        const endpoint = addMode === 'trail'? 'add-trail' : (addMode === 'bikepark' ? 'bike-parks' : 'dirt-parks');
+        const endpoint = addMode === 'trail' ? 'add-trail' : (addMode === 'bikepark' ? 'bike-parks' : 'dirt-parks');
         await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${endpoint}`, {
           method: "POST",
           headers: {
@@ -355,12 +363,12 @@ function openCreateTrailPopup(mymap, latlng, type) {
       } catch (err) {
         console.error("Error saving trail:", err);
         showToast("Fehler beim Speichern ❌", "error");
-        return;            
-      }finally {
+        return;
+      } finally {
         saveBtn.classList.remove("loading");
         marker.closePopup();
         resetAddMode(mymap);
-      }          
+      }
     });
 
     cancelBtn.addEventListener("click", () => {
@@ -402,10 +410,10 @@ function getMarkers(cluster, trails, type) {
       try {
 
         const details = await getTrailDetails(trail.id, type);
-    
-        const rules = (details.rules && details.rules.length > 0)? details.rules : ["Keine besonderen Regeln bekannt."];
+
+        const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
         const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
-    
+
         const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
         const detailsHTML = `${dirtparkInfo}
           <div class="popup-section">
@@ -429,7 +437,7 @@ function getMarkers(cluster, trails, type) {
             </div>
             <span style="font-size:0.75rem">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert von KI</span>
         `;
-    
+
         const container = popup.getElement()?.querySelector('.popup-section.loading');
         if (container) container.outerHTML = detailsHTML;
 
@@ -473,14 +481,14 @@ function getTrailPopup(trail) {
     </div>
   `;
 
-    if (trail.creator && trail.creator.trim() !== "")
-      popupHtml += `
+  if (trail.creator && trail.creator.trim() !== "")
+    popupHtml += `
         <div class="popup-creator">
           <i class="fa-regular fa-user" style="margin-right: 4px;"></i>
           <span>Eingetragen von <strong>${trail.creator}</strong></span>
         </div>
       `;
-  
+
 
   popupHtml += "</div>";
   return popupHtml;
