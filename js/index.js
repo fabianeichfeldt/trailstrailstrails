@@ -314,9 +314,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
     </div>
   </div>
 `;
-  marker.bindPopup(popupContent, {
-    maxWidth: "auto"
-  });
+  marker.bindPopup(popupContent, { /*maxWidth: 450 */});
 
   marker.on("popupopen", () => {
     const saveBtn = document.getElementById("saveTrailBtn");
