@@ -87,15 +87,23 @@
         <div class="add-wrapper">
           <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
           <div id="fab-menu" class="fab-menu hidden">
-            <button class="fab-item" data-type="trail"><img src="./assets/trail.png" width="20"/> Trail </button>
-            <button class="fab-item" data-type="bikepark"><img src="./assets/bike_park.png" width="20"/> Bikepark </button>
-            <button class="fab-item" data-type="dirtpark"><img src="./assets/bmx_bike.png" width="20"/> Dirtpark/Pumptrack</button>
+            <button class="fab-item" data-type="trail"><img src="/assets/trail.png" width="20"/> Trail </button>
+            <button class="fab-item" data-type="bikepark"><img src="/assets/bike_park.png" width="20"/> Bikepark </button>
+            <button class="fab-item" data-type="dirtpark"><img src="/assets/bmx_bike.png" width="20"/> Dirtpark/Pumptrack</button>
           </div>
       </div>
 
       </div>
       <section class="content">
-        <div id="mapid"></div>
+        <div class="map-container">
+          <div id="mapid"></div>
+          <div class="map-legend">
+            <div><span class="legend-dot" style="background:#F59E0B;"></span> Noch nicht verifizierter Eintrag</div>
+            <div><span class="legend-dot" style="background:#3B82F6;"></span> Verifizierter Trail</div>
+            <div><span class="legend-dot" style="background:#10B981;"></span> Bikepark</div>
+            <div><span class="legend-dot" style="background:#b91094;"></span> Pumptrack/Dirtpark</div>
+            </div>
+        </div> 
 
         <div class="side-section">
           <div class="news" id="news">
@@ -127,15 +135,6 @@
         </div>
       </section>
       <div id="toast-container"></div>
-      <footer>
-        <div class="map-legend">
-          <div><span class="legend-dot" style="background:#F59E0B;"></span> Noch nicht verifizierter Eintrag</div>
-          <div><span class="legend-dot" style="background:#3B82F6;"></span> Verifizierter Trail</div>
-          <div><span class="legend-dot" style="background:#10B981;"></span> Bikepark</div>
-          <div><span class="legend-dot" style="background:#b91094;"></span> Pumptrack/Dirtpark</div>
-        </div>
-        <p>© 2025 Trailradar</p>
-      </footer>
       <section id="community" class="community-section">
         <h2>Trailradar Community 💪</h2>
         <p>
@@ -255,6 +254,9 @@
         95447 Bayreuth<br>
         <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>
       </section>
+      <footer>
+        <p>© 2025 Trailradar</p>
+      </footer>
     </main>
 
     <div id="nearby-modal" class="nearby-modal hidden">

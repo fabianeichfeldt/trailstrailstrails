@@ -145,6 +145,9 @@ a:hover {
     flex: 1;
   }
 
+  .map-container {
+    flex: 4;
+  }
   #mapid {
     flex: 4;
     min-height: 80vh;
