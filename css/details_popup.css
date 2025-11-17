@@ -1,0 +1,123 @@
+.popup-creator {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #555;
+}
+
+.leaflet-popup-content .popup-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #ddd;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.leaflet-popup-content {
+    width: auto;
+    min-width: 400px;
+    white-space: nowrap;
+    font-size: 1.2rem;
+    line-height: 1.4;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+    max-height: 50vh;
+    /* width: 85vw;
+    max-width: 450px; */
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #aaa #f1f1f1;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip-container {
+    max-width: none !important;
+}
+
+.popup-content a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.popup-content a.disabled {
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+}
+
+.popup-content a i {
+    margin-left: 10px;
+}
+
+.popup-instagram a {
+    color: #E4405F;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.popup-section p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.0;
+    font-size: 1.3rem;
+    color: #333;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb {
+    background: #aaa;
+    border-radius: 3px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+.popup-section.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #666;
+    font-size: 0.9rem;
+    min-height: 65vh;
+    background: repeating-linear-gradient(45deg,
+    #f0f0f0,
+    #f0f0f0 10px,
+    #f9f9f9 10px,
+    #f9f9f9 20px);
+    border-radius: 8px;
+    animation: shimmer 1.2s linear infinite;
+}
+
+@media (max-width: 1200px) {
+    .leaflet-popup-content {
+        font-size: 1.4rem;
+        line-height: 1.6;
+        width: 85vw !important;
+    }
+
+    .leaflet-popup-content a {
+        font-weight: 400;
+    }
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 100px 0;
+    }
+}

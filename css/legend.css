@@ -1,0 +1,36 @@
+.map-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.map-legend div {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.legend-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1200px) {
+  .map-legend {
+    gap: 0.8rem;
+    font-size: 1rem;
+  }
+
+  .legend-dot {
+    width: 16px;
+    height: 16px;
+  }
+}
