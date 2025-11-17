@@ -78,9 +78,10 @@ function pageCounter() {
 }
 
 function resetAddMode(map) {
+  console.log("fsdfdsfsdf");
   addMode = undefined;
-  addBtn.textContent = "+ Trail hinzufügen";
-  addBtn.style.background = "#2b6cb0";
+  addBtn.textContent = "+";
+  addBtn.classList.remove("hidden", "active");
   map._container.classList.remove("crosshair-cursor");
 }
 
@@ -103,8 +104,9 @@ async function init() {
       }
     },
     fullscreenControl: true,
+    zoomControl: false,
     fullscreenControlOptions: {
-      position: 'topleft'
+      position: 'bottomleft'
     }
   });
 
@@ -123,11 +125,18 @@ async function init() {
 
   mymap._layersMaxZoom = 19;
 
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
     maxZoom: 19,
     tileSize: window.screen.availWidth < 600 ? 512 : 256,
     zoomOffset: window.screen.availWidth < 600 ? -1 : 0,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    zoomControl: false,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
+  }).addTo(mymap);
+
+  L.control.zoom({
+    position: 'bottomright',
   }).addTo(mymap);
 
   initBurgerBtn();
@@ -198,10 +207,10 @@ async function init() {
       addMode = type;
       if (!!addMode) {
         addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
-        addBtn.style.background = '#38a169';
+        addBtn.classList.add('active');
         mymap.getContainer().classList.add('crosshair-cursor');
       } else {
-        addBtn.textContent = '+ Trail hinzufügen';
+        addBtn.textContent = '+';
         addBtn.style.background = '#2b6cb0';
         mymap.getContainer().classList.remove('crosshair-cursor');
       }
@@ -209,10 +218,9 @@ async function init() {
   });
 
   document.addEventListener('click', (e) => {
-    const inWrapper = e.target.closest('.add-wrapper');
+    const inWrapper = e.target.closest('.add-btn-wrapper');
     if (!inWrapper) {
       fabMenu.classList.add('hidden');
-      addBtn.classList.remove('active');
     }
   });
 

@@ -36,6 +36,7 @@
     <link href="/css/marker.css" rel="stylesheet" />
     <link href="/css/details_popup.css" rel="stylesheet" />
     <link href="/css/new_entry_popup.css" rel="stylesheet" />
+    <link href="/css/legend.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
@@ -78,34 +79,33 @@
           </ul>
         </nav>
         <img src="/assets/logo.webp" alt="trails logo" class="logo" />
-        <h1>Finde <span style="color: grey;">Offizielle </span>MTB Trails</h1>
-        <p>
-          Offizielle Trails. Echter Fahrspaß. Community-powered.
-        </p>
+        <h1>Trailradar</h1>
       </header>
 
-      <div class="map-controls">
-        
-        <div class="add-wrapper">
-          <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i> Neuer Eintrag</button>
-          <div id="fab-menu" class="fab-menu hidden">
-            <button class="fab-item" data-type="trail"><img src="/assets/trail.png" width="20"/> Trail </button>
-            <button class="fab-item" data-type="bikepark"><img src="/assets/bike_park.png" width="20"/> Bikepark </button>
-            <button class="fab-item" data-type="dirtpark"><img src="/assets/bmx_bike.png" width="20"/> Dirtpark/Pumptrack</button>
-          </div>
-      </div>
-
-      </div>
       <section class="content">
         <div class="map-container">
-          <div id="mapid"></div>
+          <div class="map-top">
+            <h2>Finde offizielle </span>MTB Trails</h2>
+            <div class="top-map-buttons">
+              <div class="add-btn-wrapper">
+                <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
+                <div id="fab-menu" class="fab-menu hidden">
+                  <button class="fab-item" data-type="trail"><img src="/assets/trail.png" width="30"/> Trail </button>
+                  <button class="fab-item" data-type="bikepark"><img src="/assets/bike_park.png" width="30"/> Bikepark </button>
+                  <button class="fab-item" data-type="dirtpark"><img src="/assets/bmx_bike.png" width="30"/> Dirtpark/Pumptrack</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="mapid">
+          </div>
           <div class="map-legend">
-            <div><span class="legend-dot" style="background:#F59E0B;"></span> Noch nicht verifizierter Eintrag</div>
-            <div><span class="legend-dot" style="background:#3B82F6;"></span> Verifizierter Trail</div>
+            <div><span class="legend-dot" style="background:#3B82F6;"></span> Trailcenter</div>
             <div><span class="legend-dot" style="background:#10B981;"></span> Bikepark</div>
             <div><span class="legend-dot" style="background:#b91094;"></span> Pumptrack/Dirtpark</div>
-            </div>
-        </div> 
+            <div><span class="legend-dot" style="background:#F59E0B;"></span> Nicht verifizierter Eintrag</div>
+          </div>
+        </div>
 
         <div class="side-section">
           <div class="news" id="news">
