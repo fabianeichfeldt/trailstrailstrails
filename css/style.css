@@ -143,13 +143,6 @@ a:hover {
   text-decoration: underline;
 }
 
-
-@media (max-width: 1200px) {
-  .only-visible-on-mobile {
-    display: block;
-  }
-}
-
 .btn-community-top {
   background: #2b6cb0;
   color: white;
