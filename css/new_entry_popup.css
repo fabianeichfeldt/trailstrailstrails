@@ -1,29 +1,29 @@
 .popup-form {
   font-family: system-ui, sans-serif;
-  padding: 1rem;
+  padding: 1em;
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.6em;
 }
 
 .popup-form h3 {
-  margin: 0 0 0.3rem 0;
-  font-size: 1.1rem;
+  margin: 0 0 0.3em 0;
+  font-size: 1.1em;
   text-align: center;
 }
 
 .popup-form label {
   display: flex;
   flex-direction: column;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   color: #333;
 }
 
 .popup-form input {
   border: 1px solid #ccc;
   border-radius: 6px;
-  padding: 0.35rem 0.5rem;
-  font-size: 0.9rem;
+  padding: 0.35em 0.5em;
+  font-size: 0.9em;
   outline: none;
   transition: border-color 0.2s;
 }
@@ -35,13 +35,13 @@
 .popup-actions {
   display: flex;
   justify-content: space-between;
-  margin-top: 0.3rem;
+  margin-top: 0.3em;
 }
 
 .popup-actions button {
   flex: 1;
-  padding: 0.4rem 0.5rem;
-  font-size: 0.9rem;
+  padding: 0.4em 0.5em;
+  font-size: 0.9em;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -51,7 +51,7 @@
 .popup-actions button.save {
   background: #2b6cb0;
   color: white;
-  margin-right: 0.3rem;
+  margin-right: 0.3em;
 }
 
 .popup-actions button.save:hover {

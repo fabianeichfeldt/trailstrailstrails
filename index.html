@@ -2,6 +2,7 @@
 <html lang="de">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
     <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo.webp">
     <link rel="apple-touch-icon" href="/assets/logo.webp">
@@ -22,7 +23,7 @@
     <meta property="og:updated_time" content="">
     <meta property="og:locale" content="de_DE" />
     <link itemprop="thumbnailUrl" href="/assets/logo.webp">
-    <title>Finde Offizielle MTB Trails</title>
+    <title>Finde Offizielle MTB Trails in Deutschland</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="/css/style.css" rel="stylesheet" />
@@ -37,13 +38,12 @@
     <link href="/css/details_popup.css" rel="stylesheet" />
     <link href="/css/new_entry_popup.css" rel="stylesheet" />
     <link href="/css/legend.css" rel="stylesheet" />
+    <link href="/css/fullscreen.css" rel="stylesheet" />
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
-    <script src="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js"></script>
     <script src="https://unpkg.com/leaflet-gesture-handling"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
-    <link rel="stylesheet" href="https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
@@ -79,13 +79,13 @@
           </ul>
         </nav>
         <img src="/assets/logo.webp" alt="trails logo" class="logo" />
-        <h1>Trailradar</h1>
+        <h1>Trailradar<span class="no-mobile">&nbsp;- finde offiziell gebaute MTB Trails in deiner Nähe</span></h1>
       </header>
 
       <section class="content">
         <div class="map-container">
           <div class="map-top">
-            <h2>Finde offizielle </span>MTB Trails</h2>
+            <h2>Finde offizielle MTB Trails in Deutschland</h2>
             <div class="top-map-buttons">
               <div class="add-btn-wrapper">
                 <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
@@ -270,5 +270,6 @@
       </div>
     </div>
     <script type="module" src="/js/index.js?v=20251103"></script>
+    <script src="./js/fullscreen.js"></script>
   </body>
 </html>

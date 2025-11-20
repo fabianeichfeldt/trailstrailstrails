@@ -2,19 +2,17 @@ html,
 body {
   height: 100%;
   margin: 0;
-  padding: 0;
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
   color: #333;
-  font-size: 1.3rem;
+  font-size: 1.3em;
 }
 
 main {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 1rem;
-  gap: 1rem;
+  padding: 0 0.2em 0.2em 0.2em;
 }
 
 header {
@@ -26,19 +24,21 @@ header {
 }
 
 header .logo {
-  margin-top: 0.3rem;
-  margin-left: 0.3rem;
-  border-radius: 0.5rem;
-  height: 100px;
-  width: auto;
+  margin-top: 0.1em;
+  margin-left: 0.1em;
+  border-radius: 0.5em;
+  height: clamp(50px, 10vw, 100px);
 }
 
 header h1 {
   justify-self: left;
   font-weight: normal;
   color: #000000;
-  padding-left: 0.4rem;
-  font-size: 2rem;
+  padding: 0 0 0 0.4em;
+  font-size: 1em;
+  span {
+    font-size: 0.7em;
+  }
 }
 
 .map-container {
@@ -53,8 +53,8 @@ header h1 {
       padding: 0.4rem 0 0.4rem 0;
       top: 0;
       margin-top: 0;
-      margin-bottom: 0.2rem;
-      font-size: 1.5rem;
+      margin-bottom: 0.2em;
+      font-size: 0.6em;
       text-align: center;
       background: rgba(162, 164, 166, 0.66);
     }
@@ -72,6 +72,10 @@ header h1 {
 
 .only-visible-on-mobile {
   display: none;
+}
+
+.no-mobile {
+  display: inline-block;
 }
 
 .content {
@@ -177,4 +181,10 @@ a:hover {
 
 .seo-text a {
   color: #2b6cb0;
+}
+
+@media (max-width: 800px) {
+  .no-mobile {
+    display: none;
+  }
 }

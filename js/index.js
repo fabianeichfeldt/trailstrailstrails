@@ -103,11 +103,7 @@ async function init() {
         scrollMac: "Benutze \u2318 + scroll um die Karte zu zoomen"
       }
     },
-    fullscreenControl: true,
     zoomControl: false,
-    fullscreenControlOptions: {
-      position: 'bottomleft'
-    }
   });
 
   if (match && match[1] && match[1].length > 0 && match[1].toLowerCase() !== "nearby") {
@@ -128,8 +124,6 @@ async function init() {
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
     maxZoom: 19,
-    tileSize: window.screen.availWidth < 600 ? 512 : 256,
-    zoomOffset: window.screen.availWidth < 600 ? -1 : 0,
     zoomControl: false,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 
@@ -138,6 +132,13 @@ async function init() {
   L.control.zoom({
     position: 'bottomright',
   }).addTo(mymap);
+
+  L.control
+      .fullscreen({
+        position: 'bottomright',
+        forceSeparateButton: false,
+      })
+      .addTo(mymap);
 
   initBurgerBtn();
   const clusterToggle = document.getElementById("clusterToggle");
@@ -251,10 +252,12 @@ function initBurgerBtn() {
   function openDrawer() {
     drawer.classList.add('open');
     drawerOverlay.classList.add('active');
+    burgerBtn.classList.add('active');
   }
   function closeDrawer() {
     drawer.classList.remove('open');
     drawerOverlay.classList.remove('active');
+    burgerBtn.classList.remove('active');
   }
 
   burgerBtn.addEventListener('click', openDrawer);
@@ -394,9 +397,7 @@ function getMarkers(cluster, trails, type) {
 
     const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved, type) })
       .addTo(cluster)
-      .bindPopup(popupHtml, {
-        maxWidth: "auto"
-      });
+      .bindPopup(popupHtml);
 
     marker.on("popupopen", async (e) => {
       const popup = e.popup;
@@ -441,7 +442,7 @@ function getMarkers(cluster, trails, type) {
                 </button>
               </div>
             </div>
-            <span style="font-size:0.75rem">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert von KI</span>
+            <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
         `;
 
         const container = popup.getElement()?.querySelector('.popup-section.loading');
