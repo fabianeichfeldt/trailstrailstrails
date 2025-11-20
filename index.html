@@ -1,272 +1,288 @@
 <!DOCTYPE html>
 <html lang="de">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
-    <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo.webp">
-    <link rel="apple-touch-icon" href="/assets/logo.webp">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-    <meta name="theme-color" content="#0077cc">
-    <meta name="description" content="TrailRadar zeigt dir legal gebaute, offizielle MTB Trails in Deutschland – übersichtlich auf der Karte, mit Schließungen & Trailregeln.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://trailradar.org/">
-    <meta property="og:title" content="Trailradar.org - trails·trails·trails">
-    <meta property="og:description" content="Hier findest du offizielle genehmigte, extra fürs Mountainbike angelegte Trails – interaktive Karte inklusive.">
-    <meta property="og:image" content="https://trailradar.org/assets/logo.webp">
-    <meta property="og:image_secure_url" content="https://trailradar.org/assets/logo.webp" itemprop="image">
-    <meta property="og:image:type" content="image/jpeg">
-    <meta property="og:image:width" content="256">
-    <meta property="og:image:height" content="256">
-    <meta property="og:site_name" content="Trailradar.org">
-    <meta property="og:type" content="website">
-    <meta property="og:updated_time" content="">
-    <meta property="og:locale" content="de_DE" />
-    <link itemprop="thumbnailUrl" href="/assets/logo.webp">
-    <title>Finde Offizielle MTB Trails in Deutschland</title>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="/css/style.css" rel="stylesheet" />
-    <link href="/css/switch.css" rel="stylesheet" />
-    <link href="/css/community.css" rel="stylesheet" />
-    <link href="/css/feedback_button.css" rel="stylesheet" />
-    <link href="/css/nearby_modal.css" rel="stylesheet" />
-    <link href="/css/add_btn.css" rel="stylesheet" />
-    <link href="/css/toast.css" rel="stylesheet" />
-    <link href="/css/side_menu.css" rel="stylesheet" />
-    <link href="/css/marker.css" rel="stylesheet" />
-    <link href="/css/details_popup.css" rel="stylesheet" />
-    <link href="/css/new_entry_popup.css" rel="stylesheet" />
-    <link href="/css/legend.css" rel="stylesheet" />
-    <link href="/css/fullscreen.css" rel="stylesheet" />
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo.webp">
+  <link rel="apple-touch-icon" href="/assets/logo.webp">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <meta name="theme-color" content="#0077cc">
+  <meta name="description"
+    content="TrailRadar zeigt dir legal gebaute, offizielle MTB Trails in Deutschland – übersichtlich auf der Karte, mit Schließungen & Trailregeln.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://trailradar.org/">
+  <meta property="og:title" content="Trailradar.org - trails·trails·trails">
+  <meta property="og:description"
+    content="Hier findest du offizielle genehmigte, extra fürs Mountainbike angelegte Trails – interaktive Karte inklusive.">
+  <meta property="og:image" content="https://trailradar.org/assets/logo.webp">
+  <meta property="og:image_secure_url" content="https://trailradar.org/assets/logo.webp" itemprop="image">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="256">
+  <meta property="og:image:height" content="256">
+  <meta property="og:site_name" content="Trailradar.org">
+  <meta property="og:type" content="website">
+  <meta property="og:updated_time" content="">
+  <meta property="og:locale" content="de_DE" />
+  <link itemprop="thumbnailUrl" href="/assets/logo.webp">
+  <title>Finde Offizielle MTB Trails in Deutschland</title>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js" ></script>
-    <script src="https://unpkg.com/leaflet-gesture-handling"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="/css/style.css" rel="stylesheet" />
+  <link href="/css/switch.css" rel="stylesheet" />
+  <link href="/css/community.css" rel="stylesheet" />
+  <link href="/css/feedback_button.css" rel="stylesheet" />
+  <link href="/css/nearby_modal.css" rel="stylesheet" />
+  <link href="/css/add_btn.css" rel="stylesheet" />
+  <link href="/css/toast.css" rel="stylesheet" />
+  <link href="/css/side_menu.css" rel="stylesheet" />
+  <link href="/css/marker.css" rel="stylesheet" />
+  <link href="/css/details_popup.css" rel="stylesheet" />
+  <link href="/css/new_entry_popup.css" rel="stylesheet" />
+  <link href="/css/legend.css" rel="stylesheet" />
+  <link href="/css/fullscreen.css" rel="stylesheet" />
 
-  </head>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+  <script src="https://unpkg.com/leaflet-gesture-handling"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css"
+    type="text/css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
 
-  <body>
-    <main>
-      <header>
-        <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
-          <i class="fas fa-bars"></i>
-        </button>
-        
-        <div id="drawerOverlay" class="drawer-overlay"></div>
-        
-        <nav id="drawer" class="drawer">
-          <div class="drawer-header">
-            <img src="/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
-            <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
-          </div>
-        
-          <ul class="drawer-menu">
-            <li><label class="cluster-switch">
+</head>
+
+<body>
+  <main>
+    <header>
+      <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
+        <i class="fas fa-bars"></i>
+      </button>
+
+      <div id="drawerOverlay" class="drawer-overlay"></div>
+
+      <nav id="drawer" class="drawer">
+        <div class="drawer-header">
+          <img src="/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
+          <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
+        </div>
+
+        <ul class="drawer-menu">
+          <li><label class="cluster-switch">
               <input type="checkbox" id="clusterToggle" checked />
               <span class="slider"></span>
               <span class="switch-label">Gruppierung</span>
             </label>
-            </li>
-            <li class="only-visible-on-mobile"><a href="#news">📆 News</a></li>
-            <li class="only-visible-on-mobile"><a href="#contact">📬 Kontakt</a></li>
-            <li><a href="#community">💪 Community</a></li>
-            <li><a href="/legal.html">⚖️ Was ist "offiziell"?</a></li>
-            <li><a href="/privacy.html">Datenschutz & Impressum</a></li>
-          </ul>
-        </nav>
-        <img src="/assets/logo.webp" alt="trails logo" class="logo" />
-        <h1>Trailradar</h1>
-      </header>
+          </li>
+          <li class="only-visible-on-mobile"><a href="#news">📆 News</a></li>
+          <li class="only-visible-on-mobile"><a href="#contact">📬 Kontakt</a></li>
+          <li><a href="#community">💪 Community</a></li>
+          <li><a href="/legal.html">⚖️ Was ist "offiziell"?</a></li>
+          <li><a href="/privacy.html">Datenschutz & Impressum</a></li>
+        </ul>
+      </nav>
+      <img src="/assets/logo.webp" alt="trails logo" class="logo" />
+      <h1>Trailradar</h1>
+    </header>
 
-      <section class="content">
-        <div class="map-container">
-          <div class="map-top">
-            <h2>Finde offizielle MTB Trails in Deutschland</h2>
-            <div class="top-map-buttons">
-              <div class="add-btn-wrapper">
-                <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
-                <div id="fab-menu" class="fab-menu hidden">
-                  <button class="fab-item" data-type="trail"><img src="/assets/trail.png" width="30"/> Trail </button>
-                  <button class="fab-item" data-type="bikepark"><img src="/assets/bike_park.png" width="30"/> Bikepark </button>
-                  <button class="fab-item" data-type="dirtpark"><img src="/assets/bmx_bike.png" width="30"/> Dirtpark/Pumptrack</button>
-                </div>
+    <section class="content">
+      <div class="map-container">
+        <div class="map-top">
+          <h2>Finde offizielle MTB Trails in Deutschland</h2>
+          <div class="top-map-buttons">
+            <div class="add-btn-wrapper">
+              <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
+              <div id="fab-menu" class="fab-menu hidden">
+                <button class="fab-item" data-type="trail"><img src="/assets/trail.png" width="30" /> Trail </button>
+                <button class="fab-item" data-type="bikepark"><img src="/assets/bike_park.png" width="30" /> Bikepark
+                </button>
+                <button class="fab-item" data-type="dirtpark"><img src="/assets/bmx_bike.png" width="30" />
+                  Dirtpark/Pumptrack</button>
               </div>
             </div>
           </div>
-          <div id="mapid">
+        </div>
+        <div id="mapid">
+        </div>
+        <div class="map-legend">
+          <div class="legend-header" onclick="toggleLegend()">
+            <span>Legende</span>
+            <span class="chevron">&#9660;</span>
           </div>
-          <div class="map-legend">
+
+          <div class="legend-content">
             <div><span class="legend-dot" style="background:#3B82F6;"></span> Trailcenter</div>
             <div><span class="legend-dot" style="background:#10B981;"></span> Bikepark</div>
             <div><span class="legend-dot" style="background:#b91094;"></span> Pumptrack/Dirtpark</div>
             <div><span class="legend-dot" style="background:#F59E0B;"></span> Nicht verifizierter Eintrag</div>
           </div>
         </div>
+      </div>
 
-        <div class="side-section">
-          <div class="news" id="news">
-            <h2>Neuigkeiten</h2>
-            <p>Lade Neuigkeiten...</p>
-          </div>
-        </div>
-      </section>
-      <div id="toast-container"></div>
-      <section id="contact" class="contact-section">
-        <div class="text-section" id="contact">
-          <p>
-            Vorschläge für weitere Strecken könnt ihr gerne im
-            <a href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/">mtb-news Forum-Thread</a>
-            oder über
-            <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>, oder <a
-              href="https://www.instagram.com/trailradar.germany"><i class="fab fa-instagram"
-                style="margin-right: 6px; font-size: 16px;"></i>@trailradar.org</a>
-            melden.
-          </p>
-          <p>
-            Diese Website nutzt Kartendienste, die von der OpenStreetMap
-            Foundation bereitgestellt werden. Weitere Informationen findet ihr
-            in den
-            <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
-          </p>
-        </div>
-      </section>
-      <section id="community" class="community-section">
-        <h2>Trailradar Community 💪</h2>
-        <p>
-          Unterstütze uns auf dem Weg zur vollständigen Trail-Karte! <br>
-          Wir haben schon <strong>430 Einträge</strong> in 13 Ländern!
-        </p>
-        <p>
-          Die aktivsten Trailradar Mitglieder:
-        </p>
-      
-        <div class="leaderboard-mini">
-          <div class="leaderboard-entry">
-            🥇 <strong>@maik.ri.00</strong> <span>44 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            🥈 <strong>StelioKontos</strong> <span>35 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            🥈 <strong>Florian</strong> <span>35 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            🥉 <strong>cbtp</strong> <span>21 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>alexlechner</strong> <span>9 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>Poacher-79</strong> <span>8 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>VLKR</strong> <span>7 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>Magster</strong> <span>7 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>ciao heiko</strong> <span>6 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>thegab</strong> <span>6 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>hudak</strong> <span>6 Einträge</span>
-          </div>
-          <div class="leaderboard-entry">
-            💪 <strong>FingerlFranz</strong> <span>6 Einträge</span>
-          </div>
-        </div>
-      
-        <!-- <a href="/community" class="btn-community">Mehr erfahren →</a> -->
-        <a href="https://www.flaticon.com/free-icons/bmx-bike" title="bmx bike icons">Bmx bike icons created by gravisio - Flaticon</a>
-        <a href="https://www.flaticon.com/free-icons/mtb" title="mtb icons">Mtb icons created by gravisio - Flaticon</a>
-      </section>
-      <section class="seo-text">
-        <h2 class="seo-title">Entdecke offizielle MTB Trails in deiner Nähe</h2>
-        <p class="seo-text">
-          Du suchst nach <strong>offiziellen Mountainbike-Strecken in Deutschland und Umgebung</strong>?<br>
-          <strong>TrailRadar</strong> ist deine zentrale Plattform für <strong>genehmigte MTB-Trails, Bikeparks, Dirtparks und
-            Pumptracks</strong>.<br>
-          Hier findest du von der Community gesammelte Spots mit allen wichtigen Infos.<br>
-          Ganz egal, ob du nach Trails in der Nähe suchst oder deinen nächsten Urlaub planen möchtest –
-          TrailRadar hilft dir dabei, die besten <strong>offiziellen MTB-Strecken und Bikeparks</strong> zu finden.    
-        </p>
-        <p>  
-          Finde <a href="/trails/pfalz">Trails in der Pfalz, </a>
-          <a href="/trails/schwarzwald">Trails im Schwarzwald, </a>
-          <a href="/trails/allgaeu">Trails im Allgaeu, </a>
-          <a href="/trails/odenwald">Trails im Odenwald, </a>
-          <a href="/trails/fraenkische-schweiz">Trails in der Fränkischen-Schweiz, </a>
-          <a href="/trails/schwaebische-alb">Trails in der Schwäbischen-Alb, </a>
-          <a href="/trails/oberpfalz">Trails in der Oberpfalz, </a>
-          <a href="/trails/taunus">Trails im Taunus, </a>
-          <a href="/trails/rhoen">Trails in der Rhön, </a>
-          <a href="/trails/berlin">Trails in Berlin, </a>
-          <a href="/trails/hamburg">Trails in Hamburg, </a>
-          <a href="/trails/muenchen">Trails in Muenchen, </a>
-          <a href="/trails/koeln">Trails in Köln, </a>
-          <a href="/trails/stuttgart">Trails in Stuttgart, </a>
-          <a href="/trails/duesseldorf">Trails in Düsseldorf, </a>
-          <a href="/trails/leipzig">Trails in Leipzig, </a>
-          <a href="/trails/dortmund">Trails in Dortmund, </a>
-          <a href="/trails/essen">Trails in Essen, </a>
-          <a href="/trails/nuernberg">Trails in Nürnberg, </a>
-          <a href="/trails/augsburg">Trails in Augsburg, </a>
-          <a href="/trails/regensburg">Trails in Regensburg, </a>
-          <a href="/trails/ingolstadt">Trails in Ingolstadt, </a>
-          <a href="/trails/karlsruhe">Trails in Karlsruhe, </a>
-          <a href="/trails/mannheim">Trails in Mannheim, </a>
-          <a href="/trails/freiburg">Trails in Freiburg, </a>
-          <a href="/trails/heidelberg">Trails in Heidelberg, </a>
-          <a href="/trails/frankfurt">Trails in Frankfurt, </a>
-          <a href="/trails/wiesbaden">Trails in Wiesbaden, </a>
-          <a href="/trails/kassel">Trails in Kassel, </a>
-          <a href="/trails/darmstadt">Trails in Darmstadt, </a>
-          <a href="/trails/offenbach">Trails in Offenbach, </a>
-          <a href="/trails/saarbruecken">Trails in Saarbrücken, </a>
-          <a href="/trails/neunkirchen">Trails in Neunkirchen, </a>
-          <a href="/trails/homburg">Trails in Homburg, </a>
-          <a href="/trails/bayerischerwald">Trails im Bayerischen Wald, </a>
-          <a href="/trails/schweiz">Trails in der Schweiz, </a>
-          <a href="/trails/oesterreich">Trails in Österreich, </a>
-          <a href="/trails/tschechien">Trails in Tschechien, </a>
-          <a href="/trails/tirol">Trails in Tirol, </a>
-          <a href="/trails/vorarlberg">Trails in Vorarlberg, </a>
-          <a href="/trails/salzburg">Trails in Salzburg, </a>
-          <a href="/trails/graz">Trails in Graz, </a>
-          <a href="/trails/wien">Trails in Wien, </a>
-          <a href="/trails/innsbruck">Trails in Innsbruck, </a>
-          <a href="/trails/kaernten">Trails in Kärnten, </a>
-          <a href="/trails/nearby">Trails in der Umgebung </a>
-           und viele mehr.
-        </p>
-      </section>
-      <footer>
-        <p>© 2025 Trailradar</p>
-      </footer>
-    </main>
-
-    <div id="nearby-modal" class="nearby-modal hidden">
-      <div class="nearby-box">
-        <h3>Es gibt schon einen Eintrag in der Nähe 🤔</h3>
-        <p>
-          Im Umkreis von ~3 km gibt es schon „<span id="nearby-name"></span>“.
-        </p>
-        <p>Ist dein Eintrag ein anderer Typ bzw. ein anderes Trailcenter?</p>
-    
-        <div class="nearby-actions">
-          <button id="nearby-cancel">Nein</button>
-          <button id="nearby-continue" class="primary">Ja</button>
+      <div class="side-section">
+        <div class="news" id="news">
+          <h2>Neuigkeiten</h2>
+          <p>Lade Neuigkeiten...</p>
         </div>
       </div>
+    </section>
+    <div id="toast-container"></div>
+    <section id="contact" class="contact-section">
+      <div class="text-section" id="contact">
+        <p>
+          Vorschläge für weitere Strecken könnt ihr gerne im
+          <a href="https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/">mtb-news Forum-Thread</a>
+          oder über
+          <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>, oder <a
+            href="https://www.instagram.com/trailradar.germany"><i class="fab fa-instagram"
+              style="margin-right: 6px; font-size: 16px;"></i>@trailradar.org</a>
+          melden.
+        </p>
+        <p>
+          Diese Website nutzt Kartendienste, die von der OpenStreetMap
+          Foundation bereitgestellt werden. Weitere Informationen findet ihr
+          in den
+          <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">Datenschutzbestimmungen der OSMF</a>.
+        </p>
+      </div>
+    </section>
+    <section id="community" class="community-section">
+      <h2>Trailradar Community 💪</h2>
+      <p>
+        Unterstütze uns auf dem Weg zur vollständigen Trail-Karte! <br>
+        Wir haben schon <strong>430 Einträge</strong> in 13 Ländern!
+      </p>
+      <p>
+        Die aktivsten Trailradar Mitglieder:
+      </p>
+
+      <div class="leaderboard-mini">
+        <div class="leaderboard-entry">
+          🥇 <strong>@maik.ri.00</strong> <span>44 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          🥈 <strong>StelioKontos</strong> <span>35 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          🥈 <strong>Florian</strong> <span>35 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          🥉 <strong>cbtp</strong> <span>21 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>alexlechner</strong> <span>9 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>Poacher-79</strong> <span>8 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>VLKR</strong> <span>7 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>Magster</strong> <span>7 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>ciao heiko</strong> <span>6 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>thegab</strong> <span>6 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>hudak</strong> <span>6 Einträge</span>
+        </div>
+        <div class="leaderboard-entry">
+          💪 <strong>FingerlFranz</strong> <span>6 Einträge</span>
+        </div>
+      </div>
+
+      <!-- <a href="/community" class="btn-community">Mehr erfahren →</a> -->
+      <a href="https://www.flaticon.com/free-icons/bmx-bike" title="bmx bike icons">Bmx bike icons created by gravisio -
+        Flaticon</a>
+      <a href="https://www.flaticon.com/free-icons/mtb" title="mtb icons">Mtb icons created by gravisio - Flaticon</a>
+    </section>
+    <section class="seo-text">
+      <h2 class="seo-title">Entdecke offizielle MTB Trails in deiner Nähe</h2>
+      <p class="seo-text">
+        Du suchst nach <strong>offiziellen Mountainbike-Strecken in Deutschland und Umgebung</strong>?<br>
+        <strong>TrailRadar</strong> ist deine zentrale Plattform für <strong>genehmigte MTB-Trails, Bikeparks, Dirtparks
+          und
+          Pumptracks</strong>.<br>
+        Hier findest du von der Community gesammelte Spots mit allen wichtigen Infos.<br>
+        Ganz egal, ob du nach Trails in der Nähe suchst oder deinen nächsten Urlaub planen möchtest –
+        TrailRadar hilft dir dabei, die besten <strong>offiziellen MTB-Strecken und Bikeparks</strong> zu finden.
+      </p>
+      <p>
+        Finde <a href="/trails/pfalz">Trails in der Pfalz, </a>
+        <a href="/trails/schwarzwald">Trails im Schwarzwald, </a>
+        <a href="/trails/allgaeu">Trails im Allgaeu, </a>
+        <a href="/trails/odenwald">Trails im Odenwald, </a>
+        <a href="/trails/fraenkische-schweiz">Trails in der Fränkischen-Schweiz, </a>
+        <a href="/trails/schwaebische-alb">Trails in der Schwäbischen-Alb, </a>
+        <a href="/trails/oberpfalz">Trails in der Oberpfalz, </a>
+        <a href="/trails/taunus">Trails im Taunus, </a>
+        <a href="/trails/rhoen">Trails in der Rhön, </a>
+        <a href="/trails/berlin">Trails in Berlin, </a>
+        <a href="/trails/hamburg">Trails in Hamburg, </a>
+        <a href="/trails/muenchen">Trails in Muenchen, </a>
+        <a href="/trails/koeln">Trails in Köln, </a>
+        <a href="/trails/stuttgart">Trails in Stuttgart, </a>
+        <a href="/trails/duesseldorf">Trails in Düsseldorf, </a>
+        <a href="/trails/leipzig">Trails in Leipzig, </a>
+        <a href="/trails/dortmund">Trails in Dortmund, </a>
+        <a href="/trails/essen">Trails in Essen, </a>
+        <a href="/trails/nuernberg">Trails in Nürnberg, </a>
+        <a href="/trails/augsburg">Trails in Augsburg, </a>
+        <a href="/trails/regensburg">Trails in Regensburg, </a>
+        <a href="/trails/ingolstadt">Trails in Ingolstadt, </a>
+        <a href="/trails/karlsruhe">Trails in Karlsruhe, </a>
+        <a href="/trails/mannheim">Trails in Mannheim, </a>
+        <a href="/trails/freiburg">Trails in Freiburg, </a>
+        <a href="/trails/heidelberg">Trails in Heidelberg, </a>
+        <a href="/trails/frankfurt">Trails in Frankfurt, </a>
+        <a href="/trails/wiesbaden">Trails in Wiesbaden, </a>
+        <a href="/trails/kassel">Trails in Kassel, </a>
+        <a href="/trails/darmstadt">Trails in Darmstadt, </a>
+        <a href="/trails/offenbach">Trails in Offenbach, </a>
+        <a href="/trails/saarbruecken">Trails in Saarbrücken, </a>
+        <a href="/trails/neunkirchen">Trails in Neunkirchen, </a>
+        <a href="/trails/homburg">Trails in Homburg, </a>
+        <a href="/trails/bayerischerwald">Trails im Bayerischen Wald, </a>
+        <a href="/trails/schweiz">Trails in der Schweiz, </a>
+        <a href="/trails/oesterreich">Trails in Österreich, </a>
+        <a href="/trails/tschechien">Trails in Tschechien, </a>
+        <a href="/trails/tirol">Trails in Tirol, </a>
+        <a href="/trails/vorarlberg">Trails in Vorarlberg, </a>
+        <a href="/trails/salzburg">Trails in Salzburg, </a>
+        <a href="/trails/graz">Trails in Graz, </a>
+        <a href="/trails/wien">Trails in Wien, </a>
+        <a href="/trails/innsbruck">Trails in Innsbruck, </a>
+        <a href="/trails/kaernten">Trails in Kärnten, </a>
+        <a href="/trails/nearby">Trails in der Umgebung </a>
+        und viele mehr.
+      </p>
+    </section>
+    <footer>
+      <p>© 2025 Trailradar</p>
+    </footer>
+  </main>
+
+  <div id="nearby-modal" class="nearby-modal hidden">
+    <div class="nearby-box">
+      <h3>Es gibt schon einen Eintrag in der Nähe 🤔</h3>
+      <p>
+        Im Umkreis von ~3 km gibt es schon „<span id="nearby-name"></span>“.
+      </p>
+      <p>Ist dein Eintrag ein anderer Typ bzw. ein anderes Trailcenter?</p>
+
+      <div class="nearby-actions">
+        <button id="nearby-cancel">Nein</button>
+        <button id="nearby-continue" class="primary">Ja</button>
+      </div>
     </div>
-    <script type="module" src="/js/index.js?v=20251103"></script>
-    <script src="./js/fullscreen.js"></script>
-  </body>
+  </div>
+  <script type="module" src="/js/index.js?v=20251120"></script>
+  <script src="./js/fullscreen.js"></script>
+</body>
+
 </html>

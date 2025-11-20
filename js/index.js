@@ -16,6 +16,10 @@ window.upVote = async function (trailID, el) {
   showToast("Danke für dein Feedback! 🙏", "success");
 };
 
+window.toggleLegend = function () {
+  document.querySelector('.map-legend').classList.toggle('collapsed');
+}
+
 let addMode = undefined;
 let addBtn;
 
