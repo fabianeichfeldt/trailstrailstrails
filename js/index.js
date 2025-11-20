@@ -16,6 +16,10 @@ window.upVote = async function (trailID, el) {
   showToast("Danke für dein Feedback! 🙏", "success");
 };
 
+window.toggleLegend = function () {
+  document.querySelector('.map-legend').classList.toggle('collapsed');
+}
+
 let addMode = undefined;
 let addBtn;
 
@@ -79,8 +83,8 @@ function pageCounter() {
 
 function resetAddMode(map) {
   addMode = undefined;
-  addBtn.textContent = "+ Trail hinzufügen";
-  addBtn.style.background = "#2b6cb0";
+  addBtn.textContent = "+";
+  addBtn.classList.remove("hidden", "active");
   map._container.classList.remove("crosshair-cursor");
 }
 
@@ -102,10 +106,7 @@ async function init() {
         scrollMac: "Benutze \u2318 + scroll um die Karte zu zoomen"
       }
     },
-    fullscreenControl: true,
-    fullscreenControlOptions: {
-      position: 'topleft'
-    }
+    zoomControl: false,
   });
 
   if (match && match[1] && match[1].length > 0 && match[1].toLowerCase() !== "nearby") {
@@ -123,12 +124,24 @@ async function init() {
 
   mymap._layersMaxZoom = 19;
 
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
     maxZoom: 19,
-    tileSize: window.screen.availWidth < 600 ? 512 : 256,
-    zoomOffset: window.screen.availWidth < 600 ? -1 : 0,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    zoomControl: false,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+
   }).addTo(mymap);
+
+  L.control.zoom({
+    position: 'bottomright',
+  }).addTo(mymap);
+
+  L.control
+      .fullscreen({
+        position: 'bottomright',
+        forceSeparateButton: false,
+      })
+      .addTo(mymap);
 
   initBurgerBtn();
   const clusterToggle = document.getElementById("clusterToggle");
@@ -198,10 +211,10 @@ async function init() {
       addMode = type;
       if (!!addMode) {
         addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
-        addBtn.style.background = '#38a169';
+        addBtn.classList.add('active');
         mymap.getContainer().classList.add('crosshair-cursor');
       } else {
-        addBtn.textContent = '+ Trail hinzufügen';
+        addBtn.textContent = '+';
         addBtn.style.background = '#2b6cb0';
         mymap.getContainer().classList.remove('crosshair-cursor');
       }
@@ -209,10 +222,9 @@ async function init() {
   });
 
   document.addEventListener('click', (e) => {
-    const inWrapper = e.target.closest('.add-wrapper');
+    const inWrapper = e.target.closest('.add-btn-wrapper');
     if (!inWrapper) {
       fabMenu.classList.add('hidden');
-      addBtn.classList.remove('active');
     }
   });
 
@@ -239,14 +251,19 @@ function initBurgerBtn() {
   const drawer = document.getElementById('drawer');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const drawerClose = document.getElementById('drawerClose');
+  const drawerLinks = drawer.querySelectorAll('a');
+
+  drawerLinks.forEach(link =>link.addEventListener('click', () => closeDrawer()));
 
   function openDrawer() {
     drawer.classList.add('open');
     drawerOverlay.classList.add('active');
+    burgerBtn.classList.add('active');
   }
   function closeDrawer() {
     drawer.classList.remove('open');
     drawerOverlay.classList.remove('active');
+    burgerBtn.classList.remove('active');
   }
 
   burgerBtn.addEventListener('click', openDrawer);
@@ -262,7 +279,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
   const popupContent = `
   <div class="popup-form">
     <h3>Neuer Eintrag</h3>
-    <p>Bitte ${types[type]} einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
+    <p>Bitte ${types[type]} einfügen - einzelne Trails nur bei größeren Transfer (>5km)</p>
     <div class="type-switch">
       <label class="type-option">
         <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" ${type === 'trail' ? 'checked' : ''} disabled>
@@ -386,9 +403,7 @@ function getMarkers(cluster, trails, type) {
 
     const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved, type) })
       .addTo(cluster)
-      .bindPopup(popupHtml, {
-        maxWidth: "auto"
-      });
+      .bindPopup(popupHtml);
 
     marker.on("popupopen", async (e) => {
       const popup = e.popup;
@@ -433,7 +448,7 @@ function getMarkers(cluster, trails, type) {
                 </button>
               </div>
             </div>
-            <span style="font-size:0.75rem">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert von KI</span>
+            <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
         `;
 
         const container = popup.getElement()?.querySelector('.popup-section.loading');
