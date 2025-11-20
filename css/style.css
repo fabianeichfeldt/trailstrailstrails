@@ -187,6 +187,10 @@ a:hover {
   color: #2b6cb0;
 }
 
+.leaflet-container .leaflet-control-attribution {
+  font-size: 0.6em;
+}
+
 @media (max-width: 800px) {
   .no-mobile {
     display: none;
