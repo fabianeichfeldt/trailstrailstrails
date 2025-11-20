@@ -4,13 +4,13 @@
   align-items: center;
   background: #f1f5f9;
   border-radius: 9999px;
-  padding: 0.25rem;
+  padding: 0.25em;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   font-family: system-ui, sans-serif;
-  gap: 0.25rem;
+  gap: 0.25em;
   width: auto;
   align-self: center;
-  margin-top: 0.3rem;
+  margin-top: 0.3em;
 }
 
 .type-option {
@@ -27,9 +27,9 @@
 
 .switch-btn {
   display: inline-block;
-  padding: 0.35rem 0.8rem;
+  padding: 0.35em 0.8em;
   border-radius: 9999px;
-  font-size: 0.85rem;
+  font-size: 0.85em;
   font-weight: 500;
   color: #333;
   background: transparent;
@@ -61,7 +61,7 @@
   padding: 3px 10px;
   border-radius: 6px;
   border: 1px solid #2b6cb0;
-  font-size: 0.8rem;
+  font-size: 0.8em;
   color: #2b6cb0;
   background: #fff;
   cursor: pointer;

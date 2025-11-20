@@ -1,9 +1,13 @@
 .popup-form {
   font-family: system-ui, sans-serif;
-  padding: 1em;
   display: flex;
   flex-direction: column;
   gap: 0.6em;
+}
+
+.popup-form p {
+  word-break: break-all;
+  white-space: wrap;
 }
 
 .popup-form h3 {

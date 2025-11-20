@@ -24,6 +24,10 @@
     line-height: 1.4;
 }
 
+.leaflet-popup-content p {
+    overflow-wrap: break-word;
+}
+
 .leaflet-popup-content-wrapper {
     border-radius: 12px;
     padding: 0;

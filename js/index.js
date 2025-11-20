@@ -279,7 +279,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
   const popupContent = `
   <div class="popup-form">
     <h3>Neuer Eintrag</h3>
-    <p>Bitte ${types[type]} einfügen - <br>einzelne Trails nur bei größeren Transfer (>5km)</p>
+    <p>Bitte ${types[type]} einfügen - einzelne Trails nur bei größeren Transfer (>5km)</p>
     <div class="type-switch">
       <label class="type-option">
         <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" ${type === 'trail' ? 'checked' : ''} disabled>
