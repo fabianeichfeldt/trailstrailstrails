@@ -78,7 +78,6 @@ function pageCounter() {
 }
 
 function resetAddMode(map) {
-  console.log("fsdfdsfsdf");
   addMode = undefined;
   addBtn.textContent = "+";
   addBtn.classList.remove("hidden", "active");
@@ -248,6 +247,9 @@ function initBurgerBtn() {
   const drawer = document.getElementById('drawer');
   const drawerOverlay = document.getElementById('drawerOverlay');
   const drawerClose = document.getElementById('drawerClose');
+  const drawerLinks = drawer.querySelectorAll('a');
+
+  drawerLinks.forEach(link =>link.addEventListener('click', () => closeDrawer()));
 
   function openDrawer() {
     drawer.classList.add('open');
