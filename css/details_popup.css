@@ -40,10 +40,10 @@
     scrollbar-color: #aaa #f1f1f1;
 }
 
-.leaflet-popup-content-wrapper,
-.leaflet-popup-tip-container {
-    max-width: none !important;
-}
+/*.leaflet-popup-content-wrapper,*/
+/*.leaflet-popup-tip-container {*/
+/*    max-width: none !important;*/
+/*}*/
 
 .popup-content a {
     text-decoration: none;
