@@ -69,12 +69,48 @@
         </div>
 
         <ul class="drawer-menu">
-          <li><label class="cluster-switch">
-              <input type="checkbox" id="clusterToggle" checked />
-              <span class="slider"></span>
-              <span class="switch-label">Gruppierung</span>
+          <li class="filter-box">
+            <div class="filter-title">Einstellungen</div>
+            <label class="filter-item">
+              <span class="filter-label">Gruppierung</span>
+              <input type="checkbox" id="clusterToggle"  checked>
+              <span class="filter-toggle"></span>
             </label>
-          </li>
+          
+            <label class="filter-item">
+              <span class="filter-dot" style="background:#3B82F6;"></span>
+              <span class="filter-label">Trailcenter</span>
+              <input type="checkbox" data-filter="trailcenter" checked>
+              <span class="filter-toggle"></span>
+            </label>
+          
+            <label class="filter-item">
+              <span class="filter-dot" style="background:#10B981;"></span>
+              <span class="filter-label">Bikeparks</span>
+              <input type="checkbox" data-filter="bikepark" checked>
+              <span class="filter-toggle"></span>
+            </label>
+          
+            <label class="filter-item">
+              <span class="filter-dot" style="background:#b91094;"></span>
+              <span class="filter-label">Dirtparks</span>
+              <input type="checkbox" data-filter="dirtpark" checked>
+              <span class="filter-toggle"></span>
+            </label>
+          
+            <label class="filter-item">
+              <span class="filter-dot" style="background:#b91094;"></span>
+              <span class="filter-label">Pumptracks</span>
+              <input type="checkbox" data-filter="pumptrack" checked>
+              <span class="filter-toggle"></span>
+            </label>
+            <label class="filter-item">
+              <span class="filter-dot" style="background: #F59E0B;"></span>
+              <span class="filter-label">nicht verifiziert</span>
+              <input type="checkbox" data-filter="unverified" checked>
+              <span class="filter-toggle"></span>
+            </label>
+          </div>
           <li class="only-visible-on-mobile"><a href="#news">📆 News</a></li>
           <li class="only-visible-on-mobile"><a href="#contact">📬 Kontakt</a></li>
           <li><a href="#community">💪 Community</a></li>

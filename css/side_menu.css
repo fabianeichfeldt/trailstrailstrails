@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1em;
+  padding: 0.3em;
   border-bottom: 1px solid #eee;
 }
 
@@ -78,7 +78,7 @@
 
 .drawer-menu {
   list-style: none;
-  padding: 1.2em 0 0.1em 0.5em;
+  padding: 0.8em 0 0.1em 0.5em;
   margin: 0;
 }
 
@@ -98,4 +98,86 @@
 
 .drawer-menu a:hover {
   color: #0077cc;
+}
+
+.filter-box {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 1em;
+  border-radius: 0.6em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  margin: 0.8em;
+  font-size: 0.75em;
+}
+
+.filter-title {
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.6em;
+  text-shadow: rgba(162, 164, 166, 0.1) 1px 1px 1px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  padding: 0.6em 0.7em;
+  border-radius: 0.4em;
+  margin-bottom: 0.5em;
+  cursor: pointer;
+  gap: 0.7em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  transition: background 0.2s ease;
+}
+
+.filter-item:hover {
+  background: #fff;
+}
+
+.filter-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.filter-label {
+  flex-grow: 1;
+  font-size: 0.75em;
+  color: #333;
+}
+
+.filter-item input {
+  display: none;
+}
+
+.filter-toggle {
+  position: relative;
+  width: 32px;
+  height: 18px;
+  background: #ccc;
+  border-radius: 20px;
+  transition: background 0.3s ease;
+}
+
+.filter-toggle::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  top: 2px;
+  left: 2px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+}
+
+.filter-item input:checked+.filter-toggle {
+  background: #0077cc;
+}
+
+.filter-item input:checked+.filter-toggle::before {
+  transform: translateX(14px);
 }

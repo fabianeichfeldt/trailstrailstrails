@@ -146,43 +146,30 @@ async function init() {
       .addTo(mymap);
 
   initBurgerBtn();
-  const clusterToggle = document.getElementById("clusterToggle");
-
-  clusterToggle.addEventListener("change", (e) => {
-    const useCluster = e.target.checked;
-
-    mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
-    mymap.addLayer(useCluster ? clusterGroup : markerGroup);
-
-    if (useCluster && clusterGroup.getLayers().length === 0) {
-      renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
-    } else if (!useCluster && markerGroup.getLayers().length === 0) {
-      renderMarkers(markerGroup, trails, bikeparks, dirtparks);
-    }
-  });
-
+  
   const clusterGroup = L.markerClusterGroup();
   const markerGroup = L.layerGroup();
-
+  
   function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
-
+    
     getMarkers(targetGroup, parks, "bikepark");
     getMarkers(targetGroup, dirtParks, "dirtpark");
-
+    
     trailMarkers = getMarkers(targetGroup, trails, "trail");
   }
-
+  
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),
     getParks(),
     getDirtParks()
   ]);
-
+  
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
   mymap.addLayer(clusterGroup);
-
+  
+  initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
   generateNews(trails);
 
   for (let i = 1; i <= 6; i++)
@@ -246,6 +233,51 @@ async function init() {
     else
       openCreateTrailPopup(mymap, e.latlng, addMode);
   });
+}
+
+function initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks) {
+  const clusterToggle = document.getElementById("clusterToggle");
+  const filterParks = document.querySelector('input[data-filter="bikepark"]');
+  const filterTrails = document.querySelector('input[data-filter="trailcenter"]');
+  const filterDirtParks = document.querySelector('input[data-filter="dirtpark"]');
+  const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]');  
+  const filterUnverified = document.querySelector('input[data-filter="unverified"]');
+
+  function updateFilters() {
+    const useCluster = clusterToggle.checked;
+    const showTrails = filterTrails.checked;
+    const showParks = filterParks.checked;
+    const showDirtParks = filterDirtParks.checked;
+    const showPumptracks = filterPumptracks.checked;
+    const showUnverified = filterUnverified.checked;
+
+    mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
+    mymap.addLayer(useCluster ? clusterGroup : markerGroup);
+
+    const filteredTrails = trails.filter(t => showTrails && (showUnverified ? true : t.approved));
+    const filteredParks = bikeparks.filter(p => showParks && (showUnverified ? true : p.approved));
+    const filteredDirtParks = dirtparks.filter(dp => {
+      if (showDirtParks && showPumptracks && (showUnverified ? true : dp.approved)) return true;
+      if (showDirtParks && dp.dirtpark && (showUnverified ? true : dp.approved)) return true;
+      if (showPumptracks && dp.pumptrack && (showUnverified ? true : dp.approved)) return true;
+      return false;
+    });
+    
+    clusterGroup.clearLayers();
+    markerGroup.clearLayers();
+
+    if (useCluster && clusterGroup.getLayers().length === 0) {
+      renderMarkers(clusterGroup, filteredTrails, filteredParks, filteredDirtParks);
+    } else if (!useCluster && markerGroup.getLayers().length === 0) {
+      renderMarkers(markerGroup, filteredTrails, filteredParks, filteredDirtParks);
+    }
+  }
+  clusterToggle.addEventListener("change", updateFilters);
+  filterParks.addEventListener("change", updateFilters);
+  filterTrails.addEventListener("change", updateFilters);
+  filterDirtParks.addEventListener("change", updateFilters);
+  filterPumptracks.addEventListener("change", updateFilters);
+
 }
 
 function initBurgerBtn() {
