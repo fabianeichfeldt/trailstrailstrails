@@ -2,10 +2,10 @@
     background: white;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    padding: 1.2rem 1rem;
+    padding: 1.2em 1em;
     text-align: center;
     align-self: center;
-    font-size: 0.95rem;
+    font-size: 0.85em;
     color: #333;
     transition: transform 0.2s ease, box-shadow 0.3s ease;
     max-width: 620px;
@@ -19,7 +19,7 @@
   .community-section h2 {
     margin-top: 0;
     color: #2b6cb0;
-    font-size: 1.4rem;
+    font-size: 0.9em;
     margin-bottom: 0.5rem;
   }
   
@@ -27,7 +27,7 @@
     margin: 0.4rem 0 1rem;
     color: #555;
     line-height: 1.4;
-    font-size: 1.2rem;
+    font-size: 0.7em;
   }
   
   .leaderboard-mini {
@@ -41,9 +41,9 @@
     display: flex;
     justify-content: space-between;
     background: #f9fafb;
-    padding: 0.4rem 0.6rem;
+    padding: 0.4em 0.6em;
     border-radius: 8px;
-    font-size: 1.2rem;
+    font-size: 0.7em;
     align-items: center;
     transition: background 0.2s ease;
   }

@@ -20,6 +20,8 @@ window.toggleLegend = function () {
   document.querySelector('.map-legend').classList.toggle('collapsed');
 }
 
+const popupSizing = { width: "95vw", maxWidth: "450px" }
+
 let addMode = undefined;
 let addBtn;
 
@@ -331,7 +333,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
     </div>
   </div>
 `;
-  marker.bindPopup(popupContent, { /*maxWidth: 450 */});
+  marker.bindPopup(popupContent, popupSizing);
 
   marker.on("popupopen", () => {
     const saveBtn = document.getElementById("saveTrailBtn");
@@ -373,7 +375,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
           body: JSON.stringify(trail),
         });
 
-        marker.bindPopup(getTrailPopup(trail));
+        marker.bindPopup(getTrailPopup(trail), popupSizing);
         showToast("Trail erfolgreich gespeichert ✅", "success");
       } catch (err) {
         console.error("Error saving trail:", err);
@@ -403,7 +405,7 @@ function getMarkers(cluster, trails, type) {
 
     const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved, type) })
       .addTo(cluster)
-      .bindPopup(popupHtml);
+      .bindPopup(popupHtml, popupSizing);
 
     marker.on("popupopen", async (e) => {
       const popup = e.popup;
