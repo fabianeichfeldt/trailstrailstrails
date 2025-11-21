@@ -32,8 +32,8 @@
     border-radius: 12px;
     padding: 0;
     max-height: 70vh;
-    /*width: 95vw;*/
-    /*max-width: 450px;*/
+    width: 95vw;
+    max-width: 450px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;

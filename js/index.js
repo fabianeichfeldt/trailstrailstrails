@@ -375,7 +375,6 @@ function openCreateTrailPopup(mymap, latlng, type) {
           body: JSON.stringify(trail),
         });
 
-        marker.bindPopup(getTrailPopup(trail), popupSizing);
         showToast("Trail erfolgreich gespeichert ✅", "success");
       } catch (err) {
         console.error("Error saving trail:", err);
@@ -384,6 +383,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
       } finally {
         saveBtn.classList.remove("loading");
         marker.closePopup();
+        marker.bindPopup(getTrailPopup(trail), popupSizing);
         resetAddMode(mymap);
       }
     });

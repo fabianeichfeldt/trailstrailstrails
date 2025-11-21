@@ -13,9 +13,9 @@
 .toast {
   background: #2b6cb0;
   color: #fff;
-  padding: 0.6rem 1rem;
+  padding: 0.4em 0.4em;
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.6em;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   opacity: 0;
   transform: translateY(20px);

@@ -55,12 +55,16 @@
   background: #fff;
   border: 1px solid #2b6cb0;
   border-radius: 6px;
-  padding: 7px 12px;
-  font-size: 1.3rem;
+  padding: 0.1em 0.3em;
+  font-size: 0.7em;
   text-align: start;
   cursor: pointer;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
   white-space: nowrap;
+
+  img {
+    width: 1.4em;
+  }
 }
 
 .fab-item:hover {
