@@ -101,9 +101,9 @@
   align-items: center;
   cursor: pointer;
   user-select: none;
-  font-size: 0.95rem;
+  font-size: 0.8em;
   color: #444;
-  gap: 0.5rem;
+  gap: 0.5em;
 }
 
 .cluster-switch input {
@@ -114,20 +114,20 @@
 
 .cluster-switch .slider {
   position: relative;
-  width: 42px;
-  height: 22px;
+  width: 32px;
+  height: 16px;
   background-color: #ccc;
-  border-radius: 22px;
+  border-radius: 16px;
   transition: background-color 0.3s ease;
 }
 
 .cluster-switch .slider::before {
   content: "";
   position: absolute;
-  left: 3px;
-  top: 3px;
-  width: 16px;
-  height: 16px;
+  left: 2px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
   background-color: white;
   border-radius: 50%;
   transition: transform 0.3s ease;
@@ -138,34 +138,11 @@
 }
 
 .cluster-switch input:checked+.slider::before {
-  transform: translateX(20px);
+  transform: translateX(16px);
 }
 
 .cluster-switch .switch-label {
-  font-size: 0.9rem;
+  font-size: 0.7em;
   color: #333;
   font-weight: 500;
-}
-
-@media (max-width: 1000px) {
-  .cluster-switch {
-    gap: 0.8rem;
-    font-size: 1.1rem;
-  }
-
-  .cluster-switch .slider {
-    width: 54px;
-    height: 30px;
-  }
-
-  .cluster-switch .slider::before {
-    width: 22px;
-    height: 22px;
-    top: 4px;
-    left: 4px;
-  }
-
-  .cluster-switch input:checked+.slider::before {
-    transform: translateX(24px);
-  }
 }
