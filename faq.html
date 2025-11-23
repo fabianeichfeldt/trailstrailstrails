@@ -4,47 +4,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>FAQ – Häufige Fragen zu offiziell gebauten MTB-Trails und Trailradar</title>
+  <title>FAQ – MTB-Trails finden & Vorbereitung für deine Tour | Trailradar</title>
   <meta name="description"
-    content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+    content="Häufige Fragen zu offiziell gebauten MTB-Trails, Trailradar sowie Tipps zur Vorbereitung deiner Mountainbike-Tour. Finde offizielle Trails und erfahre, was du unbedingt mitnehmen solltest." />
 
-  <meta property="og:title" content="">
+  <meta property="og:title" content="FAQ – MTB-Trails & Vorbereitung auf deine Tour | Trailradar">
   <meta property="og:description"
-    content="">
+    content="Alles über offiziell gebaute MTB-Trails, Trailradar und die wichtigste Ausrüstung für deine nächste Mountainbike-Tour.">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://trailradar.org/faq.html">
 
   <style>
     body {
       font-family: system-ui, sans-serif;
-      line-height: 1.55;
+      line-height: 1.6;
       margin: 0 auto;
       padding: 1.5em 1.2em 4em;
-      max-width: 780px;
+      max-width: 820px;
       color: #1c1c1c;
     }
 
     h1 {
-      font-size: 1.3em;
+      font-size: 1.6em;
       margin-bottom: 0.8em;
     }
 
-    h2 {
-      font-size: 1.2em;
-      margin-top: 1.2em;
-      margin-bottom: 1em;
+    h2,
+    h3 {
+      scroll-margin-top: 90px;
+    }
+
+    .faq-nav {
+      background: #f6f9fc;
+      padding: 1em;
+      border-radius: 12px;
+      margin-bottom: 2em;
+      border: 1px solid #e2e8f0;
+    }
+
+    .faq-nav h2 {
+      margin-top: 0;
       color: #2b6cb0;
     }
 
-    ul {
-      padding-left: 1.2em;
+    .faq-nav ul {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
     }
 
-    .intro {
-      font-size: 1em;
-      font-weight: 500;
-      margin-bottom: 1em;
+    .faq-nav li {
+      margin: .4em 0;
+    }
+
+    .faq-nav a {
+      text-decoration: none;
+      color: #2b6cb0;
+      font-weight: 600;
+    }
+
+    .faq-item+.faq-item {
+      margin-top: 2em;
+    }
+
+    h3 {
+      font-size: 1.2em;
+      margin-bottom: .3em;
+      color: #2b6cb0;
     }
 
     a.back {
@@ -55,137 +81,121 @@
       text-decoration: none;
     }
 
-    .site-header {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      margin-bottom: 1em;
-    }
-
-    .logo-link img {
-      height: 10vw;
+    .site-header img {
+      height: 48px;
       width: auto;
-    }
-
-    @media(max-width:600px) {
-      .site-header {
-        justify-content: center;
-      }
-
-      .logo-link img {
-        height: 48px;
-      }
-    }
-
-    .faq {
-      margin-top: 3em;
-    }
-
-    .faq-item+.faq-item {
-      margin-top: 1.5em;
-    }
-
-    .faq h2 {
-      margin-bottom: 1em;
-    }
-
-    .faq h3 {
-      font-size: 1.1em;
-      margin-bottom: .3em;
     }
   </style>
 </head>
 
 <body>
   <header class="site-header">
-    <a href="/" class="logo-link">
-      <img src="/assets/logo.webp" alt="TrailRadar Logo">
-    </a>
+    <a href="/" class="logo-link"><img src="/assets/logo.webp" alt="Trailradar Logo"></a>
   </header>
+
   <main>
-
-    <h1>FAQ – Häufige Fragen zu offiziell gebauten MTB-Trails und Trailradar</h1>
+    <h1>FAQ – Häufige Fragen zu MTB-Trails & Trailradar</h1>
     <a class="back" href="/">← zurück zur Karte</a>
-    <p class="intro">
-      Hier findest du Antworten auf häufige Fragen rund um offiziell gebaute MTB-Trails und das Trailradar-Projekt.
-    </p>
+    <p class="intro">Hier findest du Antworten auf die häufigsten Fragen rund um offiziell gebaute MTB-Trails, das
+      Trailradar-Projekt und hilfreiche Tipps für deine nächste Tour.</p>
 
+    <nav class="faq-nav">
+      <h2>Direkt zu deiner Frage</h2>
+      <ul>
+        <li><a href="#off-map">• Darf ich Trails fahren, die nicht in dieser Karte stehen?</a></li>
+        <li><a href="#official">• Was macht einen Trail offiziell?</a></li>
+        <li><a href="#missing">• Warum fehlen manche Bikeparks/Trails?</a></li>
+        <li><a href="#submit">• Kann ich selbst Trails melden?</a></li>
+        <li><a href="#packing">• Was sollte ich auf eine MTB-Tour mitnehmen?</a></li>
+      </ul>
+    </nav>
   </main>
+
   <section class="faq">
-    <div class="faq-item">
+    <div class="faq-item" id="off-map">
       <h3>Darf ich Trails fahren, die nicht in dieser Karte stehen?</h3>
-      <p>
-        Ja, in vielen Gebieten ist das möglich! Bitte informiere dich auf offiziellen Seiten der Kommune und der Forstbehörden
-        zu den jeweiligen Regelungen vor Ort.
-      </p>
+      <p>Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern
+        oder Kommunen über geltende Regelungen, insbesondere in Schutzgebieten.</p>
     </div>
 
-    <div class="faq-item">
+    <div class="faq-item" id="official">
       <h3>Was macht einen Trail offiziell?</h3>
-      <p>
-        Ein offizieller Trail im Sinne von TrailRadar wurde in Abstimmung mit Behörden geplant und gebaut
-        und wird von einer zuständigen Organisation (z.B. Verein, Kommune, Betreiber) gepflegt.
-      </p>
+      <p>Ein offizieller Trail wurde in enger Abstimmung mit Behörden geplant, genehmigt und gebaut. Zudem wird er von
+        einer zuständigen Organisation wie einem Verein, Betreiber oder einer Kommune gepflegt.</p>
     </div>
-    <div class="faq-item">
-      <h3>Warum finde ich hier nicht alle offiziellen Bikeparks oder MTB-Trails?</h3>
-      <p>
-        Dieses Projekt wird von der Community getragen. Wenn du weitere offiziell gebaute und genehmigte 
-        MTB-Trails oder Bikeparks kennst, dann trage sie gerne auf der Karte ein – oder melde dich via 
-        Instagram (<a href="https://www.instagram.com/trailradar.germany/" target="_blank">@trailradar.germany</a>) 
-        oder per Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.
-      </p>
+
+    <div class="faq-item" id="missing">
+      <h3>Warum finde ich hier nicht alle offiziellen Bikeparks oder Trails?</h3>
+      <p>Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir! Wenn du einen
+        offiziell gebauten Trail kennst, trag ihn direkt auf der Karte ein oder kontaktiere uns.</p>
     </div>
-    
-    <div class="faq-item">
+
+    <div class="faq-item" id="submit">
       <h3>Kann ich selbst Trails melden?</h3>
-      <p>
-        Absolut – und das ist erwünscht! Trag sie direkt auf der Karte ein oder melde dich via 
-        Instagram (<a href="https://www.instagram.com/trailradar.germany/" target="_blank">@trailradar.germany</a>) 
-        oder per Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.
-      </p>
+      <p>Ja! Trage den Trail direkt in die Karte ein oder melde dich via Instagram (<a
+          href="https://www.instagram.com/trailradar.germany/" target="_blank">@trailradar.germany</a>) oder per Mail an
+        <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
+    </div>
+
+    <div class="faq-item" id="packing">
+      <h3>Was muss ich auf eine MTB-Tour mitnehmen?</h3>
+      <p>Für eine sichere und entspannte Tour solltest du immer eine sinnvolle Grundausrüstung dabeihaben. Dazu gehören
+        ein <strong>Multitool</strong> für kleine Reparaturen, eine <strong>Wasserflasche</strong> oder Trinkblase,
+        sowie eine <strong>Mini-Pumpe</strong> für den Fall der Fälle. Wenn du tubeless fährst, sind <strong>Tire
+        Plugs</strong> sinnvoll – ansonsten empfiehlt sich ein <strong>Ersatzschlauch</strong>. Je nach Tourlänge
+        lohnt es sich außerdem, <strong>Energieriegel, Banane oder andere Snacks</strong> mitzunehmen, um deine
+        Kraftreserven rechtzeitig aufzufüllen. Etwas Bargeld für Notfälle ist ebenfalls empfehlenswert.</p>
     </div>
   </section>
+
   <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {
-      "@type": "Question",
-      "name": "Darf ich Trails fahren, die nicht in dieser Karte stehen?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ja, in vielen Gebieten ist das möglich! Bitte informiere dich auf offiziellen Seiten der Kommune und der Forstbehörde zu den jeweiligen Regelungen vor Ort."
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Darf ich Trails fahren, die nicht in dieser Karte stehen?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern oder Kommunen über geltende Regelungen."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Was macht einen Trail offiziell?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ein offizieller Trail wurde behördlich geplant, genehmigt und gebaut und wird von einer zuständigen Organisation gepflegt."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Warum fehlen manche Bikeparks oder Trails?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir!"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Kann ich selbst Trails melden?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Ja. Trails können auf der Karte eingetragen oder über Instagram bzw. E-Mail gemeldet werden."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Was muss ich auf eine MTB-Tour mitnehmen?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Empfohlen werden Multitool, Wasserflasche oder Trinkblase, Mini-Pumpe, Tire Plugs oder Ersatzschlauch sowie energiereiche Snacks."
+        }
       }
-    },
-    {
-      "@type": "Question",
-      "name": "Was macht einen Trail offiziell?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ein offizieller Trail im Sinne von TrailRadar wurde in Abstimmung mit Behörden geplant und gebaut und wird von einer zuständigen Organisation (z. B. Verein, Kommune, Betreiber) gepflegt."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Warum finde ich hier nicht alle offiziellen Bikeparks oder MTB-Trails?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Dieses Projekt wird von der Community getragen. Wenn du weitere offiziell gebaute und genehmigte MTB-Trails oder Bikeparks kennst, dann trage sie gerne auf der Karte ein oder melde dich via Instagram oder E-Mail."
-      }
-    },
-    {
-      "@type": "Question",
-      "name": "Kann ich selbst Trails melden?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "Ja. Trails können direkt auf der Karte eingetragen werden oder über Instagram oder E-Mail gemeldet werden."
-      }
-    }
-  ]
-}
-</script>
+    ]
+  }
+  </script>
 </body>
 
 </html>
