@@ -34,6 +34,7 @@ export const locations = [
   { "name": "Rhoen", "lat": 50.471402, "lng": 10.067911 },
   { "name": "Pfalz", "lat": 49.517976, "lng": 7.981093 },
   { "name": "Innsbruck", "lat": 47.264952, "lng": 11.410609 },
+  { "name": "bayerischerwald", "lat": 49.1381, "lng": 13.0896 },
 ];  
 
 export async function getApproxLocation() {
