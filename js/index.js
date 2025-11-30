@@ -177,7 +177,7 @@ async function init() {
   initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
   generateNews(trails);
 
-  const specificTrailMarker = trailMarkers.find(m => m.internal_id === specificTrail); 
+  const specificTrailMarker = trailMarkers.find(m => m.options.internal_id === specificTrail); 
   if (specificTrailMarker) {
     console.log("Opening specific location popup for", trail.name);
     specificTrailMarker.openPopup();
