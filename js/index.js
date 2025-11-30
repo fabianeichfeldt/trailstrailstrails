@@ -118,6 +118,10 @@ async function init() {
     const predefinedRegion = locations.find(loc => (loc.name.toLowerCase() === specificLocation));
     if (specificLocation !== "nearby" && predefinedRegion) 
       mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
+    else {
+      const loc = await getApproxLocation();
+      mymap.setView(loc, 9)
+    }
   } else {
     const loc = await getApproxLocation();
     mymap.setView(loc, 9)
