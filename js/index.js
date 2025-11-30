@@ -115,15 +115,9 @@ async function init() {
   const match = path.match(/^\/trails\/([^/]+)/);
   if (match && match[1] && match[1].length > 0) {
     specificLocation = match[1].toLowerCase();
-    if (specificLocation !== "nearby") {
-      locations.find(loc => {
-        if (loc.name.toLowerCase() === specificLocation) {
-          mymap.setView([loc.lat, loc.lng], 9);
-          return true;
-        }
-        return false;
-      });
-    }
+    const predefinedRegion = locations.find(loc => (loc.name.toLowerCase() === specificLocation));
+    if (specificLocation !== "nearby" && predefinedRegion) 
+      mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
   } else {
     const loc = await getApproxLocation();
     mymap.setView(loc, 9)
