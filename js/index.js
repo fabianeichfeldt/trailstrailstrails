@@ -179,7 +179,7 @@ async function init() {
 
   const specificTrailMarker = trailMarkers.find(m => m.options.internal_id === specificTrail); 
   if (specificTrailMarker) {
-    console.log("Opening specific location popup for", trail.name);
+    console.log("Opening specific location popup for", specificTrail);
     specificTrailMarker.openPopup();
   }
 
