@@ -25,7 +25,7 @@ const popupSizing = { width: "95vw", maxWidth: "450px" }
 
 let addMode = undefined;
 let addBtn;
-let specificLocation = undefined;
+let specificTrail = undefined;
 
 const types = {
   trail: "Trail",
@@ -114,9 +114,9 @@ async function init() {
   
   const match = path.match(/^\/trails\/([^/]+)/);
   if (match && match[1] && match[1].length > 0) {
-    specificLocation = match[1].toLowerCase();
-    const predefinedRegion = locations.find(loc => (loc.name.toLowerCase() === specificLocation));
-    if (specificLocation !== "nearby" && predefinedRegion) 
+    specificTrail = match[1].toLowerCase();
+    const predefinedRegion = locations.find(l => (l.id.toLowerCase() === specificTrail));
+    if (specificTrail !== "nearby" && predefinedRegion) 
       mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
     else {
       const loc = await getApproxLocation();
@@ -171,7 +171,7 @@ async function init() {
   generateJsonLD(trails);
   
   let trailMarkers = []
-  renderMarkers(clusterGroup, trails, bikeparks, dirtparks, specificLocation);
+  renderMarkers(clusterGroup, trails, bikeparks, dirtparks, specificTrail);
   mymap.addLayer(clusterGroup);
   
   initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
