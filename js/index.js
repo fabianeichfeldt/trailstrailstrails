@@ -502,8 +502,10 @@ function getMarkers(cluster, trails, type, specificLocation) {
       }
     });
     trailMarkers.push(marker);
-    if (trail.id === specificLocation)
+    if (trail.id === specificLocation) {
+      console.log("Opening specific location popup for", trail.name);
       marker.openPopup();
+    }
   }
 
   return trailMarkers;
