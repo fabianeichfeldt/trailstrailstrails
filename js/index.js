@@ -153,13 +153,13 @@ async function init() {
   const clusterGroup = L.markerClusterGroup();
   const markerGroup = L.layerGroup();
   
-  function renderMarkers(targetGroup, trails, parks, dirtParks, specificLocation) {
+  function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
     
     getMarkers(targetGroup, parks, "bikepark");
     getMarkers(targetGroup, dirtParks, "dirtpark");
     
-    trailMarkers = getMarkers(targetGroup, trails, "trail", specificLocation);
+    trailMarkers = getMarkers(targetGroup, trails, "trail");
   }
   
   const [trails, bikeparks, dirtparks] = await Promise.all([
@@ -171,11 +171,17 @@ async function init() {
   generateJsonLD(trails);
   
   let trailMarkers = []
-  renderMarkers(clusterGroup, trails, bikeparks, dirtparks, specificTrail);
+  renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
   mymap.addLayer(clusterGroup);
   
   initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
   generateNews(trails);
+
+  const specificTrailMarker = trailMarkers.find(m => m.internal_id === specificTrail); 
+  if (specificTrailMarker) {
+    console.log("Opening specific location popup for", trail.name);
+    specificTrailMarker.openPopup();
+  }
 
   for (let i = 1; i <= 6; i++)
     document.getElementById(`show-last-${i}`).addEventListener("click", () => {
@@ -434,13 +440,16 @@ function openCreateTrailPopup(mymap, latlng, type) {
   marker.openPopup();
 }
 
-function getMarkers(cluster, trails, type, specificLocation) {
+function getMarkers(cluster, trails, type) {
   const trailMarkers = [];
 
   for (const trail of trails) {
     const popupHtml = getTrailPopup(trail);
 
-    const marker = L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail.approved, type) })
+    const marker = L.marker([trail.latitude, trail.longitude], { 
+      icon: createCustomIcon(trail.approved, type),
+      internal_id: trail.id,
+      })
       .addTo(cluster)
       .bindPopup(popupHtml, popupSizing);
 
@@ -500,10 +509,6 @@ function getMarkers(cluster, trails, type, specificLocation) {
       }
     });
     trailMarkers.push(marker);
-    if (trail.id === specificLocation) {
-      console.log("Opening specific location popup for", trail.name);
-      marker.openPopup();
-    }
   }
 
   return trailMarkers;
