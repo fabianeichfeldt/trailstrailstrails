@@ -1,4 +1,4 @@
-const trails = require('../../trail_analysis.json');
+const trails = require('../../trail-scraper/trail_analysis.json');
 
 const api_key = process.env.ADD_TRAIL_ANON;
 async function pushTrail(trail) {

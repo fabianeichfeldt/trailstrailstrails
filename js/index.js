@@ -5,6 +5,7 @@ import { showToast } from "./toast.js";
 import { getApproxLocation, locations } from "./locations.js";
 import { upVote, downVote } from './feedback.js';
 import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails.js";
+import { generateJsonLD } from "./json_ld.js";
 import { anon } from "./anon.js";
 
 window.downVote = async function (trailID, el) {
@@ -24,6 +25,7 @@ const popupSizing = { width: "95vw", maxWidth: "450px" }
 
 let addMode = undefined;
 let addBtn;
+let specificLocation = undefined;
 
 const types = {
   trail: "Trail",
@@ -98,7 +100,6 @@ async function init() {
   }
 
   const path = window.location.pathname;
-  const match = path.match(/^\/trails\/([^/]+)/);
   var mymap = L.map(el, {
     gestureHandling: true,
     gestureHandlingOptions: {
@@ -110,15 +111,19 @@ async function init() {
     },
     zoomControl: false,
   });
-
-  if (match && match[1] && match[1].length > 0 && match[1].toLowerCase() !== "nearby") {
-    locations.find(loc => {
-      if (loc.name.toLowerCase() === match[1].toLowerCase()) {
-        mymap.setView([loc.lat, loc.lng], 9);
-        return true;
-      }
-      return false;
-    });
+  
+  const match = path.match(/^\/trails\/([^/]+)/);
+  if (match && match[1] && match[1].length > 0) {
+    specificLocation = match[1].toLowerCase();
+    if (specificLocation !== "nearby") {
+      locations.find(loc => {
+        if (loc.name.toLowerCase() === specificLocation) {
+          mymap.setView([loc.lat, loc.lng], 9);
+          return true;
+        }
+        return false;
+      });
+    }
   } else {
     const loc = await getApproxLocation();
     mymap.setView(loc, 9)
@@ -150,13 +155,13 @@ async function init() {
   const clusterGroup = L.markerClusterGroup();
   const markerGroup = L.layerGroup();
   
-  function renderMarkers(targetGroup, trails, parks, dirtParks) {
+  function renderMarkers(targetGroup, trails, parks, dirtParks, specificLocation) {
     targetGroup.clearLayers();
     
     getMarkers(targetGroup, parks, "bikepark");
     getMarkers(targetGroup, dirtParks, "dirtpark");
     
-    trailMarkers = getMarkers(targetGroup, trails, "trail");
+    trailMarkers = getMarkers(targetGroup, trails, "trail", specificLocation);
   }
   
   const [trails, bikeparks, dirtparks] = await Promise.all([
@@ -164,9 +169,11 @@ async function init() {
     getParks(),
     getDirtParks()
   ]);
+
+  generateJsonLD(trails);
   
   let trailMarkers = []
-  renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
+  renderMarkers(clusterGroup, trails, bikeparks, dirtparks, specificLocation);
   mymap.addLayer(clusterGroup);
   
   initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
@@ -429,7 +436,7 @@ function openCreateTrailPopup(mymap, latlng, type) {
   marker.openPopup();
 }
 
-function getMarkers(cluster, trails, type) {
+function getMarkers(cluster, trails, type, specificLocation) {
   const trailMarkers = [];
 
   for (const trail of trails) {
@@ -495,6 +502,8 @@ function getMarkers(cluster, trails, type) {
       }
     });
     trailMarkers.push(marker);
+    if (trail.id === specificLocation)
+      marker.openPopup();
   }
 
   return trailMarkers;
