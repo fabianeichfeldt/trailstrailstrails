@@ -51,7 +51,8 @@ export async function getTrailDetails(id, type) {
   }
 
   const json = await response.json();
-  return json.data[0];
+  console.log(json);
+  return json.data;
 }
 
 export function createCustomIcon(approved, type) {
