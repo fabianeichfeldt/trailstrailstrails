@@ -1,16 +1,3 @@
-export function generateJsonLD(locations, openedSpecificTrail) {
-  const script = document.createElement("script");
-  script.setAttribute("type", "application/ld+json");
-  const data =  [];
-
-  if (openedSpecificTrail)
-    data.push(createSchemaEntry(locations.find(loc => loc.id === openedSpecificTrail)));
-  else
-    locations.forEach(loc => data.push(createSchemaEntry(loc)));
-  script.innerHTML = JSON.stringify(data);
-  document.head.appendChild(script);
-}
-
 function createSchemaEntry(loc) {
   return {
     "@context": "https://schema.org",
@@ -24,4 +11,17 @@ function createSchemaEntry(loc) {
     },
     "url": `https://trailradar.org/trails/${loc.id}`
   };
+}
+
+export function generateJsonLD(locations, openedSpecificTrail) {
+  const script = document.createElement("script");
+  script.setAttribute("type", "application/ld+json");
+  const data =  [];
+
+  if (openedSpecificTrail)
+    data.push(createSchemaEntry(locations.find(loc => loc.id === openedSpecificTrail)));
+  else
+    locations.forEach(loc => data.push(createSchemaEntry(loc)));
+  script.innerHTML = JSON.stringify(data);
+  document.head.appendChild(script);
 }
