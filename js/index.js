@@ -25,7 +25,7 @@ const popupSizing = { width: "95vw", maxWidth: "450px" }
 
 let addMode = undefined;
 let addBtn;
-let specificTrail = undefined;
+let openSpecificTrail = undefined;
 
 const types = {
   trail: "Trail",
@@ -114,9 +114,9 @@ async function init() {
   
   const match = path.match(/^\/trails\/([^/]+)/);
   if (match && match[1] && match[1].length > 0) {
-    specificTrail = match[1].toLowerCase();
-    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === specificTrail));
-    if (specificTrail !== "nearby" && predefinedRegion) 
+    openSpecificTrail = match[1].toLowerCase();
+    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === openSpecificTrail));
+    if (openSpecificTrail !== "nearby" && predefinedRegion) 
       mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
     else {
       const loc = await getApproxLocation();
@@ -168,7 +168,7 @@ async function init() {
     getDirtParks()
   ]);
 
-  generateJsonLD(trails);
+  generateJsonLD(trails, openSpecificTrail);
   
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
@@ -177,9 +177,9 @@ async function init() {
   initFilterAndClustering(mymap, markerGroup, clusterGroup, renderMarkers, trails, bikeparks, dirtparks);
   generateNews(trails);
 
-  const specificTrailMarker = trailMarkers.find(m => m.options.internal_id === specificTrail); 
+  const specificTrailMarker = trailMarkers.find(m => m.options.internal_id === openSpecificTrail); 
   if (specificTrailMarker) {
-    console.log("Opening specific location popup for", specificTrail);
+    console.log("Opening specific location popup for", openSpecificTrail);
     specificTrailMarker.openPopup();
   }
 
