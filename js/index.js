@@ -114,11 +114,12 @@ async function init() {
   
   const match = path.match(/^\/trails\/([^/]+)/);
   if (match && match[1] && match[1].length > 0) {
-    openSpecificTrail = match[1].toLowerCase();
-    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === openSpecificTrail));
-    if (openSpecificTrail !== "nearby" && predefinedRegion) 
+    const trailPath = match[1].toLowerCase();
+    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === trailPath));
+    if (trailPath !== "nearby" && predefinedRegion) 
       mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
     else {
+      openSpecificTrail = match[1].toLowerCase();
       const loc = await getApproxLocation();
       mymap.setView(loc, 9)
     }

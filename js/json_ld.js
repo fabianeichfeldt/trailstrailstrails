@@ -18,6 +18,7 @@ export function generateJsonLD(locations, openedSpecificTrail) {
   script.setAttribute("type", "application/ld+json");
   const data =  [];
 
+  console.log('generateJsonLD', openedSpecificTrail);
   if (openedSpecificTrail)
     data.push(createSchemaEntry(locations.find(loc => loc.id === openedSpecificTrail)));
   else
