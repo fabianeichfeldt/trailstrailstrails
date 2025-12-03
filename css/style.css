@@ -180,9 +180,17 @@ a:hover {
 }
 
 .seo-text {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 2em 0;
+  padding: 0em 1em;
+  text-align: center;
+  align-self: center;
   font-size: 0.7em;
   color: #666;
-  margin-top: 1em;
+  transition: transform 0.2s ease, box-shadow 0.3s ease;
+  max-width: 620px;
 }
 
 .seo-text a {
