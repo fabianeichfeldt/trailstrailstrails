@@ -54,79 +54,81 @@
 </head>
 
 <body>
-  <main>
-    <header>
-      <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
-        <i class="fas fa-bars"></i>
-      </button>
-
-      <div id="drawerOverlay" class="drawer-overlay"></div>
-
-      <nav id="drawer" class="drawer">
-        <div class="drawer-header">
-          <img src="/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
-          <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
-        </div>
-
-        <ul class="drawer-menu">
-          <li class="filter-box">
-            <div class="filter-title">Einstellungen</div>
-            <label class="filter-item">
-              <span class="filter-label">Gruppierung</span>
-              <input type="checkbox" id="clusterToggle"  checked>
-              <span class="filter-toggle"></span>
-            </label>
-          
-            <label class="filter-item">
-              <span class="filter-dot" style="background:#3B82F6;"></span>
-              <span class="filter-label">Trailcenter</span>
-              <input type="checkbox" data-filter="trailcenter" checked>
-              <span class="filter-toggle"></span>
-            </label>
-          
-            <label class="filter-item">
-              <span class="filter-dot" style="background:#10B981;"></span>
-              <span class="filter-label">Bikeparks</span>
-              <input type="checkbox" data-filter="bikepark" checked>
-              <span class="filter-toggle"></span>
-            </label>
-          
-            <label class="filter-item">
-              <span class="filter-dot" style="background:#b91094;"></span>
-              <span class="filter-label">Dirtparks</span>
-              <input type="checkbox" data-filter="dirtpark" checked>
-              <span class="filter-toggle"></span>
-            </label>
-          
-            <label class="filter-item">
-              <span class="filter-dot" style="background:#b91094;"></span>
-              <span class="filter-label">Pumptracks</span>
-              <input type="checkbox" data-filter="pumptrack" checked>
-              <span class="filter-toggle"></span>
-            </label>
-            <label class="filter-item">
-              <span class="filter-dot" style="background: #F59E0B;"></span>
-              <span class="filter-label">nicht verifiziert</span>
-              <input type="checkbox" data-filter="unverified" checked>
-              <span class="filter-toggle"></span>
-            </label>
+  <section class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <h1 class="hero-title">Offizielle MTB Trails. Echt. Legal. Endlich übersichtlich.</h1>
+      <p class="hero-sub">Finde Trailcenter, Bikeparks & Pumptracks in Deutschland – auf einer Karte.</p>
+    </div>
+    <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
+      <i class="fas fa-bars"></i>
+    </button>
+    
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+    
+    <nav id="drawer" class="drawer">
+      <div class="drawer-header">
+        <img src="/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
+        <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
+      </div>
+    
+      <ul class="drawer-menu">
+        <li class="filter-box">
+          <div class="filter-title">Einstellungen</div>
+          <label class="filter-item">
+            <span class="filter-label">Gruppierung</span>
+            <input type="checkbox" id="clusterToggle" checked>
+            <span class="filter-toggle"></span>
+          </label>
+    
+          <label class="filter-item">
+            <span class="filter-dot" style="background:#3B82F6;"></span>
+            <span class="filter-label">Trailcenter</span>
+            <input type="checkbox" data-filter="trailcenter" checked>
+            <span class="filter-toggle"></span>
+          </label>
+    
+          <label class="filter-item">
+            <span class="filter-dot" style="background:#10B981;"></span>
+            <span class="filter-label">Bikeparks</span>
+            <input type="checkbox" data-filter="bikepark" checked>
+            <span class="filter-toggle"></span>
+          </label>
+    
+          <label class="filter-item">
+            <span class="filter-dot" style="background:#b91094;"></span>
+            <span class="filter-label">Dirtparks</span>
+            <input type="checkbox" data-filter="dirtpark" checked>
+            <span class="filter-toggle"></span>
+          </label>
+    
+          <label class="filter-item">
+            <span class="filter-dot" style="background:#b91094;"></span>
+            <span class="filter-label">Pumptracks</span>
+            <input type="checkbox" data-filter="pumptrack" checked>
+            <span class="filter-toggle"></span>
+          </label>
+          <label class="filter-item">
+            <span class="filter-dot" style="background: #F59E0B;"></span>
+            <span class="filter-label">nicht verifiziert</span>
+            <input type="checkbox" data-filter="unverified" checked>
+            <span class="filter-toggle"></span>
+          </label>
           </div>
-          <li class="only-visible-on-mobile"><a href="#news"><span class="menu-icon">📆</span> News</a></li>
-          <li class="only-visible-on-mobile"><a href="#contact"><span class="menu-icon">📬</span> Kontakt</a></li>
-          <li><a href="/faq.html"><span class="menu-icon">ℹ️</span> FAQ</a></li>
-          <li><a href="#community"><span class="menu-icon">💪</span> Community</a></li>
-          <li><a href="/legal.html"><span class="menu-icon">⚖️</span> Was ist "offiziell"?</a></li>
-          <li><a href="/privacy.html"><span class="menu-icon">⚖️</span> Datenschutz & Impressum</a></li>
-        </ul>
-      </nav>
-      <img src="/assets/logo.webp" alt="trails logo" class="logo" />
-      <h1>Trailradar</h1>
-    </header>
-
+        <li class="only-visible-on-mobile"><a href="#news"><span class="menu-icon">📆</span> News</a></li>
+        <li class="only-visible-on-mobile"><a href="#contact"><span class="menu-icon">📬</span> Kontakt</a></li>
+        <li><a href="/faq.html"><span class="menu-icon">ℹ️</span> FAQ</a></li>
+        <li><a href="#community"><span class="menu-icon">💪</span> Community</a></li>
+        <li><a href="/legal.html"><span class="menu-icon">⚖️</span> Was ist "offiziell"?</a></li>
+        <li><a href="/privacy.html"><span class="menu-icon">⚖️</span> Datenschutz & Impressum</a></li>
+      </ul>
+    </nav>
+    <img src="/assets/logo.webp" alt="trailradar logo" class="logo" />
+    </section>
+  <main>
     <section class="content">
       <div class="map-container">
         <div class="map-top">
-          <h2>Finde offizielle MTB Trails in Deutschland</h2>
           <div class="top-map-buttons">
             <div class="add-btn-wrapper">
               <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
