@@ -9,16 +9,11 @@
     top: 0;
     background: white;
     z-index: 10;
-    padding: 0.5em 0;
-    border-bottom: 1px solid #ddd;
     font-weight: bold;
     font-size: 1.1em;
 }
 
 .leaflet-popup-content {
-    /*width: 95vw;*/
-    /*max-width: 450px;*/
-    /*min-width: 400px;*/
     white-space: nowrap;
     font-size: 1.2em;
     line-height: 1.4;
@@ -33,21 +28,17 @@
     padding: 0;
     max-height: 70vh;
     width: 95vw;
-    max-width: 450px;
+    max-width: 500px;
     overflow-y: auto;
     overflow-x: hidden;
     scrollbar-width: thin;
     scrollbar-color: #aaa #f1f1f1;
 }
 
-/*.leaflet-popup-content-wrapper,*/
-/*.leaflet-popup-tip-container {*/
-/*    max-width: none !important;*/
-/*}*/
-
 .popup-content a {
     text-decoration: none;
     font-weight: bold;
+    font-size: 0.8em;
 }
 
 .popup-content a.disabled {
@@ -65,6 +56,7 @@
     display: inline-flex;
     align-items: center;
     text-decoration: none;
+    font-size: 0.6em;
 }
 
 .popup-section p {
@@ -119,3 +111,109 @@
         background-position: 100px 0;
     }
 }
+
+.popup-photos {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+}    
+
+.photo-carousel {
+    position: absolute;
+    inset: 0; 
+}
+
+.photo-carousel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    z-index: 2;
+    display: block;
+    margin: 0 auto;
+    transition: transform .35s ease, opacity .3s ease;
+    transform-origin: center;
+}
+
+.photo-carousel img.active {
+    opacity: 1;
+}
+
+.photo-wrap {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .45s ease;
+    pointer-events: none;
+}
+
+.photo-wrap.active {
+    opacity: 1; 
+    pointer-events: auto;
+}
+.photo-wrap.active img {
+    opacity: 1;
+    transform: scale(1); 
+}
+
+.photo-wrap::before {
+    content: "";
+        position: absolute;
+        inset: 0;
+        background-image: var(--img);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: blur(20px) brightness(0.6);
+        transform: scale(1.15);
+        z-index: 0;
+        will-change: transform, filter;
+        pointer-events: none;
+}
+
+.photo-wrap::before {
+    background-image: var(--img); 
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 8px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, .7);
+    border-radius: 50%;
+}
+
+.carousel-dots .dot.active {
+    background: white; 
+}
+
+.no-photos {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    font-size: 14px;
+    color: #555;
+    background: linear-gradient(135deg, #fafafa, #eee);
+    border-radius: 9px;
+    border: 1px solid #ddd;
+}
+
+.no-photos strong {
+    color: #333; }

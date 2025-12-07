@@ -1,12 +1,14 @@
 import { getParks } from "./data/bikeparks.js";
 import { getDirtParks } from "./data/dirt_parks.js";
-import { getTrails, createCustomIcon, getTrailDetails } from "./data/trails.js";
+import { getTrails, createCustomIcon } from "./data/trails.js";
 import { showToast } from "./toast.js";
 import { getApproxLocation, locations } from "./locations.js";
 import { upVote, downVote } from './feedback.js';
 import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails.js";
 import { generateJsonLD } from "./json_ld.js";
+import { getTrailDetailsHTML, startPhotoCarousel } from "./detailsPopup.js";
 import { anon } from "./anon.js";
+import { formatDate } from "./formatDate.js";
 
 window.downVote = async function (trailID, el) {
   await downVote(trailID, el);
@@ -63,15 +65,6 @@ function generateNews(trails) {
     container.innerHTML =
       "<p>⚠️ Neuigkeiten konnten nicht geladen werden.</p>";
   }
-}
-
-function formatDate(dateStr) {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("de-DE", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
 }
 
 function pageCounter() {
@@ -455,54 +448,15 @@ function getMarkers(cluster, trails, type) {
       .bindPopup(popupHtml, popupSizing);
 
     marker.on("popupopen", async (e) => {
-      const popup = e.popup;
-      const dirtparkInfo = type === 'dirtpark' ? `<div class="popup-section">
-        <div class="multi-select">
-          <label class="multi-option">
-          <input type="checkbox" id="hasPumprack" name="subType" value="pumptrack" ${trail.pumptrack ? 'checked' : ''} disabled>
-          <span class="multi-btn">${trail.pumptrack ? '✅' : '❌'} Pumptrack</span>
-          </label>
-          
-          <label class="multi-option">
-          <input type="checkbox" name="subType" id="hasDirtpark" value="dirtpark" ${trail.dirtpark ? 'checked' : ''} disabled>
-          <span class="multi-btn">${trail.dirtpark ? '✅' : '❌'} Dirtpark</span>
-          </label>
-        </div>
-      </div>` : '';
-      try {
+      try {  
+        const detailsHTML = await getTrailDetailsHTML(trail, type);
 
-        const details = await getTrailDetails(trail.id, type);
-
-        const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
-        const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
-
-        const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
-        const detailsHTML = `${dirtparkInfo}
-          <div class="popup-section">
-            <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
-            <p>${hours}</p>
-          </div>
-          <div class="popup-section">
-            <h4>📜 Nutzungsregeln</h4>
-            ${rulesHTML}
-          </div>
-            <div class="popup-feedback" data-trail-id="${trail.id}">
-              <span class="feedback-label">Sind diese Infos hilfreich?</span>
-              <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
-                  <i class="fa-solid fa-thumbs-up"></i>
-                </button>
-                <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
-                  <i class="fa-solid fa-thumbs-down"></i>
-                </button>
-              </div>
-            </div>
-            <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
-        `;
-
+        const popup = e.popup;
         const container = popup.getElement()?.querySelector('.popup-section.loading');
-        if (container) container.outerHTML = detailsHTML;
-
+        if (container) { 
+          container.outerHTML = detailsHTML;
+          startPhotoCarousel();
+        }
       } catch (err) {
         console.error("Fehler beim Laden der Details:", err);
         const container = popup.getElement()?.querySelector('.popup-section.loading');
@@ -528,7 +482,7 @@ function getTrailPopup(trail) {
 
   if (trail.instagram && trail.instagram.trim() !== "") {
     popupHtml += `
-      <div class="popup-instagram" style="margin-top: 6px;">
+      <div class="popup-instagram">
         <a href="https://instagram.com/${trail.approved ? trail.instagram : ''}" target="_blank">
           <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
           <span>${trail.instagram}</span>

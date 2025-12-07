@@ -51,7 +51,6 @@ export async function getTrailDetails(id, type) {
   }
 
   const json = await response.json();
-  console.log(json);
   return json.data;
 }
 
