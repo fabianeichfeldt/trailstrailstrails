@@ -13,13 +13,12 @@ function createSchemaEntry(loc) {
   };
 }
 
-export function generateJsonLD(locations, openedSpecificTrail) {
+export function generateJsonLD(locations) {
   const script = document.createElement("script");
   script.setAttribute("type", "application/ld+json");
   const data =  [];
 
-  if (!openedSpecificTrail)
-    locations.forEach(loc => data.push(createSchemaEntry(loc)));
+  locations.forEach(loc => data.push(createSchemaEntry(loc)));
   script.innerHTML = JSON.stringify(data);
   document.head.appendChild(script);
 }

@@ -162,7 +162,8 @@ async function init() {
     getDirtParks()
   ]);
 
-  generateJsonLD(trails, openSpecificTrail);
+  if (!openSpecificTrail)
+    generateJsonLD(trails);
   
   let trailMarkers = []
   renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
