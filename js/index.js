@@ -6,7 +6,7 @@ import { getApproxLocation, locations } from "./locations.js";
 import { upVote, downVote } from './feedback.js';
 import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails.js";
 import { generateJsonLD } from "./json_ld.js";
-import { getTrailDetailsHTML, startPhotoCarousel } from "./detailsPopup.js";
+import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detailsPopup.js";
 import { anon } from "./anon.js";
 import { formatDate } from "./formatDate.js";
 
@@ -449,14 +449,14 @@ function getMarkers(cluster, trails, type) {
       .bindPopup(popupHtml, popupSizing);
 
     marker.on("popupopen", async (e) => {
+      const popup = e.popup;
       try {  
         const detailsHTML = await getTrailDetailsHTML(trail, type);
-
-        const popup = e.popup;
         const container = popup.getElement()?.querySelector('.popup-section.loading');
         if (container) { 
           container.outerHTML = detailsHTML;
           startPhotoCarousel();
+          setupYT2Click();
         }
       } catch (err) {
         console.error("Fehler beim Laden der Details:", err);

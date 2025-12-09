@@ -57,9 +57,22 @@ export async function getTrailDetailsHTML(trail, type) {
             </div>
           `;
   }
+  const videoHTML = details.videos.length > 0 ? `<br>
+  <div class="yt-2click" data-yt-src="${details.videos[0].url}">
+    <div class="yt-thumb">
+      <div class="yt-overlay">
+        <p class="yt-text">
+          Dieses Video wird von YouTube bereitgestellt.<br>
+          Durch das Laden können personenbezogene Daten an Google übermittelt werden.
+        </p>
+        <button class="yt-load-btn">▶ Video laden</button>
+      </div>
+    </div>
+  </div>` : '';
 
   const detailsHTML = `
         ${photosHTML}
+        ${videoHTML}
         ${dirtparkInfo}
           <div class="popup-section">
             <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
@@ -85,6 +98,28 @@ export async function getTrailDetailsHTML(trail, type) {
   return detailsHTML;
 }
 
+export function setupYT2Click() {
+  const box = document.querySelector(".yt-2click");
+  if (!box) return;
+  const url = box.dataset.ytSrc;
+  box.querySelector(".yt-load-btn").addEventListener("click", (e) => {
+    const iframe = document.createElement("iframe");
+    iframe.src = url;
+    iframe.loading = "lazy";
+    iframe.style.aspectRatio = "16 / 9";
+    iframe.allow =
+      "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+    iframe.allowFullscreen = true;
+    iframe.style.width = "100%";
+    iframe.style.border = "none";
+
+    box.innerHTML = "";
+    box.appendChild(iframe);
+    e.stopPropagation();   // ⛔ prevent Leaflet from closing popup
+    e.preventDefault();
+  });
+}
+
 export function startPhotoCarousel() {
   const slides = document.querySelectorAll(".photo-wrap");
   const dots = document.querySelectorAll(".carousel-dots .dot");
@@ -92,13 +127,13 @@ export function startPhotoCarousel() {
   let current = 0;
 
   function showSlide(index) {
-    slides[current].classList.remove("active");
-    dots[current].classList.remove("active");
+    slides[current]?.classList.remove("active");
+    dots[current]?.classList.remove("active");
 
     current = index;
 
-    slides[current].classList.add("active");
-    dots[current].classList.add("active");
+    slides[current]?.classList.add("active");
+    dots[current]?.classList.add("active");
   }
 
   setInterval(() => {

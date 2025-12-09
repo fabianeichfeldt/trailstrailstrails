@@ -1,8 +1,8 @@
-# [TrailRadar.org](https://trailradar.org)
+# [Trailradar.org](https://trailradar.org)
 
 **Legal MTB Trails. Real Fun. Community-Contributed.**
 
-TrailRadar.org is a community-driven project that maps **official, legal mountain bike trails**. The idea originated from discussions in the [MTB-News Forum](https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/) and is built **by the community, for the community**.
+Trailradar.org is a community-driven project that maps **official, legal mountain bike trails**. The idea originated from discussions in the [MTB-News Forum](https://www.mtb-news.de/forum/t/sammlung-legaler-trails.941342/) and is built **by the community, for the community**.
 
 ---
 
