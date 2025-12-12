@@ -1,7 +1,8 @@
 import { anon } from "../anon.js";
 export async function getTrails() {
-  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-trail", {
+  const response = await fetch("https://trailradar.org/api/add-trail", {
     method: "GET",
+    cache: "force-cache",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -19,8 +20,9 @@ export async function getTrails() {
 export async function getTrailDetails(id, type) {
   let response = null;
   if(type === 'dirtpark') {
-    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-parks-details?id=${id}`, {
+    response = await fetch(`https://trailradar.org/api/dirt-parks-details?id=${id}`, {
       method: "GET",
+      cache: "force-cache",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,
@@ -28,8 +30,9 @@ export async function getTrailDetails(id, type) {
     });
   }
   else if(type === 'bikepark') {
-    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/bike-parks-details?id=${id}`, {
+    response = await fetch(`https://trailradar.org/api/bike-parks-details?id=${id}`, {
       method: "GET",
+      cache: "force-cache",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,
@@ -37,8 +40,9 @@ export async function getTrailDetails(id, type) {
     });
   }
   else {
-    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details?trail=${id}`, {
+    response = await fetch(`https://trailradar.org/api/trail-details?trail=${id}`, {
       method: "GET",
+      cache: "force-cache",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,

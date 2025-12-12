@@ -1,8 +1,9 @@
 import { anon } from "../anon.js";
 
 export async function getDirtParks() {
-  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-parks", {
+  const response = await fetch("https://trailradar.org/api/dirt-parks", {
     method: "GET",
+    cache: "force-cache",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
