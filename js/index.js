@@ -448,7 +448,9 @@ function getMarkers(cluster, trails, type) {
       .addTo(cluster)
       .bindPopup(popupHtml, popupSizing);
 
+    marker.on("popupclose", () => document.getElementById("top-map-buttons").style.display = "block");
     marker.on("popupopen", async (e) => {
+      document.getElementById("top-map-buttons").style.display = "none";
       const popup = e.popup;
       try {  
         const detailsHTML = await getTrailDetailsHTML(trail, type);
