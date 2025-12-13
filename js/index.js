@@ -461,7 +461,7 @@ function getMarkers(cluster, trails, type) {
       } catch (err) {
         console.error("Fehler beim Laden der Details:", err);
         const container = popup.getElement()?.querySelector('.popup-section.loading');
-        if (container) container.outerHTML = `${dirtparkInfo}<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
+        if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
       }
     });
     trailMarkers.push(marker);
