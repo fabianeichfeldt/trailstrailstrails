@@ -32,6 +32,10 @@
 .yt-text {
   font-size: 0.7em;
   text-wrap: auto;
+  a {
+    color: #fff;
+    text-decoration: none;
+  }
 }
 
 .yt-load-btn {

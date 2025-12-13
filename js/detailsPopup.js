@@ -63,7 +63,8 @@ export async function getTrailDetailsHTML(trail, type) {
       <div class="yt-overlay">
         <p class="yt-text">
           Dieses Video wird von YouTube bereitgestellt.<br>
-          Durch das Laden können personenbezogene Daten an Google übermittelt werden.
+          Durch das Laden können personenbezogene Daten an Google übermittelt werden.<br>
+          <a href="${details.videos[0].creator}" class="yt-text"><i class="fa-brands fa-youtube"></i>&nbsp;${details.videos[0].creator.split('/').pop()}</a>
         </p>
         <button class="yt-load-btn">▶ Video laden</button>
       </div>
