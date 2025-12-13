@@ -206,13 +206,15 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 16px;
-    font-size: 14px;
+    padding: 0.1em;
+    font-size: 0.7em;
     color: #555;
     background: linear-gradient(135deg, #fafafa, #eee);
     border-radius: 9px;
     border: 1px solid #ddd;
 }
 
-.no-photos strong {
-    color: #333; }
+.no-photos a {
+    font-size: 0.9em;
+    font-weight: bold;
+}

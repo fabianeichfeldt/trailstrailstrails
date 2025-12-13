@@ -31,7 +31,7 @@ export async function getTrailDetailsHTML(trail, type) {
                 <strong>Oops!</strong><br>
                 Hier gibt es noch keine Fotos.<br>
                 Du hast ein Foto, das hier erscheinen soll?<br>
-                Schreib uns: <strong>webmaster@trailradar.org</strong>
+                Schreib uns: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>
               </p>
             </div>
           `;
