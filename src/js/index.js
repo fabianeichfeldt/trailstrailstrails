@@ -9,6 +9,13 @@ import { generateJsonLD } from "./json_ld.js";
 import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detailsPopup.js";
 import { anon } from "./anon.js";
 import { formatDate } from "./formatDate.js";
+import L from "leaflet";
+import { MarkerClusterGroup } from "leaflet.markercluster"
+
+import "leaflet/dist/leaflet.css";
+import "leaflet.markercluster/dist/MarkerCluster.css";
+import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+
 
 window.downVote = async function (trailID, el) {
   await downVote(trailID, el);
@@ -93,7 +100,7 @@ async function init() {
   }
 
   const path = window.location.pathname;
-  var mymap = L.map(el, {
+  let mymap = L.map(el, {
     gestureHandling: true,
     gestureHandlingOptions: {
       text: {
@@ -135,17 +142,17 @@ async function init() {
     position: 'bottomright',
   }).addTo(mymap);
 
-  L.control
-      .fullscreen({
-        position: 'bottomright',
-        forceSeparateButton: false,
-      })
-      .addTo(mymap);
+  // L.control
+  //     .fullscreen({
+  //       position: 'bottomright',
+  //       forceSeparateButton: false,
+  //     })
+  //     .addTo(mymap);
 
   initBurgerBtn();
   
-  const clusterGroup = L.markerClusterGroup();
-  const markerGroup = L.layerGroup();
+  const clusterGroup = new MarkerClusterGroup();
+  const markerGroup = new L.LayerGroup();
   
   function renderMarkers(targetGroup, trails, parks, dirtParks) {
     targetGroup.clearLayers();
@@ -513,5 +520,5 @@ function getTrailPopup(trail) {
   return popupHtml;
 }
 
-pageCounter();
+// pageCounter();
 await init();
