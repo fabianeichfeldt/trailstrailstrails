@@ -424,7 +424,6 @@ function openCreateTrailPopup(mymap, latlng, type) {
       } catch (err) {
         console.error("Error saving trail:", err);
         showToast("Fehler beim Speichern ❌", "error");
-        return;
       } finally {
         saveBtn.classList.remove("loading");
         marker.closePopup();
@@ -520,5 +519,5 @@ function getTrailPopup(trail) {
   return popupHtml;
 }
 
-// pageCounter();
+pageCounter();
 await init();
