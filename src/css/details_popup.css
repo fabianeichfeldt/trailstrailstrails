@@ -1,0 +1,220 @@
+.popup-creator {
+    margin-top: 10px;
+    font-size: 0.8em;
+    color: #555;
+}
+
+.leaflet-popup-content .popup-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.leaflet-popup-content {
+    white-space: nowrap;
+    font-size: 1.2em;
+    line-height: 1.4;
+}
+
+.leaflet-popup-content p {
+    overflow-wrap: break-word;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    padding: 0;
+    max-height: 70vh;
+    width: 95vw;
+    max-width: 500px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: #aaa #f1f1f1;
+}
+
+.popup-content a {
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.8em;
+}
+
+.popup-content a.disabled {
+    pointer-events: none;
+    cursor: default;
+    text-decoration: none;
+}
+
+.popup-content a i {
+    margin-left: 10px;
+}
+
+.popup-instagram a {
+    color: #E4405F;
+    display: inline-flex;
+    align-items: center;
+    text-decoration: none;
+    font-size: 0.6em;
+}
+
+.popup-section p {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.0;
+    font-size: 0.7em;
+    color: #333;
+}
+
+.popup-section h4 {
+    font-size: 0.9em;
+    line-height: 0.9em;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb {
+    background: #aaa;
+    border-radius: 3px;
+}
+
+.leaflet-popup-content-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
+.popup-section.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #666;
+    font-size: 0.9em;
+    min-height: 65vh;
+    background: repeating-linear-gradient(45deg,
+    #f0f0f0,
+    #f0f0f0 10px,
+    #f9f9f9 10px,
+    #f9f9f9 20px);
+    border-radius: 8px;
+    animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+    from {
+        background-position: 0 0;
+    }
+
+    to {
+        background-position: 100px 0;
+    }
+}
+
+.popup-photos {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+    background: #111;
+}    
+
+.photo-carousel {
+    position: absolute;
+    inset: 0; 
+}
+
+.photo-carousel img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    z-index: 2;
+    display: block;
+    margin: 0 auto;
+    transition: transform .35s ease, opacity .3s ease;
+    transform-origin: center;
+}
+
+.photo-carousel img.active {
+    opacity: 1;
+}
+
+.photo-wrap {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity .45s ease;
+    pointer-events: none;
+}
+
+.photo-wrap.active {
+    opacity: 1; 
+    pointer-events: auto;
+}
+.photo-wrap.active img {
+    opacity: 1;
+    transform: scale(1); 
+}
+
+.photo-wrap::before {
+    content: "";
+        position: absolute;
+        inset: 0;
+        background-image: var(--img);
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        filter: blur(20px) brightness(0.6);
+        transform: scale(1.15);
+        z-index: 0;
+        will-change: transform, filter;
+        pointer-events: none;
+}
+
+.photo-wrap::before {
+    background-image: var(--img); 
+}
+
+.carousel-dots {
+    position: absolute;
+    bottom: 8px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+}
+
+.carousel-dots .dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, .7);
+    border-radius: 50%;
+}
+
+.carousel-dots .dot.active {
+    background: white; 
+}
+
+.no-photos {
+    width: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 0.1em;
+    font-size: 0.7em;
+    color: #555;
+    background: linear-gradient(135deg, #fafafa, #eee);
+    border-radius: 9px;
+    border: 1px solid #ddd;
+}
+
+.no-photos a {
+    font-size: 0.9em;
+    font-weight: bold;
+}
