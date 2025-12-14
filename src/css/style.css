@@ -213,18 +213,18 @@ a:hover {
     display: none;
   }
   body {
-    background: url("/assets/hero-mobile.webp"), #1212125d;
+    background: url("/src/assets/hero-mobile.webp"), #1212125d;
   }
 }
 @media (min-width: 800px) {
   body {
-    background: url("/assets/hero-tablet.webp"), #1212125d;
+    background: url("/src/assets/hero-tablet.webp"), #1212125d;
   }
 }
 
 @media (min-width: 1200px) {
   body {
-    background: url("/assets/hero-desktop.webp"), #1212125d;
+    background: url("/src/assets/hero-desktop.webp"), #1212125d;
   }  
   .content {
     display: flex;
