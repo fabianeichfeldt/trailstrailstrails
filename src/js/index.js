@@ -10,7 +10,8 @@ import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detail
 import { anon } from "./anon.js";
 import { formatDate } from "./formatDate.js";
 import L from "leaflet";
-import { MarkerClusterGroup } from "leaflet.markercluster"
+import { MarkerClusterGroup } from "leaflet.markercluster";
+import * as f from "./fullscreen.js";
 
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
@@ -155,12 +156,12 @@ async function init() {
     position: 'bottomright',
   }).addTo(mymap);
 
-  // L.control
-  //     .fullscreen({
-  //       position: 'bottomright',
-  //       forceSeparateButton: false,
-  //     })
-  //     .addTo(mymap);
+  L.control
+      .fullscreen({
+        position: 'bottomright',
+        forceSeparateButton: false,
+      })
+      .addTo(mymap);
 
   initBurgerBtn();
   
