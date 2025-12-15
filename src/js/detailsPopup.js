@@ -1,6 +1,8 @@
 import { getTrailDetails } from "./data/trails.js";
 import { formatDate } from "./formatDate.js";
 
+import "/src/css/yt.css";
+
 export async function getTrailDetailsHTML(trail, type) {
   const dirtparkInfo = type === 'dirtpark' ? `<div class="popup-section">
     <div class="multi-select">

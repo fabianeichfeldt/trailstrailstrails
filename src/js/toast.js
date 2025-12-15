@@ -1,3 +1,5 @@
+import "/src/css/toast.css";
+
 export function showToast(message, type = "success", duration = 3000) {
     const container = document.getElementById("toast-container");
     if (!container) return;

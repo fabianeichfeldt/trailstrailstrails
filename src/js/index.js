@@ -16,6 +16,19 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "@fortawesome/fontawesome-free/css/all.css";
+import "/src/css/details_popup.css";
+import "/src/css/style.css";
+import "/src/css/nearby_modal.css";
+import "/src/css/add_btn.css";
+import "/src/css/fullscreen.css";
+import "/src/css/marker.css";
+import "/src/css/legend.css";
+import "/src/css/switch.css";
+import "/src/css/community.css";
+import "/src/css/side_menu.css";
+
+import "/src/css/new_entry_popup.css";
+
 
 window.downVote = async function (trailID, el) {
   await downVote(trailID, el);

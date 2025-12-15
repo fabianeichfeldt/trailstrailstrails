@@ -1,4 +1,5 @@
 import { anon } from "./anon.js";
+import "/src/css/feedback_button.css";
 
 export async function upVote(trailId, el) {
     await setFeedback(trailId, true, el);
