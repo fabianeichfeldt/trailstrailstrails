@@ -1,5 +1,5 @@
 import { anon } from "../anon";
-import {isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
+import {BikePark, isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
 import {TrailDetails} from "../types/TrailDetails";
 
 export async function getTrails(): Promise<SingleTrail[]>  {
@@ -17,7 +17,11 @@ export async function getTrails(): Promise<SingleTrail[]>  {
   }
 
   const json = await response.json();
-  return json.data;
+  return (json.data as Array<Trail>).map(i => {
+    return {
+      ...i,
+      type: "trail",
+    }});
 }
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {

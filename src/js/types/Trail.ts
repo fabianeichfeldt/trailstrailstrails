@@ -35,3 +35,9 @@ export function isBikePark(trail: Trail): trail is BikePark {
 export function isTrail(trail: Trail): trail is SingleTrail {
     return trail.type === "trail";
 }
+
+export type anyTrailType = "dirtpark" | "bikepark" | "trail";
+
+export function isAnyTrailType(type: string): type is anyTrailType {
+    return type === "trail" || type === "bikepark" || type === "dirtpark";
+}

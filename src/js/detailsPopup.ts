@@ -3,6 +3,17 @@ import { formatDate } from "./formatDate";
 
 import "/src/css/yt.css";
 import {isDirtPark, Trail} from "./types/Trail";
+import { downVote, upVote } from "./feedback";
+import { showToast } from "./toast";
+
+async function downVoteIntern(trailID: string, el: HTMLElement) {
+  await downVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+}
+async function upVoteIntern(trailID: string, el: HTMLElement) {
+  await upVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+}
 
 export async function getTrailDetailsHTML(trail: Trail) {
   const dirtparkInfo = isDirtPark(trail) ? `<div class="popup-section">
@@ -89,10 +100,10 @@ export async function getTrailDetailsHTML(trail: Trail) {
             <div class="popup-feedback" data-trail-id="${trail.id}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
+                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVoteIntern('${trail.id}', this)">
                   <i class="fa-solid fa-thumbs-up"></i>
                 </button>
-                <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
+                <button class="thumb-btn down" title="Nein" onclick="downVoteIntern('${trail.id}', this)">
                   <i class="fa-solid fa-thumbs-down"></i>
                 </button>
               </div>

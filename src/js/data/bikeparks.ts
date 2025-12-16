@@ -16,5 +16,9 @@ export async function getParks(): Promise<BikePark[]> {
   }
 
   const json = await response.json();
-  return json.data;
+  return (json.data as Array<BikePark>).map(i => {
+    return {
+      ...i,
+      type: "bikepark",
+    }});
 }
