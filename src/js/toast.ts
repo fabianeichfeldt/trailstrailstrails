@@ -1,6 +1,6 @@
 import "/src/css/toast.css";
 
-export function showToast(message, type = "success", duration = 3000) {
+export function showToast(message: string, type = "success", duration = 3000) {
     const container = document.getElementById("toast-container");
     if (!container) return;
   
@@ -9,10 +9,8 @@ export function showToast(message, type = "success", duration = 3000) {
     toast.textContent = message;
     container.appendChild(toast);
   
-    // Kurze Verzögerung, damit CSS-Transition greift
     requestAnimationFrame(() => toast.classList.add("show"));
   
-    // Nach Ablauf wieder entfernen
     setTimeout(() => {
       toast.classList.remove("show");
       setTimeout(() => toast.remove(), 300);

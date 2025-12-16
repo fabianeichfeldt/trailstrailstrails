@@ -1,6 +1,7 @@
-import { anon } from "../anon.js";
+import { anon } from "../anon";
+import { DirtPark } from "../types/Trail";
 
-export async function getDirtParks() {
+export async function getDirtParks() :Promise<DirtPark[]> {
   const response = await fetch("https://trailradar.org/api/dirt-parks", {
     method: "GET",
     cache: "force-cache",
@@ -18,7 +19,7 @@ export async function getDirtParks() {
   return json.data;
 }
 
-export async function getDirtParkDetails(park) {
+export async function getDirtParkDetails(park: DirtPark) {
   const response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-park-details?id=${park}`, {
     method: "GET",
     headers: {

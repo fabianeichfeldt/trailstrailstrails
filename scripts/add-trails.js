@@ -1,4 +1,4 @@
-import { trails } from '../js/data/trails.js';
+import { trails } from '../js/data/trails.ts';
 
 const api_key = process.env.ADD_TRAIL_ANON;
 async function pushTrail(trail) {

@@ -1,5 +1,8 @@
-import { anon } from "../anon.js";
-export async function getTrails() {
+import { anon } from "../anon";
+import {isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
+import {TrailDetails} from "../types/TrailDetails";
+
+export async function getTrails(): Promise<SingleTrail[]>  {
   const response = await fetch("https://trailradar.org/api/add-trail", {
     method: "GET",
     cache: "force-cache",
@@ -17,10 +20,10 @@ export async function getTrails() {
   return json.data;
 }
 
-export async function getTrailDetails(id, type) {
+export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   let response = null;
-  if(type === 'dirtpark') {
-    response = await fetch(`https://trailradar.org/api/dirt-parks-details?id=${id}`, {
+  if(isDirtPark(trail)) {
+    response = await fetch(`https://trailradar.org/api/dirt-parks-details?id=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {
@@ -29,8 +32,8 @@ export async function getTrailDetails(id, type) {
       },
     });
   }
-  else if(type === 'bikepark') {
-    response = await fetch(`https://trailradar.org/api/bike-parks-details?id=${id}`, {
+  else if(isBikePark(trail)) {
+    response = await fetch(`https://trailradar.org/api/bike-parks-details?id=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {
@@ -40,7 +43,7 @@ export async function getTrailDetails(id, type) {
     });
   }
   else {
-    response = await fetch(`https://trailradar.org/api/trail-details?trail=${id}`, {
+    response = await fetch(`https://trailradar.org/api/trail-details?trail=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {
@@ -50,30 +53,27 @@ export async function getTrailDetails(id, type) {
     });
   }
 
-  if (!response.ok) {
-    return {};
-  }
+  if (!response.ok)
+    throw new Error(`Trails ${trail.type} failed with status ${response.status}`);
 
   const json = await response.json();
   return json.data;
 }
 
-export function createCustomIcon(approved, type) {
+export function createCustomIcon(trail: Trail) {
   let category = 'unverified';
-  if (approved) {
+  if (trail.approved) {
     category = 'verified';
-    if(type === 'dirtpark')
+    if(isDirtPark(trail))
       category = 'dirtpark';
-    else if(type === 'bikepark')
+    else if(isBikePark(trail))
       category = 'bikepark';
   }
   
-  const icon = L.icon({
+  return {
     iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     className: `marker-${category}`,
-  });
-
-  return icon;
+  };
 }
 
