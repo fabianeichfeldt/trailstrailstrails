@@ -1,0 +1,34 @@
+{
+  "name": "trailradar",
+  "version": "1.0.0",
+  "description": "**Legal MTB Trails. Real Fun. Community-Contributed.**",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fabianeichfeldt/trailstrailstrails.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/fabianeichfeldt/trailstrailstrails/issues"
+  },
+  "homepage": "https://github.com/fabianeichfeldt/trailstrailstrails#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  },
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
+    "leaflet": "^1.9.4",
+    "leaflet-gesture-handling": "^1.2.2",
+    "leaflet.fullscreen": "^5.1.1",
+    "leaflet.markercluster": "^1.5.3"
+  }
+}

@@ -1,13 +1,11 @@
 <!DOCTYPE html>
 <html lang="de">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
-  <link rel="icon" type="image/png" sizes="192x192" href="/assets/logo.webp">
-  <link rel="apple-touch-icon" href="/assets/logo.webp">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/src/assets/logo.webp">
+  <link rel="icon" type="image/png" sizes="192x192" href="/src/assets/logo.webp">
+  <link rel="apple-touch-icon" href="/src/assets/logo.webp">
   <meta name="theme-color" content="#0077cc">
   <meta name="description"
     content="Trailradar zeigt dir legal gebaute, offizielle MTB Trails in Deutschland – übersichtlich auf der Karte, mit Schließungen & Trailregeln.">
@@ -25,40 +23,15 @@
   <meta property="og:type" content="website">
   <meta property="og:updated_time" content="">
   <meta property="og:locale" content="de_DE" />
-  <link itemprop="thumbnailUrl" href="/assets/logo.webp">
+  <link itemprop="thumbnailUrl" href="/src/assets/logo.webp">
   <title>Finde Offizielle MTB Trails in Deutschland</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link href="/css/style.css?v=1" rel="stylesheet" />
-  <link href="/css/switch.css?v=2" rel="stylesheet" />
-  <link href="/css/community.css?v=2" rel="stylesheet" />
-  <link href="/css/feedback_button.css?v=2" rel="stylesheet" />
-  <link href="/css/nearby_modal.css?v=2" rel="stylesheet" />
-  <link href="/css/add_btn.css?v=2" rel="stylesheet" />
-  <link href="/css/toast.css?v=2" rel="stylesheet" />
-  <link href="/css/side_menu.css?v=2" rel="stylesheet" />
-  <link href="/css/marker.css?v=2" rel="stylesheet" />
-  <link href="/css/details_popup.css?v=2" rel="stylesheet" />
-  <link href="/css/new_entry_popup.css?v=2" rel="stylesheet" />
-  <link href="/css/legend.css?v=2" rel="stylesheet" />
-  <link href="/css/fullscreen.css?v=2" rel="stylesheet" />
-  <link href="/css/yt.css" rel="stylesheet" />
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
-  <script src="https://unpkg.com/leaflet-gesture-handling"></script>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css"
-    type="text/css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
-
 </head>
 
 <body>
   <section class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <img src="/assets/logo.webp" alt="trailradar logo" class="logo" />
+      <img src="/src/assets/logo.webp" alt="trailradar logo" class="logo" />
       <h1 class="hero-title no-mobile">Offizielle MTB Trails. Legal. Community getrieben und übersichtlich auf der Karte.</h1>
       <p class="hero-sub">Finde Trailcenter, Bikeparks & Pumptracks in Deutschland – auf einer Karte.</p>
     </div>
@@ -70,7 +43,7 @@
     
     <nav id="drawer" class="drawer">
       <div class="drawer-header">
-        <img src="/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
+        <img src="/src/assets/logo.webp" alt="Trailradar Logo" class="drawer-logo" />
         <button id="drawerClose" class="drawer-close"><i class="fas fa-times"></i></button>
       </div>
     
@@ -119,10 +92,10 @@
         </li>
         <li class="only-visible-on-mobile"><a href="#news"><span class="menu-icon">📆</span> News</a></li>
         <li class="only-visible-on-mobile"><a href="#contact"><span class="menu-icon">📬</span> Kontakt</a></li>
-        <li><a href="/faq.html"><span class="menu-icon">ℹ️</span> FAQ</a></li>
+        <li><a href="/src/faq.html"><span class="menu-icon">ℹ️</span> FAQ</a></li>
         <li><a href="#community"><span class="menu-icon">💪</span> Community</a></li>
-        <li><a href="/legal.html"><span class="menu-icon">⚖️</span> Was ist "offiziell"?</a></li>
-        <li><a href="/privacy.html"><span class="menu-icon">⚖️</span> Datenschutz & Impressum</a></li>
+        <li><a href="/src/legal.html"><span class="menu-icon">⚖️</span> Was ist "offiziell"?</a></li>
+        <li><a href="/src/privacy.html"><span class="menu-icon">⚖️</span> Datenschutz & Impressum</a></li>
       </ul>
     </nav>
     </section>
@@ -134,10 +107,10 @@
             <div class="add-btn-wrapper">
               <button id="add-btn" class="add-trail-btn"><i class="fas fa-plus"></i></button>
               <div id="fab-menu" class="fab-menu hidden">
-                <button class="fab-item" data-type="trail"><img alt="Trail Logo" src="/assets/trail.png"/> Trail </button>
-                <button class="fab-item" data-type="bikepark"><img alt="Bikepark Logo" src="/assets/bike_park.png"/> Bikepark
+                <button class="fab-item" data-type="trail"><img alt="Trail Logo" src="/src/assets/trail.png"/> Trail </button>
+                <button class="fab-item" data-type="bikepark"><img alt="Bikepark Logo" src="/src/assets/bike_park.png"/> Bikepark
                 </button>
-                <button class="fab-item" data-type="dirtpark"><img alt="Dirtpark Logo" src="/assets/bmx_bike.png"/>
+                <button class="fab-item" data-type="dirtpark"><img alt="Dirtpark Logo" src="/src/assets/bmx_bike.png"/>
                   Dirtpark/Pumptrack</button>
               </div>
             </div>
@@ -335,6 +308,7 @@
         <a href="/trails/wien">Trails in Wien, </a>
         <a href="/trails/innsbruck">Trails in Innsbruck, </a>
         <a href="/trails/kaernten">Trails in Kärnten, </a>
+        <a href="/trails/nearby">Trails in der Umgebung </a>
         und viele mehr.
       </p>
     </section>
@@ -361,8 +335,7 @@
       </div>
     </div>
   </div>
-  <script type="module" src="/js/index.js?v=20251211"></script>
-  <script src="/js/fullscreen.js"></script>
+  <script type="module" src="/src/js/index.js"></script>
 </body>
 
 </html>
