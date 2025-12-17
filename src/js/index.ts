@@ -6,7 +6,6 @@ import { getApproxLocation, locations } from "./locations";
 import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails";
 import { generateJsonLD } from "./json_ld";
 import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detailsPopup";
-import { anon } from "./anon";
 import { formatDate } from "./formatDate";
 import L from "leaflet";
 import "leaflet.markercluster";
@@ -30,7 +29,8 @@ import "/src/css/side_menu.css";
 import "/src/css/new_entry_popup.css";
 import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail, Trail} from "./types/Trail";
 
-function toggleLegend() {
+//@ts-expect-error
+window.toggleLegend = function () {
   document.querySelector('.map-legend')?.classList.toggle('collapsed');
 }
 
