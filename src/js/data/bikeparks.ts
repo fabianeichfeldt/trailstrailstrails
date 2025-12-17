@@ -1,6 +1,7 @@
-import { anon } from "../anon.js";
+import { anon } from "../anon";
+import { BikePark } from "../types/Trail";
 
-export async function getParks() {
+export async function getParks(): Promise<BikePark[]> {
   const response = await fetch("https://trailradar.org/api/bike-parks", {
     method: "GET",
     cache: "force-cache",
@@ -15,5 +16,9 @@ export async function getParks() {
   }
 
   const json = await response.json();
-  return json.data;
+  return (json.data as Array<BikePark>).map(i => {
+    return {
+      ...i,
+      type: "bikepark",
+    }});
 }

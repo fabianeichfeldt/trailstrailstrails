@@ -1,5 +1,5 @@
 import * as axios from 'axios';
-import { getTrails } from '../js/data/trails.js';
+import { getTrails } from '../js/data/trails.ts';
 
 const api_key = process.env.GEO_API_KEY;
 async function getDetails(lat, lon) {

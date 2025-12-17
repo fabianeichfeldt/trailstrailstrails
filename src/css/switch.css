@@ -48,6 +48,7 @@
 
 .multi-select {
   display: flex;
+  margin-top: 0.5em;
   gap: 6px;
 }
 

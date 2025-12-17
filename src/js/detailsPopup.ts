@@ -1,10 +1,24 @@
-import { getTrailDetails } from "./data/trails.js";
-import { formatDate } from "./formatDate.js";
+import { getTrailDetails } from "./data/trails";
+import { formatDate } from "./formatDate";
 
 import "/src/css/yt.css";
+import {isDirtPark, Trail} from "./types/Trail";
+import { downVote, upVote } from "./feedback";
+import { showToast } from "./toast";
 
-export async function getTrailDetailsHTML(trail, type) {
-  const dirtparkInfo = type === 'dirtpark' ? `<div class="popup-section">
+//@ts-expect-error
+window.downVoteIntern = async function (trailID: string, el: HTMLElement) {
+  await downVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+};
+//@ts-expect-error
+window.upVoteIntern = async function (trailID: string, el: HTMLElement) {
+  await upVote(trailID, el);
+  showToast("Danke für dein Feedback! 🙏", "success");
+};
+
+export async function getTrailDetailsHTML(trail: Trail) {
+  const dirtparkInfo = isDirtPark(trail) ? `<div class="popup-section">
     <div class="multi-select">
       <label class="multi-option">
       <input type="checkbox" id="hasPumprack" name="subType" value="pumptrack" ${trail.pumptrack ? 'checked' : ''} disabled>
@@ -18,7 +32,7 @@ export async function getTrailDetailsHTML(trail, type) {
     </div>
   </div>` : '';
 
-  const details = await getTrailDetails(trail.id, type);
+  const details = await getTrailDetails(trail);
 
   const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
   const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
@@ -88,10 +102,10 @@ export async function getTrailDetailsHTML(trail, type) {
             <div class="popup-feedback" data-trail-id="${trail.id}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVote('${trail.id}', this)">
+                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVoteIntern('${trail.id}', this)">
                   <i class="fa-solid fa-thumbs-up"></i>
                 </button>
-                <button class="thumb-btn down" title="Nein" onclick="downVote('${trail.id}', this)">
+                <button class="thumb-btn down" title="Nein" onclick="downVoteIntern('${trail.id}', this)">
                   <i class="fa-solid fa-thumbs-down"></i>
                 </button>
               </div>
@@ -102,10 +116,10 @@ export async function getTrailDetailsHTML(trail, type) {
 }
 
 export function setupYT2Click() {
-  const box = document.querySelector(".yt-2click");
+  const box: HTMLDivElement | null = document.querySelector(".yt-2click");
   if (!box) return;
-  const url = box.dataset.ytSrc;
-  box.querySelector(".yt-load-btn").addEventListener("click", (e) => {
+  const url = box.dataset.ytSrc || "";
+  box.querySelector(".yt-load-btn")?.addEventListener("click", (e) => {
     const iframe = document.createElement("iframe");
     iframe.src = url;
     iframe.loading = "lazy";
@@ -129,7 +143,7 @@ export function startPhotoCarousel() {
 
   let current = 0;
 
-  function showSlide(index) {
+  function showSlide(index: number) {
     slides[current]?.classList.remove("active");
     dots[current]?.classList.remove("active");
 

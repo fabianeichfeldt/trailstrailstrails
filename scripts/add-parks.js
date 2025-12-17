@@ -1,4 +1,4 @@
-import { bikeparks } from '../js/data/bikeparks.js';
+import { bikeparks } from '../js/data/bikeparks.ts';
 
 const api_key = process.env.ADD_TRAIL_ANON;
 async function pushpark(park) {

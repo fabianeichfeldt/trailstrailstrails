@@ -1,4 +1,5 @@
-export const locations = [
+
+export const locations : Region[] = [
   { "name": "Berlin", "lat": 52.5200, "lng": 13.4050 },
   { "name": "Hamburg", "lat": 53.5511, "lng": 9.9937 },
   { "name": "Muenchen", "lat": 48.1351, "lng": 11.5820 },
@@ -44,11 +45,20 @@ export async function getApproxLocation() {
     const data = await res.json();
     if (data.lat && data.lon) {
       const lat = Math.round(data.lat * 10) / 10;
-      const lon = Math.round(data.lon * 10) / 10;
-      return [lat, lon];
+      const lng = Math.round(data.lon * 10) / 10;
+      return {lat, lng};
     }
   } catch (err) {
     console.error('geo failed', err);
   }
-  return null;
+  return {
+    lat: 0,
+    lng: 0,
+  };
+}
+
+export class Region {
+  name: string = "";
+  lat: number = 0;
+  lng: number = 0;
 }
