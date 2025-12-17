@@ -9,8 +9,10 @@ import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detail
 import { formatDate } from "./formatDate";
 import L from "leaflet";
 import "leaflet.markercluster";
+import "leaflet-gesture-handling";
 import "./fullscreen";
 
+import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -112,6 +114,7 @@ async function init() {
   }
 
   const path = window.location.pathname;
+  L.Map.addInitHook("addHandler", "gestureHandling", (L as any).GestureHandling);
   let mymap = L.map(el, {
     //@ts-expect-error
     gestureHandling: true,
