@@ -6,14 +6,16 @@ import {isDirtPark, Trail} from "./types/Trail";
 import { downVote, upVote } from "./feedback";
 import { showToast } from "./toast";
 
-async function downVoteIntern(trailID: string, el: HTMLElement) {
+//@ts-expect-error
+window.downVoteIntern = async function (trailID: string, el: HTMLElement) {
   await downVote(trailID, el);
   showToast("Danke für dein Feedback! 🙏", "success");
-}
-async function upVoteIntern(trailID: string, el: HTMLElement) {
+};
+//@ts-expect-error
+window.upVoteIntern = async function (trailID: string, el: HTMLElement) {
   await upVote(trailID, el);
   showToast("Danke für dein Feedback! 🙏", "success");
-}
+};
 
 export async function getTrailDetailsHTML(trail: Trail) {
   const dirtparkInfo = isDirtPark(trail) ? `<div class="popup-section">
