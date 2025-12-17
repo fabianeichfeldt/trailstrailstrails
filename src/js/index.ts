@@ -429,11 +429,10 @@ function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, type: anyT
       saveBtn.classList.add("loading");
       try {
         const endpoint = addMode === 'trail' ? 'add-trail' : (addMode === 'bikepark' ? 'bike-parks' : 'dirt-parks');
-        await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/${endpoint}`, {
+        await fetch(`https://trailradar.org/api/${endpoint}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${anon}`,
           },
           body: JSON.stringify(trail),
         });
