@@ -1,84 +1,27 @@
 import { getParks } from "./data/bikeparks";
 import { getDirtParks } from "./data/dirt_parks";
-import { getTrails, createCustomIcon } from "./data/trails";
-import { showToast } from "./toast";
-import { getApproxLocation, locations } from "./locations";
-import { giveTrailNearBy, askNearbyConflict, reportAbort } from "./near_by_trails";
+import {getTrails} from "./data/trails";
+import {Coord, getApproxLocation, locations} from "./locations";
 import { generateJsonLD } from "./json_ld";
-import { getTrailDetailsHTML, startPhotoCarousel, setupYT2Click } from "./detailsPopup";
-import { formatDate } from "./formatDate";
-import L from "leaflet";
-import "leaflet.markercluster";
-import "leaflet-gesture-handling";
-import "./fullscreen";
 
-import "leaflet-gesture-handling/dist/leaflet-gesture-handling.css";
-import "leaflet/dist/leaflet.css";
-import "leaflet.markercluster/dist/MarkerCluster.css";
-import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "@fortawesome/fontawesome-free/css/all.css";
-import "/src/css/details_popup.css";
 import "/src/css/style.css";
-import "/src/css/nearby_modal.css";
 import "/src/css/add_btn.css";
-import "/src/css/fullscreen.css";
-import "/src/css/marker.css";
 import "/src/css/legend.css";
 import "/src/css/switch.css";
 import "/src/css/community.css";
 import "/src/css/side_menu.css";
 
 import "/src/css/new_entry_popup.css";
-import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail, Trail} from "./types/Trail";
+import {generateNews} from "../news/news";
+import {hideAddButton, initMap} from "../map/map";
 
 //@ts-expect-error
 window.toggleLegend = function () {
   document.querySelector('.map-legend')?.classList.toggle('collapsed');
 }
 
-const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
-
-let addMode: anyTrailType | undefined = undefined;
-let addBtn : HTMLButtonElement | null = null;
 let openSpecificTrail: string | undefined = undefined;
-
-const types = {
-  trail: "Trail",
-  bikepark: "Bike Park",
-  dirtpark: "Dirtpark/Pumptrack"
-}
-
-function generateNews(trails: Trail[]) {
-  const container = document.getElementById("news");
-  if (!container) return;
-
-  try {
-    const news = [];
-    for (let i = 1; i < 7; i++) {
-      const newsItem = trails.at(-i);
-      news.push({
-        title: "Neue Trails!",
-        date: newsItem?.created_at ?? Date.now().toString(),
-        text: `<strong>${newsItem?.name}</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last-${i}' href='#'>Link</a>`,
-      });
-    }
-    container.innerHTML = "<h2>Neuigkeiten</h2>";
-
-    for (const item of news) {
-      const el = document.createElement("div");
-      el.className = "news-item";
-      el.innerHTML = `
-        <time datetime="${item.date}">${formatDate(item.date)}</time>
-        <p>${item.text}</p>
-      `;
-      container.appendChild(el);
-    }
-  } catch (err) {
-    console.error("Error loading news:", err);
-    container.innerHTML =
-      "<p>⚠️ Neuigkeiten konnten nicht geladen werden.</p>";
-  }
-}
 
 function pageCounter() {
   return fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-visit", {
@@ -91,21 +34,22 @@ function pageCounter() {
   });
 }
 
-function resetAddMode(map: L.Map) {
-  addMode = undefined;
-  if(!addBtn) return;
-  addBtn.textContent = "+";
-  addBtn.classList.remove("hidden", "active");
-  // map_container.classList.remove("crosshair-cursor");
+async function getInitialLocation(): Promise<Coord> {
+  const path = window.location.pathname;
+  const match = path.match(/^\/trails\/([^/]+)/);
+  if (match && match[1] && match[1].length > 0) {
+    const trailPath = match[1].toLowerCase();
+    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === trailPath));
+    if (trailPath !== "nearby" && predefinedRegion)
+      return predefinedRegion;
+    else {
+      openSpecificTrail = match[1].toLowerCase();
+      return await getApproxLocation();
+    }
+  }
+  return await getApproxLocation();
 }
-function renderMarkers(targetGroup: L.MarkerClusterGroup | L.LayerGroup, trails: SingleTrail[], parks: BikePark[], dirtParks: DirtPark[]) {
-  targetGroup.clearLayers();
 
-  getMarkers(targetGroup, parks);
-  getMarkers(targetGroup, dirtParks);
-
-  return getMarkers(targetGroup, trails);
-}
 async function init() {
   const el = document.getElementById("mapid");
   if (!el) {
@@ -113,140 +57,33 @@ async function init() {
     return;
   }
 
-  const path = window.location.pathname;
-  L.Map.addInitHook("addHandler", "gestureHandling", (L as any).GestureHandling);
-  let mymap = L.map(el, {
-    //@ts-expect-error
-    gestureHandling: true,
-    gestureHandlingOptions: {
-      text: {
-        touch: "Benutze 2 Finger um die Karte zu bewegen",
-        scroll: "Benutze ctrl + scroll um die Karte zu zoomen",
-        scrollMac: "Benutze \u2318 + scroll um die Karte zu zoomen"
-      }
-    },
-    zoomControl: false,
-  });
-  
-  const match = path.match(/^\/trails\/([^/]+)/);
-  if (match && match[1] && match[1].length > 0) {
-    const trailPath = match[1].toLowerCase();
-    const predefinedRegion = locations.find(l => (l.name.toLowerCase() === trailPath));
-    if (trailPath !== "nearby" && predefinedRegion) 
-      mymap.setView([predefinedRegion.lat, predefinedRegion.lng], 9);
-    else {
-      openSpecificTrail = match[1].toLowerCase();
-      const loc = await getApproxLocation();
-      mymap.setView(loc, 9)
-    }
-  } else {
-    const loc = await getApproxLocation();
-    mymap.setView(loc, 9)
-  }
-
-  mymap.setMaxZoom(19);
-
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
-    maxZoom: 19,
-    // zoomControl: false,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-
-  }).addTo(mymap);
-
-  L.control.zoom({
-    position: 'bottomright',
-  }).addTo(mymap);
-
-  L.control
-      //@ts-expect-error
-      .fullscreen({
-        position: 'bottomright',
-        forceSeparateButton: false,
-      })
-      .addTo(mymap);
-
   initBurgerBtn();
-  
-  const clusterGroup = new L.MarkerClusterGroup();
-  const markerGroup = new L.LayerGroup();
-  
+
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),
     getParks(),
     getDirtParks()
   ]);
+  const location = await getInitialLocation();
+  await initMap(el, location, undefined, trails, bikeparks, dirtparks);
 
   if (!openSpecificTrail)
     generateJsonLD(trails);
-  
-  const trailMarkers = renderMarkers(clusterGroup, trails, bikeparks, dirtparks);
-  mymap.addLayer(clusterGroup);
-  
-  initFilterAndClustering(mymap, markerGroup, clusterGroup, trails, bikeparks, dirtparks);
+
   generateNews(trails);
 
-  //@ts-expect-error
-  const specificTrailMarker = trailMarkers.find(m => m.options.internal_id === openSpecificTrail); 
-  if (specificTrailMarker) {
-    console.log("Opening specific location popup for", openSpecificTrail);
-    specificTrailMarker.openPopup();
-  }
-
-  for (let i = 1; i <= 6; i++)
-    document.getElementById(`show-last-${i}`)?.addEventListener("click", () => {
-      const newsMarker = trailMarkers.at(-i);
-      if(!newsMarker)
-        return;
-      clusterGroup.zoomToShowLayer(newsMarker, () => {
-        newsMarker.openPopup();
-      });
-    });
-
-  addMode = undefined;
-
-  addBtn = document.getElementById('add-btn') as HTMLButtonElement | null;
-  const fabMenu = document.getElementById('fab-menu');
-
-  addBtn?.addEventListener('click', () => {
-    fabMenu?.classList.toggle('hidden');
-    addBtn?.classList.toggle('active');
-    if (!!addMode)
-      resetAddMode(mymap);
-  });
-
-  fabMenu?.addEventListener('click', (e) => {
-    const target = e.target as HTMLElement;
-    if(!target)
-      return;
-    if (!target.classList.contains('fab-item'))
-      return
-    if (!addBtn)
-      return;
-
-      const type = target.dataset.type;
-      fabMenu.classList.add('hidden');
-
-      if(!type || !isAnyTrailType(type))
-        return;
-      addMode = type;
-      if (!!addMode) {
-        addBtn.textContent = 'Klick auf Karte, um Trail zu setzen';
-        addBtn.classList.add('active');
-        mymap.getContainer().classList.add('crosshair-cursor');
-      } else {
-        addBtn.textContent = '+';
-        addBtn.style.background = '#2b6cb0';
-        mymap.getContainer().classList.remove('crosshair-cursor');
-      }
-  });
-
+  // for (let i = 1; i <= 6; i++)
+  //   document.getElementById(`show-last-${i}`)?.addEventListener("click", () => {
+  //     const newsMarker = trailMarkers.at(-i);
+  //     if(!newsMarker)
+  //       return;
+  //     clusterGroup.zoomToShowLayer(newsMarker, () => {
+  //       newsMarker.openPopup();
+  //     });
+  //   });
+  //
   document.addEventListener('click', (e) => {
-    const target = e.target as HTMLButtonElement;
-    const inWrapper = target.closest('.add-btn-wrapper');
-    if (!inWrapper) {
-      fabMenu?.classList.add('hidden');
-    }
+    hideAddButton();
   });
 
   document.getElementById("communityBtn")?.addEventListener("click", () => {
@@ -255,61 +92,9 @@ async function init() {
       section.scrollIntoView({ behavior: "smooth" });
     }
   });
-
-  mymap.on('click', (e) => {
-    if (!addMode) return;
-    const nearByTrail = giveTrailNearBy(e.latlng.lat, e.latlng.lng, trails);
-    if (nearByTrail)
-      askNearbyConflict(nearByTrail, () => openCreateTrailPopup(mymap, e.latlng.lat, e.latlng.lng, addMode!), () => reportAbort());
-    else
-      openCreateTrailPopup(mymap, e.latlng.lat, e.latlng.lng, addMode);
-  });
 }
 
-function initFilterAndClustering(mymap: L.Map, markerGroup : L.LayerGroup, clusterGroup : L.MarkerClusterGroup, trails: SingleTrail[], bikeparks: BikePark[], dirtparks: DirtPark[]) {
-  const clusterToggle = document.getElementById("clusterToggle") as HTMLFormElement;
-  const filterParks = document.querySelector('input[data-filter="bikepark"]') as HTMLFormElement;
-  const filterTrails = document.querySelector('input[data-filter="trailcenter"]') as HTMLFormElement;
-  const filterDirtParks = document.querySelector('input[data-filter="dirtpark"]') as HTMLFormElement;
-  const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]') as HTMLFormElement;
-  const filterUnverified = document.querySelector('input[data-filter="unverified"]') as HTMLFormElement;
 
-  function updateFilters() {
-    const useCluster = clusterToggle.checked;
-    const showTrails = filterTrails.checked;
-    const showParks = filterParks.checked;
-    const showDirtParks = filterDirtParks.checked;
-    const showPumptracks = filterPumptracks.checked;
-    const showUnverified = filterUnverified.checked;
-
-    mymap.removeLayer(useCluster ? markerGroup : clusterGroup);
-    mymap.addLayer(useCluster ? clusterGroup : markerGroup);
-
-    const filteredTrails = trails.filter(t => showTrails && (showUnverified ? true : t.approved));
-    const filteredParks = bikeparks.filter(p => showParks && (showUnverified ? true : p.approved));
-    const filteredDirtParks = dirtparks.filter(dp => {
-      if (showDirtParks && showPumptracks && (showUnverified ? true : dp.approved)) return true;
-      if (showDirtParks && dp.dirtpark && (showUnverified ? true : dp.approved)) return true;
-      if (showPumptracks && dp.pumptrack && (showUnverified ? true : dp.approved)) return true;
-      return false;
-    });
-    
-    clusterGroup.clearLayers();
-    markerGroup.clearLayers();
-
-    if (useCluster && clusterGroup.getLayers().length === 0) {
-      renderMarkers(clusterGroup, filteredTrails, filteredParks, filteredDirtParks);
-    } else if (!useCluster && markerGroup.getLayers().length === 0) {
-      renderMarkers(markerGroup, filteredTrails, filteredParks, filteredDirtParks);
-    }
-  }
-  clusterToggle?.addEventListener("change", updateFilters);
-  filterParks?.addEventListener("change", updateFilters);
-  filterTrails?.addEventListener("change", updateFilters);
-  filterDirtParks?.addEventListener("change", updateFilters);
-  filterPumptracks?.addEventListener("change", updateFilters);
-
-}
 
 function initBurgerBtn() {
   const burgerBtn = document.getElementById('burgerBtn');
@@ -336,210 +121,6 @@ function initBurgerBtn() {
   burgerBtn.addEventListener('click', openDrawer);
   drawerClose?.addEventListener('click', closeDrawer);
   drawerOverlay?.addEventListener('click', closeDrawer);
-}
-
-function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, type: anyTrailType) {
-  const marker = L.marker([lat, lng]).addTo(mymap);
-  const popupContent = `
-  <div class="popup-form">
-    <h3>Neuer Eintrag</h3>
-    <p>Bitte ${types[type]} einfügen - einzelne Trails nur bei größeren Transfer (>5km)</p>
-    <div class="type-switch">
-      <label class="type-option">
-        <input type="radio" id="trailTypeSwitch" name="trailType" value="trail" ${type === 'trail' ? 'checked' : ''} disabled>
-        <span class="switch-btn">Trail</span>
-      </label>
-
-      <label class="type-option">
-        <input type="radio" name="trailType" value="bikepark" ${type === 'bikepark' ? 'checked' : ''} disabled>
-        <span class="switch-btn">Bike Park</span>
-      </label>
-      <label class="type-option">
-        <input type="radio" id="trailTypeSwitch" name="trailType" value="dirtpark" ${type === 'dirtpark' ? 'checked' : ''} disabled>
-        <span class="switch-btn">Dirtpark/Pumptrack</span>
-      </label>
-    </div>
-    <div style="display:${type === 'dirtpark' ? 'block' : 'none'};">
-      <label class="checkbox-label-explain">Was findest du hier?</label>
-      <div class="multi-select">
-        <label class="multi-option">
-        <input type="checkbox" id="hasPumprack" name="subType" value="pumptrack">
-        <span class="multi-btn">Pumptrack</span>
-        </label>
-        
-        <label class="multi-option">
-        <input type="checkbox" name="subType" id="hasDirtpark" value="dirtpark">
-        <span class="multi-btn">Dirtpark</span>
-        </label>
-      </div>
-    </div>
-    <label>
-      <span>Name*</span>
-      <input type="text" id="trailName" placeholder="Trailname" required>
-    </label>
-    <label>
-      <span>Website</span>
-      <input type="url" id="trailUrl" placeholder="https://...">
-    </label>
-    <label>
-      <span>Instagram vom Verein/Trailbauer</span><span class="optional"> (optional)</span>
-      <input type="text" id="trailInsta" placeholder="@username">
-    </label>
-    <label>
-      <span>Eingetragen von... (Nickname etc.)</span><span class="optional"> (optional)</span>
-      <input type="text" id="trailCreator" placeholder="Dein Name oder Nick, Instagram etc.">
-    </label>
-    <div class="popup-actions">
-    <button id="cancelTrailBtn" class="cancel">Abbrechen</button>
-    <button id="saveTrailBtn" class="save">Speichern</button>
-    </div>
-  </div>
-`;
-  //@ts-expect-error
-  marker.bindPopup(popupContent, popupSizing);
-
-  marker.on("popupopen", () => {
-    const saveBtn = document.getElementById("saveTrailBtn");
-    const cancelBtn = document.getElementById("cancelTrailBtn");
-
-    saveBtn?.addEventListener("click", async () => {
-      let trail: any = {
-        name: (document.getElementById("trailName") as HTMLFormElement).value.trim(),
-        url: (document.getElementById("trailUrl") as HTMLFormElement).value.trim(),
-        instagram: (document.getElementById("trailInsta") as HTMLFormElement).value.trim(),
-        creator: (document.getElementById("trailCreator") as HTMLFormElement).value.trim(),
-        latitude: lat,
-        longitude: lng,
-      };
-
-      if (!trail.name) {
-        alert("Bitte gib einen Namen ein.");
-        return;
-      }
-      if (addMode === 'dirtpark') {
-        trail = {
-          ...trail,
-          dirtpark: (document.getElementById("hasDirtpark") as HTMLFormElement).checked,
-          pumptrack: (document.getElementById("hasPumprack") as HTMLFormElement).checked
-        }
-
-        if (!trail.pumptrack && !trail.dirtpark) {
-          alert("Bitte wähle aus ob Pumptrack oder Dirtpark vorzufinden sind.");
-          return;
-        }
-      }
-
-      saveBtn.classList.add("loading");
-      try {
-        const endpoint = addMode === 'trail' ? 'add-trail' : (addMode === 'bikepark' ? 'bike-parks' : 'dirt-parks');
-        await fetch(`https://trailradar.org/api/${endpoint}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(trail),
-        });
-
-        showToast("Trail erfolgreich gespeichert ✅", "success");
-      } catch (err) {
-        console.error("Error saving trail:", err);
-        showToast("Fehler beim Speichern ❌", "error");
-      } finally {
-        saveBtn.classList.remove("loading");
-        marker.closePopup();
-        //@ts-expect-error
-        marker.bindPopup(getTrailPopup(trail), popupSizing);
-        resetAddMode(mymap);
-      }
-    });
-
-    cancelBtn?.addEventListener("click", () => {
-      mymap.removeLayer(marker);
-      resetAddMode(mymap);
-    });
-  });
-
-  marker.openPopup();
-}
-
-function getMarkers(cluster: L.MarkerClusterGroup | L.LayerGroup, trails: Trail[]) {
-  const trailMarkers = [];
-
-  for (const trail of trails) {
-    const popupHtml = getTrailPopup(trail);
-
-    const marker = L.marker([trail.latitude, trail.longitude], { 
-      icon: L.icon(createCustomIcon(trail)),
-      //@ts-expect-error
-      internal_id: trail.id
-      })
-      .addTo(cluster)
-        //@ts-expect-error
-      .bindPopup(popupHtml, popupSizing);
-
-    marker.on("popupclose", () => document.getElementById("top-map-buttons")!.style.display = "block");
-    marker.on("popupopen", async (e) => {
-      document.getElementById("top-map-buttons")!.style.display = "none";
-      const popup = e.popup;
-      try {  
-        const detailsHTML = await getTrailDetailsHTML(trail);
-        const container = popup.getElement()?.querySelector('.popup-section.loading');
-        if (container) { 
-          container.outerHTML = detailsHTML;
-          startPhotoCarousel();
-          setupYT2Click();
-        }
-      } catch (err) {
-        console.error("Fehler beim Laden der Details:", err);
-        const container = popup.getElement()?.querySelector('.popup-section.loading');
-        if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
-      }
-    });
-    trailMarkers.push(marker);
-  }
-
-  return trailMarkers;
-}
-
-function getTrailPopup(trail: Trail) {
-  let popupHtml = `
-    <div class="popup-content">
-    <div class="popup-header">
-      <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
-        ${trail.name}
-        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
-      </a>
-      </div>
-  `;
-
-  if (trail.instagram && trail.instagram.trim() !== "") {
-    popupHtml += `
-      <div class="popup-instagram">
-        <a href="https://instagram.com/${trail.approved ? trail.instagram : ''}" target="_blank">
-          <i class="fab fa-instagram" style="margin-right: 6px; font-size: 16px;"></i>
-          <span>${trail.instagram}</span>
-        </a>
-      </div>
-    `;
-  }
-
-  popupHtml += `
-    <div class="popup-section loading">
-      <p>Lade Details …</p>
-    </div>
-  `;
-
-  if (trail.creator && trail.creator.trim() !== "")
-    popupHtml += `
-        <div class="popup-creator">
-          <i class="fa-regular fa-user" style="margin-right: 4px;"></i>
-          <span>Eingetragen von <strong>${trail.creator}</strong></span>
-        </div>
-      `;
-
-
-  popupHtml += "</div>";
-  return popupHtml;
 }
 
 pageCounter();
