@@ -6,23 +6,17 @@ export function generateNews(trails: Trail[]) {
     if (!container) return;
 
     try {
-        const news = [];
+        container.innerHTML = "<h2>Neuigkeiten</h2>";
         for (let i = 1; i < 7; i++) {
             const newsItem = trails.at(-i);
-            news.push({
-                title: "Neue Trails!",
-                date: newsItem?.created_at ?? Date.now().toString(),
-                text: `<strong>${newsItem?.name}</strong> wurde neu aufgenommen in die Übersicht: <a id='show-last-${i}' href='#'>Link</a>`,
-            });
-        }
-        container.innerHTML = "<h2>Neuigkeiten</h2>";
-
-        for (const item of news) {
+            if (!newsItem) continue;
             const el = document.createElement("div");
+            el.dataset.trailID = newsItem.id;
+            el.id = `show-last-${i}`
             el.className = "news-item";
             el.innerHTML = `
-        <time datetime="${item.date}">${formatDate(item.date)}</time>
-        <p>${item.text}</p>
+        <time datetime="${newsItem.created_at}">${formatDate(newsItem.created_at)}</time>
+        <p><strong>${newsItem.name}</strong> wurde neu aufgenommen in die Übersicht: <a href='#'>Link</a></p>
       `;
             container.appendChild(el);
         }

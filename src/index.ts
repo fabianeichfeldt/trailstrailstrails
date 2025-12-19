@@ -76,16 +76,15 @@ async function init() {
 
   generateNews(trails);
 
-  // for (let i = 1; i <= 6; i++)
-  //   document.getElementById(`show-last-${i}`)?.addEventListener("click", () => {
-  //     const newsMarker = trailMarkers.at(-i);
-  //     if(!newsMarker)
-  //       return;
-  //     clusterGroup.zoomToShowLayer(newsMarker, () => {
-  //       newsMarker.openPopup();
-  //     });
-  //   });
-  //
+  for (let i = 1; i <= 6; i++) {
+    const newsItem = document.getElementById(`show-last-${i}`)
+    newsItem?.getElementsByTagName('a')[0]?.addEventListener("click", () => {
+      const trailID = newsItem?.dataset.trailID;
+      if (!trailID) return;
+      map.openTrail(trailID)
+    });
+  }
+
   document.addEventListener('click', () => {
     map.hideAddButton();
   });
@@ -99,8 +98,6 @@ async function init() {
 
   filterHandling(map);
 }
-
-
 
 function initBurgerBtn() {
   const burgerBtn = document.getElementById('burgerBtn');
@@ -137,9 +134,8 @@ function filterHandling(map: TrailMap) {
   const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]') as HTMLFormElement;
 
   function updateFilters() {
-    map.setFilter(!clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
+    map.setFilter(clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
   }
-  updateFilters();
 
   clusterToggle?.addEventListener("change", updateFilters);
   filterParks?.addEventListener("change", updateFilters);

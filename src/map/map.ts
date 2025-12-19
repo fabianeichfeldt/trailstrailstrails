@@ -32,6 +32,9 @@ export class TrailMap {
   private markersById = new Map<string, L.Marker>();
   private mymap!: L.Map;
 
+  private get currentMarkerLayer() : L.MarkerClusterGroup | L.LayerGroup {
+    return this.filterSettings.useCluster ? this.clusterGroup : this.markerGroup;
+  }
   private get filteredTrails(): SingleTrail[] {
     return this.trails.filter(() => this.filterSettings.showTrails);
   }
@@ -99,8 +102,9 @@ export class TrailMap {
   public openTrail(trailID: string) {
     const specificTrailMarker = this.markersById.get(trailID);
     if (specificTrailMarker) {
-      console.log("Opening specific location popup for", trailID);
-      specificTrailMarker.openPopup();
+      this.clusterGroup.zoomToShowLayer(specificTrailMarker, () => {
+        specificTrailMarker.openPopup();
+      });
     }
   }
 
@@ -123,19 +127,19 @@ export class TrailMap {
   }
 
   private renderMarkers() {
-    const target = this.filterSettings.useCluster ? this.markerGroup : this.clusterGroup;
-    this.mymap.removeLayer(target);
-    this.mymap.addLayer(target);
+    this.mymap.removeLayer(this.currentMarkerLayer);
+    this.mymap.addLayer(this.currentMarkerLayer);
     this.clusterGroup.clearLayers();
     this.markerGroup.clearLayers();
 
 
     let allTrails: (SingleTrail | BikePark | DirtPark)[] = this.filteredDirtparks
     allTrails = allTrails.concat(this.filteredTrails).concat(this.filteredBikeparks);
-    this.createMarkers(target, allTrails);
+    this.createMarkers(this.currentMarkerLayer, allTrails);
   }
 
   private createMarkers(cluster: L.MarkerClusterGroup | L.LayerGroup, trails: (SingleTrail | BikePark | DirtPark)[]) {
+    this.markersById.clear();
     for (const trail of trails) {
       const marker = L.marker([trail.latitude, trail.longitude], {
         icon: L.icon(createCustomIcon(trail)),
@@ -144,6 +148,7 @@ export class TrailMap {
         //@ts-expect-error
         .bindPopup(getTrailPopup(trail), popupSizing);
 
+      this.markersById.set(trail.id, marker);
       marker.on("popupclose", () => document.getElementById("top-map-buttons")!.style.display = "block");
       marker.on("popupopen", async (e) => {
         document.getElementById("top-map-buttons")!.style.display = "none";
