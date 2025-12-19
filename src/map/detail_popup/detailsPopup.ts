@@ -13,7 +13,7 @@ export function getTrailPopup(trail: Trail) {
       <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
         ${trail.name}
       </a>
-      <a id="share-button" href="#"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></a>
+      <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
       </div>
   `;
 
