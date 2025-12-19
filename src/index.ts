@@ -65,6 +65,7 @@ async function init() {
 
   map.setData(trails, bikeparks, dirtparks);
   const location = await getInitialLocation();
+  console.log(location)
   if((location as Coord) !== undefined) {
     map.setView(location as Coord);
     generateJsonLD(trails);
