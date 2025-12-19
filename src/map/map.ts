@@ -154,13 +154,11 @@ export class TrailMap {
         const shareBtn = document.getElementById("share-button");
         shareBtn?.addEventListener("click", async () => {
           console.log("Share button clicked", navigator.canShare())
-          if (navigator.canShare()) {
             await navigator.share({
               title: document.title,
               text: `Offizieller MTB Trail '${trail.name}' auf Trailradar`,
               url: window.location.href
             });
-          }
         });
 
         document.getElementById("top-map-buttons")!.style.display = "none";
