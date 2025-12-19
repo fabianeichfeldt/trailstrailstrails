@@ -12,8 +12,8 @@ export function getTrailPopup(trail: Trail) {
     <div class="popup-header">
       <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
         ${trail.name}
-        <i class=\"fa-solid fa-arrow-up-right-from-square\"></i>
       </a>
+      <a id="share-button" href="#"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></a>
       </div>
   `;
 
@@ -41,7 +41,6 @@ export function getTrailPopup(trail: Trail) {
           <span>Eingetragen von <strong>${trail.creator}</strong></span>
         </div>
       `;
-
 
     popupHtml += "</div>";
     return popupHtml;
