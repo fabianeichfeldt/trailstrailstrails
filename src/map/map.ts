@@ -29,6 +29,8 @@ export class TrailMap {
   private bikeparks: BikePark[] = [];
   private dirtparks: DirtPark[] = [];
   private filterSettings: TrailFilter = new TrailFilter();
+  private markersById = new Map<string, L.Marker>();
+  private mymap!: L.Map;
 
   private get filteredTrails(): SingleTrail[] {
     return this.trails.filter(() => this.filterSettings.showTrails);
@@ -44,10 +46,6 @@ export class TrailMap {
       return this.filterSettings.showPumptracks && dp.pumptrack;
     });
   }
-
-  private markersById = new Map<string, L.Marker>();
-  private mymap!: L.Map;
-  private useCluster: boolean = true;
 
   constructor(private readonly container: HTMLElement) {
     L.Map.addInitHook("addHandler", "gestureHandling", (L as any).GestureHandling);
@@ -120,12 +118,12 @@ export class TrailMap {
     this.filterSettings.showPumptracks = showPumptracks;
     this.filterSettings.showTrails = showTrails;
 
-    this.useCluster = useCluster;
+    this.filterSettings.useCluster = useCluster;
     this.renderMarkers();
   }
 
   private renderMarkers() {
-    const target = this.useCluster ? this.markerGroup : this.clusterGroup;
+    const target = this.filterSettings.useCluster ? this.markerGroup : this.clusterGroup;
     this.mymap.removeLayer(target);
     this.mymap.addLayer(target);
     this.clusterGroup.clearLayers();

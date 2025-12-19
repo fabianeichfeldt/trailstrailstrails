@@ -22,21 +22,3 @@ export async function getDirtParks() :Promise<DirtPark[]> {
       type: "dirtpark",
     }});
 }
-
-export async function getDirtParkDetails(park: DirtPark) {
-  const response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-park-details?id=${park}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${anon}`,
-    },
-  });
-
-  if (!response.ok) {
-    return {};
-  }
-
-  const json = await response.json();
-  return json.data[0];
-}
-

@@ -137,8 +137,9 @@ function filterHandling(map: TrailMap) {
   const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]') as HTMLFormElement;
 
   function updateFilters() {
-    map.setFilter(clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
+    map.setFilter(!clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
   }
+  updateFilters();
 
   clusterToggle?.addEventListener("change", updateFilters);
   filterParks?.addEventListener("change", updateFilters);

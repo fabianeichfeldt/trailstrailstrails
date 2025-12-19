@@ -3,4 +3,5 @@ export class TrailFilter {
   public showBikeparks: boolean = true;
   public showDirtparks: boolean = true;
   public showPumptracks: boolean = true;
+  public useCluster: boolean = true;
 }
