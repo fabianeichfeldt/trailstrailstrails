@@ -1,10 +1,10 @@
-import { formatDate } from "../js/formatDate";
+import {formatDate} from "../js/formatDate";
 
 import "/src/detail_popup/details_popup.css";
 import "/src/detail_popup/yt.css";
 
 import {isDirtPark, Trail} from "../js/types/Trail";
-import { TrailDetails } from "../js/types/TrailDetails";
+import {TrailDetails} from "../js/types/TrailDetails";
 
 export function getTrailPopup(trail: Trail) {
     let popupHtml = `
@@ -58,7 +58,7 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
   const photosHTML = renderPhotos(details);
   const videoHTML = renderVideos(details);
 
-  const detailsHTML = `
+  return `
         ${photosHTML}
         ${videoHTML}
         ${dirtparkInfo}
@@ -83,7 +83,6 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
             </div>
             <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
         `;
-  return detailsHTML;
 }
 
 function renderPhotos(details: TrailDetails) {
@@ -99,7 +98,7 @@ function renderPhotos(details: TrailDetails) {
   }
     const photos = details.photos.map((p, i) => `
             <div class="photo-wrap${i === 0 ? " active" : ""}" style="--img:url('${p.url}')">
-              <img src="${p.url}" class="${i === 0 ? "active" : ""}">
+              <img alt="offizieller MTB Trail" src="${p.url}" class="${i === 0 ? "active" : ""}">
             </div>
           `).join('');
 
@@ -138,7 +137,7 @@ function renderDirtparkDetails(trail: Trail) {
 
 function renderVideos(details: TrailDetails) {
   if (details.videos.length === 0)
-    return;
+    return "";
 
   return `<br>
   <div class="yt-2click" data-yt-src="${details.videos[0].url}">

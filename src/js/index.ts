@@ -14,7 +14,7 @@ import "/src/css/side_menu.css";
 
 import "/src/css/new_entry_popup.css";
 import {generateNews} from "../news/news";
-import {hideAddButton, initMap} from "../map/map";
+import { TrailMap } from "../map/map";
 
 //@ts-expect-error
 window.toggleLegend = function () {
@@ -56,6 +56,8 @@ async function init() {
     console.error("Map div not found!");
     return;
   }
+  const map = new TrailMap(el);
+  await map.init();
 
   initBurgerBtn();
 
@@ -65,7 +67,9 @@ async function init() {
     getDirtParks()
   ]);
   const location = await getInitialLocation();
-  await initMap(el, location, undefined, trails, bikeparks, dirtparks);
+
+  map.setData(trails, bikeparks, dirtparks);
+  map.setView(location);
 
   if (!openSpecificTrail)
     generateJsonLD(trails);
@@ -82,8 +86,8 @@ async function init() {
   //     });
   //   });
   //
-  document.addEventListener('click', (e) => {
-    hideAddButton();
+  document.addEventListener('click', () => {
+    map.hideAddButton();
   });
 
   document.getElementById("communityBtn")?.addEventListener("click", () => {
@@ -92,6 +96,8 @@ async function init() {
       section.scrollIntoView({ behavior: "smooth" });
     }
   });
+
+  filterHandling(map);
 }
 
 
@@ -121,6 +127,24 @@ function initBurgerBtn() {
   burgerBtn.addEventListener('click', openDrawer);
   drawerClose?.addEventListener('click', closeDrawer);
   drawerOverlay?.addEventListener('click', closeDrawer);
+}
+
+function filterHandling(map: TrailMap) {
+  const clusterToggle = document.getElementById("clusterToggle") as HTMLFormElement;
+  const filterParks = document.querySelector('input[data-filter="bikepark"]') as HTMLFormElement;
+  const filterTrails = document.querySelector('input[data-filter="trailcenter"]') as HTMLFormElement;
+  const filterDirtParks = document.querySelector('input[data-filter="dirtpark"]') as HTMLFormElement;
+  const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]') as HTMLFormElement;
+
+  function updateFilters() {
+    map.setFilter(clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
+  }
+
+  clusterToggle?.addEventListener("change", updateFilters);
+  filterParks?.addEventListener("change", updateFilters);
+  filterTrails?.addEventListener("change", updateFilters);
+  filterDirtParks?.addEventListener("change", updateFilters);
+  filterPumptracks?.addEventListener("change", updateFilters);
 }
 
 pageCounter();
