@@ -102,8 +102,8 @@ export class TrailMap {
   public openTrail(trailID: string) {
     console.log("open trail", trailID)
     const specificTrailMarker = this.markersById.get(trailID);
-    console.log(specificTrailMarker)
     if (specificTrailMarker) {
+      this.setView(specificTrailMarker.getLatLng());
       this.clusterGroup.zoomToShowLayer(specificTrailMarker, () => {
         specificTrailMarker.openPopup();
       });
