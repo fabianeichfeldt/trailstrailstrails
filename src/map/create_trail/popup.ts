@@ -1,6 +1,6 @@
 import "/src/css/nearby_modal.css";
-import {anyTrailType} from "../../js/types/Trail";
-import {showToast} from "../../js/toast";
+import {anyTrailType} from "../../types/Trail";
+import {showToast} from "../../toast";
 import L from "leaflet";
 
 const types = {

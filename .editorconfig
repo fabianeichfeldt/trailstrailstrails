@@ -8,3 +8,7 @@ indent_style = space
 insert_final_newline = false
 max_line_length = 120
 tab_width = 2
+
+[*.{js,ts,jsx,tsx}]
+ij_typescript_spaces_within_object_literal_braces = true
+ij_javascript_spaces_within_object_literal_braces = true

@@ -13,8 +13,8 @@ import "/src/css/community.css";
 import "/src/css/side_menu.css";
 
 import "/src/css/new_entry_popup.css";
-import {generateNews} from "../news/news";
-import { TrailMap } from "../map/map";
+import {generateNews} from "./news/news";
+import { TrailMap } from "./map/map";
 
 //@ts-expect-error
 window.toggleLegend = function () {

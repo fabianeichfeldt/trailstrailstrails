@@ -1,5 +1,5 @@
 import { anon } from "../anon";
-import {BikePark, DirtPark} from "../types/Trail";
+import { DirtPark } from "../types/Trail";
 
 export async function getDirtParks() :Promise<DirtPark[]> {
   const response = await fetch("https://trailradar.org/api/dirt-parks", {

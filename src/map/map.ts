@@ -1,7 +1,7 @@
 import L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet-gesture-handling";
-import "../js/fullscreen";
+import "../fullscreen";
 
 import "/src/css/fullscreen.css";
 import "/src/css/marker.css";
@@ -10,13 +10,13 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../js/types/Trail";
-import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../js/near_by_trails";
+import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../types/Trail";
+import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails";
 import {openCreateTrailPopup} from "./create_trail/popup";
-import {createCustomIcon, getTrailDetails} from "../js/data/trails";
-import {getTrailPopup, renderTrailDetails} from "../detail_popup/detailsPopup";
-import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "../detail_popup/logic";
-import {Coord} from "../js/locations";
+import {createCustomIcon, getTrailDetails} from "../data/trails";
+import {getTrailPopup, renderTrailDetails} from "./detail_popup/detailsPopup";
+import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "./detail_popup/logic";
+import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }

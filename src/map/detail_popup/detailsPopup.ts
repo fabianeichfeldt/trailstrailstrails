@@ -1,10 +1,10 @@
-import {formatDate} from "../js/formatDate";
+import {formatDate} from "../../formatDate";
 
-import "/src/detail_popup/details_popup.css";
-import "/src/detail_popup/yt.css";
+import "/src/map/detail_popup/details_popup.css";
+import "/src/map/detail_popup/yt.css";
 
-import {isDirtPark, Trail} from "../js/types/Trail";
-import {TrailDetails} from "../js/types/TrailDetails";
+import {isDirtPark, Trail} from "../../types/Trail";
+import {TrailDetails} from "../../types/TrailDetails";
 
 export function getTrailPopup(trail: Trail) {
     let popupHtml = `

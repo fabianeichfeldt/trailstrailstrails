@@ -1,5 +1,5 @@
-import {Trail} from "../js/types/Trail";
-import {formatDate} from "../js/formatDate";
+import {Trail} from "../types/Trail";
+import {formatDate} from "../formatDate";
 
 export function generateNews(trails: Trail[]) {
     const container = document.getElementById("news");

@@ -1,5 +1,5 @@
-import { downVote, upVote } from "../js/feedback";
-import { showToast } from "../js/toast";
+import { downVote, upVote } from "../../feedback";
+import { showToast } from "../../toast";
 
 export function startPhotoCarousel(popup: HTMLElement) {
     const slides = popup.querySelectorAll(".photo-wrap");
