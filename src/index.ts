@@ -21,8 +21,6 @@ window.toggleLegend = function () {
   document.querySelector('.map-legend')?.classList.toggle('collapsed');
 }
 
-let openSpecificTrail: string | undefined = undefined;
-
 function pageCounter() {
   return fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/add-visit", {
     method: "POST",
@@ -34,7 +32,7 @@ function pageCounter() {
   });
 }
 
-async function getInitialLocation(): Promise<Coord> {
+async function getInitialLocation(): Promise<Coord | string> {
   const path = window.location.pathname;
   const match = path.match(/^\/trails\/([^/]+)/);
   if (match && match[1] && match[1].length > 0) {
@@ -42,10 +40,8 @@ async function getInitialLocation(): Promise<Coord> {
     const predefinedRegion = locations.find(l => (l.name.toLowerCase() === trailPath));
     if (trailPath !== "nearby" && predefinedRegion)
       return predefinedRegion;
-    else {
-      openSpecificTrail = match[1].toLowerCase();
-      return await getApproxLocation();
-    }
+    else
+      return match[1].toLowerCase();
   }
   return await getApproxLocation();
 }
@@ -66,13 +62,15 @@ async function init() {
     getParks(),
     getDirtParks()
   ]);
-  const location = await getInitialLocation();
 
   map.setData(trails, bikeparks, dirtparks);
-  map.setView(location);
-
-  if (!openSpecificTrail)
+  const location = await getInitialLocation();
+  if((location as Coord) !== undefined) {
+    map.setView(location as Coord);
     generateJsonLD(trails);
+  }
+  else
+    map.openTrail(location as string);
 
   generateNews(trails);
 
