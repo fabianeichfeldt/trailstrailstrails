@@ -100,7 +100,9 @@ export class TrailMap {
   }
 
   public openTrail(trailID: string) {
+    console.log("open trail", trailID)
     const specificTrailMarker = this.markersById.get(trailID);
+    console.log(specificTrailMarker)
     if (specificTrailMarker) {
       this.clusterGroup.zoomToShowLayer(specificTrailMarker, () => {
         specificTrailMarker.openPopup();
@@ -131,7 +133,6 @@ export class TrailMap {
     this.mymap.addLayer(this.currentMarkerLayer);
     this.clusterGroup.clearLayers();
     this.markerGroup.clearLayers();
-
 
     let allTrails: (SingleTrail | BikePark | DirtPark)[] = this.filteredDirtparks
     allTrails = allTrails.concat(this.filteredTrails).concat(this.filteredBikeparks);
