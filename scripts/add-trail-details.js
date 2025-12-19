@@ -10,10 +10,11 @@ async function pushTrail(trail) {
     },
     body: JSON.stringify({ 
       trail_id: trail.id,
-      rules: trail.analysis.trail_rules || [],
-      status: trail.analysis.open_status || 'unknown',
-      status_hint: trail.analysis.closure_reason || '',
-      opening_hours: trail.analysis.opening_hours || '',
+      // rules: trail.analysis.trail_rules || [],
+      // status: trail.analysis.open_status || 'unknown',
+      // status_hint: trail.analysis.closure_reason || '',
+      // opening_hours: trail.analysis.opening_hours || '',
+      trail_description: trail.analysis.description || '',
      }),
   });
   console.log(response.status, await response.text());

@@ -1,4 +1,4 @@
-class BaseTrail {
+export class BaseTrail {
     name: string = "";
     id: string = "";
     creator: string = "";

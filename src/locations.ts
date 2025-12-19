@@ -38,7 +38,7 @@ export const locations : Region[] = [
   { "name": "bayerischerwald", "lat": 49.1381, "lng": 13.0896 },
 ];  
 
-export async function getApproxLocation() {
+export async function getApproxLocation(): Promise<Coord> {
   try {
     const res = await fetch('https://trailradar.org/geo');
     if (!res.ok) throw new Error('no geo data');
@@ -55,6 +55,11 @@ export async function getApproxLocation() {
     lat: 0,
     lng: 0,
   };
+}
+
+export class Coord {
+  lat: number = 0;
+  lng: number = 0;
 }
 
 export class Region {
