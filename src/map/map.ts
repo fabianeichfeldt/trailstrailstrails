@@ -154,7 +154,6 @@ export class TrailMap {
       marker.on("popupopen", async (e) => {
         const shareBtn = document.getElementById("share-button");
         shareBtn?.addEventListener("click", async () => {
-          console.log("Share button clicked", navigator.canShare())
             await navigator.share({
               title: `Offizieller MTB Trail '${trail.name}' auf Trailradar`,
               url: `https://trailradar.org/trails/${trail.id}`
