@@ -13,11 +13,12 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../types/Trail";
 import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails";
 import {openCreateTrailPopup} from "./create_trail/popup";
-import {createCustomIcon, getTrailDetails} from "../data/trails";
+import {createCustomIcon, getTrailDetails} from "../communication/trails";
 import {getTrailPopup, renderTrailDetails} from "./detail_popup/detailsPopup";
 import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "./detail_popup/logic";
 import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
+import {share} from "../communication/share";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 export class TrailMap {
@@ -160,6 +161,7 @@ export class TrailMap {
               title: `Offizieller MTB Trail '${trail.name}' auf Trailradar`,
               url: `https://trailradar.org/trails/${trail.id}`
             });
+            await share(trail);
         });
 
         document.getElementById("top-map-buttons")!.style.display = "none";

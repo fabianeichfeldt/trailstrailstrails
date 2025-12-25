@@ -1,6 +1,6 @@
-import { getParks } from "./data/bikeparks";
-import { getDirtParks } from "./data/dirt_parks";
-import {getTrails} from "./data/trails";
+import { getParks } from "./communication/bikeparks";
+import { getDirtParks } from "./communication/dirt_parks";
+import {getTrails} from "./communication/trails";
 import {Coord, getApproxLocation, locations} from "./locations";
 import { generateJsonLD } from "./json_ld";
 
@@ -128,10 +128,10 @@ function initBurgerBtn() {
 
 function filterHandling(map: TrailMap) {
   const clusterToggle = document.getElementById("clusterToggle") as HTMLFormElement;
-  const filterParks = document.querySelector('input[data-filter="bikepark"]') as HTMLFormElement;
-  const filterTrails = document.querySelector('input[data-filter="trailcenter"]') as HTMLFormElement;
-  const filterDirtParks = document.querySelector('input[data-filter="dirtpark"]') as HTMLFormElement;
-  const filterPumptracks = document.querySelector('input[data-filter="pumptrack"]') as HTMLFormElement;
+  const filterParks = document.querySelector('input[communication-filter="bikepark"]') as HTMLFormElement;
+  const filterTrails = document.querySelector('input[communication-filter="trailcenter"]') as HTMLFormElement;
+  const filterDirtParks = document.querySelector('input[communication-filter="dirtpark"]') as HTMLFormElement;
+  const filterPumptracks = document.querySelector('input[communication-filter="pumptrack"]') as HTMLFormElement;
 
   function updateFilters() {
     map.setFilter(clusterToggle.checked, filterParks.checked, filterDirtParks.checked, filterPumptracks.checked, filterTrails.checked);
