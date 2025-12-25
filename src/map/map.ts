@@ -108,6 +108,8 @@ export class TrailMap {
         specificTrailMarker.openPopup();
       });
     }
+    else
+      this.setView({lat: 49.059213, lng: 10.652860 });
   }
 
   public setData(trails: SingleTrail[], bikeparks: BikePark[], dirtparks: DirtPark[]) {
