@@ -16,7 +16,7 @@ export async function initAuthModal() {
     document.dispatchEvent(new CustomEvent('auth:login'));
   });
 
-  backdrop?.querySelector('.auth-close')!
+  backdrop?.querySelector('.cancel')!
     .addEventListener('click', closeAuthModal);
 
   backdrop?.querySelector('.google')!

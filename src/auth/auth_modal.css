@@ -1,66 +1,143 @@
+/* BACKDROP */
 .auth-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,.6);
+  background: rgba(10, 12, 14, 0.75);
+  backdrop-filter: blur(6px);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10000;
 }
+
 .hidden {
   display: none;
 }
 
+/* MODAL */
 .auth-modal {
-  background: whitesmoke;
-  color: black;
+  background: #f7f7f5;
+  color: #1c1c1c;
   width: 100%;
   max-width: 420px;
-  margin: 1rem;
-  padding: 2rem;
-  border-radius: 20px;
-  box-shadow: 0 30px 60px rgba(0,0,0,.5);
+  margin: 1em;
+  padding: 2em;
+  border-radius: 22px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.45);
 }
 
-.auth-modal h2 {
-  margin-bottom: 1.5rem;
+.auth-header {
+  text-align: center;
+}
+
+.auth-logo {
+  width: 48px;
+  height: 48px;
+  margin-bottom: .8em;
+}
+
+.auth-header h2 {
+  margin: 0;
+  font-size: 1.2em;
+}
+
+.auth-sub {
+  margin-top: .4em;
+  font-size: .6em;
+  color: #666;
+}
+
+.auth-modal form label {
+  display: block;
+  margin-bottom: 0.3em;
+}
+
+.auth-modal label span {
+  display: block;
+  font-size: .6em;
+  color: #666;
+  margin-bottom: .25em;
 }
 
 .auth-modal input {
-  width: 100%;
-  padding: .9rem;
-  margin-bottom: 1rem;
-  border-radius: 12px;
-  border: none;
-  background: #222;
-  color: white;
+  width: 90%;
+  padding: .5em 1em;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  background: white;
+  font-size: .6em;
+}
+
+.auth-modal input:focus {
+  outline: none;
+  border-color: #58c27d;
 }
 
 button.primary {
   width: 100%;
-  padding: .9rem;
+  margin-top: .5em;
+  padding: .9em;
   border-radius: 999px;
-  background: var(--accent);
-  color: black;
+  background: #58c27d;
+  color: #0f1a12;
   font-weight: 600;
+  font-size: .6em;
+  border: none;
+}
+
+.divider {
+  margin: 1em 0;
+  display: flex;
+  align-items: center;
+  gap: .8em;
+  color: #999;
+  font-size: .6em;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #ddd;
 }
 
 .oauth.google {
   width: 100%;
-  padding: .8rem;
+  padding: .75em;
   border-radius: 999px;
-  background: #fff;
-  color: #000;
+  border: 1px solid #ddd;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6em;
+  font-weight: 500;
 }
 
-.divider {
-  text-align: center;
-  margin: 1.2rem 0;
-  color: var(--text-muted);
+.oauth.google img {
+  width: 18px;
+  height: 18px;
 }
 
 .switch {
-  margin-top: 1rem;
+  margin-top: 1.2em;
   text-align: center;
-  font-size: .9rem;
+  font-size: .6em;
+  color: #666;
+}
+
+.switch a {
+  color: #58c27d;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+button.cancel {
+  margin-top: 1.5em;
+  width: 100%;
+  background: none;
+  border: none;
+  font-size: .6em;
+  color: #777;
 }

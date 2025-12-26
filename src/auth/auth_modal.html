@@ -1,28 +1,47 @@
+<div id="auth-modal" class="auth-backdrop hidden">
+  <div class="auth-modal">
 
-  <div id="auth-modal" class="auth-backdrop">
-    <div class="auth-modal">
-      <button class="auth-close">×</button>
-
+    <div class="auth-header">
+      <img src="/src/assets/logo.webp" alt="Trailradar Logo" class="auth-logo" />
       <h2 id="auth-title">Anmelden</h2>
-
-      <form id="auth-form">
-        <input type="email" placeholder="E-Mail" required />
-        <input type="password" placeholder="Passwort" required />
-
-        <button class="primary" type="submit">
-          Weiter
-        </button>
-      </form>
-
-      <div class="divider">oder</div>
-
-      <button class="oauth google">
-        Mit Google anmelden
-      </button>
-
-      <p class="switch">
-        Noch kein Konto?
-        <a href="#" id="switch-auth">Registrieren</a>
+      <p class="auth-sub">
+        Melde dich an, um Trails hinzuzufügen, Fotos hochzuladen und vieles mehr.
       </p>
     </div>
+
+    <form id="auth-form">
+      <label>
+        <span>E-Mail</span>
+        <input type="email" required />
+      </label>
+
+      <label>
+        <span>Passwort</span>
+        <input type="password" required />
+      </label>
+
+      <button class="primary" type="submit">
+        Weiter
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>oder</span>
+    </div>
+
+    <button class="oauth google">
+      <i class="fab fa-google"></i>
+      <span>Mit Google anmelden</span>
+    </button>
+
+    <p class="switch">
+      Noch kein Konto?
+      <a href="#" id="switch-auth">Registrieren</a>
+    </p>
+
+    <button class="cancel">
+      Abbrechen
+    </button>
+
   </div>
+</div>
