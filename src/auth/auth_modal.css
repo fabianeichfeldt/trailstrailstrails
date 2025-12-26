@@ -85,6 +85,11 @@ button.primary {
   cursor: pointer;
 }
 
+button.primary.loading {
+  opacity: .6;
+  pointer-events: none;
+}
+
 .divider {
   margin: 1em 0;
   display: flex;

@@ -17,6 +17,7 @@ export class DummyAuthService {
 
   async signIn(email: string) {
     this.user = { id: '1', email };
+    await new Promise(resolve => setTimeout(resolve, 3000));
     return this.user;
   }
 
