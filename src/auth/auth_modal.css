@@ -143,3 +143,12 @@ button.cancel {
   color: #777;
   cursor: pointer;
 }
+.auth-error {
+  margin: 1rem 0 1.2rem;
+  padding: .75rem 1rem;
+  border-radius: 12px;
+  background: #fff2f2;
+  color: #a10000;
+  font-size: .9rem;
+  line-height: 1.4;
+}
