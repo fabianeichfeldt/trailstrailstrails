@@ -14,14 +14,13 @@
   display: none;
 }
 
-/* MODAL */
 .auth-modal {
   background: #f7f7f5;
   color: #1c1c1c;
   width: 100%;
   max-width: 420px;
   margin: 1em;
-  padding: 2em;
+  padding: 0.5em 2em;
   border-radius: 22px;
   box-shadow: 0 30px 80px rgba(0,0,0,.45);
 }
@@ -83,6 +82,7 @@ button.primary {
   font-weight: 600;
   font-size: .6em;
   border: none;
+  cursor: pointer;
 }
 
 .divider {
@@ -113,6 +113,7 @@ button.primary {
   justify-content: center;
   gap: .6em;
   font-weight: 500;
+  cursor: pointer;
 }
 
 .oauth.google img {
@@ -140,4 +141,5 @@ button.cancel {
   border: none;
   font-size: .6em;
   color: #777;
+  cursor: pointer;
 }

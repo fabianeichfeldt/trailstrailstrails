@@ -12,7 +12,7 @@ export async function initAuthModal() {
     e.preventDefault();
     const email = (form[0] as HTMLInputElement).value;
     await auth.signIn(email);
-    backdrop?.setAttribute('hidden', '');
+    backdrop?.classList.add('hidden');
     document.dispatchEvent(new CustomEvent('auth:login'));
   });
 
