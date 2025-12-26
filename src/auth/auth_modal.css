@@ -157,3 +157,19 @@ button.cancel {
   font-size: .9rem;
   line-height: 1.4;
 }
+
+.forgot-password {
+  text-align: right;
+  margin-top: -0.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.forgot-password a {
+  font-size: .85rem;
+  color: #666;
+  text-decoration: none;
+}
+
+.forgot-password a:hover {
+  text-decoration: underline;
+}

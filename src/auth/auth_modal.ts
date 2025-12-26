@@ -36,6 +36,11 @@ export async function initAuthModal() {
     .addEventListener('click', () => {
       console.log('Google login (dummy)');
     });
+  backdrop?.querySelector('#forgot-password')!
+    .addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Forgot password clicked (UI only)');
+    });
 }
 
 export function openAuthModal() {
