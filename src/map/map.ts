@@ -76,10 +76,6 @@ export class TrailMap {
 
     }).addTo(this.mymap);
 
-    L.control.zoom({
-      position: 'bottomright',
-    }).addTo(this.mymap);
-
     L.control
       //@ts-expect-error
       .fullscreen({

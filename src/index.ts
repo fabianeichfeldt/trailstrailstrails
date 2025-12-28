@@ -12,7 +12,6 @@ import "/src/css/switch.css";
 import "/src/css/community.css";
 import "/src/css/side_menu.css";
 import "/src/css/new_entry_popup.css";
-import "/src/auth/auth_modal.css";
 import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
 import {initAuthModal, openAuthModal} from "./auth/auth_modal";

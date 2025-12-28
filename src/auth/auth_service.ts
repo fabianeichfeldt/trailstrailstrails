@@ -11,7 +11,6 @@ export interface Auth_service {
   getUser(): User | null;
 }
 
-// src/auth/Auth_service.ts
 export class DummyAuthService {
   private user: any = null;
 

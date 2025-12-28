@@ -1,7 +1,7 @@
 .burger-btn {
   position: absolute;
   top: 1em;
-  right: 1em;
+  left: 1em;
   z-index: 1100;
   background: rgba(255, 255, 255, 0.9);
   border: none;
@@ -35,7 +35,7 @@
 .drawer {
   position: fixed;
   top: 0;
-  right: -380px;
+  left: -350px;
   width: 350px;
   height: 100%;
   background: #fff;
@@ -48,7 +48,7 @@
 }
 
 .drawer.open {
-  right: 0;
+  left: 0;
 }
 
 .drawer-overlay.active {

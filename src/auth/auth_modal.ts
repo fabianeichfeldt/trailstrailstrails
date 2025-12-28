@@ -1,5 +1,8 @@
 import { DummyAuthService } from './auth_service';
 
+import "/src/auth/avatar.css"
+import "/src/auth/auth_modal.css"
+
 let backdrop: HTMLElement | null = null;
 let errorBox: HTMLElement | null = null;
 let form: HTMLFormElement | null = null;
