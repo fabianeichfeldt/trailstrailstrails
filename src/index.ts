@@ -14,7 +14,8 @@ import "/src/css/side_menu.css";
 import "/src/css/new_entry_popup.css";
 import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
-import {initAuthModal, openAuthModal} from "./auth/auth_modal";
+import { Auth } from "./auth/auth_modal";
+import {User} from "./auth/auth_service";
 
 //@ts-expect-error
 window.toggleLegend = function () {
@@ -56,8 +57,15 @@ async function init() {
   await map.init();
 
   initBurgerBtn();
-  await initAuthModal();
-  openAuthModal();
+  const auth = new Auth();
+  auth.onUserChanged((u) => {
+    const avatar = document.getElementById("user-avatar-btn")
+    if (!avatar) return Promise.resolve();
+    avatar.innerHTML = u.avatarHTML;
+    return Promise.resolve();
+  });
+  await auth.init();
+  auth.openModal();
 
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),
@@ -146,5 +154,5 @@ function filterHandling(map: TrailMap) {
   filterPumptracks?.addEventListener("change", updateFilters);
 }
 
-pageCounter();
 await init();
+pageCounter();

@@ -1,0 +1,87 @@
+.user-avatar-btn {
+  position: absolute;
+  top: 0.9em;
+  right: 0.9em;
+  z-index: 20;
+
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  padding: 0;
+  border: none;
+
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+}
+
+.user-avatar-btn:hover {
+  transform: scale(1.04);
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(135deg, #1f2937, #374151);
+  box-shadow: 0 4px 10px rgba(0,0,0,.25);
+  border: 2px solid rgba(255,255,255,.6);
+
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+.user-avatar:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0,0,0,.3);
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-fallback {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Kopf */
+.avatar-fallback::before {
+  content: "";
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  width: 38%;
+  height: 38%;
+  background: rgba(255,255,255,.85);
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+
+/* Schultern */
+.avatar-fallback::after {
+  content: "";
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  width: 70%;
+  height: 42%;
+  background: rgba(255,255,255,.85);
+  border-radius: 50% 50% 20% 20%;
+  transform: translateX(-50%);
+}

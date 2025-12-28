@@ -1,32 +1,49 @@
-export interface User {
-  id: string;
-  email: string;
-  avatarUrl?: string;
+export class User {
+  email: string = "";
+  avatarUrl?: string = "";
+  avatarHTML: string = "";
+
+  public constructor(email: string, avatarUrl?: string) {
+    this.email = email;
+    this.avatarUrl = avatarUrl;
+    this.avatarHTML = `
+  <div class="user-avatar">
+    ${
+      avatarUrl
+        ? `<img src="${avatarUrl}" alt="User Avatar" />`
+        : `<span class="avatar-fallback" aria-hidden="true"></span>`
+    }
+  </div>
+`;
+  }
+  public static get AnonymousUser() : User {
+    return new User("dummy@google.com");
+  }
 }
 
 export interface Auth_service {
   signIn(email: string, password: string): Promise<User>;
   signUp(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
-  getUser(): User | null;
+  getUser(): User;
 }
 
 export class DummyAuthService {
-  private user: any = null;
+  private user: User = User.AnonymousUser;
 
-  async signIn(email: string) {
-    this.user = { id: '1', email };
+  async signIn(email: string) : Promise<User> {
+    this.user = new User(email, "/src/assets/logo.webp");
     await new Promise(resolve => setTimeout(resolve, 3000));
     return this.user;
   }
 
   async signUp(email: string) {
-    this.user = { id: '1', email };
+    this.user = new User(email, "/src/assets/logo.webp");
     return this.user;
   }
 
   async signOut() {
-    this.user = null;
+    this.user = User.AnonymousUser;
   }
 
   getUser() {
