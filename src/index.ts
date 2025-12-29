@@ -14,8 +14,9 @@ import "/src/css/side_menu.css";
 import "/src/css/new_entry_popup.css";
 import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
-import { Auth } from "./auth/auth_modal";
-import {User} from "./auth/auth_service";
+import { Auth } from "./auth/auth";
+
+import {User} from "./auth/user";
 
 //@ts-expect-error
 window.toggleLegend = function () {

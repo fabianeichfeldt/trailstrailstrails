@@ -1,7 +1,8 @@
-import {DummyAuthService, User} from './auth_service';
+import {DummyAuthService} from './auth_service';
 
 import "/src/auth/avatar.css"
 import "/src/auth/auth_modal.css"
+import {User} from "./user";
 
 type UserChangedHandler = (u: User) => Promise<void>;
 
@@ -82,7 +83,7 @@ export class Auth {
     if (document.getElementById('auth-modal'))
       return; // already loaded
 
-    const res = await fetch('/src/auth/auth_modal.html');
+    const res = await fetch('/src/auth/sign_in_modal.html');
     const html = await res.text();
 
     const wrapper = document.createElement('div');
