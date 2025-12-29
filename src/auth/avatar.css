@@ -1,3 +1,35 @@
+.auth-spot {
+  position: absolute;
+  top: 0.8em;
+  right: 1em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3em;
+  z-index: 20;
+}
+.auth-login-btn {
+  background: #d6730d;
+  color: #111;
+  border: none;
+  border-radius: 9px;
+  padding: 0.45em 0.9em;
+  font-size: 0.75em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-login-btn:hover {
+  background: #ea8f3d;
+}
+
+.auth-signup-btn {
+  font-size: 0.65em;
+  color: #e7dbc7;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .user-avatar-btn {
   position: absolute;
   top: 0.9em;
@@ -84,4 +116,48 @@
   background: rgba(255,255,255,.85);
   border-radius: 50% 50% 20% 20%;
   transform: translateX(-50%);
+}
+
+.user-menu {
+  position: absolute;
+  top: 0.6em;
+  right: 0.6em;
+}
+
+.user-dropdown {
+  z-index: 1200;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 70px);
+  min-width: 180px;
+  background: white;
+  border-radius: 14px;
+  padding: 0.4em 0;
+  box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  animation: dropdownFade .15s ease;
+}
+
+.user-dropdown button {
+  width: 100%;
+  padding: 0.4em 1em;
+  background: none;
+  border: none;
+  text-align: left;
+  font-size: 0.55em;
+  cursor: pointer;
+}
+
+.user-dropdown button:hover {
+  background: #f1f5f9;
+}
+
+.user-dropdown .divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 0.4em 0;
+}
+
+@keyframes dropdownFade {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }

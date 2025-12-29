@@ -59,14 +59,7 @@ async function init() {
 
   initBurgerBtn();
   const auth = new Auth();
-  auth.onUserChanged((u) => {
-    const avatar = document.getElementById("user-avatar-btn")
-    if (!avatar) return Promise.resolve();
-    avatar.innerHTML = u.avatarHTML;
-    return Promise.resolve();
-  });
   await auth.init();
-  auth.openModal();
 
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),

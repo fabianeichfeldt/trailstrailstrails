@@ -10,6 +10,10 @@ export interface Auth_service {
 export class DummyAuthService {
   private user: User = User.AnonymousUser;
 
+  public get loggedIn() {
+    return this.user !== User.AnonymousUser;
+  }
+
   async signIn(email: string) : Promise<User> {
     this.user = new User(email, "/src/assets/logo.webp");
     await new Promise(resolve => setTimeout(resolve, 3000));

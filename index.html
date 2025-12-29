@@ -37,13 +37,31 @@
       <h1 class="hero-title no-mobile">Offizielle MTB Trails. Legal. Community getrieben und übersichtlich auf der Karte.</h1>
       <p class="hero-sub">Finde Trailcenter, Bikeparks & Pumptracks in Deutschland – auf einer Karte.</p>
     </div>
-    <button id="user-avatar-btn" class="user-avatar-btn" aria-label="Benutzerkonto">
-      <img
-        src="/src/assets/logo.webp"
-        alt="User Avatar"
-        class="user-avatar"
-      />
-    </button>
+    <div class="auth-spot">
+      <button class="auth-login-btn" id="login-btn">
+        Anmelden
+      </button>
+      <span class="auth-signup-btn" id="signup-btn">
+        Registrieren
+      </span>
+    </div>
+    <div id="user-menu" class="user-menu">
+      <div id="user-avatar-container">
+        <button id="user-avatar-btn" class="user-avatar-btn hidden" aria-label="Benutzerkonto">
+          <img
+            src="/src/assets/logo.webp"
+            alt="User Avatar"
+            class="user-avatar"
+          />
+        </button>
+      </div>
+
+      <div id="user-dropdown" class="user-dropdown hidden" role="menu">
+        <button id="profile-btn">Profil</button>
+        <div class="divider"></div>
+        <button id="logout-btn">Abmelden</button>
+      </div>
+    </div>
     </section>
   <main>
     <section class="content">

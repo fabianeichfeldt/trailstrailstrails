@@ -1,4 +1,5 @@
 export class User {
+  public static AnonymousUser: User = new User("dummy@google.com");
   email: string = "";
   avatarUrl?: string = "";
   avatarHTML: string = "";
@@ -15,9 +16,5 @@ export class User {
     }
   </div>
 `;
-  }
-
-  public static get AnonymousUser(): User {
-    return new User("dummy@google.com");
   }
 }
