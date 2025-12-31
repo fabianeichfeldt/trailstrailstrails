@@ -9,7 +9,8 @@ import stopPropagation = DomEvent.stopPropagation;
 type UserChangedHandler = (u: User) => Promise<void>;
 
 export class Auth {
-  private backdrop: HTMLElement | null = null;
+  private signInModal: HTMLElement | null = null;
+  private signUpModal: HTMLElement | null = null;
   private errorBox: HTMLElement | null = null;
   private form: HTMLFormElement | null = null;
   private avatarBtn: HTMLElement | null = null;
@@ -20,14 +21,17 @@ export class Auth {
   private dropdown: HTMLElement | null = null;
 
   public async init() {
-    await this.loadAuthTemplate();
-    this.backdrop = document.querySelector('.auth-backdrop');
-    this.errorBox = this.backdrop?.querySelector('.auth-error') as HTMLElement;
+    await this.loadSignInTemplate();
+    await this.loadSignUpTemplate();
+    this.signInModal = document.querySelector('#sign-in-modal');
+    this.signUpModal = document.querySelector('#sign-up-modal');
+    this.errorBox = this.signInModal?.querySelector('.auth-error') as HTMLElement;
     this.avatarBtn = document.getElementById("user-avatar-btn");
     this.dropdown = document.getElementById('user-dropdown');
     this.loginBtn = document.getElementById('login-btn');
     this.signUpBtn = document.getElementById('signup-btn');
-    this.closeModal();
+    // this.closeSignInModal();
+    // this.closeSignUpModal();
 
     this.form = document.getElementById('auth-form') as HTMLFormElement;
 
@@ -42,9 +46,8 @@ export class Auth {
     });
     this.triggerUserChanged();
 
-    this.loginBtn?.addEventListener('click', async () => {
-      this.openModal();
-    })
+    this.loginBtn?.addEventListener('click', this.openSignInModal);
+    this.signUpBtn?.addEventListener('click', this.openSignUpModal);
 
     this.dropdown?.querySelector('#logout-btn')!
       .addEventListener('click', async () => {
@@ -68,7 +71,7 @@ export class Auth {
       try {
         this.setLoading(true);
         const user = await this.auth.signIn(email, password);
-        this.backdrop?.classList.add('hidden');
+        this.signInModal?.classList.add('hidden');
         document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
       } catch (e) {
         this.showAuthError('Fehler beim Anmelden. Bitte versuche es erneut.');
@@ -78,14 +81,20 @@ export class Auth {
       }
     });
 
-    this.backdrop?.querySelector('.cancel')!
-      .addEventListener('click', this.closeModal);
+    this.signInModal?.querySelector('.cancel')!
+      .addEventListener('click', this.closeSignInModal);
+    this.signUpModal?.querySelector('.cancel')!
+      .addEventListener('click', this.closeSignUpModal);
+    this.signInModal?.querySelector('#switch-to-sign-up')?.
+      addEventListener('click', () => {this.closeSignInModal(); this.openSignUpModal();});
+    this.signUpModal?.querySelector('#switch-to-login')?.
+      addEventListener('click', () => {this.closeSignUpModal(); this.openSignInModal();});
 
-    this.backdrop?.querySelector('.google')!
+    this.signInModal?.querySelector('.google')!
       .addEventListener('click', () => {
         console.log('Google login (dummy)');
       });
-    this.backdrop?.querySelector('#forgot-password')!
+    this.signInModal?.querySelector('#forgot-password')!
       .addEventListener('click', (e) => {
         e.preventDefault();
         console.log('Forgot password clicked (UI only)');
@@ -120,15 +129,24 @@ export class Auth {
     this.userChangedHandlers.push(handler);
   }
 
-  public openModal() {
-    this.backdrop?.classList.remove("hidden");
-    console.log("open", this.backdrop)
+  public openSignInModal() {
+    this.signInModal = document.querySelector('#sign-in-modal');
+    this.signInModal?.classList.remove("hidden");
   }
 
-  public closeModal() {
-    this.backdrop = document.querySelector('.auth-backdrop');
-    this.backdrop?.classList.add("hidden");
-    console.log("close", this.backdrop)
+  public openSignUpModal() {
+    this.signUpModal = document.querySelector('#sign-up-modal');
+    this.signUpModal?.classList.remove("hidden");
+  }
+
+  public closeSignInModal() {
+    this.signInModal = document.querySelector('#sign-in-modal');
+    this.signInModal?.classList.add("hidden");
+  }
+
+  public closeSignUpModal() {
+    this.signUpModal = document.querySelector('#sign-up-modal');
+    this.signUpModal?.classList.add("hidden");
   }
 
   private setLoading(state: boolean) {
@@ -136,11 +154,29 @@ export class Auth {
       .classList.toggle('loading', state);
   }
 
-  private async loadAuthTemplate(): Promise<void> {
+  private async loadSignInTemplate(): Promise<void> {
     if (document.getElementById('sign-in-modal'))
       return; // already loaded
 
     const res = await fetch('/src/auth/sign_in_modal.html');
+    const html = await res.text();
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+
+    const template = wrapper.querySelector('div');
+    if (!template) {
+      throw new Error('Auth template not found');
+    }
+
+    document.body.appendChild(template);
+  }
+
+  private async loadSignUpTemplate(): Promise<void> {
+    if (document.getElementById('sign-up-modal'))
+      return; // already loaded
+
+    const res = await fetch('/src/auth/sign_up_modal.html');
     const html = await res.text();
 
     const wrapper = document.createElement('div');

@@ -8,6 +8,17 @@
   justify-content: center;
   align-items: center;
   z-index: 10000;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+
+  padding: env(safe-area-inset-top) 0
+  env(safe-area-inset-bottom) 0;
+}
+
+@media (max-width: 800px) {
+  .auth-backdrop {
+    align-items: flex-start;
+  }
 }
 
 .hidden {
@@ -20,7 +31,7 @@
   width: 100%;
   max-width: 420px;
   margin: 1em;
-  padding: 0.5em 2em;
+  padding: 0.5em 1em;
   border-radius: 22px;
   box-shadow: 0 30px 80px rgba(0,0,0,.45);
 }
@@ -172,4 +183,58 @@ button.cancel {
 
 .forgot-password a:hover {
   text-decoration: underline;
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  margin-bottom: 0.6rem;
+}
+
+.auth-sub {
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.auth-modal label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 0.9rem;
+}
+
+.auth-modal label span {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.auth-error {
+  background: #fee2e2;
+  color: #991b1b;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.auth-error:not(.hidden) {
+  display: block;
+}
+
+.oauth.google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 1px solid #ddd;
+}
+
+.oauth.google i {
+  font-size: 1rem;
 }

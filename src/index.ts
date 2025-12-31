@@ -16,8 +16,6 @@ import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
 import { Auth } from "./auth/auth";
 
-import {User} from "./auth/user";
-
 //@ts-expect-error
 window.toggleLegend = function () {
   document.querySelector('.map-legend')?.classList.toggle('collapsed');
@@ -69,7 +67,6 @@ async function init() {
 
   map.setData(trails, bikeparks, dirtparks);
   const location = await getInitialLocation();
-  console.log(location)
   const coord = location as Coord;
   if(coord.lat !== undefined && coord.lng !== undefined) {
     map.setView(coord);
