@@ -137,7 +137,7 @@ export class Auth {
   }
 
   private async loadAuthTemplate(): Promise<void> {
-    if (document.getElementById('auth-modal'))
+    if (document.getElementById('sign-in-modal'))
       return; // already loaded
 
     const res = await fetch('/src/auth/sign_in_modal.html');

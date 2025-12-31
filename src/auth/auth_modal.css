@@ -14,7 +14,7 @@
   display: none;
 }
 
-.auth-modal {
+.sign-in-modal {
   background: #f7f7f5;
   color: #1c1c1c;
   width: 100%;
@@ -46,19 +46,19 @@
   color: #666;
 }
 
-.auth-modal form label {
+.sign-in-modal form label {
   display: block;
   margin-bottom: 0.3em;
 }
 
-.auth-modal label span {
+.sign-in-modal label span {
   display: block;
   font-size: .6em;
   color: #666;
   margin-bottom: .25em;
 }
 
-.auth-modal input {
+.sign-in-modal input {
   width: 90%;
   padding: .5em 1em;
   border-radius: 14px;
@@ -67,7 +67,7 @@
   font-size: .6em;
 }
 
-.auth-modal input:focus {
+.sign-in-modal input:focus {
   outline: none;
   border-color: #58c27d;
 }
