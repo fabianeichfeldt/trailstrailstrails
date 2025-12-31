@@ -1,27 +1,40 @@
 import {User} from "./user";
 
-export interface Auth_service {
+export interface AuthService {
   signIn(email: string, password: string): Promise<User>;
   signUp(email: string, password: string): Promise<User>;
   signOut(): Promise<void>;
   getUser(): User;
+  uploadAvatar(file: File): Promise<string>;
+  updatePassword(oldPassword: string, newPassword: string): Promise<void>;
+  updateProfile(param: { avatarUrl?: string, nickname?: string }): Promise<void>;
 }
 
-export class DummyAuthService {
+export class DummyAuthService implements AuthService{
+  updatePassword(oldPassword: string, newPassword: string): Promise<void> {
+      throw new Error("Method not implemented.");
+  }
+  updateProfile(param: { avatarUrl?: string; nickname?: string; }) : Promise<void> {
+      throw new Error("Method not implemented.");
+  }
   private user: User = User.AnonymousUser;
+
+  public uploadAvatar(file: File): Promise<string> {
+      throw new Error("Method not implemented.");
+  }
 
   public get loggedIn() {
     return this.user !== User.AnonymousUser;
   }
 
-  async signIn(email: string) : Promise<User> {
-    this.user = new User(email, "/src/assets/logo.webp");
+  async signIn(email: string, password: string) : Promise<User> {
+    this.user = new User(email, "Trailradar", "/src/assets/logo.webp");
     await new Promise(resolve => setTimeout(resolve, 3000));
     return this.user;
   }
 
-  async signUp(email: string) {
-    this.user = new User(email, "/src/assets/logo.webp");
+  async signUp(email: string, password: string) {
+    this.user = new User(email, "Trailradar", "/src/assets/logo.webp");
     return this.user;
   }
 

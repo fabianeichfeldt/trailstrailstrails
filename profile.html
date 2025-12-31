@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profileinstellungen – Trailradar</title>
+  <link rel="stylesheet" href="/src/css/style.css" />
+  <link rel="stylesheet" href="/src/auth/profile.css" />
+  <script defer type="module">
+    import { ProfileSettingsPage } from '/src/auth/profileSettingsPage.ts';
+
+    const profile = new ProfileSettingsPage();
+    await profile.initProfilePage();
+  </script>
+</head>
+
+<body>
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <a href="/"><img src="/src/assets/logo.webp" alt="Trailradar Logo" class="logo" /></a>
+    <h1 class="hero-title">Profileinstellungen</h1>
+  </div>
+</section>
+<main class="profile-main">
+  <div class="profile-card">
+    <a href="/" class="profile-back">
+      ← Zurück
+    </a>
+    <div class="profile-avatar">
+      <img id="profile-avatar-img"
+           src="/src/assets/logo.webp"
+           alt="User Avatar" />
+      <button class="avatar-edit" aria-label="Avatar ändern">
+        ✎
+      </button>
+      <input type="file" id="avatar-input" hidden accept="image/*" />
+    </div>
+
+    <form class="profile-form">
+      <div class="field">
+        <label>E-Mail</label>
+        <input type="email" autocomplete="email" value="user@email.de" readonly />
+      </div>
+
+      <div class="field">
+        <label>Nickname</label>
+        <input type="text" value="Nickname" />
+      </div>
+      <div class="divider-line"></div>
+      <span>Passwort ändern</span>
+      <div class="field">
+        <label>Altes Passwort</label>
+        <input type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+      <div class="field">
+        <label>Neues Passwort</label>
+        <input type="password" autocomplete="new-password" placeholder="••••••••" />
+      </div>
+
+      <div class="field">
+        <label>Passwort wiederholen</label>
+        <input type="password" autocomplete="new-password" placeholder="••••••••" />
+      </div>
+
+      <div class="profile-actions">
+        <button type="submit" class="primary">Speichern</button>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+</body>
+</html>

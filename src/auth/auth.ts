@@ -63,10 +63,11 @@ export class Auth {
       e.preventDefault();
       this.clearAuthError();
       const email = (this.form[0] as HTMLInputElement).value;
+      const password = (this.form[1] as HTMLInputElement).value;
 
       try {
         this.setLoading(true);
-        const user = await this.auth.signIn(email);
+        const user = await this.auth.signIn(email, password);
         this.backdrop?.classList.add('hidden');
         document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
       } catch (e) {

@@ -1,0 +1,123 @@
+.profile-main {
+  display: flex;
+  justify-self: center;
+  padding: 4.5em 1em 2em;
+}
+
+.profile-card {
+  width: clamp(40vw, 400px, 70vw);
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border-radius: 14px;
+  padding: 1.4em 1.2em 1.6em;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  position: relative;
+}
+
+
+.profile-back {
+  display: inline-block;
+  margin-bottom: 0.6em;
+  font-size: 0.65em;
+  color: #2b6cb0;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 132px;
+  height: 132px;
+  margin: 0.6em auto 1.2em;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.avatar-edit {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #2b6cb0;
+  color: #fff;
+  font-size: 0.75em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-edit:hover {
+  background: #3182ce;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7em;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+}
+
+.field label {
+  font-size: 0.6em;
+  color: #555;
+  margin-bottom: 0.2em;
+}
+
+.field input {
+  width: 95%;
+  padding: 0.45em 0.5em;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 0.7em;
+}
+
+.field input[readonly] {
+  background: #f2f2f2;
+}
+
+
+.divider-line {
+  height: 1px;
+  background: #ddd;
+}
+
+span {
+  font-size: 0.7em;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6em;
+  margin-top: 0.4em;
+}
+
+.profile-actions .primary {
+  background: #2b6cb0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45em 0.9em;
+  font-size: 0.7em;
+}
+
+.profile-actions .secondary {
+  background: transparent;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  padding: 0.45em 0.9em;
+  font-size: 0.7em;
+}

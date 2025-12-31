@@ -30,6 +30,20 @@
   cursor: pointer;
 }
 
+@media (max-width: 800px) {
+  .auth-signup-btn {
+    font-size: 0.5em;
+  }
+  .auth-spot {
+    top: 0.3em;
+    right: 0.3em;
+  }
+  .auth-login-btn {
+    padding: 0.3em 0.3em;
+    font-size: 0.5em;
+  }
+}
+
 .user-avatar-btn {
   position: absolute;
   top: 0.9em;
