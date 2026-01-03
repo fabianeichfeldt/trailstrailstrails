@@ -1,8 +1,8 @@
-import {DummyAuthService} from "./dummy_service";
 import {IAuthService} from "./auth_service";
+import {Supabase} from "./supabase";
 
 export class ProfileSettingsPage {
-  private auth: IAuthService = new DummyAuthService();
+  private auth: IAuthService = new Supabase();
   private avatarImg: HTMLImageElement = null!;
   private avatarInput: HTMLInputElement = null!;
   private emailInput: HTMLInputElement = null!;
