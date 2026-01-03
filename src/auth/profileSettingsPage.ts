@@ -1,7 +1,8 @@
-import {AuthService, DummyAuthService} from "./auth_service";
+import {DummyAuthService} from "./dummy_service";
+import {IAuthService} from "./auth_service";
 
 export class ProfileSettingsPage {
-  private auth: AuthService = new DummyAuthService();
+  private auth: IAuthService = new DummyAuthService();
   private avatarImg: HTMLImageElement = null!;
   private avatarInput: HTMLInputElement = null!;
   private emailInput: HTMLInputElement = null!;
@@ -41,7 +42,7 @@ export class ProfileSettingsPage {
   }
 
   public async loadProfile() {
-    const user = this.auth.getUser();
+    const user = await this.auth.getUser();
     if (!user) return;
 
     this.emailInput.value = user.email;

@@ -1,10 +1,9 @@
-import {DummyAuthService} from './auth_service';
-
 import "/src/auth/avatar.css"
 import "/src/auth/auth_modal.css"
 import {User} from "./user";
 import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
+import {Supabase} from "./supabase";
 
 type UserChangedHandler = (u: User) => Promise<void>;
 
@@ -12,12 +11,13 @@ export class Auth {
   private signInModal: HTMLElement | null = null;
   private signUpModal: HTMLElement | null = null;
   private errorBox: HTMLElement | null = null;
-  private form: HTMLFormElement | null = null;
+  private signInForm: HTMLFormElement | null = null;
+  private signUpForm: HTMLFormElement | null = null;
   private avatarBtn: HTMLElement | null = null;
   private loginBtn: HTMLElement | null = null;
   private signUpBtn: HTMLElement | null = null;
   private userChangedHandlers: UserChangedHandler[] = [];
-  private auth = new DummyAuthService();
+  private auth = new Supabase();
   private dropdown: HTMLElement | null = null;
 
   public async init() {
@@ -33,7 +33,8 @@ export class Auth {
     // this.closeSignInModal();
     // this.closeSignUpModal();
 
-    this.form = document.getElementById('auth-form') as HTMLFormElement;
+    this.signInForm = document.getElementById('auth-form') as HTMLFormElement;
+    this.signUpForm = document.getElementById('signup-form') as HTMLFormElement;
 
     this.onUserChanged((u) => {
       if (!this.avatarBtn) return Promise.resolve();
@@ -61,25 +62,8 @@ export class Auth {
       stopPropagation(e);
     });
 
-    this.form.addEventListener('submit', async (e) => {
-      if (!this.form) return;
-      e.preventDefault();
-      this.clearAuthError();
-      const email = (this.form[0] as HTMLInputElement).value;
-      const password = (this.form[1] as HTMLInputElement).value;
-
-      try {
-        this.setLoading(true);
-        const user = await this.auth.signIn(email, password);
-        this.signInModal?.classList.add('hidden');
-        document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
-      } catch (e) {
-        this.showAuthError('Fehler beim Anmelden. Bitte versuche es erneut.');
-      } finally {
-        this.setLoading(false);
-        this.triggerUserChanged();
-      }
-    });
+    this.signInForm.addEventListener('submit', async (e) => await this.signIn(e));
+    this.signUpForm.addEventListener('submit', async (e) => await this.signUp(e));
 
     this.signInModal?.querySelector('.cancel')!
       .addEventListener('click', this.closeSignInModal);
@@ -105,6 +89,48 @@ export class Auth {
     });
   }
 
+  private async signIn(e: SubmitEvent) {
+    if (!this.signInForm) return;
+    e.preventDefault();
+    this.clearAuthError();
+    const email = (this.signInForm[0] as HTMLInputElement).value;
+    const password = (this.signInForm[1] as HTMLInputElement).value;
+
+    try {
+      this.setLoading(true);
+      const user = await this.auth.signIn(email, password);
+      this.signInModal?.classList.add('hidden');
+      document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
+    } catch (e) {
+      this.showAuthError('Fehler beim Anmelden. Bitte versuche es erneut.');
+    } finally {
+      this.setLoading(false);
+      this.triggerUserChanged();
+    }
+  }
+
+  private async signUp(e: SubmitEvent) {
+    if (!this.signUpForm) return;
+    e.preventDefault();
+    this.clearAuthError();
+    const nickname = (this.signUpForm[0] as HTMLInputElement).value;
+    const email = (this.signUpForm[1] as HTMLInputElement).value;
+    const password = (this.signUpForm[2] as HTMLInputElement).value;
+
+    try {
+      this.setLoading(true);
+      const user = await this.auth.signUp(email, password, nickname);
+      await this.auth.signIn(email, password);
+      this.signUpModal?.classList.add('hidden');
+      document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
+    } catch (e) {
+      this.showAuthError('Fehler beim Anmelden. Bitte versuche es erneut.');
+    } finally {
+      this.setLoading(false);
+      this.triggerUserChanged();
+    }
+  }
+
   private showAvatarButton() {
     this.avatarBtn?.classList.remove('hidden');
     this.loginBtn?.classList.add('hidden');
@@ -122,7 +148,7 @@ export class Auth {
   }
 
   private triggerUserChanged() {
-    this.userChangedHandlers.slice(0).forEach((handler) => handler(this.auth.getUser()));
+    this.userChangedHandlers.slice(0).forEach(async (handler) => handler(await this.auth.getUser()));
   }
 
   public onUserChanged(handler: UserChangedHandler) {
@@ -150,7 +176,7 @@ export class Auth {
   }
 
   private setLoading(state: boolean) {
-    this.form?.querySelector('button.primary')!
+    this.signInForm?.querySelector('button.primary')!
       .classList.toggle('loading', state);
   }
 

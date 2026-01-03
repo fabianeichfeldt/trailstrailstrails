@@ -2,7 +2,7 @@
   "name": "trailradar",
   "version": "1.0.0",
   "description": "**Legal MTB Trails. Real Fun. Community-Contributed.**",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
@@ -28,6 +28,8 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
+    "@supabase/auth-js": "^2.89.0",
+    "@supabase/supabase-js": "^2.89.0",
     "leaflet": "^1.9.4",
     "leaflet-gesture-handling": "^1.2.2",
     "leaflet.fullscreen": "^5.1.1",
