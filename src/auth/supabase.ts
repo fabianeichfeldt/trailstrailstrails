@@ -25,8 +25,9 @@ export class Supabase implements IAuthService {
 
   async getUser(): Promise<User> {
     const response = await this.auth.getUser();
-    console.log("User session:", response.data.user);
-    return new User(response.data.user?.email || "", "")
+    if (response.error != null)
+      throw new Error(`Failed to get user: ${response.error.message}`);
+    return new User(response.data.user?.email || "", response.data.user.user_metadata?.nickname)
   }
 
   async signIn(email: string, password: string): Promise<User> {

@@ -143,27 +143,57 @@
   position: absolute;
   right: 0;
   top: calc(100% + 70px);
-  min-width: 180px;
+  min-width: 200px;
+
   background: white;
-  border-radius: 14px;
-  padding: 0.4em 0;
-  box-shadow: 0 20px 40px rgba(0,0,0,.25);
-  animation: dropdownFade .15s ease;
+  border-radius: 16px;
+  padding: 0.3em 0;
+
+  box-shadow:
+    0 20px 40px rgba(255,255,255,.3),
+    2px 5px 5px rgba(0,0,0,0.2) inset;
+
+  animation: dropdownFade .5s ease;
+}
+
+.user-dropdown-header {
+  padding: 0.2em 0.2em 0.2em 0.5em;
+}
+
+.user-nickname {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
 }
 
 .user-dropdown button {
   width: 100%;
-  padding: 0.4em 1em;
+  padding: 0.5em 1em;
+
   background: none;
   border: none;
   text-align: left;
-  font-size: 0.55em;
+
+  font-size: 0.6em;
+  font-weight: 500;
+  color: #111827;
+
   cursor: pointer;
 }
 
 .user-dropdown button:hover {
   background: #f1f5f9;
 }
+
+.user-dropdown button.danger {
+  color: #b91c1c;
+}
+
+.user-dropdown button.danger:hover {
+  background: #fee2e2;
+}
+
 
 .user-dropdown .divider {
   height: 1px;

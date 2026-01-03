@@ -19,6 +19,7 @@ export class Auth {
   private userChangedHandlers: UserChangedHandler[] = [];
   private auth = new Supabase();
   private dropdown: HTMLElement | null = null;
+  private nickname: HTMLElement = null!;
 
   public async init() {
     await this.loadSignInTemplate();
@@ -30,16 +31,16 @@ export class Auth {
     this.dropdown = document.getElementById('user-dropdown');
     this.loginBtn = document.getElementById('login-btn');
     this.signUpBtn = document.getElementById('signup-btn');
-    // this.closeSignInModal();
-    // this.closeSignUpModal();
-
     this.signInForm = document.getElementById('auth-form') as HTMLFormElement;
     this.signUpForm = document.getElementById('signup-form') as HTMLFormElement;
 
-    this.onUserChanged((u) => {
+    this.onUserChanged(async (u) => {
       if (!this.avatarBtn) return Promise.resolve();
-      if (this.auth.loggedIn)
+      if (this.auth.loggedIn) {
         this.showAvatarButton();
+        const user = await this.auth.getUser();
+        this.nickname.innerHTML = user.nickname;
+      }
       else
         this.hideAvatarButton();
       this.avatarBtn.innerHTML = u.avatarHTML;
@@ -47,21 +48,10 @@ export class Auth {
     });
     this.triggerUserChanged();
 
+    this.initializeProfileDropdown();
+
     this.loginBtn?.addEventListener('click', this.openSignInModal);
     this.signUpBtn?.addEventListener('click', this.openSignUpModal);
-
-    this.dropdown?.querySelector('#logout-btn')!
-      .addEventListener('click', async () => {
-        await this.auth.signOut();
-        this.triggerUserChanged();
-        document.dispatchEvent(new CustomEvent('auth:logout'));
-        this.dropdown?.classList.add('hidden');
-      });
-    this.avatarBtn?.addEventListener('click', (e) => {
-      this.openProfileMenu();
-      stopPropagation(e);
-    });
-
     this.signInForm.addEventListener('submit', async (e) => await this.signIn(e));
     this.signUpForm.addEventListener('submit', async (e) => await this.signUp(e));
 
@@ -87,6 +77,25 @@ export class Auth {
     document.addEventListener('click', () => {
       this.dropdown?.classList.add('hidden');
     });
+  }
+
+  private initializeProfileDropdown() {
+    this.dropdown?.querySelector('#logout-btn')!
+      .addEventListener('click', async () => {
+        await this.auth.signOut();
+        this.triggerUserChanged();
+        document.dispatchEvent(new CustomEvent('auth:logout'));
+        this.dropdown?.classList.add('hidden');
+      });
+    this.dropdown?.querySelector('#profile-btn')!
+      .addEventListener('click', async () => {
+        window.location.href = '/profile.html';
+      });
+    this.avatarBtn?.addEventListener('click', (e) => {
+      this.openProfileMenu();
+      stopPropagation(e);
+    });
+    this.nickname = this.dropdown?.querySelector("#user-nickname")!;
   }
 
   private async signIn(e: SubmitEvent) {
