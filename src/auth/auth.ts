@@ -3,7 +3,7 @@ import "/src/auth/auth_modal.css"
 import {User} from "./user";
 import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
-import {Supabase} from "./supabase";
+import {IAuthService} from "./auth_service";
 
 type UserChangedHandler = (u: User) => Promise<void>;
 
@@ -17,10 +17,13 @@ export class Auth {
   private loginBtn: HTMLElement | null = null;
   private signUpBtn: HTMLElement | null = null;
   private userChangedHandlers: UserChangedHandler[] = [];
-  private auth = new Supabase();
+  private auth: IAuthService;
   private dropdown: HTMLElement | null = null;
   private nickname: HTMLElement = null!;
 
+  public constructor(auth: IAuthService) {
+    this.auth = auth;
+  }
   public async init() {
     await this.loadSignInTemplate();
     await this.loadSignUpTemplate();

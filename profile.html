@@ -8,8 +8,9 @@
   <link rel="stylesheet" href="/src/auth/profile.css" />
   <script defer type="module">
     import { ProfileSettingsPage } from '/src/auth/profileSettingsPage.ts';
+    import {Supabase} from '/src/auth/supabase.ts';
 
-    const profile = new ProfileSettingsPage();
+    const profile = new ProfileSettingsPage(new Supabase());
     await profile.initProfilePage();
   </script>
 </head>
@@ -45,7 +46,7 @@
 
       <div class="field">
         <label>Nickname</label>
-        <input type="text" value="Nickname" />
+        <input type="text" value="" />
       </div>
       <div class="divider-line"></div>
       <span>Passwort ändern</span>

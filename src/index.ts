@@ -15,6 +15,7 @@ import "/src/css/new_entry_popup.css";
 import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
 import { Auth } from "./auth/auth";
+import {Supabase} from "./auth/supabase";
 
 //@ts-expect-error
 window.toggleLegend = function () {
@@ -56,7 +57,7 @@ async function init() {
   await map.init();
 
   initBurgerBtn();
-  const auth = new Auth();
+  const auth = new Auth(new Supabase());
   await auth.init();
 
   const [trails, bikeparks, dirtparks] = await Promise.all([

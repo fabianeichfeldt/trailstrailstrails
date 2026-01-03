@@ -1,8 +1,7 @@
 import {IAuthService} from "./auth_service";
-import {Supabase} from "./supabase";
 
 export class ProfileSettingsPage {
-  private auth: IAuthService = new Supabase();
+  private auth: IAuthService;
   private avatarImg: HTMLImageElement = null!;
   private avatarInput: HTMLInputElement = null!;
   private emailInput: HTMLInputElement = null!;
@@ -11,6 +10,9 @@ export class ProfileSettingsPage {
   private pwRepeatInput: HTMLInputElement = null!;
   private oldPwInput: HTMLInputElement = null!;
 
+  public constructor(auth: IAuthService) {
+    this.auth = auth;
+  }
   public async initProfilePage() {
     this.cacheElements();
     this.bindEvents();
