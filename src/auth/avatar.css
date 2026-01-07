@@ -106,7 +106,6 @@
   height: 100%;
 }
 
-/* Kopf */
 .avatar-fallback::before {
   content: "";
   position: absolute;
@@ -119,7 +118,6 @@
   transform: translateX(-50%);
 }
 
-/* Schultern */
 .avatar-fallback::after {
   content: "";
   position: absolute;
@@ -133,9 +131,10 @@
 }
 
 .user-menu {
-  position: absolute;
+  position: fixed;
   top: 0.6em;
   right: 0.6em;
+  z-index: 1000;
 }
 
 .user-dropdown {
