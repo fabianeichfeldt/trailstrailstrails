@@ -16,6 +16,18 @@
       --text-main: #ffffff;
       --text-muted: #939393;
     }
+    .back-link{
+      display: inline-block;
+      margin-top: 1em;
+      font-weight: 600;
+      color: #2b6cb0;
+      font-size: 0.9em;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      background: #005fa3;
+    }
 
     * { box-sizing: border-box; }
 
@@ -114,7 +126,6 @@
       .hero-content { padding: 2.5rem; }
     }
 
-    /* TYPOGRAPHY */
     .lead {
       font-size: 1.2rem;
       color: var(--text-muted);
@@ -152,7 +163,9 @@
 </section>
 
 <main class="container">
-
+  <div style="text-align:left;">
+    <a href="/" class="back-link">← Zurück zur Karte</a>
+  </div>
   <section class="section split">
     <img src="/public/assets/aletsch.webp" alt="MTB Stoneman Glaciera - Aletsch Gletscher" />
     <div>
