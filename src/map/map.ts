@@ -13,11 +13,12 @@ import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../types/Trail";
 import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails";
 import {openCreateTrailPopup} from "./create_trail/popup";
-import {createCustomIcon, getTrailDetails} from "../data/trails";
+import {createCustomIcon, getTrailDetails} from "../communication/trails";
 import {getTrailPopup, renderTrailDetails} from "./detail_popup/detailsPopup";
 import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "./detail_popup/logic";
 import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
+import {share} from "../communication/share";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 export class TrailMap {
@@ -100,14 +101,16 @@ export class TrailMap {
   }
 
   public openTrail(trailID: string) {
-    console.log("open trail", trailID)
     const specificTrailMarker = this.markersById.get(trailID);
+    console.log("open trail", trailID, specificTrailMarker)
     if (specificTrailMarker) {
       this.setView(specificTrailMarker.getLatLng());
       this.clusterGroup.zoomToShowLayer(specificTrailMarker, () => {
         specificTrailMarker.openPopup();
       });
     }
+    else
+      this.setView({lat: 49.059213, lng: 10.652860 });
   }
 
   public setData(trails: SingleTrail[], bikeparks: BikePark[], dirtparks: DirtPark[]) {
@@ -154,11 +157,11 @@ export class TrailMap {
       marker.on("popupopen", async (e) => {
         const shareBtn = document.getElementById("share-button");
         shareBtn?.addEventListener("click", async () => {
-          console.log("Share button clicked", navigator.canShare())
             await navigator.share({
               title: `Offizieller MTB Trail '${trail.name}' auf Trailradar`,
               url: `https://trailradar.org/trails/${trail.id}`
             });
+            await share(trail);
         });
 
         document.getElementById("top-map-buttons")!.style.display = "none";

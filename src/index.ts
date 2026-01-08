@@ -1,6 +1,6 @@
-import { getParks } from "./data/bikeparks";
-import { getDirtParks } from "./data/dirt_parks";
-import {getTrails} from "./data/trails";
+import { getParks } from "./communication/bikeparks";
+import { getDirtParks } from "./communication/dirt_parks";
+import {getTrails} from "./communication/trails";
 import {Coord, getApproxLocation, locations} from "./locations";
 import { generateJsonLD } from "./json_ld";
 

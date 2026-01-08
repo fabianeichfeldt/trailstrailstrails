@@ -26,14 +26,14 @@ export function bindPopupEvents(popup: HTMLElement) {
     const feedback = popup.querySelector(".popup-feedback");
     if (!feedback) return;
 
-    const trailId = feedback.getAttribute("data-trail-id");
+    const trailId = feedback.getAttribute("communication-trail-id");
     if (!trailId) return;
 
     feedback.addEventListener("click", async (e) => {
         const btn = (e.target as HTMLElement).closest("button");
         if (!btn) return;
 
-        const action = btn.getAttribute("data-action");
+        const action = btn.getAttribute("communication-action");
         if (action === "upvote") {
             await upVote(trailId, btn);
             showToast("Danke für dein Feedback! 🙏", "success");

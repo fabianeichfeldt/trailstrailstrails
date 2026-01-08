@@ -36,7 +36,11 @@ export const locations : Region[] = [
   { "name": "Pfalz", "lat": 49.517976, "lng": 7.981093 },
   { "name": "Innsbruck", "lat": 47.264952, "lng": 11.410609 },
   { "name": "bayerischerwald", "lat": 49.1381, "lng": 13.0896 },
-];  
+  { "name": "salzberg", "lat": 47.8057, "lng": 13.0421 },
+  { "name": "vorarlberg", "lat": 47.318110, "lng": 9.965299 },
+  { "name": "wien", "lat": 48.217370, "lng": 16.396112 },
+  { "name": "kaernten", "lat": 46.732976, "lng": 13.967933 },
+];
 
 export async function getApproxLocation(): Promise<Coord> {
   try {
