@@ -9,4 +9,5 @@ export interface IAuthService {
   updatePassword(oldPassword: string, newPassword: string): Promise<void>;
   updateProfile(param: { avatarUrl?: string, nickname?: string }): Promise<void>;
   loggedIn: boolean
+  resetPassword(email: string): Promise<void>;
 }

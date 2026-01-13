@@ -4,6 +4,7 @@ import {User} from "./user";
 import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
 import {IAuthService} from "./auth_service";
+import {showToast} from "../toast";
 
 type UserChangedHandler = (u: User) => Promise<void>;
 
@@ -72,9 +73,12 @@ export class Auth {
         console.log('Google login (dummy)');
       });
     this.signInModal?.querySelector('#forgot-password')!
-      .addEventListener('click', (e) => {
+      .addEventListener('click', async (e) => {
         e.preventDefault();
-        console.log('Forgot password clicked (UI only)');
+        const email = (document.getElementById('email') as HTMLInputElement).value;
+        await this.auth.resetPassword(email);
+        showToast("Wir haben dir eine Email gesendet um das Passwort zurück zu setzen.")
+        this.closeSignInModal();
       });
 
     document.addEventListener('click', () => {
@@ -123,12 +127,16 @@ export class Auth {
 
   private async signUp(e: SubmitEvent) {
     if (!this.signUpForm) return;
-    e.preventDefault();
-    this.clearAuthError();
     const nickname = (this.signUpForm[0] as HTMLInputElement).value;
     const email = (this.signUpForm[1] as HTMLInputElement).value;
     const password = (this.signUpForm[2] as HTMLInputElement).value;
-
+    const passwordConfirmation = (this.signUpForm[3] as HTMLInputElement).value;
+    this.clearAuthError();
+    if (password !== passwordConfirmation) {
+      this.showAuthError('Passwörter stimmen nicht überein');
+      return;
+    }
+    e.preventDefault();
     try {
       this.setLoading(true);
       const user = await this.auth.signUp(email, password, nickname);

@@ -44,8 +44,8 @@ export class Supabase implements IAuthService {
     return new User("", response.data.user?.email || "", "")
   }
 
-  updatePassword(oldPassword: string, newPassword: string): Promise<void> {
-    return Promise.resolve(undefined);
+  async updatePassword(oldPassword: string, newPassword: string): Promise<void> {
+    await this.supabase.auth.updateUser({ password: newPassword})
   }
 
   async updateProfile(param: { avatarUrl?: string; nickname?: string }): Promise<void> {
@@ -79,6 +79,12 @@ export class Supabase implements IAuthService {
 
   public get loggedIn(): boolean {
     return this._loggedIn;
+  }
+
+  async resetPassword(email: string): Promise<void> {
+    await this.supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://trailradar.org/reset_password.html'
+    });
   }
 
 }
