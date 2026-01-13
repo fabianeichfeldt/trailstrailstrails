@@ -53,12 +53,13 @@ async function init() {
     console.error("Map div not found!");
     return;
   }
+  const authService = new Supabase();
+  const auth = new Auth(authService);
+  await auth.init();
   const map = new TrailMap(el);
-  await map.init();
+  await map.init(authService);
 
   initBurgerBtn();
-  const auth = new Auth(new Supabase());
-  await auth.init();
 
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),

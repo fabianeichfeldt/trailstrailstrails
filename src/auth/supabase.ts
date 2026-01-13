@@ -19,15 +19,15 @@ export class Supabase implements IAuthService {
   async getUser(): Promise<User> {
     const response = await this.supabase.auth.getUser();
     if (response.error != null)
-      throw new Error(`Failed to get user: ${response.error.message}`);
-    return new User(response.data.user?.email || "", response.data.user.user_metadata?.nickname, response.data.user.user_metadata?.avatarUrl)
+      return User.AnonymousUser;
+    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.nickname, response.data.user.user_metadata?.avatarUrl)
   }
 
   async signIn(email: string, password: string): Promise<User> {
     const response = await this.supabase.auth.signInWithPassword({ password, email });
     if (response.error != null)
       throw new Error(`Sign-in failed: ${response.error.message}`);
-    return new User(response.data.user?.email || "", response.data.user.user_metadata?.nickname, response.data.user.user_metadata?.avatarUrl)
+    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.nickname, response.data.user.user_metadata?.avatarUrl)
   }
 
   async signOut(): Promise<void> {
@@ -41,7 +41,7 @@ export class Supabase implements IAuthService {
     await this.supabase.auth.updateUser({data: {
         nickname
       }});
-    return new User(response.data.user?.email || "", "")
+    return new User("", response.data.user?.email || "", "")
   }
 
   updatePassword(oldPassword: string, newPassword: string): Promise<void> {
