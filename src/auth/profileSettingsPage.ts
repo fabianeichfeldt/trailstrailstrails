@@ -91,9 +91,25 @@ export class ProfileSettingsPage {
     await this.auth.updateProfile({ avatarUrl: uploadedUrl });
   }
 
+    private async verifyOldPassword(oldPassword: string): Promise<boolean> {
+      const user = await this.auth.getUser();
+      if (!user) return false;
+
+      try {
+        await this.auth.signIn(user.email, oldPassword);
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
   private async onSave(e: Event) {
     e.preventDefault();
 
+    if (!await this.verifyOldPassword(this.oldPwInput.value)) {
+      alert('Falsches Passwort');
+      return;
+    }
     if (this.pwInput?.value || this.pwRepeatInput?.value) {
       if (this.pwInput?.value !== this.pwRepeatInput?.value) {
         alert('Passwörter stimmen nicht überein');
