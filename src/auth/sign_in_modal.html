@@ -1,0 +1,67 @@
+<div id="sign-in-modal" class="auth-backdrop hidden">
+  <div class="sign-in-modal">
+
+    <div class="auth-header">
+      <img src="/src/assets/logo.webp" alt="Trailradar Logo" class="auth-logo" />
+      <h2 id="auth-title">Anmelden</h2>
+      <p class="auth-sub">
+        Melde dich an, um Trails hinzuzufügen, Fotos hochzuladen und vieles mehr.
+      </p>
+    </div>
+    <div class="auth-error hidden" role="alert"></div>
+    <form id="auth-form">
+      <label>
+        <span>E-Mail</span>
+        <input type="email" id="email" autocomplete="email" required />
+      </label>
+
+      <label>
+        <span>Passwort</span>
+        <div class="password-field">
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            minlength="8"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </label>
+      <div class="forgot-password">
+        <a href="#" id="forgot-password">
+          Passwort vergessen?
+        </a>
+      </div>
+
+      <button class="primary" type="submit">
+        Weiter
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>oder</span>
+    </div>
+
+    <button class="oauth google" disabled>
+      <i class="fab fa-google"></i>
+      <span>Mit Google anmelden</span>
+    </button>
+
+    <p class="switch">
+      Noch kein Konto?
+      <a href="#" id="switch-to-sign-up">Registrieren</a>
+    </p>
+
+    <button class="cancel">
+      Abbrechen
+    </button>
+
+  </div>
+</div>

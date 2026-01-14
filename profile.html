@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Profileinstellungen – Trailradar</title>
+  <link rel="stylesheet" href="/src/css/style.css" />
+  <link rel="stylesheet" href="/src/auth/auth_modal.css" />
+  <link rel="stylesheet" href="/src/auth/profile.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
+  <link rel="canonical" href="https://trailradar.org/profile.html">
+  <script defer type="module">
+    import { ProfileSettingsPage } from '/src/auth/profileSettingsPage.ts';
+    import {Supabase} from '/src/auth/supabase.ts';
+
+    const profile = new ProfileSettingsPage(new Supabase());
+    await profile.initProfilePage();
+  </script>
+</head>
+
+<body>
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <a href="/"><img src="/src/assets/logo.webp" alt="Trailradar Logo" class="logo" /></a>
+    <h1 class="hero-title">Profileinstellungen</h1>
+  </div>
+</section>
+<main class="profile-main">
+  <div class="profile-card">
+    <a href="/" class="profile-back">
+      ← Zurück
+    </a>
+    <div class="profile-avatar">
+      <img id="profile-avatar-img"
+           src="/src/assets/logo.webp"
+           alt="User Avatar" />
+      <button class="avatar-edit" aria-label="Avatar ändern">
+        ✎
+      </button>
+      <input type="file" id="avatar-input" hidden accept="image/*" />
+    </div>
+
+    <form class="profile-form">
+      <div class="field">
+        <label>E-Mail</label>
+        <input type="email" autocomplete="email" value="user@email.de" readonly />
+      </div>
+
+      <div class="field">
+        <label>Nickname</label>
+        <input type="text" value="" />
+      </div>
+      <div class="divider-line"></div>
+      <span>Passwort ändern</span>
+      <div class="field">
+        <label>Altes Passwort</label>
+        <div class="password-field">
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Neues Passwort</label>
+        <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+      </div>
+
+      <div class="field">
+        <label>Passwort wiederholen</label>
+        <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+      </div>
+
+      <div class="profile-actions">
+        <button type="submit" class="primary">Speichern</button>
+      </div>
+
+    </form>
+  </div>
+</main>
+
+</body>
+</html>

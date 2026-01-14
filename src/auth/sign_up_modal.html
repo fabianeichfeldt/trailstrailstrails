@@ -1,0 +1,120 @@
+<div id="sign-up-modal" class="auth-backdrop hidden">
+  <div class="sign-in-modal">
+    <div class="auth-header">
+      <img src="/src/assets/logo.webp" alt="Trailradar Logo" class="auth-logo" />
+      <h2>Konto erstellen</h2>
+      <p class="auth-sub">
+        Erstelle dein Trailradar-Konto und werde Teil der Community.
+      </p>
+    </div>
+
+    <form id="signup-form">
+      <label>
+        <span>Nickname</span>
+        <input
+          type="text"
+          name="nickname"
+          autocomplete="username"
+          required
+          minlength="3"
+        />
+      </label>
+
+      <label>
+        <span>E-Mail</span>
+        <input
+          type="email"
+          name="email"
+          autocomplete="email"
+          required
+        />
+      </label>
+
+      <label>
+        <span>Passwort</span>
+        <div class="password-field">
+          <input
+            type="password"
+            name="password"
+            autocomplete="new-password"
+            required
+            minlength="8"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </label>
+
+      <label>
+        <span>Passwort wiederholen</span>
+        <div class="password-field">
+          <input
+            type="password"
+            name="password_repeat"
+            autocomplete="new-password"
+            required
+            minlength="8"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
+      </label>
+
+      <label class="consent-checkbox">
+        <input
+          type="checkbox"
+          name="privacy_consent"
+          required
+        />
+
+          <span class="custom-checkbox"></span>
+        <span class="consent-text">
+          Ich habe die
+          <a href="/privacy.html" target="_blank" rel="noopener">
+            Datenschutzerklärung
+          </a>
+          und die
+          <a href="/terms.html" target="_blank" rel="noopener">
+            Nutzungsbedingungen
+          </a>
+          gelesen und akzeptiere diese.
+        </span>
+            </label>
+
+      <div class="auth-error hidden" id="signup-error"></div>
+
+      <button class="primary" type="submit">
+        Registrieren
+      </button>
+    </form>
+
+    <div class="divider">
+      <span>oder</span>
+    </div>
+
+    <button class="oauth google" disabled>
+      <i class="fab fa-google"></i>
+      <span>Mit Google registrieren</span>
+    </button>
+
+    <p class="switch">
+      Schon ein Konto?
+      <a href="#" id="switch-to-login">Anmelden</a>
+    </p>
+
+    <button class="cancel">
+      Abbrechen
+    </button>
+
+  </div>
+</div>

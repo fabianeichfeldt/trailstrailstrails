@@ -2,6 +2,8 @@ import "/src/css/nearby_modal.css";
 import {anyTrailType} from "../../types/Trail";
 import {showToast} from "../../toast";
 import L from "leaflet";
+import {IAuthService} from "../../auth/auth_service";
+import {User} from "../../auth/user";
 
 const types = {
     trail: "Trail",
@@ -11,8 +13,8 @@ const types = {
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 
-export function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, mode: anyTrailType) {
-    const marker = L.marker([lat, lng]).addTo(mymap);
+export function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, mode: anyTrailType, auth: IAuthService) {
+  const marker = L.marker([lat, lng]).addTo(mymap);
     const popupContent = `
   <div class="popup-form">
     <h3>Neuer Eintrag</h3>
@@ -71,10 +73,17 @@ export function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, mod
     //@ts-expect-error
     marker.bindPopup(popupContent, popupSizing);
 
-    marker.on("popupopen", () => {
+    marker.on("popupopen", async () => {
         const saveBtn = document.getElementById("saveTrailBtn");
         const cancelBtn = document.getElementById("cancelTrailBtn");
 
+        let user: User | undefined;
+        if (auth.loggedIn) {
+          const creatorInput = document.getElementById("trailCreator") as HTMLFormElement;
+          user = await auth.getUser();
+          creatorInput.value = (await auth.getUser()).nickname || "";
+          creatorInput.readOnly = true;
+        }
         saveBtn?.addEventListener("click", async () => {
             let trail: any = {
                 name: (document.getElementById("trailName") as HTMLFormElement).value.trim(),
@@ -83,6 +92,7 @@ export function openCreateTrailPopup(mymap: L.Map, lat: number, lng: number, mod
                 creator: (document.getElementById("trailCreator") as HTMLFormElement).value.trim(),
                 latitude: lat,
                 longitude: lng,
+                creator_id: user?.id ?? ""
             };
 
             if (!trail.name) {

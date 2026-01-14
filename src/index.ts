@@ -11,10 +11,11 @@ import "/src/css/legend.css";
 import "/src/css/switch.css";
 import "/src/css/community.css";
 import "/src/css/side_menu.css";
-
 import "/src/css/new_entry_popup.css";
 import {generateNews} from "./news/news";
 import { TrailMap } from "./map/map";
+import { Auth } from "./auth/auth";
+import {Supabase} from "./auth/supabase";
 
 //@ts-expect-error
 window.toggleLegend = function () {
@@ -52,8 +53,11 @@ async function init() {
     console.error("Map div not found!");
     return;
   }
+  const authService = new Supabase();
+  const auth = new Auth(authService);
+  await auth.init();
   const map = new TrailMap(el);
-  await map.init();
+  await map.init(authService);
 
   initBurgerBtn();
 
@@ -65,7 +69,6 @@ async function init() {
 
   map.setData(trails, bikeparks, dirtparks);
   const location = await getInitialLocation();
-  console.log(location)
   const coord = location as Coord;
   if(coord.lat !== undefined && coord.lng !== undefined) {
     map.setView(coord);
@@ -144,5 +147,5 @@ function filterHandling(map: TrailMap) {
   filterPumptracks?.addEventListener("change", updateFilters);
 }
 
-pageCounter();
 await init();
+pageCounter();

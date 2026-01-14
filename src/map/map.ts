@@ -19,8 +19,10 @@ import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "./detail_popup
 import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
 import {share} from "../communication/share";
+import {IAuthService} from "../auth/auth_service";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
+
 export class TrailMap {
   private clusterGroup!: L.MarkerClusterGroup;
   private markerGroup!: L.LayerGroup;
@@ -33,15 +35,18 @@ export class TrailMap {
   private markersById = new Map<string, L.Marker>();
   private mymap!: L.Map;
 
-  private get currentMarkerLayer() : L.MarkerClusterGroup | L.LayerGroup {
+  private get currentMarkerLayer(): L.MarkerClusterGroup | L.LayerGroup {
     return this.filterSettings.useCluster ? this.clusterGroup : this.markerGroup;
   }
+
   private get filteredTrails(): SingleTrail[] {
     return this.trails.filter(() => this.filterSettings.showTrails);
   }
+
   private get filteredBikeparks(): BikePark[] {
     return this.bikeparks.filter(() => this.filterSettings.showBikeparks);
   }
+
   private get filteredDirtparks(): DirtPark[] {
     return this.dirtparks.filter(dp => {
       if (this.filterSettings.showDirtparks && this.filterSettings.showPumptracks) return true;
@@ -67,17 +72,13 @@ export class TrailMap {
     });
   }
 
-  public async init() {
+  public async init(auth: IAuthService) {
     this.mymap.setMaxZoom(19);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
       maxZoom: 19,
       // zoomControl: false,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 
-    }).addTo(this.mymap);
-
-    L.control.zoom({
-      position: 'bottomright',
     }).addTo(this.mymap);
 
     L.control
@@ -93,7 +94,7 @@ export class TrailMap {
     this.markerGroup = new L.LayerGroup();
     this.mymap.addLayer(this.clusterGroup);
 
-    this.initAddButton();
+    this.initAddButton(auth);
   }
 
   public setView(location: Coord) {
@@ -187,7 +188,7 @@ export class TrailMap {
     }
   }
 
-  private initAddButton() {
+  private initAddButton(auth: IAuthService) {
     const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null;
     const fabMenu = document.getElementById('fab-menu');
 
@@ -229,11 +230,11 @@ export class TrailMap {
       const nearByTrail = giveTrailNearBy(e.latlng.lat, e.latlng.lng, this.trails);
       if (nearByTrail)
         askNearbyConflict(nearByTrail, () => {
-          openCreateTrailPopup(this.mymap, e.latlng.lat, e.latlng.lng, this.addMode!)
+          openCreateTrailPopup(this.mymap, e.latlng.lat, e.latlng.lng, this.addMode!, auth)
           this.resetAddMode(addBtn);
         }, () => reportAbort());
       else {
-        openCreateTrailPopup(this.mymap, e.latlng.lat, e.latlng.lng, this.addMode);
+        openCreateTrailPopup(this.mymap, e.latlng.lat, e.latlng.lng, this.addMode, auth);
         this.resetAddMode(addBtn);
       }
     });

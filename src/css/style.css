@@ -1,6 +1,5 @@
 html,
 body {
-  /* height: 100%; */
   margin: 0;
   font-family: Arial, sans-serif;
   background-color: #f5f5f5;
@@ -47,20 +46,12 @@ header h1 {
 .map-container {
   position: relative;
   display: inline-block;
-  .map-top {
+  .map-bottom {
     z-index: 1000;
     width: 100%;
     border-radius: 12px 12px 0 0;
     position: absolute;
-    h2 {
-      padding: 0.4rem 0 0.4rem 0;
-      top: 0;
-      margin-top: 0;
-      margin-bottom: 0.2em;
-      font-size: 0.6em;
-      text-align: center;
-      background: rgba(162, 164, 166, 0.66);
-    }
+    bottom: 0;
   }
 }
 
