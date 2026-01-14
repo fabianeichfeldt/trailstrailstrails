@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Profileinstellungen – Trailradar</title>
   <link rel="stylesheet" href="/src/css/style.css" />
+  <link rel="stylesheet" href="/src/auth/auth_modal.css" />
   <link rel="stylesheet" href="/src/auth/profile.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
   <link rel="canonical" href="https://trailradar.org/profile.html">
@@ -54,16 +55,60 @@
       <span>Passwort ändern</span>
       <div class="field">
         <label>Altes Passwort</label>
-        <input type="password" autocomplete="current-password" placeholder="••••••••" />
+        <div class="password-field">
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </div>
       <div class="field">
         <label>Neues Passwort</label>
-        <input type="password" autocomplete="new-password" placeholder="••••••••" />
+        <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
       </div>
 
       <div class="field">
         <label>Passwort wiederholen</label>
-        <input type="password" autocomplete="new-password" placeholder="••••••••" />
+        <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
       </div>
 
       <div class="profile-actions">

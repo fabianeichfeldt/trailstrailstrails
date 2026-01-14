@@ -1,4 +1,5 @@
 import {IAuthService} from "./auth_service";
+import "@fortawesome/fontawesome-free/css/all.css";
 
 export class ProfileSettingsPage {
   private auth: IAuthService;
@@ -28,7 +29,7 @@ export class ProfileSettingsPage {
     this.nicknameInput = inputs[1] as HTMLInputElement;
     this.oldPwInput = inputs[2] as HTMLInputElement;
     this.pwInput = inputs[3] as HTMLInputElement;
-    this.pwRepeatInput = inputs[2] as HTMLInputElement;
+    this.pwRepeatInput = inputs[4] as HTMLInputElement;
   }
 
   private bindEvents() {
@@ -41,6 +42,31 @@ export class ProfileSettingsPage {
     document
       .querySelector('.profile-form')!
       .addEventListener('submit', this.onSave.bind(this));
+
+    const toggles = document.querySelectorAll<HTMLButtonElement>('.toggle-password');
+
+    toggles.forEach((toggle) => {
+      toggle.addEventListener('click', () => {
+        const wrapper = toggle.closest('.password-field');
+        if (!wrapper) return;
+
+        const input = wrapper.querySelector<HTMLInputElement>('input');
+        const icon = toggle.querySelector('i');
+        if (!input || !icon) return;
+
+        const isHidden = input.type === 'password';
+
+        input.type = isHidden ? 'text' : 'password';
+
+        icon.classList.toggle('fa-eye', !isHidden);
+        icon.classList.toggle('fa-eye-slash', isHidden);
+
+        toggle.setAttribute(
+          'aria-label',
+          isHidden ? 'Passwort verbergen' : 'Passwort anzeigen'
+        );
+      });
+    });
   }
 
   public async loadProfile() {

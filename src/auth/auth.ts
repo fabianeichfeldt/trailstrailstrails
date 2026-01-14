@@ -11,7 +11,7 @@ type UserChangedHandler = (u: User) => Promise<void>;
 export class Auth {
   private signInModal: HTMLElement | null = null;
   private signUpModal: HTMLElement | null = null;
-  private errorBox: HTMLElement | null = null;
+  private errorBox: HTMLCollectionOf<HTMLElement> | null = null;
   private signInForm: HTMLFormElement | null = null;
   private signUpForm: HTMLFormElement | null = null;
   private avatarBtn: HTMLElement | null = null;
@@ -31,7 +31,7 @@ export class Auth {
     this.initPasswordToggles();
     this.signInModal = document.querySelector('#sign-in-modal');
     this.signUpModal = document.querySelector('#sign-up-modal');
-    this.errorBox = this.signInModal?.querySelector('.auth-error') as HTMLElement;
+    this.errorBox = this.signInModal? document.getElementsByClassName('auth-error') as HTMLCollectionOf<HTMLElement> : null;
     this.avatarBtn = document.getElementById("user-avatar-btn");
     this.dropdown = document.getElementById('user-dropdown');
     this.loginBtn = document.getElementById('login-btn');
@@ -131,28 +131,28 @@ export class Auth {
   }
 
   private async signUp(e: SubmitEvent) {
+    e.preventDefault();
     if (!this.signUpForm) return;
     const nickname = (this.signUpForm[0] as HTMLInputElement).value;
     const email = (this.signUpForm[1] as HTMLInputElement).value;
     const password = (this.signUpForm[2] as HTMLInputElement).value;
-    const passwordConfirmation = (this.signUpForm[3] as HTMLInputElement).value;
+    const passwordConfirmation = (this.signUpForm[4] as HTMLInputElement).value;
     this.clearAuthError();
     if (password !== passwordConfirmation) {
       this.showAuthError('Passwörter stimmen nicht überein');
       return;
     }
-    e.preventDefault();
     try {
       this.setLoading(true);
       const user = await this.auth.signUp(email, password, nickname);
       await this.auth.signIn(email, password);
       this.signUpModal?.classList.add('hidden');
       document.dispatchEvent(new CustomEvent('auth:login', { detail: user }));
+      this.triggerUserChanged();
     } catch (e) {
       this.showAuthError('Fehler beim Anmelden. Bitte versuche es erneut.');
     } finally {
       this.setLoading(false);
-      this.triggerUserChanged();
     }
   }
 
@@ -180,12 +180,12 @@ export class Auth {
     this.userChangedHandlers.push(handler);
   }
 
-  public openSignInModal() {
+  public async openSignInModal() {
     this.signInModal = document.querySelector('#sign-in-modal');
     this.signInModal?.classList.remove("hidden");
   }
 
-  public openSignUpModal() {
+  public async openSignUpModal() {
     this.signUpModal = document.querySelector('#sign-up-modal');
     this.signUpModal?.classList.remove("hidden");
   }
@@ -242,13 +242,18 @@ export class Auth {
   }
 
   private showAuthError(message: string) {
+    console.error(message, this.errorBox);
     if (!this.errorBox) return;
-    this.errorBox.textContent = message;
-    this.errorBox.classList.remove('hidden');
+    for(const e of this.errorBox) {
+      e.textContent = message;
+      e.classList.remove('hidden');
+    }
   }
 
   private clearAuthError() {
-    this.errorBox?.classList.add('hidden');
+    if (!this.errorBox) return;
+    for(const e of this.errorBox)
+      e.classList.add('hidden');
   }
 
   private initPasswordToggles() {
