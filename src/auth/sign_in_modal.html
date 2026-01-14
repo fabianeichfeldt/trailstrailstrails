@@ -17,7 +17,22 @@
 
       <label>
         <span>Passwort</span>
-        <input type="password" autocomplete="current-password" required />
+        <div class="password-field">
+          <input
+            type="password"
+            name="password"
+            autocomplete="current-password"
+            required
+            minlength="8"
+          />
+          <button
+            type="button"
+            class="toggle-password"
+            aria-label="Passwort anzeigen"
+          >
+            <i class="fa-solid fa-eye"></i>
+          </button>
+        </div>
       </label>
       <div class="forgot-password">
         <a href="#" id="forgot-password">

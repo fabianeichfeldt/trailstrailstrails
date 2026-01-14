@@ -28,6 +28,7 @@ export class Auth {
   public async init() {
     await this.loadSignInTemplate();
     await this.loadSignUpTemplate();
+    this.initPasswordToggles();
     this.signInModal = document.querySelector('#sign-in-modal');
     this.signUpModal = document.querySelector('#sign-up-modal');
     this.errorBox = this.signInModal?.querySelector('.auth-error') as HTMLElement;
@@ -76,6 +77,10 @@ export class Auth {
       .addEventListener('click', async (e) => {
         e.preventDefault();
         const email = (document.getElementById('email') as HTMLInputElement).value;
+        if (!email) {
+          this.showAuthError('Bitte gib deine Email ein.');
+          return
+        }
         await this.auth.resetPassword(email);
         showToast("Wir haben dir eine Email gesendet um das Passwort zurück zu setzen.")
         this.closeSignInModal();
@@ -244,5 +249,32 @@ export class Auth {
 
   private clearAuthError() {
     this.errorBox?.classList.add('hidden');
+  }
+
+  private initPasswordToggles() {
+    const toggles = document.querySelectorAll<HTMLButtonElement>('.toggle-password');
+
+    toggles.forEach((toggle) => {
+      toggle.addEventListener('click', () => {
+        const wrapper = toggle.closest('.password-field');
+        if (!wrapper) return;
+
+        const input = wrapper.querySelector<HTMLInputElement>('input');
+        const icon = toggle.querySelector('i');
+        if (!input || !icon) return;
+
+        const isHidden = input.type === 'password';
+
+        input.type = isHidden ? 'text' : 'password';
+
+        icon.classList.toggle('fa-eye', !isHidden);
+        icon.classList.toggle('fa-eye-slash', isHidden);
+
+        toggle.setAttribute(
+          'aria-label',
+          isHidden ? 'Passwort verbergen' : 'Passwort anzeigen'
+        );
+      });
+    });
   }
 }

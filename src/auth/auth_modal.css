@@ -238,3 +238,49 @@ button.cancel {
 .oauth.google i {
   font-size: 1rem;
 }
+
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #888;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.1s ease;
+}
+
+.toggle-password:hover {
+  color: #58c27d;
+  background: rgba(88, 194, 125, 0.12);
+}
+
+.toggle-password:active {
+  transform: translateY(-50%) scale(0.92);
+}
+
+.toggle-password:focus-visible {
+  outline: 2px solid #58c27d;
+  outline-offset: 2px;
+}
