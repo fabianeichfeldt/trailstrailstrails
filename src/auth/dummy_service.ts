@@ -19,13 +19,13 @@ export class DummyAuthService implements IAuthService{
   }
 
   async signIn(email: string, password: string) : Promise<User> {
-    this.user = new User("", email, "Trailradar", "/src/assets/logo.webp");
+    this.user = new User("", email, "Trailradar", "/assets/logo.webp");
     await new Promise(resolve => setTimeout(resolve, 3000));
     return this.user;
   }
 
   async signUp(email: string, password: string) {
-    this.user = new User("", email, "Trailradar", "/src/assets/logo.webp");
+    this.user = new User("", email, "Trailradar", "/assets/logo.webp");
     return this.user;
   }
 
@@ -35,5 +35,9 @@ export class DummyAuthService implements IAuthService{
 
   getUser() {
     return Promise.resolve(this.user);
+  }
+
+  resetPassword(email: string): Promise<void> {
+    return Promise.resolve(undefined);
   }
 }

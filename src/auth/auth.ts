@@ -209,7 +209,7 @@ export class Auth {
     if (document.getElementById('sign-in-modal'))
       return; // already loaded
 
-    const res = await fetch('/src/auth/sign_in_modal.html');
+    const res = await fetch('/auth/sign_in_modal.html');
     const html = await res.text();
 
     const wrapper = document.createElement('div');
@@ -227,7 +227,7 @@ export class Auth {
     if (document.getElementById('sign-up-modal'))
       return; // already loaded
 
-    const res = await fetch('/src/auth/sign_up_modal.html');
+    const res = await fetch('/auth/sign_up_modal.html');
     const html = await res.text();
 
     const wrapper = document.createElement('div');

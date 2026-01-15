@@ -1,4 +1,9 @@
 import {IAuthService} from "./auth_service";
+import {Supabase} from './supabase';
+
+import "/src/css/style.css";
+import "/src/auth/auth_modal.css";
+import "/src/auth/profile.css";
 import "@fortawesome/fontawesome-free/css/all.css";
 
 export class ProfileSettingsPage {
@@ -129,3 +134,6 @@ export class ProfileSettingsPage {
     alert('Profil gespeichert');
   }
 }
+
+const profile = new ProfileSettingsPage(new Supabase());
+await profile.initProfilePage();

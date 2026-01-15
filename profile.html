@@ -4,18 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Profileinstellungen – Trailradar</title>
-  <link rel="stylesheet" href="/src/css/style.css" />
-  <link rel="stylesheet" href="/src/auth/auth_modal.css" />
-  <link rel="stylesheet" href="/src/auth/profile.css" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
   <link rel="canonical" href="https://trailradar.org/profile.html">
-  <script defer type="module">
-    import { ProfileSettingsPage } from '/src/auth/profileSettingsPage.ts';
-    import {Supabase} from '/src/auth/supabase.ts';
-
-    const profile = new ProfileSettingsPage(new Supabase());
-    await profile.initProfilePage();
-  </script>
+  <script type="module" src="/src/auth/profileSettingsPage.ts"></script>
 </head>
 
 <body>
