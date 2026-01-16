@@ -121,3 +121,59 @@ span {
   padding: 0.45em 0.9em;
   font-size: 0.7em;
 }
+
+.profile-section {
+  padding: 0.8em 0;
+}
+
+.section-title {
+  font-size: 0.8em;
+  margin-bottom: 0.4em;
+  color: #222;
+}
+
+.section-subtitle {
+  font-size: 0.65em;
+  color: #666;
+}
+
+.danger-zone {
+  margin-top: 1.2em;
+  padding-top: 1em;
+  border-top: 1px dashed #e0a1a1;
+}
+
+.section-title.danger {
+  color: #a10000;
+}
+
+.danger-hint {
+  font-size: 0.65em;
+  color: #7a1d1d;
+  margin-bottom: 0.6em;
+}
+
+.danger-button {
+  margin-top: 0.6em;
+  width: 100%;
+  padding: 0.6em;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ff5c5c, #e02424);
+  color: white;
+  font-size: 0.7em;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  gap: 0.4em;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(224,36,36,0.35);
+}
+
+.danger-button:hover {
+  filter: brightness(1.05);
+}
+
+.danger-button:active {
+  transform: translateY(1px);
+}

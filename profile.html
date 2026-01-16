@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Profileinstellungen – Trailradar</title>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo.webp">
   <link rel="canonical" href="https://trailradar.org/profile.html">
@@ -13,7 +13,7 @@
 <section class="hero">
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <a href="/"><img src="/src/assets/logo.webp" alt="Trailradar Logo" class="logo" /></a>
+    <a href="/"><img src="/src/assets/logo.webp" alt="Trailradar Logo" class="logo"/></a>
     <h1 class="hero-title">Profileinstellungen</h1>
   </div>
 </section>
@@ -25,88 +25,116 @@
     <div class="profile-avatar">
       <img id="profile-avatar-img"
            src="/src/assets/logo.webp"
-           alt="User Avatar" />
+           alt="User Avatar"/>
       <button class="avatar-edit" aria-label="Avatar ändern">
         ✎
       </button>
-      <input type="file" id="avatar-input" hidden accept="image/*" />
+      <input type="file" id="avatar-input" hidden accept="image/*"/>
     </div>
 
-    <form class="profile-form">
-      <div class="field">
-        <label>E-Mail</label>
-        <input type="email" autocomplete="email" value="user@email.de" readonly />
-      </div>
+    <section class="profile-section">
+      <h2 class="section-title">Kontoeinstellungen</h2>
+      <form class="profile-form">
+        <div class="field">
+          <label>E-Mail</label>
+          <input type="email" autocomplete="email" value="user@email.de" readonly/>
+        </div>
+
+        <div class="field">
+          <label>Nickname</label>
+          <input type="text" value=""/>
+        </div>
+        <div class="divider-line"></div>
+        <span>Passwort ändern</span>
+        <div class="field">
+          <label>Altes Passwort</label>
+          <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="current-password"
+              required
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+        <div class="field">
+          <label>Neues Passwort</label>
+          <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Passwort wiederholen</label>
+          <div class="password-field">
+            <input
+              type="password"
+              name="password"
+              autocomplete="new-password"
+              required
+              minlength="8"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              aria-label="Passwort anzeigen"
+            >
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-actions">
+          <button type="submit" class="primary">Speichern</button>
+        </div>
+      </form>
+    </section>
+    <section class="profile-section danger-zone">
+      <h2 class="section-title danger">Danger zone</h2>
+      <p class="danger-hint">
+        Das Löschen deines Accounts ist endgültig und kann nicht rückgängig gemacht werden.
+      </p>
 
       <div class="field">
-        <label>Nickname</label>
-        <input type="text" value="" />
-      </div>
-      <div class="divider-line"></div>
-      <span>Passwort ändern</span>
-      <div class="field">
-        <label>Altes Passwort</label>
+        <label>Zur Bestätigung: Passwort eingeben</label>
         <div class="password-field">
           <input
             type="password"
-            name="password"
+            id="delete-password"
             autocomplete="current-password"
-            required
+            placeholder="Passwort eingeben"
           />
-          <button
-            type="button"
-            class="toggle-password"
-            aria-label="Passwort anzeigen"
-          >
+          <button type="button" class="toggle-password">
             <i class="fa-solid fa-eye"></i>
           </button>
         </div>
       </div>
-      <div class="field">
-        <label>Neues Passwort</label>
-        <div class="password-field">
-            <input
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              required
-              minlength="8"
-            />
-            <button
-              type="button"
-              class="toggle-password"
-              aria-label="Passwort anzeigen"
-            >
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-      </div>
 
-      <div class="field">
-        <label>Passwort wiederholen</label>
-        <div class="password-field">
-            <input
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              required
-              minlength="8"
-            />
-            <button
-              type="button"
-              class="toggle-password"
-              aria-label="Passwort anzeigen"
-            >
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-      </div>
-
-      <div class="profile-actions">
-        <button type="submit" class="primary">Speichern</button>
-      </div>
-
-    </form>
+      <button class="danger-button" id="delete-account-btn">
+        <i class="fa-solid fa-trash"></i>
+        Account endgültig löschen
+      </button>
+    </section>
   </div>
 </main>
 
