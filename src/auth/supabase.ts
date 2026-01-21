@@ -99,7 +99,7 @@ export class Supabase implements IAuthService {
     await this.supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: 'http://localhost:5173' }});
     const user = await this.supabase.auth.getUser();
     console.log(user.data.user?.user_metadata);
-    return new User(user.data.user?.id || "", user.data.user?.email || "", user.data.user?.user_metadata?.nickname || "", "")
+    return new User(user.data.user?.id || "", user.data.user?.email || "", user.data.user?.user_metadata?.name || "", user.data.user?.user_metadata?.avatar_url || "")
   }
 
 }
