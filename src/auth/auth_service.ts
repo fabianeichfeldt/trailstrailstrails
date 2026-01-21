@@ -10,4 +10,5 @@ export interface IAuthService {
   updateProfile(param: { avatarUrl?: string, nickname?: string }): Promise<void>;
   loggedIn: boolean
   resetPassword(email: string): Promise<void>;
+  signInWithGoogle(): Promise<User>;
 }

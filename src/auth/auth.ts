@@ -21,6 +21,7 @@ export class Auth {
   private auth: IAuthService;
   private dropdown: HTMLElement | null = null;
   private nickname: HTMLElement = null!;
+  private googleLoginBtns: NodeListOf<HTMLElement> = null!;
 
   public constructor(auth: IAuthService) {
     this.auth = auth;
@@ -38,6 +39,7 @@ export class Auth {
     this.signUpBtn = document.getElementById('signup-btn');
     this.signInForm = document.getElementById('auth-form') as HTMLFormElement;
     this.signUpForm = document.getElementById('signup-form') as HTMLFormElement;
+    this.googleLoginBtns = document.querySelectorAll('.oauth.google');
 
     this.onUserChanged(async (u) => {
       if (!this.avatarBtn) return Promise.resolve();
@@ -59,6 +61,7 @@ export class Auth {
     this.signUpBtn?.addEventListener('click', this.openSignUpModal);
     this.signInForm.addEventListener('submit', async (e) => await this.signIn(e));
     this.signUpForm.addEventListener('submit', async (e) => await this.signUp(e));
+    this.googleLoginBtns.forEach(btn => btn.addEventListener('click', async () => await this.googleSignIn()));
 
     this.signInModal?.querySelector('.cancel')!
       .addEventListener('click', this.closeSignInModal);
@@ -281,5 +284,9 @@ export class Auth {
         );
       });
     });
+  }
+
+  private async googleSignIn() {
+    return this.auth.signInWithGoogle();
   }
 }
