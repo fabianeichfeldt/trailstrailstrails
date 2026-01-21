@@ -21,7 +21,7 @@ export class Supabase implements IAuthService {
     const response = await this.supabase.auth.getUser();
     if (response.error != null)
       return User.AnonymousUser;
-    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.nickname, response.data.user.user_metadata?.avatarUrl)
+    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.name, response.data.user.user_metadata?.avatar_url)
   }
 
   async signIn(email: string, password: string): Promise<User> {
