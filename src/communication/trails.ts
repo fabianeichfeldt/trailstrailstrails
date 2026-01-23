@@ -3,12 +3,13 @@ import {isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
 import {TrailDetails} from "../types/TrailDetails";
 
 export async function getTrails(): Promise<SingleTrail[]> {
-  const response = await fetch("https://trailradar.org/api/add-trail", {
+  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*", {
     method: "GET",
     cache: "force-cache",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
     },
   });
 
@@ -17,7 +18,7 @@ export async function getTrails(): Promise<SingleTrail[]> {
   }
 
   const json = await response.json();
-  return (json.data as Array<Trail>).map(i => {
+  return (json as Array<Trail>).map(i => {
     return {
       ...i,
       type: "trail",
