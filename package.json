@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "generate": "tsx build/generate.ts",
+    "generate": "tsx --env-file=.env.local build/generate.ts",
     "preview": "vite preview",
     "build:pages": "npm run build && npm run generate"
   },

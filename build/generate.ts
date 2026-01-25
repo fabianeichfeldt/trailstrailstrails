@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { regions, Region } from "./region";
+import { TrailDetails } from "./trail";
 
 const DIST_DIR = path.resolve("dist");
 const TEMPLATE_FILE = path.join(DIST_DIR, "index.html");
@@ -48,6 +49,83 @@ function applyRegionDescription(html: string, region: Region): string {
   );
 }
 
+async function generateTrailPage(
+  template: string,
+  trail: TrailDetails
+) {
+  const slug = trail.trail_id;
+
+  let html = template;
+  html = applyTrailSEO(html, slug, trail);
+
+  const outDir = path.join(TRAILS_DIR, slug);
+  const outFile = path.join(outDir, "index.html");
+
+  await fs.mkdir(outDir, { recursive: true });
+  await fs.writeFile(outFile, html, "utf8");
+
+  console.log("🚵 Generated trail", `/trails/${slug}/`);
+}
+
+async function fetchAllTrails(): Promise<TrailDetails[]> {
+  const res = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_details?select=*", {
+    headers: {
+      Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY}`,
+      apikey: `${process.env.VITE_SUPABASE_ANON_KEY}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch trails: ${res.status}`);
+  }
+
+  const ret = (await res.json()) as TrailDetails[];
+  return ret;
+}
+
+
+function applyTrailSEO(html: string, slug: string, trail: TrailDetails) {
+  const title = `<title>Trailradar - ${trail.name}</title>`;
+
+  const description =
+    trail.trail_description ||
+    (trail.rules || []).join(", ").slice(0, 160);
+
+  return html
+    .replace(/<h1>.*<\/h1>/, `<h1>Trailradar - ${trail.name}</h1>`)
+    .replace(/<title>.*<\/title>/, title)
+    .replace(
+      "</head>",
+      `
+<script type="application/ld+json">
+[{
+  "@context":"https://schema.org",
+  "@type":"Place",
+  "name":"${trail.name}",
+  "description":"${description}",
+  "geo":{
+    "@type":"GeoCoordinates",
+    "latitude":${trail.latitude},
+    "longitude":${trail.longitude}
+  },
+  "url":"https://trailradar.org/trails/${slug}/"
+}]
+</script>
+<link rel="canonical" href="https://trailradar.org/trails/${slug}/">
+</head>`
+    )
+    .replace(
+      /<h2 class="seo-title">[\s\S]*?<\/h2>/s,
+      `<h2 class="seo-title">${trail.name}</h2>`
+    )
+    .replace(
+      /<p class="seo-text">[\s\S]*?<\/p>/s,
+      `<p>${description}</p>`
+    );
+}
+
+
 async function generateRegionPage(
   template: string,
   slug: string,
@@ -71,10 +149,22 @@ async function main() {
   const template = await fs.readFile(TEMPLATE_FILE, "utf8");
   await fs.mkdir(TRAILS_DIR, { recursive: true });
 
+  console.log("🌍 Generating region pages...");
   for (const [slug, region] of Object.entries(regions)) {
     await generateRegionPage(template, slug, region);
   }
+
+  console.log("📡 Fetching trails...");
+  const trails = await fetchAllTrails();
+
+  console.log(`🚴 Generating ${trails.length} trail pages...`);
+  for (const trail of trails) {
+    await generateTrailPage(template, trail);
+  }
+
+  console.log("✅ All pages generated");
 }
+
 
 main().catch(err => {
   console.error("❌ Build failed", err);
