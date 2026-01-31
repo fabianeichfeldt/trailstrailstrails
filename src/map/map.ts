@@ -20,6 +20,7 @@ import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
 import {share} from "../communication/share";
 import {IAuthService} from "../auth/auth_service";
+import {Auth} from "../auth/auth";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 
@@ -34,6 +35,7 @@ export class TrailMap {
   private filterSettings: TrailFilter = new TrailFilter();
   private markersById = new Map<string, L.Marker>();
   private mymap!: L.Map;
+  private auth!: Auth;
 
   private get currentMarkerLayer(): L.MarkerClusterGroup | L.LayerGroup {
     return this.filterSettings.useCluster ? this.clusterGroup : this.markerGroup;
@@ -72,7 +74,8 @@ export class TrailMap {
     });
   }
 
-  public async init(auth: IAuthService) {
+  public async init(auth: Auth) {
+    this.auth = auth;
     this.mymap.setMaxZoom(19);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?ts=20251021', {
       maxZoom: 19,
@@ -94,7 +97,7 @@ export class TrailMap {
     this.markerGroup = new L.LayerGroup();
     this.mymap.addLayer(this.clusterGroup);
 
-    this.initAddButton(auth);
+    this.initAddButton(auth.authService);
   }
 
   public setView(location: Coord) {
@@ -171,11 +174,15 @@ export class TrailMap {
           return;
         try {
           const details = await getTrailDetails(trail);
-          const detailsHTML = await renderTrailDetails(trail, details);
+          const detailsHTML = await renderTrailDetails(trail, details, this.auth);
           const container = popup.querySelector('.popup-section.loading');
           if (container) {
             container.outerHTML = detailsHTML;
-            await bindPopupEvents(popup);
+            await bindPopupEvents(popup, this.auth, async () => {
+              const container = popup.querySelector('.popup-content');
+              if (container)
+                container.innerHTML = await renderTrailDetails(trail, await getTrailDetails(trail), this.auth);
+            });
             startPhotoCarousel(popup);
             setupYT2Click(popup);
           }

@@ -219,6 +219,117 @@
     font-weight: bold;
 }
 
+.no-photo-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.4em;
+}
+
+.no-photo-icon {
+  font-size: 1.6em;
+  opacity: 0.8;
+}
+
+.photo-upload-btn {
+  margin-top: 0.2em;
+  padding: 0.35em 0.9em;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2b6cb0, #3182ce);
+  color: #fff;
+  font-size: 0.65em;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+
+.photo-upload-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+}
+
+.photo-upload-btn:active {
+  transform: scale(0.96);
+  opacity: 0.85;
+}
+
+.photo-login-link {
+  margin-top: 0.2em;
+  font-size: 0.8em;
+  font-weight: bold;
+  cursor: pointer;
+  color: #2b6cb0;
+}
+
+.photo-fab {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(43,108,176,1);
+  color: #fff;
+  font-size: 0.8em;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.photo-fab:hover {
+  transform: scale(1.08);
+}
+
+.photo-fab:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+}
+
+.photo-meta {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  padding: 6px 8px;
+  border-radius: 8px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.45),
+    rgba(0,0,0,0.25)
+  );
+
+  color: #fff;
+  font-size: 0.55em;
+  line-height: 1.2;
+
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.photo-uploader {
+  font-weight: 600;
+  opacity: 0.95;
+}
+
+.photo-date {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
+
 .link-button {
   background: none;
   border: none;

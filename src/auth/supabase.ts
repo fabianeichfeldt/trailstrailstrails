@@ -60,6 +60,42 @@ export class Supabase implements IAuthService {
     await this.supabase.auth.updateUser({ data: param})
   }
 
+  async uploadTrailPhoto(file: File, trailId: string): Promise<string> {
+    const ext = "webp";
+    const fileName = `${crypto.randomUUID()}.${ext}`;
+    const filePath = `${trailId}/${fileName}`;
+
+    const resizedImg = await this.transformImage(file, 1000, 0.8);
+    const { error } = await this.supabase.storage
+      .from("trail-photos")
+      .upload(filePath, resizedImg, {
+        cacheControl: `${60 * 60 * 24}`,
+        upsert: false,
+        contentType: "image/webp"
+      });
+
+    if (error) {
+      console.error("Upload failed:", error);
+      throw new Error("Upload fehlgeschlagen");
+    }
+
+    const { data } = this.supabase.storage
+      .from("trail-photos")
+      .getPublicUrl(filePath);
+
+    const { error: error2 } = await this.supabase.from("trail_photos").insert({
+      trail_id: trailId,
+      url: data.publicUrl,
+      creator: (await this.supabase.auth.getUser()).data.user?.id
+    });
+    if (error2) {
+      console.error("Upload failed:", error2);
+      throw new Error("Upload fehlgeschlagen");
+    }
+
+    return data.publicUrl;
+  }
+
   async uploadAvatar(file: File): Promise<string> {
     const user = await this.supabase.auth.getUser();
 
@@ -102,4 +138,39 @@ export class Supabase implements IAuthService {
     return new User(user.data.user?.id || "", user.data.user?.email || "", user.data.user?.user_metadata?.name || "", user.data.user?.user_metadata?.avatar_url || "")
   }
 
+  private loadImage(file: File): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
+  private async transformImage(
+    file: File,
+    maxWidth = 1000,
+    quality = 0.8
+  ): Promise<Blob> {
+    const img = await this.loadImage(file);
+
+    const scale = Math.min(1, maxWidth / img.width);
+    const width = Math.round(img.width * scale);
+    const height = Math.round(img.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d")!;
+    ctx.drawImage(img, 0, 0, width, height);
+
+    return new Promise((resolve) => {
+      canvas.toBlob(
+        blob => resolve(blob!),
+        "image/webp",   // or "image/jpeg"
+        quality
+      );
+    });
+  }
 }

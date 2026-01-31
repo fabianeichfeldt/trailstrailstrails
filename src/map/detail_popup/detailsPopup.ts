@@ -5,6 +5,8 @@ import "/src/map/detail_popup/yt.css";
 
 import {isDirtPark, Trail} from "../../types/Trail";
 import {TrailDetails} from "../../types/TrailDetails";
+import {IAuthService} from "../../auth/auth_service";
+import {Auth} from "../../auth/auth";
 
 export function getTrailPopup(trail: Trail) {
     let popupHtml = `
@@ -46,7 +48,7 @@ export function getTrailPopup(trail: Trail) {
     return popupHtml;
 }
 
-export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
+export async function renderTrailDetails(trail: Trail, details: TrailDetails, auth : Auth) {
   const dirtparkInfo = renderDirtparkDetails(trail);
 
   const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
@@ -54,7 +56,7 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
 
   const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
 
-  const photosHTML = renderPhotos(details);
+  const photosHTML = renderPhotos(details, auth.authService);
   const videoHTML = renderVideos(details);
 
   return `
@@ -72,10 +74,10 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
             <div class="popup-feedback" data-trail-id="${trail.id}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich" onclick="upVoteIntern('${trail.id}', this)">
+                <button class="thumb-btn up" title="Ja, hilfreich">
                   <i class="fa-solid fa-thumbs-up"></i>
                 </button>
-                <button class="thumb-btn down" title="Nein" onclick="downVoteIntern('${trail.id}', this)">
+                <button class="thumb-btn down" title="Nein">
                   <i class="fa-solid fa-thumbs-down"></i>
                 </button>
               </div>
@@ -84,22 +86,46 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails) {
         `;
 }
 
-function renderPhotos(details: TrailDetails) {
+function renderPhotos(details: TrailDetails, auth: IAuthService) {
   if (details.photos.length === 0) {
-    return `<div class="no-photos">
-              <p>
-                <strong>Oops!</strong><br>
-                Hier gibt es noch keine Fotos.<br>
-                Du hast ein Foto, das hier erscheinen soll?<br>
-                Schreib uns: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>
-              </p>
-            </div>`;
+    return `
+      <div class="no-photos">
+        <div class="no-photo-inner">
+          <div class="no-photo-icon">📷</div>
+          <p>
+            <strong>Noch keine Fotos</strong><br>
+            Hilf der Community und lade das erste Foto hoch.
+          </p>
+
+          ${
+      auth.loggedIn
+        ? `
+                <button class="photo-upload-btn" data-action="upload-photo">
+                  ➕ Foto hochladen
+                </button>
+              `
+        : `
+                <span class="photo-login-link">
+                  Einloggen zum Hochladen
+                </span>
+              `
+    }
+        </div>
+      </div>
+    `;
   }
-    const photos = details.photos.map((p, i) => `
+    const photos = details.photos.map((p, i) => {
+      const date = new Date(p.created_at).toLocaleDateString('de-DE', { year: 'numeric', month: 'short', day: 'numeric' })
+      return `
             <div class="photo-wrap${i === 0 ? " active" : ""}" style="--img:url('${p.url}')">
               <img alt="offizieller MTB Trail" src="${p.url}" class="${i === 0 ? "active" : ""}">
+                <div class="photo-meta">
+                  <span class="photo-uploader">von ${p.profiles.display_name}</span>
+                  <span class="photo-date">${date}</span>
+                </div>
             </div>
-          `).join('');
+          `
+    }).join('');
 
     const dots = details.photos.map((_, i) => `
             <span class="dot${i === 0 ? " active" : ""}"></span>
@@ -109,6 +135,14 @@ function renderPhotos(details: TrailDetails) {
               <div class="photo-carousel">
                 ${photos}
               </div>
+              ${auth.loggedIn
+                ? `
+                    <button class="photo-fab" title="Foto hinzufügen" data-action="upload-photo">
+                      ➕
+                    </button>
+                  `
+                : ""
+            }
               <div class="carousel-dots">
                 ${dots}
               </div>

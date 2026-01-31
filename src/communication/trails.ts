@@ -29,7 +29,7 @@ export async function getTrails(): Promise<SingleTrail[]> {
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   let response;
   if (isDirtPark(trail)) {
-    response = await fetch(`https://trailradar.org/api/dirt-parks-details?id=${trail.id}`, {
+    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-parks-details?id=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {
@@ -38,7 +38,7 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
       },
     });
   } else if (isBikePark(trail)) {
-    response = await fetch(`https://trailradar.org/api/bike-parks-details?id=${trail.id}`, {
+    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/bike-parks-details?id=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {
@@ -47,7 +47,7 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
       },
     });
   } else {
-    response = await fetch(`https://trailradar.org/api/trail-details?trail=${trail.id}`, {
+    response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details?trail=${trail.id}`, {
       method: "GET",
       cache: "force-cache",
       headers: {

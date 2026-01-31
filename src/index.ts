@@ -58,7 +58,7 @@ async function init() {
   const auth = new Auth(authService);
   await auth.init();
   const map = new TrailMap(el);
-  await map.init(authService);
+  await map.init(auth);
 
   initBurgerBtn();
 

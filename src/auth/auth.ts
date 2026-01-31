@@ -22,6 +22,7 @@ export class Auth {
   private dropdown: HTMLElement | null = null;
   private nickname: HTMLElement = null!;
   private googleLoginBtns: NodeListOf<HTMLElement> = null!;
+  public get authService(): IAuthService { return this.auth; }
 
   public constructor(auth: IAuthService) {
     this.auth = auth;
