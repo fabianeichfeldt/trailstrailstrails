@@ -45,7 +45,10 @@ export class ProfileSettingsPage {
     this.avatarInput?.addEventListener('change', this.onAvatarSelected.bind(this));
 
     document
-      .querySelector('.profile-form')!
+      .querySelector('#password-form')!
+      .addEventListener('submit', this.onUpdatePassword.bind(this));
+    document
+      .querySelector('#profile-form')!
       .addEventListener('submit', this.onSave.bind(this));
 
     const toggles = document.querySelectorAll<HTMLButtonElement>('.toggle-password');
@@ -93,7 +96,7 @@ export class ProfileSettingsPage {
     this.avatarImg.src = URL.createObjectURL(file);
 
     const uploadedUrl = await this.auth.uploadAvatar(file);
-    await this.auth.updateProfile({ avatarUrl: uploadedUrl });
+    await this.auth.updateProfile({ avatar_url: uploadedUrl });
   }
 
     private async verifyOldPassword(oldPassword: string): Promise<boolean> {
@@ -108,7 +111,7 @@ export class ProfileSettingsPage {
       }
     }
 
-  private async onSave(e: Event) {
+  private async onUpdatePassword(e: Event) {
     e.preventDefault();
 
     if (!await this.verifyOldPassword(this.oldPwInput.value)) {
@@ -123,14 +126,19 @@ export class ProfileSettingsPage {
       await this.auth.updatePassword(this.oldPwInput.value, this.pwInput?.value);
     }
 
-    await this.auth.updateProfile({
-      nickname: this.nicknameInput.value
-    });
-
     this.oldPwInput.value = '';
     this.pwInput.value = '';
     this.pwRepeatInput.value = '';
 
+    alert('Passwort gespeichert');
+  }
+
+  private async onSave(e: Event) {
+    e.preventDefault();
+
+    await this.auth.updateProfile({
+      name: this.nicknameInput.value
+    });
     alert('Profil gespeichert');
   }
 }

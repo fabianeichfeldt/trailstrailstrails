@@ -32,7 +32,7 @@
       <input type="file" id="avatar-input" hidden accept="image/*" />
     </div>
 
-    <form class="profile-form">
+    <form class="profile-form" id="profile-form">
       <div class="field">
         <label>E-Mail</label>
         <input type="email" autocomplete="email" value="user@email.de" readonly />
@@ -42,6 +42,11 @@
         <label>Nickname</label>
         <input type="text" value="" />
       </div>
+      <div class="profile-actions">
+        <button type="submit" class="primary">Speichern</button>
+      </div>
+    </form>
+    <form class="profile-form" id="password-form">
       <div class="divider-line"></div>
       <span>Passwort ändern</span>
       <div class="field">
@@ -103,7 +108,7 @@
       </div>
 
       <div class="profile-actions">
-        <button type="submit" class="primary">Speichern</button>
+        <button type="submit" class="primary">Passwort ändern</button>
       </div>
 
     </form>

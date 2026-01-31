@@ -56,7 +56,7 @@ export class Supabase implements IAuthService {
     await this.supabase.auth.updateUser({ password: newPassword})
   }
 
-  async updateProfile(param: { avatarUrl?: string; nickname?: string }): Promise<void> {
+  async updateProfile(param: { avatar_url?: string; name?: string }): Promise<void> {
     await this.supabase.auth.updateUser({ data: param})
   }
 
