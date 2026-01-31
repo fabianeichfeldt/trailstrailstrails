@@ -2,7 +2,7 @@ import { anon } from "../anon";
 import { BikePark } from "../types/Trail";
 
 export async function getParks(): Promise<BikePark[]> {
-  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/bikepark_clicks?select=*", {
+  const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/parks?select=*", {
     method: "GET",
     cache: "force-cache",
     headers: {
