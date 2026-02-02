@@ -23,7 +23,7 @@ export const regions: Regions = {
     pronom: "in Muenchen"
   },
   koeln: {
-    descr: undefined,
+    descr: "Ein besonderes Highlight im Rheinland sind die <strong>Himmelsleiter Trails auf der Glessener Höhe</strong>, die von der <strong>DIMB IG Erft</strong> im <strong>Rhein-Erft-Kreis</strong> realisiert wurden. Die Trails verlaufen auf <strong>sandigem Untergrund</strong> und bieten dadurch ganzjährig gute Bedingungen sowie ein besonders flowiges Fahrgefühl.<br>Aktuell bestehen die <strong>Himmelsleiter MTB-Trails bei Köln</strong> aus <strong>zwei abwechslungsreichen Strecken</strong> sowie einer <strong>Skillarea</strong>, die sich ideal zum Üben und Verbessern der Fahrtechnik eignet. Weitere Trails sind bereits in Planung, was das Gebiet langfristig zu einem wichtigen <strong>Mountainbike-Spot im Großraum Köln</strong> macht und zeigt, wie moderner, legaler Trailbau in Zusammenarbeit mit Vereinen erfolgreich umgesetzt werden kann.",
     pronom: "in in Koeln"
   },
   stuttgart: {
@@ -115,7 +115,7 @@ export const regions: Regions = {
     pronom: "in Wiesbaden"
   },
   karlsruhe: {
-    descr: "",
+    descr: "Karlsruhe selbst bietet durch seine flache Topografie nur wenige offizielle Möglichkeiten zum Mountainbiken. Doch schon wenige Minuten außerhalb der Stadtgrenzen öffnen sich deutlich spannendere Optionen: Die Region rund um Karlsruhe hält mehrere legalisierte Trails und Bikeparks bereit, die sowohl Flow-Fans als auch technisch orientierten Fahrern viel zu bieten haben. <br> Nur einen kurzen Abstecher vom Stadtgebiet entfernt liegt zwischen Ettlingen und Grünwettersbach – eine der MTB-Hotspots für Karlsruher Biker. Hier warten gleich zwei offiziell gebaute Trails: <br><strong>Strommasten DH</strong> – eine anspruchsvollere Downhill-orientierte Strecke, die mit Geschwindigkeit, technischen Passagen und sportlichen Herausforderungen punktet. <br> <strong>From Dachs till Dawn</strong> – ein moderner, legalisierter Trail, der eine abwechslungsreiche Mischung aus Flow, natürlichen Elementen und spaßigen Features bietet.",
     pronom: "in Karlsruhe"
   },
   graz: {
