@@ -113,5 +113,49 @@ export const regions: Regions = {
   wiesbaden: {
     descr: "<h2> MTB Trails  Wiesbaden – Von Ebbelwoi bis Flowtrail: Die besten legalen Spots im Taunus</h2> <p>  Wiesbaden selbst ist vielleicht nicht als klassisches Mountainbike-Eldorado bekannt, doch direkt vor den Toren der Stadt beginnt eine der vielseitigsten MTB-Regionen Deutschlands: der <strong>Taunus</strong>. Zwischen naturbelassenen Enduro-Strecken, flowigen Lines und technisch anspruchsvollen Klassikern finden Mountainbiker hier alles, was das Herz höherschlagen lässt. </p> <h3>Ebbelwoi und Handkääs –  Wiesbadens Kult-Trails im Taunus</h3> <p> Die beiden offiziellen Strecken <strong>„Ebbelwoi“</strong> und <strong>„Handkääs“</strong> sind längst Kult in der Region und bieten zwei komplett unterschiedliche Erlebnisse: </p> <ul> <li> <strong>Handkääs</strong>: Ein Trail mit leichtem Cross-Country-Charakter, der über <strong>3,8 km Länge</strong> rund <strong>200 Höhenmeter</strong> nach Süden in Richtung Römerkastell Kapersburg führt. Wellig, schnell, mit kleineren Wurzelpassagen – perfekt für sportliche Tourenfahrer. </li> <li> <strong>Ebbelwoi</strong>: Keine klassische Flowline, sondern überwiegend naturbelassen, mit gebauten Elementen, naturnahen Sprüngen und Wurzelpassagen. Einige Hindernisse sind <strong>nicht überrollbar</strong>, weshalb eine fortgeschrittene Fahrtechnik gefragt ist. </li> </ul> <h3>Flowtrail Großer Feldberg – Der bekannteste Trail der Region</h3> <p> Zu den absoluten Highlights gehört der <strong>Flowtrail Großer Feldberg</strong>. Er bietet eine gelungene Mischung aus <strong>Anliegerkurven</strong>, <strong>Wurzelpassagen</strong>, <strong>Tables</strong>, <strong>Drops</strong> und Rampen – ideal für alle, die eine Kombination aus Flow und technisch-spaßigen Elementen suchen. </p> <h3>Weitere legale MTB-Angebote in der Umgebung von  Wiesbaden</h3> <ul> <li><strong>Flowtrail Kelkheim</strong> – eine der meistgefahrenen Strecken der Region, perfekt für Einsteiger wie Fortgeschrittene</li> <li><strong>Kratertrails</strong> – anspruchsvollere, verspielte Sektionen südlich von  Wiesbaden</li> <li><strong>LA Trails</strong> – modern gestaltete Lines mit viel Flow und Abwechslung</li> </ul> <h3>Odenwald in Reichweite – noch mehr Trails für Trailhunter</h3> <p> Nur eine kurze Autofahrt entfernt liegt der <strong>Odenwald</strong>, der mit seinen zahlreichen offiziell gebauten Trails eine fantastische Ergänzung zur  Wiesbadener Region bildet. Besonders rund um <strong>Miltenberg</strong> gibt es ein breites Spektrum an genehmigten, hervorragend gepflegten Enduro- und Flowtrails, die überregional bekannt sind. </p> <h3>Fazit:  Wiesbaden ist das Tor zu einer der vielseitigsten MTB-Regionen Deutschlands</h3> <p> Auch wenn  Wiesbaden selbst nicht viele legale Trails bietet, ist die Stadt ein perfekter Ausgangspunkt für Mountainbiker. Der Taunus und der Odenwald sind schnell erreichbar und bieten ein riesiges, abwechslungsreiches Netz an offiziell gebauten Strecken – von naturbelassenen Enduro-Abfahrten bis hin zu modernen Flowtrails mit massig Spaßfaktor. </p> ",
     pronom: "in Wiesbaden"
+  },
+  karlsruhe: {
+    descr: "",
+    pronom: "in Karlsruhe"
+  },
+  graz: {
+    descr: "",
+    pronom: "in Graz"
+  },
+  darmstadt: {
+    descr: "",
+    pronom: "in Darmstadt"
+  },
+  augsburg: {
+    descr: "",
+    pronom: "in Augsburg"
+  },
+  wien: {
+    descr: "",
+    pronom: "in Wien"
+  },
+  essen: {
+    descr: "",
+    pronom: "in Essen"
+  },
+  mannheim: {
+    descr: "",
+    pronom: "in Mannheim"
+  },
+  vorarlberg: {
+    descr: "",
+    pronom: "in Vorarlberg"
+  },
+  saarbruecken: {
+    descr: "",
+    pronom: "in Saarbrücken"
+  },
+  heidelberg: {
+    descr: "Heidelberg und seine Umgebung bieten Mountainbikern eine vielseitige Auswahl an <strong>offiziellen MTB-Trails</strong>, die von Flow bis technisch anspruchsvoll reichen. <br> Besonders bekannt sind die <strong>Steinbrechertrails in Dossenheim</strong>, ein offiziell angelegtes Rundensystem, das <strong>sechs unterschiedliche Trails</strong> miteinander verbindet. Hier reicht das Angebot von <strong>flowigen Lines</strong> über <strong>Jumplines</strong> und <strong>naturbelassene Trails</strong> bis hin zu einem <strong>Pumptrack mitten im Wald</strong> – ideal für alle Könnerstufen.<br> Ergänzt wird das Angebot durch die <strong>HD Freeride Trails am Königstuhl</strong>, die vom gleichnamigen Verein betrieben werden. Diese <strong>legalen Mountainbike-Strecken bei Heidelberg</strong> bieten eine gelungene Mischung aus <strong>naturnaher Downhill-Action</strong> und <strong>flowigen Abfahrten</strong> und machen die Region zu einem festen Bestandteil der <strong>MTB-Szene im Rhein-Neckar-Gebiet</strong>.",
+    pronom: "in Heidelberg"
+  },
+  kassel: {
+    descr: "",
+    pronom: "in Kassel"
   }
 };
