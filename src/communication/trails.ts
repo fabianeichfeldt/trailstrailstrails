@@ -1,5 +1,5 @@
 import {anon} from "../anon";
-import {isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
+import {BaseTrail, BikePark, DirtPark, isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
 import {TrailDetails} from "../types/TrailDetails";
 
 export async function getTrails(): Promise<SingleTrail[]> {
@@ -23,6 +23,85 @@ export async function getTrails(): Promise<SingleTrail[]> {
       ...i,
       type: "trail",
     }
+  });
+}
+
+export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
+  const trailResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*&creator_id=eq.${userId}`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+
+  const bikeParkResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/parks?creator_id=eq.${userId}`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+
+  const dirtParkResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/dirt_parks?creator_id=eq.${userId}`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+
+  const [dirtParks, trails, bikeParks] = await Promise.all([dirtParkResponse, trailResponse, bikeParkResponse]);
+  const dirtjson = await dirtParks.json();
+  const trailjson = await trails.json();
+  const parksjson = await bikeParks.json();
+  const dirt = (dirtjson as Array<DirtPark>).map(i => {
+    return {
+      ...i,
+      type: "dirtpark",
+    }
+  });
+  const t = (trailjson as Array<SingleTrail>).map(i => {
+    return {
+      ...i,
+      type: "trail",
+    }
+  });
+
+  const b = (parksjson as Array<BikePark>).map(i => {
+    return {
+      ...i,
+      type: "bikepark",
+    }
+  });
+
+  return t.concat(dirt).concat(b);
+}
+
+export interface PhotoResponse {
+  url: string;
+  created_at: string;
+  trail_name: string;
+}
+export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]> {
+  const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_photos?select=*,trails(name)&creator=eq.${userId}`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+  const trailjson = await trailResponse.json();
+  return (trailjson as { url: string, created_at: string, trails: { name: string } }[]).map(i => {
+    return { url: i.url, created_at: i.created_at, trail_name: i.trails.name }
   });
 }
 

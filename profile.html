@@ -19,99 +19,94 @@
 </section>
 <main class="profile-main">
   <div class="profile-card">
-    <a href="/" class="profile-back">
-      ← Zurück
-    </a>
-    <div class="profile-avatar">
-      <img id="profile-avatar-img"
-           src="/src/assets/logo.webp"
-           alt="User Avatar" />
-      <button class="avatar-edit" aria-label="Avatar ändern">
-        ✎
-      </button>
-      <input type="file" id="avatar-input" hidden accept="image/*" />
+
+    <a href="/" class="profile-back">← Zurück</a>
+
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <img id="profile-avatar-img" src="/src/assets/logo.webp" alt="User Avatar" />
+        <button class="avatar-edit" aria-label="Avatar ändern">✎</button>
+        <input type="file" id="avatar-input" hidden accept="image/*" />
+      </div>
     </div>
 
-    <form class="profile-form" id="profile-form">
-      <div class="field">
-        <label>E-Mail</label>
-        <input type="email" autocomplete="email" value="user@email.de" readonly />
-      </div>
+    <section class="profile-section">
+      <h3 class="section-title">Konto</h3>
 
-      <div class="field">
-        <label>Nickname</label>
-        <input type="text" value="" />
-      </div>
-      <div class="profile-actions">
-        <button type="submit" class="primary">Speichern</button>
-      </div>
-    </form>
-    <form class="profile-form" id="password-form">
-      <div class="divider-line"></div>
-      <span>Passwort ändern</span>
-      <div class="field">
-        <label>Altes Passwort</label>
-        <div class="password-field">
-          <input
-            type="password"
-            name="password"
-            autocomplete="current-password"
-            required
-          />
-          <button
-            type="button"
-            class="toggle-password"
-            aria-label="Passwort anzeigen"
-          >
-            <i class="fa-solid fa-eye"></i>
-          </button>
+      <form class="profile-form" id="profile-form">
+        <div class="field">
+          <label>E-Mail</label>
+          <input type="email" autocomplete="email" readonly />
+        </div>
+
+        <div class="field">
+          <label>Nickname</label>
+          <input type="text" />
+        </div>
+
+        <div class="profile-actions">
+          <button type="submit" class="primary">Speichern</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="profile-section">
+      <h3 class="section-title">Sicherheit</h3>
+
+      <form class="profile-form" id="password-form">
+        <div class="field">
+          <label>Altes Passwort</label>
+          <div class="password-field">
+            <input type="password" autocomplete="current-password" required />
+            <button type="button" class="toggle-password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Neues Passwort</label>
+          <div class="password-field">
+            <input type="password" autocomplete="new-password" required minlength="8" />
+            <button type="button" class="toggle-password">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Passwort wiederholen</label>
+          <input type="password" required minlength="8" />
+        </div>
+
+        <div class="profile-actions">
+          <button type="submit" class="primary">Passwort ändern</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="profile-section">
+      <h3 class="section-title">Deine Beiträge</h3>
+
+      <div class="contribution-grid">
+
+        <div class="contribution-card">
+          <h4>Erstellte Trails</h4>
+              <ul class="slider-track" id="trail-list">
+
+              </ul>
+        </div>
+
+        <div class="contribution-card">
+          <h4>Hochgeladene Fotos</h4>
+          <div class="photo-container" >
+                <div class="photo-carousel" id="photo-list">
+                </div>
+              </div>
         </div>
       </div>
-      <div class="field">
-        <label>Neues Passwort</label>
-        <div class="password-field">
-            <input
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              required
-              minlength="8"
-            />
-            <button
-              type="button"
-              class="toggle-password"
-              aria-label="Passwort anzeigen"
-            >
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-      </div>
+    </section>
 
-      <div class="field">
-        <label>Passwort wiederholen</label>
-        <div class="password-field">
-            <input
-              type="password"
-              name="password"
-              autocomplete="new-password"
-              required
-              minlength="8"
-            />
-            <button
-              type="button"
-              class="toggle-password"
-              aria-label="Passwort anzeigen"
-            >
-              <i class="fa-solid fa-eye"></i>
-            </button>
-          </div>
-      </div>
-
-      <div class="profile-actions">
-        <button type="submit" class="primary">Passwort ändern</button>
-      </div>
-
-    </form>
   </div>
 </main>
 

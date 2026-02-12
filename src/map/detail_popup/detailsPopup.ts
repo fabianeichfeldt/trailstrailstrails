@@ -1,6 +1,7 @@
 import {formatDate} from "../../formatDate";
 
 import "/src/map/detail_popup/details_popup.css";
+import "/src/css/photo_caroussel.css";
 import "/src/map/detail_popup/yt.css";
 
 import {isDirtPark, Trail} from "../../types/Trail";
@@ -131,7 +132,7 @@ function renderPhotos(details: TrailDetails, auth: IAuthService) {
             <span class="dot${i === 0 ? " active" : ""}"></span>
           `).join('');
 
-    return `<div class="popup-photos">
+    return `<div class="photo-container">
               <div class="photo-carousel">
                 ${photos}
               </div>

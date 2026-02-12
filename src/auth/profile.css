@@ -1,3 +1,90 @@
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.4em;
+  gap: 0.5em;
+}
+
+.profile-meta {
+  text-align: center;
+}
+
+.profile-name {
+  font-size: 0.9em;
+  margin: 0;
+}
+
+.profile-sub {
+  font-size: 0.6em;
+  color: #777;
+}
+
+.profile-section {
+  margin-top: 1.4em;
+  padding-top: 1em;
+  border-top: 1px solid #e5e5e5;
+}
+
+.section-title {
+  font-size: 0.75em;
+  font-weight: 600;
+  margin-bottom: 0.8em;
+  color: #333;
+}
+
+.contribution-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8em;
+}
+
+@media (min-width: 700px) {
+  .contribution-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.contribution-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.7em;
+}
+
+.contribution-card h4 {
+  font-size: 0.65em;
+  margin-bottom: 0.4em;
+  color: #444;
+}
+
+.contribution-title {
+  font-weight: 500;
+  display: block;
+}
+
+.contribution-meta {
+  font-size: 0.55em;
+  color: #777;
+}
+
+.photo-slide {
+  padding: 0;
+  overflow: hidden;
+}
+
+.photo-slide img {
+  width: 100%;
+  height: 100px;
+  object-fit: cover;
+  display: block;
+}
+
+.photo-slide .contribution-meta {
+  padding: 0.35em;
+  text-align: center;
+}
+
 .profile-main {
   display: flex;
   justify-self: center;
@@ -5,7 +92,6 @@
 }
 
 .profile-card {
-  width: clamp(40vw, 400px, 70vw);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(4px);
   border-radius: 14px;
@@ -13,7 +99,6 @@
   box-shadow: 0 6px 20px rgba(0,0,0,0.25);
   position: relative;
 }
-
 
 .profile-back {
   display: inline-block;

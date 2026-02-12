@@ -2,9 +2,13 @@ import {IAuthService} from "./auth_service";
 import {Supabase} from './supabase';
 
 import "/src/css/style.css";
+import "/src/css/photo_caroussel.css";
 import "/src/auth/auth_modal.css";
 import "/src/auth/profile.css";
+
 import "@fortawesome/fontawesome-free/css/all.css";
+import {getPhotosByUserId, getTrailsByUserId} from "../communication/trails";
+import {formatDate} from "../formatDate";
 
 export class ProfileSettingsPage {
   private auth: IAuthService;
@@ -15,6 +19,8 @@ export class ProfileSettingsPage {
   private pwInput: HTMLInputElement = null!;
   private pwRepeatInput: HTMLInputElement = null!;
   private oldPwInput: HTMLInputElement = null!;
+  private createdTrailsContainer: HTMLElement = null!;
+  private createdPhotosContainer: HTMLElement = null!;
 
   public constructor(auth: IAuthService) {
     this.auth = auth;
@@ -23,6 +29,8 @@ export class ProfileSettingsPage {
     this.cacheElements();
     this.bindEvents();
     await this.loadProfile();
+    await this.loadContributions();
+    this.initSliders();
   }
 
   private cacheElements() {
@@ -35,6 +43,9 @@ export class ProfileSettingsPage {
     this.oldPwInput = inputs[2] as HTMLInputElement;
     this.pwInput = inputs[3] as HTMLInputElement;
     this.pwRepeatInput = inputs[4] as HTMLInputElement;
+
+    this.createdTrailsContainer = document.getElementById('trail-list') as HTMLElement;
+    this.createdPhotosContainer = document.getElementById('photo-list') as HTMLElement;
   }
 
   private bindEvents() {
@@ -77,6 +88,47 @@ export class ProfileSettingsPage {
     });
   }
 
+  public async loadContributions() {
+    const user = await this.auth.getUser();
+    if (!user) return;
+
+    const trails = await getTrailsByUserId(user.id);
+    if (trails.length === 0)
+      this.createdTrailsContainer.innerHTML = `<li class="slide empty">Noch keine Trails erstellt</li>`
+    else
+    this.createdTrailsContainer.innerHTML = trails.map(trail => `<li class="slide">
+      <span class="contribution-title">${trail.name}</span>
+      <span class="contribution-meta">
+        erstellt am ${formatDate(trail.created_at)}
+      </span>
+    </li>`)
+      .join('\n');
+
+    const photos = await getPhotosByUserId(user.id);
+    if (photos.length === 0)
+      this.createdPhotosContainer.innerHTML = `<div class="no-photos">
+        <div class="no-photo-inner">
+          <div class="no-photo-icon">📷</div>
+          <p>
+            <strong>Noch keine Fotos</strong><br>
+            Hilf der Community und lade das erste Foto hoch.
+          </p>
+</div>
+      </div>`
+    else
+      this.createdPhotosContainer.innerHTML = photos.map((p, i) => {
+      const date = new Date(p.created_at).toLocaleDateString('de-DE', { year: 'numeric', month: 'short', day: 'numeric' })
+      return `
+            <div class="photo-wrap${i === 0 ? " active" : ""}" style="--img:url('${p.url}')">
+              <img alt="offizieller MTB Trail" src="${p.url}" class="${i === 0 ? "active" : ""}">
+                <div class="photo-meta">
+                  <span class="photo-uploader">von ${ this.nicknameInput.value }</span>
+                  <span class="photo-date">${date}</span>
+                </div>
+            </div>
+          `
+    }).join('\n');
+  }
   public async loadProfile() {
     const user = await this.auth.getUser();
     if (!user) return;
@@ -86,6 +138,24 @@ export class ProfileSettingsPage {
 
     this.avatarImg.src =
       user.avatarUrl ?? '/src/assets/avatar-placeholder.webp';
+  }
+
+  private initSliders() {
+    const slides = document.querySelectorAll(".photo-wrap");
+
+    let current = 0;
+
+    function showSlide(index: number) {
+      slides[current]?.classList.remove("active");
+
+      current = index;
+
+      slides[current]?.classList.add("active");
+    }
+
+    setInterval(() => {
+      showSlide((current + 1) % slides.length);
+    }, 4000);
   }
 
   private async onAvatarSelected() {

@@ -1,0 +1,181 @@
+.photo-container {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 11px;
+  overflow: hidden;
+  position: relative;
+  background: #111;
+}
+
+.photo-carousel {
+  position: absolute;
+  inset: 0;
+}
+
+.photo-carousel img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  z-index: 2;
+  display: block;
+  margin: 0 auto;
+  transition: transform .35s ease, opacity .3s ease;
+  transform-origin: center;
+}
+
+.photo-carousel img.active {
+  opacity: 1;
+}
+
+.photo-wrap {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity .45s ease;
+  pointer-events: none;
+}
+
+.photo-wrap.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.photo-wrap.active img {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.photo-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--img);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(20px) brightness(0.6);
+  transform: scale(1.15);
+  z-index: 0;
+  will-change: transform, filter;
+  pointer-events: none;
+}
+
+.photo-wrap::before {
+  background-image: var(--img);
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.carousel-dots .dot {
+  width: 8px;
+  height: 8px;
+  background: rgba(255, 255, 255, .7);
+  border-radius: 50%;
+}
+
+.carousel-dots .dot.active {
+  background: white;
+}
+
+.no-photos {
+  width: 90%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0.1em;
+  font-size: 0.7em;
+  color: #555;
+  background: linear-gradient(135deg, #fafafa, #eee);
+  border-radius: 9px;
+  border: 1px solid #ddd;
+}
+
+.no-photos a {
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+.no-photo-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.4em;
+}
+
+.no-photo-icon {
+  font-size: 1.6em;
+  opacity: 0.8;
+}
+
+.photo-fab {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(43,108,176,1);
+  color: #fff;
+  font-size: 0.8em;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 20;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  transition: transform .15s ease, opacity .15s ease;
+}
+
+.photo-fab:hover {
+  transform: scale(1.08);
+}
+
+.photo-fab:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+}
+
+.photo-meta {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 5;
+
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  padding: 6px 8px;
+  border-radius: 8px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(0,0,0,0.45),
+    rgba(0,0,0,0.25)
+  );
+
+  color: #fff;
+  font-size: 0.55em;
+  line-height: 1.2;
+
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  pointer-events: none;
+}
+
+.photo-date {
+  font-size: 0.9em;
+  opacity: 0.8;
+}
