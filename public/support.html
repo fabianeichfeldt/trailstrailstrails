@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Support Trailradar – Aus der Community, für die Community</title>
+  <meta name="description" content="Unterstütze Trailradar – durch neue Trail-Einträge, Feedback, Teilen in der Community oder mit einer kleinen Spende." />
+  <link rel="icon" type="image/webp" sizes="32x32" href="/assets/logo.webp">
+  <link rel="icon" type="image/webp" sizes="192x192" href="/assets/logo.webp">
+  <link rel="canonical" href="https://trailradar.org/support.html">
+
+  <style>
+    :root {
+      --bg-dark: #0e0f10;
+      --bg-light: #16181a;
+      --accent: #58c27d;
+      --text-main: #ffffff;
+      --text-muted: #939393;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.7;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+
+    .back-link{
+      display: inline-block;
+      margin: 0 0 2em;
+      font-weight: 600;
+      color: #2b6cb0;
+      font-size: 0.9em;
+      text-decoration: none;
+    }
+
+    .hero {
+      position: relative;
+      height: 70vh;
+      background: url('/assets/hero-desktop.webp') center / cover no-repeat;
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.2));
+    }
+
+    .logo {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 10;
+    }
+
+    .logo img {
+      border-radius: 16px;
+      height: 90px;
+      width: auto;
+    }
+
+    .hero-content {
+      position: relative;
+      padding: 4rem;
+      max-width: 900px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      margin: 0;
+    }
+
+    .hero p {
+      font-size: 1.1rem;
+      margin-top: 1rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      padding: 1em 2em 4em 2em;
+      margin: auto;
+      background: #ffffff;
+      color: #1a1a1a;
+      border-radius: 32px 32px 0 0;
+    }
+
+    .section {
+      margin-bottom: 3em;
+    }
+
+    .lead {
+      font-size: 1.2rem;
+      color: #444;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: center;
+    }
+
+    .split img {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,.3);
+    }
+
+    .cta {
+      background: var(--bg-light);
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+
+    .cta h2 { margin-bottom: 1rem; }
+
+    .cta p { color: var(--text-muted); max-width: 700px; margin: auto; }
+
+    .support-box {
+      background: #f5f5f5;
+      padding: 2rem;
+      border-radius: 20px;
+      margin-top: 2rem;
+    }
+
+    .support-box h3 {
+      margin-top: 0;
+    }
+
+    .paypal-button {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.9rem 1.6rem;
+      background: var(--accent);
+      color: #000;
+      font-weight: 600;
+      border-radius: 999px;
+      text-decoration: none;
+    }
+
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
+      .hero-content { padding: 2.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<section class="hero">
+  <a href="/" class="logo">
+    <img src="/assets/logo.webp" alt="Trailradar Logo">
+  </a>
+  <div class="hero-content">
+    <h1>Trailradar lebt von der Community.</h1>
+    <p>Aus der Community. Für die Community. Und mit deiner Unterstützung.</p>
+  </div>
+</section>
+
+<main class="container">
+  <div>
+    <a href="/" class="back-link">← Zurück zur Karte</a>
+  </div>
+
+  <section class="section">
+    <p class="lead">
+      Trailradar ist kein Konzernprojekt. Kein Startup mit Investoren.
+      Sondern ein Herzensprojekt – entstanden aus der Leidenschaft fürs Mountainbiken.
+    </p>
+    <p>
+      Damit legale Trails sichtbar werden. Damit Engagement gewürdigt wird.
+      Und damit wir als Community zeigen können, dass moderner Trailbau und Verantwortung zusammengehören.
+    </p>
+    <h2>Wie du Trailradar unterstützen kannst</h2>
+  </section>
+
+  <section class="section split">
+    <div>
+      <h2>1. Neue Trails eintragen</h2>
+      <p>
+        Die größte Unterstützung ist ganz einfach:
+        Trage fehlende Trails ein oder aktualisiere bestehende Informationen.
+      </p>
+      <p>
+        Jede neue Strecke macht Trailradar wertvoller für die gesamte MTB-Community.
+        Gerade offizielle, gepflegte und legale Trails verdienen Sichtbarkeit.
+      </p>
+    </div>
+    <img src="/assets/trailbau.webp" alt="Trailbau Community" />
+  </section>
+
+  <section class="section">
+    <h2>2. Fehler melden & Inhalte verbessern</h2>
+    <p>
+      Ein falscher Name, eine geänderte Streckenführung oder ein neuer Zustand?
+      Sag Bescheid. Trailradar soll aktuell und zuverlässig bleiben.
+    </p>
+    <p>
+      Jede Rückmeldung hilft, die Qualität der Plattform hochzuhalten.
+    </p>
+  </section>
+
+  <section class="section">
+    <h2>3. Trailradar teilen</h2>
+    <p>
+      Wenn dir Trailradar gefällt, teile es in deiner WhatsApp-Gruppe,
+      in deinem Verein, auf Instagram oder im Forum.
+    </p>
+    <p>
+      Je mehr Biker davon wissen, desto stärker wird die Community dahinter.
+    </p>
+  </section>
+
+  <section class="section split">
+    <img src="/assets/sticker.webp" alt="Trailradar Sticker" />
+    <div>
+      <h2>4. Sticker für die Community</h2>
+      <p>
+        Mittlerweile gibt es Trailradar-Aufkleber.
+        Für dein Bike, dein Auto oder die Werkstattwand.
+      </p>
+      <p>
+        Gegen eine kleine Spende schicke ich dir gerne welche zu.
+        <a href="mailto:webmaster@trailradar.org">Schreib mir einfach.</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section support-box">
+    <h3>5. Kaffee für die nächste Nachtsession ☕</h3>
+    <p>
+      Trailradar entsteht oft spät abends – nach der Arbeit, nach dem Ride.
+      Wenn du das Projekt direkt unterstützen möchtest, kannst du mir gerne
+      ein kleines Dankeschön per PayPal dalassen.
+    </p>
+    <p>
+      Damit finanzierst du symbolisch den nächsten Kaffee,
+      der mich beim Entwickeln des nächsten Features wachhält.
+    </p>
+
+    <a href="https://paypal.me/Trailradar" target="_blank" class="paypal-button">
+      Mit PayPal unterstützen
+    </a>
+  </section>
+
+</main>
+
+<footer class="cta">
+  <h2>Gemeinsam für legale Trails</h2>
+  <p>
+    Trailradar wächst nicht neben der Community – sondern mit ihr.
+    Danke, dass du Teil davon bist.
+  </p>
+  <p style="margin-top:2rem;"><strong>Happy Trails.</strong></p>
+</footer>
+
+</body>
+</html>
