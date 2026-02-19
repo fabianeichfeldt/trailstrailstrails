@@ -113,13 +113,23 @@ header h1 {
 }
 
 .news-item {
-  margin: 0.5em 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-gap: 0.3em;
+  align-items: center;
+  margin: 0 0;
+
+  img {
+    border-radius: 5px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  }
 }
 
 .news-item time {
   font-size: 0.6em;
   color: #777;
   display: block;
+  grid-column: 1 / span 2;
 }
 
 footer {

@@ -87,7 +87,8 @@ export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
 export interface PhotoResponse {
   url: string;
   created_at: string;
-  trail_name: string;
+  trailName: string;
+  trailID: string;
 }
 export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]> {
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_photos?select=*,trails(name)&creator=eq.${userId}`, {
@@ -100,8 +101,26 @@ export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]
     },
   });
   const trailjson = await trailResponse.json();
-  return (trailjson as { url: string, created_at: string, trails: { name: string } }[]).map(i => {
-    return { url: i.url, created_at: i.created_at, trail_name: i.trails.name }
+  return (trailjson as { url: string, created_at: string, trail_id: string, trails: { name: string } }[]).map(i => {
+    return { url: i.url, created_at: i.created_at, trailName: i.trails.name, trailID: i.trail_id }
+  });
+}
+
+export async function getLatestPhotos(num: number = 7): Promise<PhotoResponse[]> {
+  const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_photos?select=*,trails(name)&order=created_at.desc`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Range-Unit": "items",
+      "Range": `0-${num - 1}`,
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+  const trailjson = await trailResponse.json();
+  return (trailjson as { url: string, created_at: string, trail_id: string, trails: { name: string } }[]).map(i => {
+    return { url: i.url, created_at: i.created_at, trailName: i.trails.name, trailID: i.trail_id }
   });
 }
 

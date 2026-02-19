@@ -1,6 +1,6 @@
 import { getParks } from "./communication/bikeparks";
 import { getDirtParks } from "./communication/dirt_parks";
-import {getTrails} from "./communication/trails";
+import {getLatestPhotos, getTrails} from "./communication/trails";
 import {Coord, getApproxLocation, locations} from "./locations";
 import { generateJsonLD } from "./json_ld";
 
@@ -13,7 +13,7 @@ import "/src/css/community.css";
 import "/src/css/side_menu.css";
 import "/src/css/new_entry_popup.css";
 import "/src/auth/auth_modal.css";
-import {generateNews} from "./news/news";
+import {generateNews, News} from "./news/news";
 import { TrailMap } from "./map/map";
 import { Auth } from "./auth/auth";
 import {Supabase} from "./auth/supabase";
@@ -78,7 +78,11 @@ async function init() {
   else
     map.openTrail(location as string);
 
-  generateNews(trails);
+  let news = trails.slice(-7).map(item => new News(item));
+  const latestPhotos = await getLatestPhotos();
+  console.log(latestPhotos);
+  news = news.concat(latestPhotos.map(item => new News(item))).sort((a, b) => a.created_at > b.created_at ? 1 : -1);
+  generateNews(news);
 
   for (let i = 1; i <= 6; i++) {
     const newsItem = document.getElementById(`show-last-${i}`)
