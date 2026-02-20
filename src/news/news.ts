@@ -38,7 +38,7 @@ export function generateNews(news: News[]) {
             el.className = "news-item";
             el.innerHTML = (newsItem.type == "Trail") ? `
         <time datetime="${newsItem.created_at}">${formatDateFromDate(newsItem.created_at)}</time>
-        <a href='#'><img width="30px" alt="neues Photo fuer einen Trail" src='/src/assets/trail.webp'/></a><p><strong>${newsItem.trailName}</strong> wurde neu aufgenommen in die Übersicht.</p>
+        <a href='#'><img width="30px" alt="neues Photo fuer einen Trail" src='/assets/trail.webp'/></a><p><strong>${newsItem.trailName}</strong> wurde neu aufgenommen in die Übersicht.</p>
       ` :
               `
         <time datetime="${newsItem.created_at}">${formatDateFromDate(newsItem.created_at)}</time>
