@@ -56,6 +56,7 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
   const hours = details.opening_hours || "Keine zeitlichen Einschränkungen.";
 
   const rulesHTML = rules.map(r => `<p>${r}</p>`).join('');
+  const detailsHTML = "<p>" + details.trail_description + "</p>";
 
   const photosHTML = renderPhotos(details, auth.authService);
   const videoHTML = renderVideos(details);
@@ -68,10 +69,16 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
             <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
             <p>${hours}</p>
           </div>
+          ${details.rules && details.rules.length > 0 ? `
           <div class="popup-section">
             <h4>📜 Nutzungsregeln</h4>
             ${rulesHTML}
-          </div>
+          </div>` : ``}
+          ${details.trail_description && details.trail_description.length > 0 ? `
+          <div class="popup-section">
+            <h4>📜 Allgemeine Infos</h4>
+            ${detailsHTML}
+          </div>` : ``}
             <div class="popup-feedback" data-trail-id="${trail.id}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
