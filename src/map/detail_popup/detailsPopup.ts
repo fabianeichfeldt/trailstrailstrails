@@ -65,10 +65,11 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
         ${photosHTML}
         ${videoHTML}
         ${dirtparkInfo}
+        ${details.opening_hours ? `
           <div class="popup-section">
             <h4>⏰ Öffnungszeiten / Fahrverbote</h4>
             <p>${hours}</p>
-          </div>
+          </div>` : ''}
           ${details.rules && details.rules.length > 0 ? `
           <div class="popup-section">
             <h4>📜 Nutzungsregeln</h4>
