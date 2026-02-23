@@ -674,4 +674,14 @@
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+  <url>
+    <loc>https://trailradar.org/trails/4925e022-588d-4f8a-8908-5d943390f318</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://trailradar.org/trails/fd5bb96c-8b20-4fd0-83b8-3a3123775fa7</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
 </urlset>
