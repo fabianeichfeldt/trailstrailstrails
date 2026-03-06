@@ -32,7 +32,6 @@ export function bindPopupEvents(popup: HTMLElement, auth: Auth, onPhotoUploaded:
   if (!feedback) return;
   const trailId = feedback.dataset.trailId;
   if (!trailId) return;
-
   feedback.addEventListener("click", async (e) => {
     const btn = (e.target as HTMLElement).closest("button");
     if (!btn) return;
@@ -47,7 +46,7 @@ export function bindPopupEvents(popup: HTMLElement, auth: Auth, onPhotoUploaded:
       showToast("Danke für dein Feedback! 🙏", "success");
     }
   });
-  const uploadBtn = popup.querySelector(".photo-upload-btn");
+  const uploadBtn = popup.querySelector("button[data-action='upload-photo']");
   if (uploadBtn)
     uploadBtn.addEventListener("click", () => {
        startUpload(auth.authService, trailId, onPhotoUploaded);

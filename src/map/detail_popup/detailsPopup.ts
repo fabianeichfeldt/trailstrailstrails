@@ -83,10 +83,10 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
             <div class="popup-feedback" data-trail-id="${trail.id}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich">
+                <button class="thumb-btn up" title="Ja, hilfreich" communication-action="upvote">
                   <i class="fa-solid fa-thumbs-up"></i>
                 </button>
-                <button class="thumb-btn down" title="Nein">
+                <button class="thumb-btn down" title="Nein" communication-action="downvote">
                   <i class="fa-solid fa-thumbs-down"></i>
                 </button>
               </div>
