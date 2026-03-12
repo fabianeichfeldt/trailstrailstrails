@@ -1,6 +1,7 @@
 import {anon} from "../anon";
 import {BaseTrail, BikePark, DirtPark, isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
 import {TrailDetails} from "../types/TrailDetails";
+import {IAuthService} from "../auth/auth_service";
 
 export async function getTrails(): Promise<SingleTrail[]> {
   const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*", {
@@ -179,3 +180,33 @@ export function createCustomIcon(trail: Trail) {
   };
 }
 
+export async function likeTrail(trailID: string, authService: IAuthService) {
+  const user = await authService.getUser();
+  const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites`, {
+    method: "POST",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${user.accessToken}`,
+      "apikey": `${anon}`,
+    },
+    body: JSON.stringify({
+      user_id: user.id,
+      trail_id: trailID
+    })
+  });
+}
+
+export async function dislikeTrail(trailID: string, authService: IAuthService) {
+  const user = await authService.getUser();
+  const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites?trail_id=eq.${trailID}&user_id=eq.${user.id}`, {
+    method: "DELETE",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${user.accessToken}`,
+      "apikey": `${anon}`,
+      Prefer: "return=representation"
+    }
+  });
+}

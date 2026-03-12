@@ -19,9 +19,11 @@ export class Supabase implements IAuthService {
 
   async getUser(): Promise<User> {
     const response = await this.supabase.auth.getUser();
+    const token = (await this.supabase.auth.getSession()).data.session?.access_token ?? "";
+
     if (response.error != null)
       return User.AnonymousUser;
-    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.name, response.data.user.user_metadata?.avatar_url)
+    return new User(response.data.user?.id || "", response.data.user?.email || "", response.data.user.user_metadata?.name, token, response.data.user.user_metadata?.avatar_url)
   }
 
   async signIn(email: string, password: string): Promise<User> {
@@ -49,7 +51,7 @@ export class Supabase implements IAuthService {
     await this.supabase.auth.updateUser({data: {
         nickname
       }});
-    return new User("", response.data.user?.email || "", "")
+    return new User("", response.data.user?.email || "", "", "")
   }
 
   async updatePassword(oldPassword: string, newPassword: string): Promise<void> {

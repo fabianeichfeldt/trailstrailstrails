@@ -2,6 +2,8 @@ import {downVote, upVote} from "../../feedback";
 import {showToast} from "../../toast";
 import {IAuthService} from "../../auth/auth_service";
 import {Auth} from "../../auth/auth";
+import {dislikeTrail, likeTrail} from "../../communication/trails";
+import {share} from "../../communication/share";
 
 const MAX_FILE_SIZE_MB = 8;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -30,6 +32,7 @@ export function startPhotoCarousel(popup: HTMLElement) {
 export function bindPopupEvents(popup: HTMLElement, auth: Auth, onPhotoUploaded: () => void) {
   const feedback: HTMLDivElement | null = popup.querySelector(".popup-feedback");
   if (!feedback) return;
+  const trailName = feedback.dataset.trailName;
   const trailId = feedback.dataset.trailId;
   if (!trailId) return;
   feedback.addEventListener("click", async (e) => {
@@ -56,6 +59,25 @@ export function bindPopupEvents(popup: HTMLElement, auth: Auth, onPhotoUploaded:
     loginBtn.addEventListener("click", async () => {
       await auth.openSignInModal();
     })
+
+  const likeBtn = popup.querySelector("#like-button");
+  likeBtn?.addEventListener("click", async () => {
+    const isLike = (likeBtn as HTMLButtonElement).dataset.mode === "like";
+    if(auth.authService.loggedIn) {
+      await (isLike ? likeTrail(trailId, auth.authService) : dislikeTrail(trailId, auth.authService));
+      onPhotoUploaded();
+    } else
+      await auth.openSignInModal();
+  });
+
+  const shareBtn = document.getElementById("share-button");
+  shareBtn?.addEventListener("click", async () => {
+    await navigator.share({
+      title: `Offizieller MTB Trail '${trailName}' auf Trailradar`,
+      url: `https://trailradar.org/trails/${trailId}`
+    });
+    await share(trailId);
+  });
 }
 
 export function setupYT2Click(popup: HTMLElement) {

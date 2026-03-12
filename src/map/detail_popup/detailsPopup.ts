@@ -16,7 +16,6 @@ export function getTrailPopup(trail: Trail) {
       <a href="${trail.approved ? trail.url : '#'}" class="${!trail.approved ? 'disabled' : ''}" target="_blank">
         ${trail.name}
       </a>
-      <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
       </div>
   `;
 
@@ -49,6 +48,19 @@ export function getTrailPopup(trail: Trail) {
     return popupHtml;
 }
 
+async function renderLikeAndShare(details: TrailDetails, authService: IAuthService) {
+  const user = await authService.getUser();
+  return `<div class="popup-section">
+          <h4 class="likes-icon">${details.likes?.find(l => l.user_id === user.id) ? 
+            `<button id="like-button" aria-label="Trail liken" class="link-button"><i style="color: red" class="fa-solid fa-heart"></i></button>` : 
+            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-heart"></i></button>` 
+            }
+            <p class="likes-count">${details.likes.length > 0 ? details.likes.length : ``}</p>
+            <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
+          </h4>
+        </div>`
+}
+
 export async function renderTrailDetails(trail: Trail, details: TrailDetails, auth : Auth) {
   const dirtparkInfo = renderDirtparkDetails(trail);
 
@@ -60,10 +72,12 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
 
   const photosHTML = renderPhotos(details, auth.authService);
   const videoHTML = renderVideos(details);
+  const likesHTML = await renderLikeAndShare(details, auth.authService);
 
   return `
         ${photosHTML}
         ${videoHTML}
+        ${likesHTML}
         ${dirtparkInfo}
         ${details.opening_hours ? `
           <div class="popup-section">
@@ -80,7 +94,7 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
             <h4>📜 Allgemeine Infos</h4>
             ${detailsHTML}
           </div>` : ``}
-            <div class="popup-feedback" data-trail-id="${trail.id}">
+            <div class="popup-feedback" data-trail-id="${trail.id}" data-trail-name="${trail.name}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
               <div class="feedback-buttons">
                 <button class="thumb-btn up" title="Ja, hilfreich" communication-action="upvote">

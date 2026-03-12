@@ -1,16 +1,18 @@
 export class User {
-  public static AnonymousUser: User = new User("-1","dummy@google.com", "Dummy");
+  public static AnonymousUser: User = new User("-1","dummy@google.com", "Dummy", "");
   email: string = "";
   avatarUrl?: string = "";
   avatarHTML: string = "";
   nickname: string = "";
   id: string = "";
+  accessToken: string = "";
 
-  public constructor(id: string, email: string, nickName: string, avatarUrl?: string) {
+  public constructor(id: string, email: string, nickName: string, accessToken: string, avatarUrl?: string) {
     this.email = email;
     this.avatarUrl = avatarUrl;
     this.nickname = nickName;
     this.id = id;
+    this.accessToken = accessToken;
     this.avatarHTML = `
   <div class="user-avatar">
     ${

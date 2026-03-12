@@ -159,15 +159,6 @@ export class TrailMap {
       this.markersById.set(trail.id, marker);
       marker.on("popupclose", () => document.getElementById("top-map-buttons")!.style.display = "block");
       marker.on("popupopen", async (e) => {
-        const shareBtn = document.getElementById("share-button");
-        shareBtn?.addEventListener("click", async () => {
-            await navigator.share({
-              title: `Offizieller MTB Trail '${trail.name}' auf Trailradar`,
-              url: `https://trailradar.org/trails/${trail.id}`
-            });
-            await share(trail);
-        });
-
         document.getElementById("top-map-buttons")!.style.display = "none";
         const popup = e.popup.getElement();
         if(!popup)
