@@ -7,7 +7,7 @@ import "/src/auth/auth_modal.css";
 import "/src/auth/profile.css";
 
 import "@fortawesome/fontawesome-free/css/all.css";
-import {getPhotosByUserId, getTrailsByUserId} from "../communication/trails";
+import {getFavoriteTrails, getPhotosByUserId, getTrailsByUserId} from "../communication/trails";
 import {formatDate} from "../formatDate";
 
 export class ProfileSettingsPage {
@@ -21,6 +21,7 @@ export class ProfileSettingsPage {
   private oldPwInput: HTMLInputElement = null!;
   private createdTrailsContainer: HTMLElement = null!;
   private createdPhotosContainer: HTMLElement = null!;
+  private favoritesContainer: HTMLElement = null!;
 
   public constructor(auth: IAuthService) {
     this.auth = auth;
@@ -46,6 +47,7 @@ export class ProfileSettingsPage {
 
     this.createdTrailsContainer = document.getElementById('trail-list') as HTMLElement;
     this.createdPhotosContainer = document.getElementById('photo-list') as HTMLElement;
+    this.favoritesContainer = document.getElementById('favorites-list') as HTMLElement;
   }
 
   private bindEvents() {
@@ -91,6 +93,17 @@ export class ProfileSettingsPage {
   public async loadContributions() {
     const user = await this.auth.getUser();
     if (!user) return;
+
+    const favoriteTrails = await getFavoriteTrails(user.id);
+    if (favoriteTrails.length === 0)
+      this.favoritesContainer.innerHTML = `<li class="slide empty">Noch keine Favoriten ausgewählt</li>`
+    else
+      this.favoritesContainer.innerHTML = favoriteTrails.map(trail => `<li class="slide">
+      <span class="contribution-title">⭐ ${trail.name}</span>
+      <span class="contribution-meta">
+      </span>
+    </li>`)
+        .join('\n');
 
     const trails = await getTrailsByUserId(user.id);
     if (trails.length === 0)

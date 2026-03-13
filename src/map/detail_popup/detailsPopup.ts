@@ -52,10 +52,9 @@ async function renderLikeAndShare(details: TrailDetails, authService: IAuthServi
   const user = await authService.getUser();
   return `<div class="popup-section">
           <h4 class="likes-icon">${details.likes?.find(l => l.user_id === user.id) ? 
-            `<button id="like-button" aria-label="Trail liken" class="link-button"><i style="color: red" class="fa-solid fa-heart"></i></button>` : 
-            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-heart"></i></button>` 
+            `<button id="like-button" aria-label="Trail liken" class="link-button">⭐</button>` : 
+            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-star"></i></button>` 
             }
-            <p class="likes-count">${details.likes.length > 0 ? details.likes.length : ``}</p>
             <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
           </h4>
         </div>`

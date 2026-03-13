@@ -27,6 +27,20 @@ export async function getTrails(): Promise<SingleTrail[]> {
   });
 }
 
+export async function getFavoriteTrails(userID: string): Promise<BaseTrail[]> {
+  const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites?select=*,trails(*)&user_id=eq.${userID}`, {
+    method: "GET",
+    cache: "force-cache",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${anon}`,
+      "apikey": `${anon}`,
+    },
+  });
+  const trailjson = await trailResponse.json();
+  return (trailjson as { trails: BaseTrail }[]).map(i => i.trails);
+}
+
 export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
   const trailResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*&creator_id=eq.${userId}`, {
     method: "GET",

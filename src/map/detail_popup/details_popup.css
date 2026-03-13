@@ -164,7 +164,6 @@
   margin: 0;
   font: inherit;
   color: #084a9e;          /* typical link blue */
-  text-decoration: underline;
   cursor: pointer;
 }
 
