@@ -96,14 +96,21 @@ async function fetchAllTrails(): Promise<TrailDetails[]> {
 
   const trails = (await res_trails.json()) as Trail[];
 
-  return details.map(trail => {
-    const t = trails.find(t => t.id === trail.trail_id);
-    if (!t) return trail;
+  return trails.map(trail => {
+    const t = details.find(t => t.trail_id === trail.id);
+    if (!t) return {
+      trail_id: trail.id,
+      name: trail.name,
+      latitude: trail.latitude,
+      longitude: trail.longitude,
+      trail_description: "",
+      rules: []
+    }
 
-    trail.name = t.name;
-    trail.latitude = t.latitude;
-    trail.longitude = t.longitude;
-    return trail;
+    t.name = trail.name;
+    t.latitude = trail.latitude;
+    t.longitude = trail.longitude;
+    return t;
   })
 }
 
