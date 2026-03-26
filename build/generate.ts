@@ -125,6 +125,7 @@ function applyTrailSEO(html: string, slug: string, trail: TrailDetails) {
   return html
     .replace(/<h1>.*<\/h1>/, `<h1>Trailradar - ${trail.name}</h1>`)
     .replace(/<title>.*<\/title>/, title)
+    .replace("<link rel=\"canonical\" href=\"https://trailradar.org\">", `<link rel="canonical" href="https://trailradar.org/trails/${slug}/">`)
     .replace(
       "</head>",
       `
@@ -142,7 +143,6 @@ function applyTrailSEO(html: string, slug: string, trail: TrailDetails) {
   "url":"https://trailradar.org/trails/${slug}/"
 }]
 </script>
-<link rel="canonical" href="https://trailradar.org/trails/${slug}/">
 </head>`
     )
     .replace(
