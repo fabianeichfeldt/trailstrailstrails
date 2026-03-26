@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/webp" sizes="32x32" href="/src/assets/logo.webp">
+  <link rel="icon" type="image/webp" sizes="192x192" href="/src/assets/logo.webp">
+  <link rel="apple-touch-icon" href="/src/assets/logo.webp">
+  <title>MTB Spotchecks – Die besten Bikeparks & Trailcenter in Deutschland</title>
+
+  <meta name="description" content="Entdecke die besten MTB Spots in Deutschland: Bikeparks, Trailcenter & Pumptracks – getestet mit Bildern, Videos und echten Erfahrungen.">
+
+  <link rel="canonical" href="https://trailradar.org/spotchecks">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://trailradar.org/spotchecks">
+  <meta property="og:title" content="MTB Spotchecks – Die besten Bikeparks & Trailcenter">
+  <meta property="og:description" content="Finde die besten MTB Spots: getestete Bikeparks & Trails mit Bildern, Videos und echten Eindrücken.">
+  <meta property="og:image" content="https://trailradar.org/assets/hero-desktop.webp">
+  <meta property="og:site_name" content="Trailradar">
+  <meta property="og:locale" content="de_DE">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 1rem;
+    }
+
+    .hero {
+      border-radius: 0 0 16px 16px;
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 2rem;
+    }
+
+    .hero img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      filter: brightness(0.6);
+    }
+
+    .hero-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      text-align: center;
+      width: 90%;
+    }
+
+    .hero h1 {
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p {
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    .featured {
+      background: white;
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .featured img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+    }
+
+    .featured-content {
+      padding: 1rem;
+    }
+
+    .featured h2 {
+      margin: 0 0 0.5rem 0;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: #2b6cb0;
+      color: white;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .btn-secondary {
+      display: inline-block;
+      margin-top: 0.5rem;
+      padding: 0.6rem 1rem;
+      background: white;
+      color: #2b6cb0;
+      border-style: solid;
+      border-width: 2px;
+      border-color: #2b6cb0;
+      cursor: pointer;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+
+    .btn:hover {
+      background: #3182ce;
+    }
+
+    /* GRID */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+      transition: transform 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+    }
+
+    .card img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+    }
+
+    .card-content {
+      padding: 0.8rem;
+    }
+
+    .card h3 {
+      margin: 0 0 0.4rem 0;
+      font-size: 1rem;
+    }
+
+    .card p {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .tags {
+      margin-top: 0.5rem;
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.6rem;
+      margin-right: 0.3rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="hero">
+  <a href="/"><img src="/src/assets/hero-desktop.webp" alt="MTB Trail"></a>
+  <div class="hero-content">
+    <h1>🔥 Die besten MTB Spots</h1>
+    <p>Entdecke getestete Bikeparks & Trailcenter mit Bildern, Videos und echten Eindrücken</p>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- FEATURED -->
+  <section class="featured">
+    <img src="/src/assets/spotchecks/kulmbach.webp" alt="Featured Spot">
+    <div class="featured-content">
+      <h2>Bierstadt Trails Kulmbach - Spotcheck</h2>
+      <p>Abwechslungsreiche stadtnahe Trails, die sich gut zu einer Runde verbinden lassen.</p>
+      <a href="/trails/b3060ec3-ba3b-4b18-81d2-491c49aac727" class="btn-secondary">Spot ansehen</a>
+      <a href="/spotchecks/kulmbach/" class="btn">Spotcheck</a>
+    </div>
+  </section>
+
+  <!-- GRID -->
+  <section class="grid">
+
+    <div class="card">
+      <img src="/src/assets/spotchecks/nuernberg.webp" alt="Spot">
+      <div class="card-content">
+        <h3>Schmausenbuck - Nürnberg</h3>
+        <p>Sehr viele kurze Trails, da findet jeder etwas!</p>
+        <div class="tags">
+          <span class="tag">Trailcenter</span>
+          <span class="tag">große Vielfalt</span>
+        </div>
+        <a href="/spotchecks/nuernberg" class="btn">Spotcheck</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="/src/assets/spotchecks/saalfeld.webp" alt="Spot">
+      <div class="card-content">
+        <h3>Feen Bike Trails - Saalfeld</h3>
+        <p>Lange Trails, vieles naturbelassen</p>
+        <div class="tags">
+          <span class="tag">Trailcenter</span>
+          <span class="tag">eher für Fortgeschrittene</span>
+        </div>
+        <a href="/spotchecks/saalfeld" class="btn">Spotcheck</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="/src/assets/spotchecks/fuerth.webp" alt="Spot">
+      <div class="card-content">
+        <h3>Trailworks Fürth</h3>
+        <p>Kurze stadtnahe Trails mit Spaßgarantie</p>
+        <div class="tags">
+          <span class="tag">Anfängergeeignet</span>
+          <span class="tag">spaßig</span>
+        </div>
+        <a href="/spotchecks/pumptrack-xy" class="btn">Spotcheck</a>
+      </div>
+    </div>
+
+  </section>
+
+  <footer>
+    © 2026 Trailradar – Spotchecks
+  </footer>
+
+</div>
+
+</body>
+</html>

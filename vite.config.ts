@@ -15,6 +15,8 @@ export default defineConfig({
         legal: resolve(__dirname, "legal.html"),
         reset_password: resolve(__dirname, "reset_password.html"),
         support: resolve(__dirname, "support.html"),
+        spotchecks: resolve(__dirname, "spotchecks/index.html"),
+        kulmbach: resolve(__dirname, "spotchecks/kulmbach/index.html"),
       }
     }
   }
