@@ -14,6 +14,7 @@
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       color: #333;
+      overscroll-behavior: none;
     }
 
     .container {
@@ -70,8 +71,8 @@
       position: absolute;
       bottom: 20px;
       left: 20px;
-      color: white;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.7);
+      color: #fff7ed;
+      text-shadow: 0 4px 6px rgba(0,0,0,0.7);
       z-index: 2;
     }
 
@@ -109,18 +110,58 @@
       line-height: 1.4;
     }
 
-    .gallery {
-      display: flex;
-      gap: 0.5em;
-      overflow-x: auto;
-      padding-bottom: 0.5em;
+    .carousel-wrapper {
+      max-width: 680px;
+      margin: 0 auto;
     }
 
-    .gallery img {
-      height: 180px;
-      border-radius: 10px;
-      object-fit: cover;
+    .carousel {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .carousel-track {
+      display: flex;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      gap: 0;
+    }
+
+    .carousel-track::-webkit-scrollbar {
+      display: none;
+    }
+
+    .carousel-track img {
+      width: 100%;
       flex-shrink: 0;
+      scroll-snap-align: start;
+      aspect-ratio: 4 / 3;
+      object-fit: contain;
+    }
+
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .carousel-dots button {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: none;
+      background: #cbd5e0;
+      padding: 0;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .carousel-dots button.active {
+      background: #2b6cb0;
     }
 
     .section-title {
@@ -164,7 +205,7 @@
       justify-content: space-between;
       color: #555;
       margin-bottom: 4px;
-      font-size: 0.85em;
+      font-size: 0.95em;
     }
 
     .skill-range-track {
@@ -194,7 +235,6 @@
       margin-right: 0.3em;
     }
 
-    /* HIGHLIGHT */
     .highlight {
       background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
       color: #7c2d12;
@@ -216,25 +256,6 @@
       border-radius: 8px 8px 0 0;
     }
 
-    /* CTA */
-    .cta {
-      text-align: center;
-      margin: 2em 0;
-    }
-
-    .btn {
-      padding: 0.8em 1.4em;
-      background: #2b6cb0;
-      color: white;
-      border-radius: 10px;
-      text-decoration: none;
-    }
-
-    .btn:hover {
-      background: #3182ce;
-    }
-
-    /* STICKY CTA 🔥 */
     .sticky-cta {
       position: fixed;
       bottom: 15px;
@@ -298,12 +319,36 @@
   </p>
 
   <!-- GALLERY -->
-  <div class="gallery">
-    <img src="/src/assets/spotchecks/kulmbach.webp">
-    <img src="/src/assets/spotchecks/kulmbach.webp">
-    <img src="/src/assets/spotchecks/kulmbach.webp">
-    <img src="/src/assets/spotchecks/kulmbach.webp">
+  <div class="carousel-wrapper">
+  <div class="carousel">
+    <div class="carousel-track" id="carouselTrack">
+      <img src="/src/assets/spotchecks/kulmbach/kulmbach1.webp" alt="Kulmbach Trail 1">
+      <img src="/src/assets/spotchecks/kulmbach/kulmbach2.webp" alt="Kulmbach Trail 2">
+      <img src="/src/assets/spotchecks/kulmbach/kulmbach3.webp" alt="Kulmbach Trail 3">
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
   </div>
+  </div>
+  <script>
+    (function () {
+      const track = document.getElementById('carouselTrack');
+      const dotsEl = document.getElementById('carouselDots');
+      const imgs = track.querySelectorAll('img');
+      imgs.forEach((_, i) => {
+        const btn = document.createElement('button');
+        if (i === 0) btn.classList.add('active');
+        btn.addEventListener('click', () => {
+          track.scrollTo({ left: track.clientWidth * i, behavior: 'smooth' });
+        });
+        dotsEl.appendChild(btn);
+      });
+      track.addEventListener('scroll', () => {
+        const idx = Math.round(track.scrollLeft / track.clientWidth);
+        dotsEl.querySelectorAll('button').forEach((b, i) =>
+          b.classList.toggle('active', i === idx));
+      }, { passive: true });
+    })();
+  </script>
 
   <!-- TRAILS -->
   <h2 class="section-title">Trails im Überblick</h2>
@@ -313,7 +358,7 @@
     <div class="card">
       <div class="card-content">
         <h3>Fu - Trail</h3>
-        <p>flowig, schnell. Aber aufpassen in den letzten Kurven, hier ist es lange rutschig!</p>
+        <p>flowig, schnell. Aber aufpassen in den letzten Kurven, hier ist es nach Regen noch lange rutschig!</p>
         <span class="tag">Flow</span>
         <span class="tag">Spaß</span>
       </div>
@@ -321,7 +366,7 @@
     <div class="card">
       <div class="card-content">
         <h3>Burgvoigts Regina</h3>
-        <p>Wurzeln und Offcamber, naturbelassen. Der Inbegriff von Enduro für mich!</p>
+        <p>Wurzeln und ein guter Mix aus schnellen Passagen und engen Kurven - naturbelassen. Der Inbegriff von Enduro für mich!</p>
         <span class="tag">technisch</span>
         <span class="tag">wurzlig</span>
       </div>
