@@ -298,6 +298,53 @@
       text-decoration: none;
     }
 
+    /* NEARBY SPOTS */
+    .nearby {
+      margin: 1.5em 0;
+    }
+
+    .nearby-title {
+      font-size: 0.75em;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #888;
+      margin: 0 0 0.6em 0;
+    }
+
+    .nearby-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5em;
+    }
+
+    .nearby-list a {
+      display: inline-block;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 0.4em 1em;
+      font-size: 0.82em;
+      color: #2b6cb0;
+      text-decoration: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+
+    .nearby-list a:hover {
+      background: #ebf4ff;
+    }
+
+    .nearby-all {
+      display: block;
+      margin-top: 0.6em;
+      font-size: 0.78em;
+      color: #888;
+      text-decoration: none;
+    }
+
+    .nearby-all:hover {
+      color: #2b6cb0;
+    }
+
   </style>
   <script type="application/ld+json">
     [{
@@ -354,6 +401,17 @@
     <div class="skill-range-track">
       <div class="skill-range-fill" style="--from: 20%; --to: 80%;"></div>
     </div>
+  </div>
+
+  <div class="nearby">
+    <p class="nearby-title">Spots in der Nähe</p>
+    <div class="nearby-list">
+      <a href="/spotchecks/nuernberg">📍 Nürnberg</a>
+      <a href="/spotchecks/fuerth">📍 Fürth</a>
+      <a href="/spotchecks/saalfeld">📍 Saalfeld</a>
+    </div>
+    <a class="nearby-all" href="/spotchecks">Alle Spotchecks →</a>
+    <a class="nearby-all" href="/">Zur Karte →</a>
   </div>
 
   <p class="intro">
@@ -456,6 +514,17 @@
       </div>
     </div>
 
+  </div>
+
+  <div class="nearby">
+    <p class="nearby-title">Spots in der Nähe</p>
+    <div class="nearby-list">
+      <a href="/spotchecks/nuernberg">📍 Nürnberg</a>
+      <a href="/spotchecks/fuerth">📍 Fürth</a>
+      <a href="/spotchecks/saalfeld">📍 Saalfeld</a>
+    </div>
+    <a class="nearby-all" href="/spotchecks">Alle Spotchecks →</a>
+    <a class="nearby-all" href="/">Zur Karte →</a>
   </div>
 
   <!-- HIGHLIGHT -->
