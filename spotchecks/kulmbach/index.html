@@ -42,11 +42,8 @@
       top: 20px;
       left: 20px;
       width: 120px;
-      opacity: 0.9;
-      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 2px 2px 15px rgb(225, 193, 146);
       border-radius: 8px;
-      padding: 6px;
-      backdrop-filter: blur(4px);
       z-index: 2;
     }
 
@@ -84,6 +81,38 @@
     .hero p {
       margin: 0.3em 0 0;
       opacity: 0.9;
+    }
+
+    .map-preview {
+      position: relative;
+      border-radius: 12px;
+      max-width: 480px;
+      margin: 1em auto;
+      overflow: hidden;
+    }
+
+    .map-preview img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
+
+    .map-blur {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(4px);
+      -webkit-mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), transparent var(--r), black calc(var(--r) + 1px));
+      mask-image: radial-gradient(circle var(--r) at var(--x) var(--y), transparent var(--r), black calc(var(--r) + 1px));
+    }
+
+    .map-spotlight {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(
+        circle at var(--x) var(--y),
+        transparent var(--r),
+        rgba(0,0,0,0.65) calc(var(--r) + 1px)
+      );
     }
 
     .facts {
@@ -270,14 +299,28 @@
     }
 
   </style>
+  <script type="application/ld+json">
+    [{
+      "@context":"https://schema.org",
+      "@type":"Place",
+      "name":"Bierstadttrails Kulmbach",
+      "description":"Die Bierstadt Trails bieten eine perfekte Mischung aus Flow, Technik und spielerischen Elementen. Ideal für alle, die abwechslungsreiche Trails suchen und ihre Skills verbessern wollen.",
+      "geo":{
+        "@type":"GeoCoordinates",
+        "latitude":50.1111,
+        "longitude":11.4606
+      },
+      "url":"https://trailradar.org/trails/b3060ec3-ba3b-4b18-81d2-491c49aac727/"
+    }]
+  </script>
 </head>
 
 <body>
 
 <!-- HERO -->
 <section class="hero">
-  <img src="/src/assets/spotchecks/kulmbach.webp" alt="Bierstadt Trails Kulmbach" class="hero-background">
-  <img src="/src/assets/logo_transparent.webp" class="hero-logo" alt="Trailradar Logo">
+  <a href="/"><img src="/src/assets/spotchecks/kulmbach.webp" alt="Bierstadt Trails Kulmbach" class="hero-background"></a>
+  <a href="/"><img src="/src/assets/logo.webp" class="hero-logo" alt="Trailradar Logo"></a>
   <div class="hero-content">
     <h1>Bierstadt Trails Kulmbach</h1>
     <p>Flow, Technik & Abwechslung in Oberfranken</p>
@@ -350,6 +393,16 @@
     })();
   </script>
 
+  <a href="/trails/b3060ec3-ba3b-4b18-81d2-491c49aac727"><div class="map-preview">
+    <img src="/src/assets/spotchecks/kulmbach/map.webp" alt="Map">
+    <div class="map-blur" style="--x: 52%; --y: 30%; --r: 90px;"></div>
+    <div
+      class="map-spotlight"
+      style="--x: 52%; --y: 30%; --r: 90px;">
+    </div>
+  </div>
+  </a>
+
   <!-- TRAILS -->
   <h2 class="section-title">Trails im Überblick</h2>
 
@@ -360,7 +413,6 @@
         <h3>Fu - Trail</h3>
         <p>flowig, schnell. Aber aufpassen in den letzten Kurven, hier ist es nach Regen noch lange rutschig!</p>
         <span class="tag">Flow</span>
-        <span class="tag">Spaß</span>
       </div>
     </div>
     <div class="card">
@@ -374,9 +426,9 @@
     <div class="card">
       <div class="card-content">
         <h3>Hopfentorpedo</h3>
-        <p>flacher  flowiger Trail, anfängergeeignet.</p>
+        <p>flacher flowiger Trail, anfängergeeignet.</p>
         <span class="tag">Flow</span>
-        <span class="tag">Spaß</span>
+        <span class="tag">flach</span>
       </div>
     </div>
     <div class="card">
@@ -384,7 +436,6 @@
         <h3>Terrassen-Tango</h3>
         <p>schnell, spaßig. Gelegenheiten zum Abziehen, aber auch mal technisch und steil</p>
         <span class="tag">Flow</span>
-        <span class="tag">Spaß</span>
         <span class="tag">Enduro</span>
       </div>
     </div>
