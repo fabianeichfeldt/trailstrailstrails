@@ -16,10 +16,15 @@
   <meta property="og:site_name" content="Trailradar">
   <meta property="og:locale" content="de_DE">
   <script type="module" src="/src/visit.ts"></script>
+  <script type="module" language="ts" >
+    import { setupYT2Click } from "/src/map/detail_popup/yt.ts";
+    setupYT2Click(document.body);
+  </script>
 
   <link rel="stylesheet" href="/spotchecks/css/spotcheck.css">
   <link rel="stylesheet" href="/spotchecks/css/skill-range.css">
   <link rel="stylesheet" href="/spotchecks/css/carousel.css">
+  <link rel="stylesheet" href="/spotchecks/css/yt.css">
   <script type="application/ld+json">
     [{
       "@context":"https://schema.org",
@@ -105,15 +110,17 @@
     <span class="quote-author">— Fabian</span>
   </blockquote>
 
-  <a href="/trails/e41c943f-cff1-4e66-a278-696d83d8fcdf/"><div class="map-preview">
-    <img src="/src/assets/spotchecks/nuernberg/map.webp" alt="Map">
-    <div class="map-blur" style="--x: 52%; --y: 30%; --r: 90px;"></div>
-    <div
-      class="map-spotlight"
-      style="--x: 52%; --y: 30%; --r: 90px;">
+  <div class="yt-2click" data-yt-src="https://www.youtube.com/embed/AfdHP7tHyYc?si=f3dZtgzNnQruT4KP?autoplay=1">
+    <div class="yt-thumb">
+      <div class="yt-overlay">
+        <p class="yt-text">
+          Dieses Video wird von YouTube geladen.<br>
+          Mit dem Klick stimmst du den <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Datenschutzbestimmungen von Google</a> zu.
+        </p>
+        <button class="yt-load-btn">▶ Video abspielen</button>
+      </div>
     </div>
   </div>
-  </a>
 
   <div class="carousel-wrapper">
   <div class="carousel">

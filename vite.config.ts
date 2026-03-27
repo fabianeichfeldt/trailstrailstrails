@@ -17,6 +17,7 @@ export default defineConfig({
         support: resolve(__dirname, "support.html"),
         spotchecks: resolve(__dirname, "spotchecks/index.html"),
         kulmbach: resolve(__dirname, "spotchecks/kulmbach/index.html"),
+        nuernberg: resolve(__dirname, "spotchecks/nuernberg/index.html"),
       }
     }
   }

@@ -15,12 +15,12 @@ import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails
 import {openCreateTrailPopup} from "./create_trail/popup";
 import {createCustomIcon, getTrailDetails} from "../communication/trails";
 import {getTrailPopup, renderTrailDetails} from "./detail_popup/detailsPopup";
-import {bindPopupEvents, setupYT2Click, startPhotoCarousel} from "./detail_popup/logic";
+import {bindPopupEvents, startPhotoCarousel} from "./detail_popup/logic";
 import {Coord} from "../locations";
 import {TrailFilter} from "./trailFilter";
-import {share} from "../communication/share";
 import {IAuthService} from "../auth/auth_service";
 import {Auth} from "../auth/auth";
+import {setupYT2Click} from "./detail_popup/yt";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 
