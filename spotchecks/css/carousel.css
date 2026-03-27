@@ -1,0 +1,53 @@
+.carousel-wrapper {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.carousel {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.carousel-track {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  gap: 0;
+}
+
+.carousel-track::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel-track img {
+  width: 100%;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.carousel-dots button {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: #cbd5e0;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.carousel-dots button.active {
+  background: #2b6cb0;
+}

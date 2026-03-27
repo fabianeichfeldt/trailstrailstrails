@@ -1,0 +1,30 @@
+.skill-range {
+  padding-top: 1em;
+  font-size: 0.8em;
+}
+
+.skill-range-label {
+  display: flex;
+  justify-content: space-between;
+  color: #555;
+  margin-bottom: 4px;
+  font-size: 0.95em;
+}
+
+.skill-range-track {
+  position: relative;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.skill-range-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #68d391, #f6ad55, #fc8181);
+  left: var(--from);
+  width: calc(var(--to) - var(--from));
+}
