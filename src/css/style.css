@@ -145,9 +145,25 @@ footer {
   border-top: 1px solid #e5e7eb;
 }
 
-footer a {
-  font-size: 0.5em;
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4em 1.2em;
+  padding: 0.2em 1em;
 }
+
+.footer-links a {
+  font-size: 0.75em;
+  color: #666;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  color: #2b6cb0;
+  text-decoration: underline;
+}
+
 footer p {
   font-size: 0.7em;
   margin: 0.8em 0 0 0;
