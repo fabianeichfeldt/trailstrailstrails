@@ -6,6 +6,7 @@ export class BaseTrail {
     instagram: string = "";
     latitude: number = 0;
     longitude: number = 0;
+    spotcheck: string = "";
     approved: boolean = false;
     created_at: string = "";
 }

@@ -48,14 +48,15 @@ export function getTrailPopup(trail: Trail) {
     return popupHtml;
 }
 
-async function renderLikeAndShare(details: TrailDetails, authService: IAuthService) {
+async function renderLikeAndShare(details: TrailDetails, authService: IAuthService, spotcheckHTML: string) {
   const user = await authService.getUser();
   return `<div class="popup-section">
-          <h4 class="likes-icon">${details.likes?.find(l => l.user_id === user.id) ? 
-            `<button id="like-button" aria-label="Trail liken" class="link-button">⭐</button>` : 
-            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-star"></i></button>` 
+          <h4 class="likes-icon">${details.likes?.find(l => l.user_id === user.id) ?
+            `<button id="like-button" aria-label="Trail liken" class="link-button">⭐</button>` :
+            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-star"></i></button>`
             }
             <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
+            ${spotcheckHTML}
           </h4>
         </div>`
 }
@@ -71,7 +72,13 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
 
   const photosHTML = renderPhotos(details, auth.authService);
   const videoHTML = renderVideos(details);
-  const likesHTML = await renderLikeAndShare(details, auth.authService);
+  const spotcheckHTML = trail.spotcheck && trail.spotcheck.trim() !== ""
+    ? `<a href="${trail.spotcheck}" target="_blank" class="spotcheck-badge">
+        <i class="fa-solid fa-circle-check"></i> Trailradar Spotcheck
+       </a>`
+    : "";
+
+  const likesHTML = await renderLikeAndShare(details, auth.authService, spotcheckHTML);
 
   return `
         ${photosHTML}

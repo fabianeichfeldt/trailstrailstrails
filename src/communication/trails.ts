@@ -187,11 +187,20 @@ export function createCustomIcon(trail: Trail) {
       category = 'bikepark';
   }
 
-  return {
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+  // TODO: replace `true` with `trail.spotcheck` (or similar) once the field exists
+  const hasBadge = false;
+
+  return L.divIcon({
+    html: `<div class="marker-wrapper marker-${category}${hasBadge ? ' marker-has-badge' : ''}">
+      <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" class="marker-img" />
+      ${hasBadge ? '<span class="marker-badge">✓</span>' : ''}
+    </div>`,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    className: `marker-${category}`,
-  };
+    className: '',
+  });
 }
 
 export async function likeTrail(trailID: string, authService: IAuthService) {
