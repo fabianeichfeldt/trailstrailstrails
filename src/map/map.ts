@@ -150,7 +150,7 @@ export class TrailMap {
     this.markersById.clear();
     for (const trail of trails) {
       const marker = L.marker([trail.latitude, trail.longitude], {
-        icon: L.icon(createCustomIcon(trail)),
+        icon: createCustomIcon(trail),
       })
         .addTo(cluster)
         //@ts-expect-error

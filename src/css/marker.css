@@ -2,18 +2,50 @@
   transition: transform 0.2s, filter 0.2s;
 }
 
-img.leaflet-marker-icon.marker-verified {
+.marker-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 25px;
+  height: 41px;
+}
+
+.marker-img {
+  width: 25px;
+  height: 41px;
+  transition: filter 0.2s;
+}
+
+.marker-wrapper.marker-verified .marker-img {
   filter: hue-rotate(0deg);
 }
 
-img.leaflet-marker-icon.marker-unverified {
+.marker-wrapper.marker-unverified .marker-img {
   filter: hue-rotate(160deg);
 }
 
-img.leaflet-marker-icon.marker-bikepark {
+.marker-wrapper.marker-bikepark .marker-img {
   filter: hue-rotate(270deg);
 }
 
-img.leaflet-marker-icon.marker-dirtpark {
+.marker-wrapper.marker-dirtpark .marker-img {
   filter: hue-rotate(90deg);
+}
+
+.marker-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 14px;
+  height: 14px;
+  background: #2ecc71;
+  color: white;
+  border-radius: 50%;
+  font-size: 9px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  line-height: 1;
 }
