@@ -3,6 +3,10 @@ import {BaseTrail, BikePark, DirtPark, isBikePark, isDirtPark, SingleTrail, Trai
 import {TrailDetails} from "../types/TrailDetails";
 import {IAuthService} from "../auth/auth_service";
 
+function fallbackDetails(trail: Trail): TrailDetails {
+  return new TrailDetails(trail.id);
+}
+
 export async function getTrails(): Promise<SingleTrail[]> {
   const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*", {
     method: "GET",
@@ -171,10 +175,10 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   }
 
   if (!response.ok)
-    throw new Error(`Trails ${trail.type} failed with status ${response.status}`);
+    return fallbackDetails(trail);
 
   const json = await response.json();
-  return json.data;
+  return json.data ?? fallbackDetails(trail);
 }
 
 export function createCustomIcon(trail: Trail) {
