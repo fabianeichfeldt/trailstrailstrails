@@ -77,8 +77,8 @@ export class Supabase implements IAuthService {
       });
 
     if (error) {
-      console.error("Upload failed:", error);
-      throw new Error("Upload fehlgeschlagen");
+      console.log("Upload failed:", error);
+      throw new Error("Upload fehlgeschlagen", error);
     }
 
     const { data } = this.supabase.storage

@@ -27,7 +27,8 @@
     "@types/leaflet.markercluster": "^1.5.6",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7"
+    "vite": "^7.2.7",
+    "vite-plugin-pwa": "^1.2.0"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
