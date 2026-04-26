@@ -104,6 +104,15 @@ export class TrailMap {
     this.mymap.setView(location, 9)
   }
 
+  public flyToPlace(lat: number, lon: number) {
+    this.mymap.flyTo([lat, lon], 11, { duration: 1.2 });
+  }
+
+  public initPopupZIndexHack(elements: HTMLElement[]) {
+    this.mymap.on("popupopen", () => elements.forEach(el => el.classList.add("popup-open")));
+    this.mymap.on("popupclose", () => elements.forEach(el => el.classList.remove("popup-open")));
+  }
+
   public openTrail(trailID: string) {
     const specificTrailMarker = this.markersById.get(trailID);
     console.log("open trail", trailID, specificTrailMarker)

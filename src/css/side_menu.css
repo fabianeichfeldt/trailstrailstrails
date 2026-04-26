@@ -18,6 +18,10 @@
   background: white;
 }
 
+.burger-btn.popup-open {
+  z-index: 300;
+}
+
 .burger-btn.active {
   display: none;
 }

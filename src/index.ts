@@ -11,12 +11,14 @@ import "/src/css/legend.css";
 import "/src/css/switch.css";
 import "/src/css/community.css";
 import "/src/css/side_menu.css";
+import "/src/css/search.css";
 import "/src/css/new_entry_popup.css";
 import "/src/auth/auth_modal.css";
 import {generateNews, News} from "./news/news";
 import { TrailMap } from "./map/map";
 import { Auth } from "./auth/auth";
 import {Supabase} from "./auth/supabase";
+import {initSearch} from "./search";
 
 //@ts-expect-error
 window.toggleLegend = function () {
@@ -51,6 +53,13 @@ async function init() {
 
   initBurgerBtn();
 
+  const popupOverElements = [
+    document.getElementById("burgerBtn"),
+    document.getElementById("search-toggle"),
+    document.querySelector(".search-wrapper"),
+  ].filter(Boolean) as HTMLElement[];
+  map.initPopupZIndexHack(popupOverElements);
+
   const [trails, bikeparks, dirtparks] = await Promise.all([
     getTrails(),
     getParks(),
@@ -58,6 +67,7 @@ async function init() {
   ]);
 
   map.setData(trails, bikeparks, dirtparks);
+  initSearch(trails, bikeparks, dirtparks, map);
   const location = await getInitialLocation();
   const coord = location as Coord;
   if(coord.lat !== undefined && coord.lng !== undefined) {
@@ -123,6 +133,61 @@ function initBurgerBtn() {
   drawerOverlay?.addEventListener('click', closeDrawer);
 }
 
+function initInstallBanner() {
+  const DISMISSED_KEY = "pwa-install-dismissed";
+  if (localStorage.getItem(DISMISSED_KEY)) return;
+
+  // Already running as installed PWA — don't show
+  if (window.matchMedia("(display-mode: standalone)").matches) return;
+
+  const banner = document.getElementById("install-banner")!;
+  const btn = document.getElementById("install-banner-btn")!;
+  const dismiss = document.getElementById("install-banner-dismiss")!;
+  const hint = document.getElementById("install-banner-hint")!;
+
+  function show() {
+    banner.classList.remove("hidden");
+  }
+  function hide(permanent = true) {
+    banner.classList.add("hidden");
+    if (permanent) localStorage.setItem(DISMISSED_KEY, "1");
+  }
+
+  dismiss.addEventListener("click", () => hide());
+
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  if (isIOS) {
+    // iOS has no install prompt — show manual instructions after 3 seconds
+    hint.textContent = 'Tippe auf "Teilen" → "Zum Home-Bildschirm"';
+    btn.textContent = "Verstanden";
+    btn.addEventListener("click", () => hide());
+    setTimeout(show, 3000);
+    return;
+  }
+
+  // Android / Chrome: capture the beforeinstallprompt event
+  let deferredPrompt: any = null;
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(show, 3000);
+  });
+
+  btn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hide(outcome === "accepted");
+    if (outcome !== "accepted") {
+      // User declined — don't show again for this session but don't permanently dismiss
+      localStorage.removeItem(DISMISSED_KEY);
+    }
+  });
+
+  window.addEventListener("appinstalled", () => hide());
+}
+
 function filterHandling(map: TrailMap) {
   const clusterToggle = document.getElementById("clusterToggle") as HTMLFormElement;
   const filterParks = document.querySelector('input[data-filter="bikepark"]') as HTMLFormElement;
@@ -142,3 +207,4 @@ function filterHandling(map: TrailMap) {
 }
 
 await init();
+initInstallBanner();

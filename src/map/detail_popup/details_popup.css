@@ -1,3 +1,7 @@
+.leaflet-popup-pane {
+    z-index: 1200;
+}
+
 .popup-creator {
     margin-top: 10px;
     font-size: 0.8em;

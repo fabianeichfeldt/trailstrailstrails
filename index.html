@@ -79,9 +79,17 @@
         <button id="burgerBtn" class="burger-btn" aria-label="Menü öffnen">
           <i class="fas fa-bars"></i>
         </button>
-<!--        <div>-->
-<!--          <input type="search" id="search" class="search_input" placeholder="Suche nach Strecke, Trailcenter, Bikepark oder Pumptrack">-->
-<!--        </div>-->
+        <button id="search-toggle" class="search-toggle-btn" aria-label="Suche öffnen">
+          <i class="fas fa-search"></i>
+        </button>
+        <div class="search-wrapper">
+          <div class="search-input-row">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+            <input type="search" id="search" class="search_input" placeholder="Trail, Ort oder Region suchen…" autocomplete="off">
+            <button id="search-clear" class="search-clear" aria-label="Suche löschen">&times;</button>
+          </div>
+          <div id="search-results" class="search-results"></div>
+        </div>
 
         <div id="drawerOverlay" class="drawer-overlay"></div>
 
