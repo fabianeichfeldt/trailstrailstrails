@@ -8,106 +8,12 @@
   <link rel="icon" type="image/webp" sizes="32x32" href="/src/assets/logo.webp">
   <link rel="icon" type="image/webp" sizes="192x192" href="/src/assets/logo.webp">
   <link rel="canonical" href="https://trailradar.org/about.html">
+  <link rel="stylesheet" href="/src/css/pages.css">
   <script type="module" src="/src/visit.ts"></script>
   <style>
-    :root {
-      --bg-dark: #0e0f10;
-      --bg-light: #16181a;
-      --accent: #58c27d;
-      --text-main: #ffffff;
-      --text-muted: #939393;
-    }
-    .back-link{
-      display: inline-block;
-      margin: 0 0 2em;
-      font-weight: 600;
-      color: #2b6cb0;
-      font-size: 0.9em;
-      text-decoration: none;
-    }
+    .container .lead { color: #444; }
 
-    .back-link:hover {
-      background: #005fa3;
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg-dark);
-      color: var(--text-main);
-      line-height: 1.7;
-    }
-
-    h1, h2, h3 {
-      line-height: 1.2;
-      margin-top: 0;
-    }
-
-    a { color: var(--accent); text-decoration: none; }
-
-    .hero {
-      position: relative;
-      height: 70vh;
-      background: url('/src/assets/hero-desktop.webp') center / cover no-repeat;
-      display: flex;
-      align-items: flex-end;
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.2));
-    }
-    .logo {
-      position: absolute;
-      top: 1.5rem;
-      left: 1.5rem;
-      z-index: 10;
-    }
-
-    .logo img {
-      border-radius: 16px;
-      height: 90px;
-      width: auto;
-    }
-
-    .hero-content {
-      position: relative;
-      padding: 4rem;
-      max-width: 900px;
-    }
-
-    .hero h1 {
-      font-size: clamp(2.5rem, 5vw, 4rem);
-    }
-
-    .hero p {
-      font-size: 1.1rem;
-    }
-
-    .container {
-      max-width: 1000px;
-      padding: 1em 2em 4em 2em;
-      margin: auto;
-      background: #ffffff;
-      color: #1a1a1a;
-      border-radius: 32px 32px 0 0;
-    }
-
-    .container p {
-      color: #2a2a2a;
-    }
-
-    .container .lead {
-      color: #444;
-    }
-
-    .section {
-      margin-bottom: 2em;
-    }
+    .section { margin-bottom: 2em; }
 
     .split {
       display: grid;
@@ -120,11 +26,6 @@
       width: 100%;
       border-radius: 16px;
       box-shadow: 0 20px 40px rgba(0,0,0,.4);
-    }
-
-    @media (max-width: 900px) {
-      .split { grid-template-columns: 1fr; }
-      .hero-content { padding: 2.5rem; }
     }
 
     .lead {
@@ -140,15 +41,9 @@
       color: var(--text-muted);
     }
 
-    .cta {
-      background: var(--bg-light);
-      padding: 4rem 2rem;
-      text-align: center;
+    @media (max-width: 900px) {
+      .split { grid-template-columns: 1fr; }
     }
-
-    .cta h2 { margin-bottom: 1rem; }
-
-    .cta p { color: var(--text-muted); max-width: 700px; margin: auto; }
   </style>
 </head>
 <body>

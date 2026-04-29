@@ -17,38 +17,19 @@
   <meta property="og:image:width" content="256">
   <meta property="og:image:height" content="256">
   <meta property="og:site_name" content="Trailradar.org">
-  <meta property="og:type" content="website">
   <meta property="og:updated_time" content="">
   <meta property="og:locale" content="de_DE" />
   <link itemprop="thumbnailUrl" href="/src/assets/logo.webp">
   <link rel="icon" type="image/webp" sizes="32x32" href="/src/assets/logo.webp">
   <link rel="icon" type="image/webp" sizes="192x192" href="/src/assets/logo.webp">
   <link rel="canonical" href="https://trailradar.org/faq.html">
+  <link rel="stylesheet" href="/src/css/pages.css">
   <script type="module" src="/src/visit.ts"></script>
 
   <style>
-    body {
-      font-family: system-ui, sans-serif;
-      line-height: 1.6;
-      margin: 0 auto;
-      padding: 1.5em 1.2em 4em;
-      max-width: 820px;
-      color: #1c1c1c;
-    }
-
-    h1 {
-      font-size: 1.6em;
-      margin-bottom: 0.8em;
-    }
-
-    h2,
-    h3 {
-      scroll-margin-top: 90px;
-    }
-
     .faq-nav {
       background: #f6f9fc;
-      padding: 1em;
+      padding: 1em 1.2em;
       border-radius: 12px;
       margin-bottom: 2em;
       border: 1px solid #e2e8f0;
@@ -56,7 +37,9 @@
 
     .faq-nav h2 {
       margin-top: 0;
-      color: #2b6cb0;
+      margin-bottom: 0.6em;
+      font-size: 1rem;
+      color: var(--blue);
     }
 
     .faq-nav ul {
@@ -65,174 +48,167 @@
       margin: 0;
     }
 
-    .faq-nav li {
-      margin: .4em 0;
-    }
+    .faq-nav li { margin: 0.4em 0; }
 
     .faq-nav a {
-      text-decoration: none;
-      color: #2b6cb0;
+      color: var(--blue);
       font-weight: 600;
     }
 
-    .faq-item+.faq-item {
-      margin-top: 2em;
-    }
+    .faq-item + .faq-item { margin-top: 2em; }
 
-    h3 {
-      font-size: 1.2em;
-      margin-bottom: .3em;
-      color: #2b6cb0;
-    }
-
-    a.back {
-      display: inline-block;
-      margin-top: 1em;
-      font-weight: 600;
-      color: #2b6cb0;
-      text-decoration: none;
-    }
-
-    .site-header img {
-      height: 48px;
-      width: auto;
+    .faq-item h3 {
+      font-size: 1.15em;
+      margin-bottom: 0.3em;
+      color: var(--blue);
+      scroll-margin-top: 90px;
     }
   </style>
 </head>
 
 <body>
-  <header class="site-header">
-    <a href="/" class="logo-link"><img src="/src/assets/logo.webp" alt="Trailradar Logo"></a>
-  </header>
 
-  <main>
-    <h1>FAQ – Häufige Fragen zu MTB-Trails & Trailradar</h1>
-    <a class="back" href="/">← zurück zur Karte</a>
-    <p class="intro">Hier findest du Antworten auf die häufigsten Fragen rund um offiziell gebaute MTB-Trails, das
-      Trailradar-Projekt und hilfreiche Tipps für deine nächste Tour.</p>
+<section class="hero">
+  <a href="/" class="logo">
+    <img src="/src/assets/logo.webp" alt="Trailradar Logo">
+  </a>
+  <div class="hero-content">
+    <h1>FAQ – Häufige Fragen</h1>
+    <p>Zu offiziell gebauten MTB-Trails, dem Trailradar-Projekt und Tipps für deine nächste Tour.</p>
+  </div>
+</section>
 
-    <nav class="faq-nav">
-      <h2>Direkt zu deiner Frage</h2>
-      <ul>
-        <li><a href="#off-map">🔹 Darf ich Trails fahren, die nicht in dieser Karte stehen?</a></li>
-        <li><a href="#official">🔹 Was macht einen Trail offiziell?</a></li>
-        <li><a href="#missing">🔹 Warum fehlen manche Bikeparks/Trails?</a></li>
-        <li><a href="#submit">🔹 Kann ich selbst Trails melden?</a></li>
-        <li><a href="#packing-tour">🔹 Was sollte ich auf eine MTB-Tour mitnehmen?</a></li>
-        <li><a href="#packing-park">🔹 Was sollte ich beim Bikeparkbesuch mitnehmen?</a></li>
-      </ul>
-    </nav>
-  </main>
+<main class="container">
+  <a class="back-link" href="/">← zurück zur Karte</a>
 
-  <section class="faq">
-    <div class="faq-item" id="off-map">
-      <h3>Darf ich Trails fahren, die nicht in dieser Karte stehen?</h3>
-      <p>Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern
-        oder Kommunen über geltende Regelungen, insbesondere in Schutzgebieten.</p>
-    </div>
+  <nav class="faq-nav">
+    <h2>Direkt zu deiner Frage</h2>
+    <ul>
+      <li><a href="#off-map">🔹 Darf ich Trails fahren, die nicht in dieser Karte stehen?</a></li>
+      <li><a href="#official">🔹 Was macht einen Trail offiziell?</a></li>
+      <li><a href="#missing">🔹 Warum fehlen manche Bikeparks/Trails?</a></li>
+      <li><a href="#submit">🔹 Kann ich selbst Trails melden?</a></li>
+      <li><a href="#packing-tour">🔹 Was sollte ich auf eine MTB-Tour mitnehmen?</a></li>
+      <li><a href="#packing-park">🔹 Was sollte ich beim Bikeparkbesuch mitnehmen?</a></li>
+    </ul>
+  </nav>
 
-    <div class="faq-item" id="official">
-      <h3>Was macht einen Trail offiziell?</h3>
-      <p>Ein offizieller Trail wurde in enger Abstimmung mit Behörden geplant, genehmigt und gebaut. Zudem wird er von
-        einer zuständigen Organisation wie einem Verein, Betreiber oder einer Kommune gepflegt.</p>
-    </div>
+  <div class="faq-item" id="off-map">
+    <h3>Darf ich Trails fahren, die nicht in dieser Karte stehen?</h3>
+    <p>Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern
+      oder Kommunen über geltende Regelungen, insbesondere in Schutzgebieten.</p>
+  </div>
 
-    <div class="faq-item" id="missing">
-      <h3>Warum finde ich hier nicht alle offiziellen Bikeparks oder Trails?</h3>
-      <p>Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir! Wenn du einen
-        offiziell gebauten Trail kennst, trag ihn direkt auf der Karte ein oder kontaktiere uns.</p>
-    </div>
+  <div class="faq-item" id="official">
+    <h3>Was macht einen Trail offiziell?</h3>
+    <p>Ein offizieller Trail wurde in enger Abstimmung mit Behörden geplant, genehmigt und gebaut. Zudem wird er von
+      einer zuständigen Organisation wie einem Verein, Betreiber oder einer Kommune gepflegt.</p>
+  </div>
 
-    <div class="faq-item" id="submit">
-      <h3>Kann ich selbst Trails melden?</h3>
-      <p>Ja! Trage den Trail direkt in die Karte ein oder melde dich via Instagram (<a
-          href="https://www.instagram.com/trailradar.germany/" target="_blank">@trailradar.germany</a>) oder per Mail an
-        <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
-    </div>
+  <div class="faq-item" id="missing">
+    <h3>Warum finde ich hier nicht alle offiziellen Bikeparks oder Trails?</h3>
+    <p>Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir! Wenn du einen
+      offiziell gebauten Trail kennst, trag ihn direkt auf der Karte ein oder kontaktiere uns.</p>
+  </div>
 
-    <div class="faq-item" id="packing-tour">
-      <h3>Was sollte ich auf eine MTB-Tour mitnehmen?</h3>
-      <p>Für eine sichere und entspannte Tour ist eine gute Vorbereitung wichtig - du solltest immer eine sinnvolle Grundausrüstung dabeihaben. Dazu gehören
-        ein <strong>Multitool</strong> für kleine Reparaturen, eine <strong>Wasserflasche</strong> oder Trinkblase,
-        sowie eine <strong>Mini-Pumpe</strong> für den Fall der Fälle. Wenn du tubeless fährst, sind <strong>Tire
-        Plugs</strong> sinnvoll – ansonsten empfiehlt sich ein <strong>Ersatzschlauch</strong>. Je nach Tourlänge
-        lohnt es sich außerdem, <strong>Energieriegel, Banane oder andere Snacks</strong> mitzunehmen, um deine
-        Kraftreserven rechtzeitig aufzufüllen. Etwas Bargeld sowie ein aufgeladenes Handy für Notfälle ist ebenfalls empfehlenswert. Schutzausrüstung wie Helm 
-        und ggf. Protektoren sollten selbstverständlich auch nicht fehlen.</p>
-    </div>
-    <div class="faq-item" id="packing-park">
-      <h3>Was sollte ich beim Bikeparkbesuch mitnehmen?</h3>
-      <p> Bei einem <strong>Bikepark-Besuch</strong> wird dein Material deutlich stärker belastet als auf einer normalen
-        Trailrunde, dies sollte sich in der Vorbereitung widerspiegeln. Durch hohes Tempo, Sprünge und harte Bremsmanöver können kleinere Defekte schnell auftreten – besonders
-        ärgerlich, wenn der Tag dadurch vorzeitig endet. Deshalb lohnt es sich, für einen Bikepark-Tag eine etwas
-        umfangreichere Ausrüstung einzupacken, vor allem bei <strong>längeren Aufenthalten oder Wochenendtrips</strong>. </p>
-      <p> Zu den wichtigsten Dingen gehören: <strong>Pumpe</strong>, <strong>Multitool bzw. Inbus-Set</strong>,
-        <strong>Dichtmilch</strong>, <strong>Ersatzschlauch</strong>, <strong>Tire Plugs</strong> für Tubeless-Reparaturen,
-        <strong>Ersatzreifen</strong> sowie <strong>Ersatzbremsbeläge</strong>. Ein <strong>Bowdenzug</strong> und – je nach
-        Bremssystem – sogar ein kleines <strong>Entlüftungskit</strong> können im Ernstfall den Tag retten. </p>
-      <p> Für die eigene Sicherheit gehören im Bikepark außerdem ein <strong>Fullface-Helm</strong>,
-        <strong>Knieprotektoren</strong>, ggf. <strong>Ellbogenprotektoren</strong> sowie ein <strong>Rücken- und
-          Brustprotektor</strong> zur empfohlenen Schutzausrüstung. Damit bist du optimal vorbereitet, um den Tag im Bikepark
-        sicher und ohne größere Ausfälle zu genießen. </p>
-    </div>
-  </section>
+  <div class="faq-item" id="submit">
+    <h3>Kann ich selbst Trails melden?</h3>
+    <p>Ja! Trage den Trail direkt in die Karte ein oder melde dich via Instagram (<a
+        href="https://www.instagram.com/trailradar.germany/" target="_blank">@trailradar.germany</a>) oder per Mail an
+      <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
+  </div>
 
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Darf ich Trails fahren, die nicht in dieser Karte stehen?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern oder Kommunen über geltende Regelungen."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Was macht einen Trail offiziell?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Ein offizieller Trail wurde behördlich geplant, genehmigt und gebaut und wird von einer zuständigen Organisation gepflegt."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Warum fehlen manche Bikeparks oder Trails?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir!"
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Kann ich selbst Trails melden?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Ja. Trails können auf der Karte eingetragen oder über Instagram bzw. E-Mail gemeldet werden."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Was muss ich auf eine MTB-Tour mitnehmen?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Empfohlen werden Multitool, Wasserflasche oder Trinkblase, Mini-Pumpe, Tire Plugs oder Ersatzschlauch sowie energiereiche Snacks."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Was muss ich auf einen Bikepark-Trip mitnehmen?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Empfohlen werden Pumpe, Multitool, Dichtmilch, Ersatzschlauch, Tire Plugs, Ersatzreifen, Ersatzbremsbeläge sowie Schutzausrüstung wie Fullface-Helm und Protektoren."
-        }
+  <div class="faq-item" id="packing-tour">
+    <h3>Was sollte ich auf eine MTB-Tour mitnehmen?</h3>
+    <p>Für eine sichere und entspannte Tour ist eine gute Vorbereitung wichtig – du solltest immer eine sinnvolle
+      Grundausrüstung dabeihaben. Dazu gehören ein <strong>Multitool</strong> für kleine Reparaturen, eine
+      <strong>Wasserflasche</strong> oder Trinkblase, sowie eine <strong>Mini-Pumpe</strong> für den Fall der Fälle.
+      Wenn du tubeless fährst, sind <strong>Tire Plugs</strong> sinnvoll – ansonsten empfiehlt sich ein
+      <strong>Ersatzschlauch</strong>. Je nach Tourlänge lohnt es sich außerdem, <strong>Energieriegel, Banane oder
+      andere Snacks</strong> mitzunehmen. Etwas Bargeld sowie ein aufgeladenes Handy für Notfälle ist ebenfalls
+      empfehlenswert. Schutzausrüstung wie Helm und ggf. Protektoren sollten selbstverständlich auch nicht fehlen.</p>
+  </div>
+
+  <div class="faq-item" id="packing-park">
+    <h3>Was sollte ich beim Bikeparkbesuch mitnehmen?</h3>
+    <p>Bei einem <strong>Bikepark-Besuch</strong> wird dein Material deutlich stärker belastet als auf einer normalen
+      Trailrunde. Durch hohes Tempo, Sprünge und harte Bremsmanöver können kleinere Defekte schnell auftreten –
+      besonders ärgerlich, wenn der Tag dadurch vorzeitig endet. Deshalb lohnt es sich, eine etwas umfangreichere
+      Ausrüstung einzupacken, vor allem bei <strong>längeren Aufenthalten oder Wochenendtrips</strong>.</p>
+    <p>Zu den wichtigsten Dingen gehören: <strong>Pumpe</strong>, <strong>Multitool bzw. Inbus-Set</strong>,
+      <strong>Dichtmilch</strong>, <strong>Ersatzschlauch</strong>, <strong>Tire Plugs</strong>,
+      <strong>Ersatzreifen</strong> sowie <strong>Ersatzbremsbeläge</strong>. Ein <strong>Bowdenzug</strong> und – je
+      nach Bremssystem – sogar ein kleines <strong>Entlüftungskit</strong> können im Ernstfall den Tag retten.</p>
+    <p>Zur empfohlenen Schutzausrüstung gehören ein <strong>Fullface-Helm</strong>,
+      <strong>Knieprotektoren</strong>, ggf. <strong>Ellbogenprotektoren</strong> sowie ein <strong>Rücken- und
+      Brustprotektor</strong>.</p>
+  </div>
+</main>
+
+<footer class="cta">
+  <h2>Trailradar lebt von euch</h2>
+  <p>Wenn ein Trail fehlt, sich etwas geändert hat oder dir ein Fehler auffällt – melde dich. Trailradar wächst
+    mit der Community, nicht neben ihr.</p>
+  <p style="margin-top:2rem;">In diesem Sinne: <strong>Happy Trails.</strong></p>
+</footer>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Darf ich Trails fahren, die nicht in dieser Karte stehen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja, in vielen Regionen ist das möglich. Bitte informiere dich jedoch immer bei lokalen Behörden, Forstämtern oder Kommunen über geltende Regelungen."
       }
-    ]
-  }
-  </script>
+    },
+    {
+      "@type": "Question",
+      "name": "Was macht einen Trail offiziell?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ein offizieller Trail wurde behördlich geplant, genehmigt und gebaut und wird von einer zuständigen Organisation gepflegt."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Warum fehlen manche Bikeparks oder Trails?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt – gerne auch von dir!"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Kann ich selbst Trails melden?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Ja. Trails können auf der Karte eingetragen oder über Instagram bzw. E-Mail gemeldet werden."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Was muss ich auf eine MTB-Tour mitnehmen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Empfohlen werden Multitool, Wasserflasche oder Trinkblase, Mini-Pumpe, Tire Plugs oder Ersatzschlauch sowie energiereiche Snacks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Was muss ich auf einen Bikepark-Trip mitnehmen?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Empfohlen werden Pumpe, Multitool, Dichtmilch, Ersatzschlauch, Tire Plugs, Ersatzreifen, Ersatzbremsbeläge sowie Schutzausrüstung wie Fullface-Helm und Protektoren."
+      }
+    }
+  ]
+}
+</script>
+
 </body>
 
 </html>
