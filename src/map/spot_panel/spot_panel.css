@@ -23,16 +23,22 @@
   pointer-events: all;
 }
 
-/* ── Drag handle (mobile) ─────────────────────────────────── */
+/* ── Drag handle (mobile & desktop) ───────────────────────── */
 .spot-panel-handle {
   width: 40px;
-  height: 4px;
+  height: 6px;
   background: #d0d5dd;
-  border-radius: 2px;
+  border-radius: 3px;
   margin: 10px auto 2px;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
+  transition: background 0.15s, height 0.15s;
+}
+.spot-panel-handle:active {
+  cursor: grabbing;
+  background: #2b6cb0;
+  height: 8px;
 }
 
 /* ── Header ───────────────────────────────────────────────── */
@@ -400,5 +406,25 @@
   .spot-panel.open {
     transform: translateX(0);
   }
-  .spot-panel-handle { display: none; }
+  .spot-panel-handle {
+    display: block;
+    position: fixed;
+    left: auto;
+    right: auto;
+    top: 12px;
+    bottom: 12px;
+    width: 8px;
+    height: auto;
+    background: transparent;
+    margin: 0;
+    border-radius: 0;
+    cursor: col-resize;
+    transition: none;
+    touch-action: none;
+    pointer-events: all;
+    z-index: 1501;
+  }
+  .spot-panel-handle:active {
+    background: #2b6cb0;
+  }
 }

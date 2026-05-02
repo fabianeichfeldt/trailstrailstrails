@@ -160,24 +160,94 @@ export class SpotPanel {
 
   private initDragHandle() {
     const handle = this.panel.querySelector('.spot-panel-handle') as HTMLElement;
-    let startY = 0;
-    let startH = 0;
+    let isResizing = false;
+    let startPos = 0;
+    let startSize = 0;
+    let isHorizontal = false; // true = resize width (desktop right), false = resize height (mobile bottom)
 
-    handle.addEventListener('touchstart', e => {
-      startY = e.touches[0].clientY;
-      startH = this.panel.getBoundingClientRect().height;
+    const isDesktopMode = () => window.innerWidth >= 768;
+
+    const updateHandlePosition = () => {
+      if (isDesktopMode()) {
+        const rect = this.panel.getBoundingClientRect();
+        const handleLeft = rect.left - 4;
+        handle.style.left = handleLeft + 'px';
+        handle.style.display = 'block';
+      } else {
+        handle.style.display = '';
+        handle.style.left = '';
+      }
+    };
+
+    const startResize = (clientX: number, clientY: number) => {
+      isResizing = true;
+      isHorizontal = isDesktopMode();
+
+      if (isHorizontal) {
+        startPos = clientX;
+        startSize = this.panel.getBoundingClientRect().width;
+      } else {
+        startPos = clientY;
+        startSize = this.panel.getBoundingClientRect().height;
+      }
+
       this.panel.style.transition = 'none';
-    }, { passive: true });
+      this.panel.style.userSelect = 'none';
+    };
 
-    handle.addEventListener('touchmove', e => {
-      const dy = startY - e.touches[0].clientY;
-      const h = Math.max(200, Math.min(window.innerHeight * 0.85, startH + dy));
-      this.panel.style.height = h + 'px';
-    }, { passive: true });
+    const doResize = (clientX: number, clientY: number) => {
+      if (!isResizing) return;
 
-    handle.addEventListener('touchend', () => {
+      if (isHorizontal) {
+        // Resize width (desktop, panel on right)
+        const dx = clientX - startPos;
+        const w = Math.max(280, Math.min(window.innerWidth * 0.6, startSize - dx));
+        this.panel.style.width = w + 'px';
+        updateHandlePosition();
+      } else {
+        // Resize height (mobile, panel on bottom)
+        const dy = startPos - clientY;
+        const h = Math.max(200, Math.min(window.innerHeight * 0.85, startSize + dy));
+        this.panel.style.height = h + 'px';
+      }
+    };
+
+    const stopResize = () => {
+      if (!isResizing) return;
+      isResizing = false;
       this.panel.style.transition = '';
+      this.panel.style.userSelect = '';
+    };
+
+    // Touch events
+    handle.addEventListener('touchstart', e => {
+      startResize(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    document.addEventListener('touchmove', e => {
+      if (isResizing && e.touches.length > 0) {
+        doResize(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', stopResize, { passive: true });
+
+    // Mouse events (for desktop)
+    handle.addEventListener('mousedown', e => {
+      startResize(e.clientX, e.clientY);
     });
+
+    document.addEventListener('mousemove', e => {
+      if (isResizing) {
+        doResize(e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener('mouseup', stopResize);
+
+    // Update handle position on window resize and initial load
+    updateHandlePosition();
+    window.addEventListener('resize', updateHandlePosition);
   }
 
   // ── Tabs & rendering ───────────────────────────────────────────────────────
