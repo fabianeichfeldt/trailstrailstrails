@@ -2,7 +2,7 @@ import L from 'leaflet';
 import '@fortawesome/fontawesome-free/css/all.css';
 import './spot_panel.css';
 import { ElevationPoint, ImbaColor, MtbTour, MtbTrail, SpotMtbData, TourSegment, TrailDirection } from '../../types/MtbTypes';
-import { SingleTrail } from '../../types/Trail';
+import { SingleTrail, Trail, isBikePark, isDirtPark } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
 import { getTrailDetails, getSpotGpxData } from '../../communication/trails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
@@ -41,7 +41,7 @@ export class SpotPanel {
   private hoverMarker: L.CircleMarker | null = null;
   private activeId: string | null = null;
   private data: SpotMtbData | null = null;
-  private currentTrail: SingleTrail | null = null;
+  private currentItem: Trail | null = null;
   private infoLoaded = false;
   private onClose: () => void;
   private auth: Auth;
@@ -55,17 +55,21 @@ export class SpotPanel {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  public open(trail: SingleTrail, fallbackData: SpotMtbData) {
-    this.currentTrail = trail;
+  public open(item: Trail, fallbackData: SpotMtbData | null = null) {
+    this.currentItem = item;
     this.infoLoaded = false;
     this.activeId = null;
-    this.panel.querySelector('.spot-panel-title')!.textContent = trail.name;
+    this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
     this.closeElevation();
     this.panel.classList.add('open');
+    this.updateTabsVisibility();
     this.activateTab('info');
 
-    // Fetch real GPX data from Supabase, fall back to mock data
-    this.loadSpotData(trail.id, fallbackData);
+    // For trails, fetch real GPX data from Supabase, fall back to mock data
+    // For bikeparks/dirtparks, skip the trails/tours tabs
+    if (fallbackData) {
+      this.loadSpotData(item.id, fallbackData);
+    }
   }
 
   private async loadSpotData(spotId: string, fallbackData: SpotMtbData) {
@@ -89,7 +93,7 @@ export class SpotPanel {
     this.polylineMap.clear();
     this.activeId = null;
     this.data = null;
-    this.currentTrail = null;
+    this.currentItem = null;
     this.infoLoaded = false;
     this.closeElevation();
     this.onClose();
@@ -187,18 +191,32 @@ export class SpotPanel {
     if (tab === 'info' && !this.infoLoaded) this.loadInfo();
   }
 
+  private updateTabsVisibility() {
+    const isTrail = this.currentItem && this.currentItem.type === 'trail';
+    const toursTab = this.panel.querySelector('[data-tab="tours"]') as HTMLElement;
+    const trailsTab = this.panel.querySelector('[data-tab="trails"]') as HTMLElement;
+
+    if (isTrail) {
+      toursTab.style.display = 'block';
+      trailsTab.style.display = 'block';
+    } else {
+      toursTab.style.display = 'none';
+      trailsTab.style.display = 'none';
+    }
+  }
+
   private async loadInfo() {
-    if (!this.currentTrail) return;
-    const trail = this.currentTrail;
+    if (!this.currentItem) return;
+    const item = this.currentItem;
     const container = this.panel.querySelector('#spot-info-tab')!;
     try {
-      const details = await getTrailDetails(trail);
-      const html = await renderTrailDetails(trail, details, this.auth);
+      const details = await getTrailDetails(item);
+      const html = await renderTrailDetails(item, details, this.auth);
       container.innerHTML = `<div class="spot-info-content">${html}</div>`;
       const content = container.querySelector('.spot-info-content') as HTMLElement;
       await bindPopupEvents(content, this.auth, async () => {
-        const freshDetails = await getTrailDetails(trail);
-        content.innerHTML = await renderTrailDetails(trail, freshDetails, this.auth);
+        const freshDetails = await getTrailDetails(item);
+        content.innerHTML = await renderTrailDetails(item, freshDetails, this.auth);
         startPhotoCarousel(content);
         bindPhotoLightbox(content);
         setupYT2Click(content);
