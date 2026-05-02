@@ -1,4 +1,5 @@
 import L from 'leaflet';
+import '@fortawesome/fontawesome-free/css/all.css';
 import './spot_panel.css';
 import { ElevationPoint, ImbaColor, MtbTour, MtbTrail, SpotMtbData, TourSegment, TrailDirection } from '../../types/MtbTypes';
 import { SingleTrail } from '../../types/Trail';
@@ -123,7 +124,7 @@ export class SpotPanel {
         <div class="spot-elevation-header">
           <span class="spot-elevation-name"></span>
           <div class="spot-elevation-actions">
-            <a class="spot-elevation-download hidden" download aria-label="GPX herunterladen">📥</a>
+            <a class="spot-elevation-download hidden" download aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>
             <button class="spot-elevation-close" aria-label="Höhenprofil schließen">✕</button>
           </div>
         </div>
@@ -240,7 +241,7 @@ export class SpotPanel {
           <div class="spot-item-info">
             <div class="spot-item-name">
               <strong>${t.name}</strong>
-              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen">📥</a>` : ''}
+              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>` : ''}
             </div>
             <span class="spot-item-sub">${t.trailCount} Trails · ${t.duration_minutes} min</span>
           </div>
@@ -265,7 +266,7 @@ export class SpotPanel {
           <div class="spot-item-info">
             <div class="spot-item-name">
               <strong>${t.name}</strong>
-              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen">📥</a>` : ''}
+              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>` : ''}
             </div>
             <span class="spot-item-sub">${IMBA[t.difficulty].label}</span>
           </div>
