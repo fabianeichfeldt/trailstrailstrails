@@ -279,6 +279,15 @@ export class SpotPanel {
     if (!this.currentItem) return;
     const item = this.currentItem;
     const container = this.panel.querySelector('#spot-info-tab')!;
+
+    // Show loading spinner
+    container.innerHTML = `
+      <div class="spot-info-loading">
+        <div class="loading-spinner"></div>
+        <p>Lade Details …</p>
+      </div>
+    `;
+
     try {
       const details = await getTrailDetails(item);
       const html = await renderTrailDetails(item, details, this.auth);
