@@ -1,0 +1,395 @@
+/* ── Panel shell ──────────────────────────────────────────── */
+.spot-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1500;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 28px rgba(0, 0, 0, 0.22);
+  transform: translateY(102%);
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  height: 56vh;
+  min-height: 320px;
+  max-height: 72vh;
+  pointer-events: none; /* prevent map clicks bleeding through when closed */
+}
+
+.spot-panel.open {
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+/* ── Drag handle (mobile) ─────────────────────────────────── */
+.spot-panel-handle {
+  width: 40px;
+  height: 4px;
+  background: #d0d5dd;
+  border-radius: 2px;
+  margin: 10px auto 2px;
+  flex-shrink: 0;
+  cursor: grab;
+  touch-action: none;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.spot-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px 6px;
+  flex-shrink: 0;
+}
+
+.spot-panel-title {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1a1a2e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spot-panel-close {
+  background: none;
+  border: none;
+  font-size: 17px;
+  cursor: pointer;
+  color: #666;
+  padding: 4px 6px;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background 0.15s;
+}
+.spot-panel-close:hover { background: #f0f0f0; }
+
+/* ── Tabs ─────────────────────────────────────────────────── */
+.spot-panel-tabs {
+  display: flex;
+  padding: 0 14px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.spot-tab {
+  background: none;
+  border: none;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: #888;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  font-weight: 500;
+  transition: color 0.15s, border-color 0.15s;
+}
+.spot-tab.active {
+  color: #2b6cb0;
+  border-bottom-color: #2b6cb0;
+}
+
+/* ── Item list ────────────────────────────────────────────── */
+.spot-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.spot-tab-content.hidden { display: none; }
+
+.spot-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f2f2f2;
+  cursor: pointer;
+  transition: background 0.13s;
+  gap: 10px;
+  user-select: none;
+}
+.spot-item:last-child { border-bottom: none; }
+.spot-item:hover  { background: #f7f9fc; }
+.spot-item.active { background: #e8f0fe; }
+
+.spot-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.imba-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+/* Tour difficulty dots — multiple dots stacked horizontally */
+.imba-dots {
+  display: flex;
+  gap: 3px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.spot-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.spot-item-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.spot-item-info strong {
+  font-size: 13px;
+  color: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.spot-item-dl {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.spot-item-dl:hover {
+  opacity: 1;
+}
+.spot-item-sub {
+  font-size: 11px;
+  color: #999;
+  margin-top: 1px;
+}
+
+.spot-item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.spot-item-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  color: #555;
+}
+.spot-item-stats span { white-space: nowrap; }
+
+.direction-tag {
+  font-size: 10px;
+  color: #2b6cb0;
+  font-weight: 600;
+}
+
+.spot-item-arrow {
+  font-size: 16px;
+  color: #ccc;
+  line-height: 1;
+}
+
+.spot-empty {
+  padding: 28px 16px;
+  color: #aaa;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ── Elevation profile ────────────────────────────────────── */
+.spot-elevation-panel {
+  border-top: 1px solid #eee;
+  padding: 10px 14px 12px;
+  background: #fafafa;
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.spot-elevation-panel.hidden { display: none; }
+
+.spot-elevation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.spot-elevation-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.spot-elevation-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.spot-elevation-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 2px 4px;
+  color: #666;
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.spot-elevation-download:hover {
+  opacity: 1;
+}
+.spot-elevation-download.hidden {
+  display: none;
+}
+.spot-elevation-close {
+  background: none;
+  border: none;
+  font-size: 13px;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+
+.spot-elevation-chart {
+  width: 100%;
+  display: block;
+}
+
+.spot-elevation-stats {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: #555;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+.spot-elevation-stats span { white-space: nowrap; }
+
+/* ── Info tab ─────────────────────────────────────────────── */
+.spot-info-loading,
+.spot-info-error {
+  padding: 20px 16px;
+  font-size: 14px;
+  color: #999;
+  text-align: center;
+}
+
+/* Reset the em cascade that was designed for .leaflet-popup-content (1.2em base).
+   Inside the panel we want absolute sizes so nothing compounds to tiny. */
+.spot-info-content {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.spot-info-content .popup-header {
+  padding: 10px 14px 6px;
+  font-size: 15px;
+  font-weight: 700;
+}
+.spot-info-content .popup-header a {
+  font-size: 15px;
+}
+.spot-info-content .popup-section {
+  padding: 6px 14px;
+}
+.spot-info-content .popup-section p {
+  font-size: 13px;
+  line-height: 1.5;
+}
+.spot-info-content .popup-section h4 {
+  font-size: 13px;
+  line-height: 1.4;
+}
+.spot-info-content .popup-instagram a {
+  font-size: 13px;
+}
+.spot-info-content .popup-creator {
+  font-size: 12px;
+  padding: 4px 14px 8px;
+}
+.spot-info-content .popup-feedback {
+  padding: 8px 14px;
+  font-size: 13px;
+}
+.spot-info-content .popup-feedback-date {
+  padding: 2px 14px 10px;
+  margin: 0;
+  font-size: 11px;
+}
+
+/* ── Tour segment labels on map ───────────────────────────── */
+.seg-label {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+  pointer-events: none;
+  transform: translateX(-50%);
+  display: inline-block;
+}
+
+/* ── Map polylines ────────────────────────────────────────── */
+.trail-arrow-icon {
+  background: none !important;
+  border: none !important;
+}
+
+/* Static chevron dashes for directed trails */
+.trail-line-directed {
+  stroke-dasharray: 8 8;
+}
+.trail-line-reversed {
+  stroke-dasharray: 8 8;
+}
+
+/* ── Desktop: right-side panel ────────────────────────────── */
+@media (min-width: 768px) {
+  .spot-panel {
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    left: auto;
+    width: 320px;
+    height: auto;
+    max-height: none;
+    min-height: 0;
+    border-radius: 12px;
+    transform: translateX(calc(100% + 20px));
+    box-shadow: -3px 0 24px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0,0,0,0.06);
+  }
+  .spot-panel.open {
+    transform: translateX(0);
+  }
+  .spot-panel-handle { display: none; }
+}

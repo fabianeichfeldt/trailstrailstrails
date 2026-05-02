@@ -1,0 +1,42 @@
+{
+  "trails": {
+    "2023-10-11_1345722964_Heidenbergtrails - Enduro Fit - blau_rot_mittel - IGH - sponsored bei HUMPENÖDER.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2023-10-11_1345727890_Heidenbergtrails - Sendertrail - blau_rot - IGH - sponsored by SPORTZENTRUM KNAUBER.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2023-10-11_1345731389_Heidenbergtrails - Hobbit - blau_rot - IGH - sponsored by TREK.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2023-10-11_1345735451_Heidenbergtrails - Naturtrail - rot - IGH - sponsored by ORTLIEB.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2023-10-11_1345737774_Heidenbergtrails - Milky Way - grün_blau - IGH - sponsored by VELOVITA.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2023-10-11_1345740981_Heidenbergtrails - Cäsartrail - rot_schwarz - IGH - sponsored by RADOXX.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    },
+    "2024-07-04_1345745192_Heidenbergtrails - BMC - Schwarz_Schwer - IGH - sponsored by ENDURO ONE.gpx": {
+      "difficulty": "blue",
+      "direction": "one-way-down"
+    }
+  },
+  "tours": {
+    "2024-07-04_1340684014_Heidenbergtrails - BIG7 Ungerthal - rot_schwarz - IGH.gpx": {
+      "direction": "cw",
+      "trail_names": []
+    },
+    "2024-07-04_1497933557_Easy Peasy - Die Einsteigerrunde zum Schnuppern.gpx": {
+      "direction": "cw",
+      "trail_names": []
+    }
+  }
+}

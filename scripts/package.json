@@ -9,7 +9,10 @@
     "add-trail-details": "node --env-file=.env add-trail-details.js",
     "add-dirtpark-details": "node --env-file=.env add-dirtpark-details.js",
     "add-bikepark-details": "node --env-file=.env add-bikepark-details.js",
-    "add-parks": "node --env-file=.env add-parks.js"
+    "add-parks": "node --env-file=.env add-parks.js",
+    "preprocess-gpx": "node preprocess-gpx.js",
+    "push-gpx": "node --env-file=.env push-gpx.js",
+    "push-gpx-dry": "DRY_RUN=1 node push-gpx.js"
   },
   "author": "",
   "license": "ISC",

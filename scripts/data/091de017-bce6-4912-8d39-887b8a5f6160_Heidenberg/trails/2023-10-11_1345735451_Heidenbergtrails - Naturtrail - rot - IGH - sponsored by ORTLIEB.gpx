@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<gpx version="1.1" creator="https://www.komoot.de" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Heidenbergtrails - Naturtrail - rot - IGH - sponsored by ORTLIEB</name>
+    <author>
+      <link href="https://www.komoot.de">
+        <text>komoot</text>
+        <type>text/html</type>
+      </link>
+    </author>
+  </metadata>
+  <trk>
+    <name>Heidenbergtrails - Naturtrail - rot - IGH - sponsored by ORTLIEB</name>
+    <trkseg>
+      <trkpt lat="49.282669" lon="11.013009">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:15.059Z</time>
+      </trkpt>
+      <trkpt lat="49.282811" lon="11.012939">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:17.736Z</time>
+      </trkpt>
+      <trkpt lat="49.282907" lon="11.012831">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:19.851Z</time>
+      </trkpt>
+      <trkpt lat="49.283042" lon="11.012856">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:22.246Z</time>
+      </trkpt>
+      <trkpt lat="49.283115" lon="11.012585">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:25.539Z</time>
+      </trkpt>
+      <trkpt lat="49.283207" lon="11.012420">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:27.956Z</time>
+      </trkpt>
+      <trkpt lat="49.283346" lon="11.012225">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:31.161Z</time>
+      </trkpt>
+      <trkpt lat="49.283504" lon="11.012104">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:34.138Z</time>
+      </trkpt>
+      <trkpt lat="49.283684" lon="11.012380">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:38.436Z</time>
+      </trkpt>
+      <trkpt lat="49.283830" lon="11.012278">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:41.126Z</time>
+      </trkpt>
+      <trkpt lat="49.283913" lon="11.012344">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:42.708Z</time>
+      </trkpt>
+      <trkpt lat="49.284063" lon="11.011962">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:47.623Z</time>
+      </trkpt>
+      <trkpt lat="49.284292" lon="11.012199">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:52.358Z</time>
+      </trkpt>
+      <trkpt lat="49.284300" lon="11.012759">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:49:58.761Z</time>
+      </trkpt>
+      <trkpt lat="49.284343" lon="11.012887">
+        <ele>440.942326</ele>
+        <time>2023-10-11T21:50:00.420Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

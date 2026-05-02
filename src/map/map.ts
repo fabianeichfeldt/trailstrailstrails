@@ -10,7 +10,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../types/Trail";
+import {anyTrailType, BikePark, DirtPark, isAnyTrailType, isTrail, SingleTrail} from "../types/Trail";
 import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails";
 import {openCreateTrailPopup} from "./create_trail/popup";
 import {createCustomIcon, getTrailDetails} from "../communication/trails";
@@ -21,12 +21,15 @@ import {TrailFilter} from "./trailFilter";
 import {IAuthService} from "../auth/auth_service";
 import {Auth} from "../auth/auth";
 import {setupYT2Click} from "./detail_popup/yt";
+import {SpotPanel} from "./spot_panel/spotPanel";
+import {getMockSpotData} from "../mock/mockSpotData";
 
 const popupSizing = { minWidth: "95vw", maxWidth: "450px" }
 
 export class TrailMap {
   private clusterGroup!: L.MarkerClusterGroup;
   private markerGroup!: L.LayerGroup;
+  private spotPanel!: SpotPanel;
   private addMode: anyTrailType | undefined;
 
   private trails: SingleTrail[] = [];
@@ -97,6 +100,10 @@ export class TrailMap {
     this.markerGroup = new L.LayerGroup();
     this.mymap.addLayer(this.clusterGroup);
 
+    this.spotPanel = new SpotPanel(this.mymap, auth, () => {
+      document.getElementById("top-map-buttons")!.style.display = "block";
+    });
+
     this.initAddButton(auth.authService);
   }
 
@@ -160,38 +167,47 @@ export class TrailMap {
     for (const trail of trails) {
       const marker = L.marker([trail.latitude, trail.longitude], {
         icon: createCustomIcon(trail),
-      })
-        .addTo(cluster)
-        //@ts-expect-error
-        .bindPopup(getTrailPopup(trail), popupSizing);
+      }).addTo(cluster);
 
       this.markersById.set(trail.id, marker);
-      marker.on("popupclose", () => document.getElementById("top-map-buttons")!.style.display = "block");
-      marker.on("popupopen", async (e) => {
-        document.getElementById("top-map-buttons")!.style.display = "none";
-        const popup = e.popup.getElement();
-        if(!popup)
-          return;
-        try {
-          const details = await getTrailDetails(trail);
-          const detailsHTML = await renderTrailDetails(trail, details, this.auth);
-          const container = popup.querySelector('.popup-section.loading');
-          if (container) {
-            container.outerHTML = detailsHTML;
-            await bindPopupEvents(popup, this.auth, async () => {
-              const container = popup.querySelector('.popup-content');
-              if (container)
-                container.innerHTML = await renderTrailDetails(trail, await getTrailDetails(trail), this.auth);
-            });
-            startPhotoCarousel(popup);
-            setupYT2Click(popup);
+
+      if (isTrail(trail)) {
+        // SingleTrail → open spot panel with mock tour/trail data
+        marker.on("click", () => {
+          document.getElementById("top-map-buttons")!.style.display = "none";
+          const mockData = getMockSpotData(trail.id, trail.latitude, trail.longitude);
+          this.spotPanel.open(trail, mockData);
+        });
+      } else {
+        // BikePark / DirtPark → keep existing popup behaviour
+        //@ts-expect-error
+        marker.bindPopup(getTrailPopup(trail), popupSizing);
+        marker.on("popupclose", () => document.getElementById("top-map-buttons")!.style.display = "block");
+        marker.on("popupopen", async (e) => {
+          document.getElementById("top-map-buttons")!.style.display = "none";
+          const popup = e.popup.getElement();
+          if (!popup) return;
+          try {
+            const details = await getTrailDetails(trail);
+            const detailsHTML = await renderTrailDetails(trail, details, this.auth);
+            const container = popup.querySelector('.popup-section.loading');
+            if (container) {
+              container.outerHTML = detailsHTML;
+              await bindPopupEvents(popup, this.auth, async () => {
+                const container = popup.querySelector('.popup-content');
+                if (container)
+                  container.innerHTML = await renderTrailDetails(trail, await getTrailDetails(trail), this.auth);
+              });
+              startPhotoCarousel(popup);
+              setupYT2Click(popup);
+            }
+          } catch (err) {
+            console.error("Fehler beim Laden der Details:", err);
+            const container = popup.querySelector('.popup-section.loading');
+            if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
           }
-        } catch (err) {
-          console.error("Fehler beim Laden der Details:", err);
-          const container = popup.querySelector('.popup-section.loading');
-          if (container) container.outerHTML = `<div class="popup-section"><p>⚠️ Details derzeit nicht verfügbar.</p></div>`;
-        }
-      });
+        });
+      }
     }
   }
 
@@ -233,7 +249,10 @@ export class TrailMap {
     });
 
     this.mymap.on('click', (e) => {
-      if (!this.addMode) return;
+      if (!this.addMode) {
+        if (this.spotPanel.isOpen) this.spotPanel.close();
+        return;
+      }
       const nearByTrail = giveTrailNearBy(e.latlng.lat, e.latlng.lng, this.trails);
       if (nearByTrail)
         askNearbyConflict(nearByTrail, () => {

@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<gpx version="1.1" creator="https://www.komoot.de" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Heidenbergtrails - Sendertrail - blau/rot - IGH - sponsored by SPORTZENTRUM KNAUBER</name>
+    <author>
+      <link href="https://www.komoot.de">
+        <text>komoot</text>
+        <type>text/html</type>
+      </link>
+    </author>
+  </metadata>
+  <trk>
+    <name>Heidenbergtrails - Sendertrail - blau/rot - IGH - sponsored by SPORTZENTRUM KNAUBER</name>
+    <trkseg>
+      <trkpt lat="49.280707" lon="10.988254">
+        <ele>451.749939</ele>
+        <time>2023-10-11T21:24:33.440Z</time>
+      </trkpt>
+      <trkpt lat="49.280903" lon="10.987490">
+        <ele>451.749939</ele>
+        <time>2023-10-11T21:24:46.483Z</time>
+      </trkpt>
+      <trkpt lat="49.281387" lon="10.986176">
+        <ele>448.183448</ele>
+        <time>2023-10-11T21:25:07.832Z</time>
+      </trkpt>
+      <trkpt lat="49.281770" lon="10.985289">
+        <ele>444.195831</ele>
+        <time>2023-10-11T21:25:20.682Z</time>
+      </trkpt>
+      <trkpt lat="49.281766" lon="10.984941">
+        <ele>442.891054</ele>
+        <time>2023-10-11T21:25:24.706Z</time>
+      </trkpt>
+      <trkpt lat="49.281722" lon="10.984336">
+        <ele>439.781491</ele>
+        <time>2023-10-11T21:25:31.606Z</time>
+      </trkpt>
+      <trkpt lat="49.281599" lon="10.983934">
+        <ele>436.405344</ele>
+        <time>2023-10-11T21:25:36.527Z</time>
+      </trkpt>
+      <trkpt lat="49.281561" lon="10.983663">
+        <ele>434.297713</ele>
+        <time>2023-10-11T21:25:39.573Z</time>
+      </trkpt>
+      <trkpt lat="49.281571" lon="10.983455">
+        <ele>432.711881</ele>
+        <time>2023-10-11T21:25:41.832Z</time>
+      </trkpt>
+      <trkpt lat="49.281517" lon="10.983301">
+        <ele>431.382489</ele>
+        <time>2023-10-11T21:25:43.733Z</time>
+      </trkpt>
+      <trkpt lat="49.281549" lon="10.983066">
+        <ele>429.557136</ele>
+        <time>2023-10-11T21:25:46.327Z</time>
+      </trkpt>
+      <trkpt lat="49.281535" lon="10.982933">
+        <ele>428.532780</ele>
+        <time>2023-10-11T21:25:47.772Z</time>
+      </trkpt>
+      <trkpt lat="49.281532" lon="10.982403">
+        <ele>424.502734</ele>
+        <time>2023-10-11T21:25:53.457Z</time>
+      </trkpt>
+      <trkpt lat="49.281402" lon="10.981975">
+        <ele>420.912932</ele>
+        <time>2023-10-11T21:25:58.537Z</time>
+      </trkpt>
+      <trkpt lat="49.281380" lon="10.981798">
+        <ele>419.774759</ele>
+        <time>2023-10-11T21:26:00.483Z</time>
+      </trkpt>
+      <trkpt lat="49.281326" lon="10.981702">
+        <ele>419.057533</ele>
+        <time>2023-10-11T21:26:01.867Z</time>
+      </trkpt>
+      <trkpt lat="49.281269" lon="10.981624">
+        <ele>418.394814</ele>
+        <time>2023-10-11T21:26:03.156Z</time>
+      </trkpt>
+      <trkpt lat="49.281056" lon="10.981484">
+        <ele>416.384696</ele>
+        <time>2023-10-11T21:26:07.081Z</time>
+      </trkpt>
+      <trkpt lat="49.280913" lon="10.981465">
+        <ele>415.139735</ele>
+        <time>2023-10-11T21:26:09.554Z</time>
+      </trkpt>
+      <trkpt lat="49.280541" lon="10.981232">
+        <ele>411.654246</ele>
+        <time>2023-10-11T21:26:16.582Z</time>
+      </trkpt>
+      <trkpt lat="49.280490" lon="10.981252">
+        <ele>411.197651</ele>
+        <time>2023-10-11T21:26:17.514Z</time>
+      </trkpt>
+      <trkpt lat="49.280355" lon="10.981306">
+        <ele>409.987521</ele>
+        <time>2023-10-11T21:26:20.002Z</time>
+      </trkpt>
+      <trkpt lat="49.280049" lon="10.981364">
+        <ele>407.313217</ele>
+        <time>2023-10-11T21:26:25.612Z</time>
+      </trkpt>
+      <trkpt lat="49.279178" lon="10.981745">
+        <ele>404.848595</ele>
+        <time>2023-10-11T21:26:43.264Z</time>
+      </trkpt>
+      <trkpt lat="49.279059" lon="10.981766">
+        <ele>404.848595</ele>
+        <time>2023-10-11T21:26:45.790Z</time>
+      </trkpt>
+      <trkpt lat="49.278897" lon="10.981965">
+        <ele>404.848595</ele>
+        <time>2023-10-11T21:26:50.290Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
