@@ -35,6 +35,10 @@ export class TrailMap {
   private markersById = new Map<string, L.Marker>();
   private mymap!: L.Map;
   private auth!: Auth;
+  private currentPositionMarker: L.CircleMarker | null = null;
+  private geolocationWatchId: number | null = null;
+  private directionIndicator: L.Polygon | null = null;
+  private currentHeading: number | null = null;
 
   private get currentMarkerLayer(): L.MarkerClusterGroup | L.LayerGroup {
     return this.filterSettings.useCluster ? this.clusterGroup : this.markerGroup;
@@ -101,6 +105,7 @@ export class TrailMap {
     });
 
     this.initAddButton(auth.authService);
+    this.initGeolocation();
   }
 
   public setView(location: Coord) {
@@ -244,6 +249,174 @@ export class TrailMap {
     if (!inWrapper) {
       const fabMenu = document.getElementById('fab-menu');
       fabMenu?.classList.add('hidden');
+    }
+  }
+
+  private initGeolocation() {
+    if (!navigator.geolocation) {
+      console.warn('Geolocation not supported by this browser');
+      return;
+    }
+
+    this.startGeolocation();
+  }
+
+  private startGeolocation() {
+    if (this.geolocationWatchId !== null) return;
+
+    this.geolocationWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        this.updateCurrentPosition(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy,
+          position.coords.heading
+        );
+      },
+      (error) => {
+        console.warn('Geolocation error:', error);
+      },
+      {
+        enableHighAccuracy: false,
+        maximumAge: 0,
+        timeout: 10000,
+      }
+    );
+
+    // Request permission and listen to device orientation for better heading accuracy
+    if ('permissions' in navigator && 'query' in navigator.permissions) {
+      navigator.permissions.query({ name: 'geolocation' }).then(() => {
+        this.startDeviceOrientationListener();
+      });
+    }
+  }
+
+  public stopGeolocation() {
+    if (this.geolocationWatchId !== null) {
+      navigator.geolocation.clearWatch(this.geolocationWatchId);
+      this.geolocationWatchId = null;
+    }
+    if (this.currentPositionMarker) {
+      this.mymap.removeLayer(this.currentPositionMarker);
+      this.currentPositionMarker = null;
+    }
+    if (this.directionIndicator) {
+      this.mymap.removeLayer(this.directionIndicator);
+      this.directionIndicator = null;
+    }
+    window.removeEventListener('deviceorientationabsolute', this.handleDeviceOrientation.bind(this));
+  }
+
+  private updateCurrentPosition(lat: number, lng: number, accuracy: number, heading?: number | null) {
+    if (heading !== undefined && heading !== null) {
+      this.currentHeading = heading;
+    }
+
+    if (!this.currentPositionMarker) {
+      this.currentPositionMarker = L.circleMarker([lat, lng], {
+        radius: 8,
+        fillColor: '#4285F4',
+        fillOpacity: 0.9,
+        color: '#1e40af',
+        weight: 2.5,
+        interactive: false,
+      }).addTo(this.mymap);
+
+      // Add a subtle pulsing circle around the marker
+      const pulseCircle = L.circleMarker([lat, lng], {
+        radius: 12,
+        fillColor: '#4285F4',
+        fillOpacity: 0.1,
+        color: '#4285F4',
+        weight: 0,
+        interactive: false,
+      }).addTo(this.mymap);
+    } else {
+      this.currentPositionMarker.setLatLng([lat, lng]);
+      // Update the pulse circle
+      const children = this.mymap._layers;
+      for (const id in children) {
+        const layer = children[id];
+        if (layer instanceof L.CircleMarker && (layer as any)._radius === 12) {
+          layer.setLatLng([lat, lng]);
+          break;
+        }
+      }
+    }
+
+    // Update direction indicator if heading is available
+    if (this.currentHeading !== null) {
+      this.updateDirectionIndicator(lat, lng);
+    }
+  }
+
+  private updateDirectionIndicator(lat: number, lng: number) {
+    const heading = this.currentHeading;
+    if (heading === null) return;
+
+    // Create a cone pointing in the direction of heading
+    const coneAngle = 60; // 60 degree cone
+    const coneDistance = 0.0015; // ~150 meters at equator
+
+    const leftAngle = (heading - coneAngle / 2) * (Math.PI / 180);
+    const rightAngle = (heading + coneAngle / 2) * (Math.PI / 180);
+    const forwardAngle = heading * (Math.PI / 180);
+
+    // Calculate cone points
+    const forward = L.latLng(
+      lat + coneDistance * Math.cos(forwardAngle),
+      lng + coneDistance * Math.sin(forwardAngle)
+    );
+    const left = L.latLng(
+      lat + coneDistance * 0.4 * Math.cos(leftAngle),
+      lng + coneDistance * 0.4 * Math.sin(leftAngle)
+    );
+    const right = L.latLng(
+      lat + coneDistance * 0.4 * Math.cos(rightAngle),
+      lng + coneDistance * 0.4 * Math.sin(rightAngle)
+    );
+
+    const conePoints: L.LatLngExpression[] = [
+      [lat, lng],
+      forward,
+      right,
+      [lat, lng],
+      forward,
+      left,
+    ];
+
+    if (this.directionIndicator) {
+      this.directionIndicator.setLatLngs(conePoints);
+    } else {
+      this.directionIndicator = L.polygon(conePoints, {
+        color: '#4285F4',
+        fillColor: '#4285F4',
+        fillOpacity: 0.25,
+        weight: 2,
+        interactive: false,
+      }).addTo(this.mymap);
+    }
+  }
+
+  private startDeviceOrientationListener() {
+    window.addEventListener('deviceorientationabsolute', (event: DeviceOrientationEvent) => {
+      if (event.absolute && event.alpha !== null) {
+        this.currentHeading = (360 - event.alpha) % 360;
+        if (this.currentPositionMarker) {
+          const latLng = this.currentPositionMarker.getLatLng();
+          this.updateDirectionIndicator(latLng.lat, latLng.lng);
+        }
+      }
+    });
+  }
+
+  private handleDeviceOrientation(event: DeviceOrientationEvent) {
+    if (event.absolute && event.alpha !== null) {
+      this.currentHeading = (360 - event.alpha) % 360;
+      if (this.currentPositionMarker) {
+        const latLng = this.currentPositionMarker.getLatLng();
+        this.updateDirectionIndicator(latLng.lat, latLng.lng);
+      }
     }
   }
 }

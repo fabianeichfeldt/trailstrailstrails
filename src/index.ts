@@ -51,6 +51,33 @@ async function init() {
   const map = new TrailMap(el);
   await map.init(auth);
 
+  // Set up location button
+  const locationBtn = document.getElementById('location-btn') as HTMLButtonElement | null;
+  if (locationBtn) {
+    locationBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolokalisierung wird von diesem Browser nicht unterstützt');
+        return;
+      }
+
+      // Request current position to trigger permission dialog
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Permission granted
+          locationBtn.classList.add('active');
+          console.log('Location enabled:', position.coords);
+        },
+        (error) => {
+          // Permission denied or error
+          if (error.code === error.PERMISSION_DENIED) {
+            alert('Bitte erlaube den Zugriff auf deine Position in den Browser-Einstellungen');
+          }
+          console.warn('Geolocation error:', error);
+        }
+      );
+    });
+  }
+
   initBurgerBtn();
 
   const popupOverElements = [
