@@ -1,26 +1,18 @@
 import L from 'leaflet';
 import '@fortawesome/fontawesome-free/css/all.css';
 import './spot_panel.css';
-import { ElevationPoint, ImbaColor, MtbTour, MtbTrail, SpotMtbData, TourSegment, TrailDirection } from '../../types/MtbTypes';
-import { SingleTrail, Trail, isBikePark, isDirtPark } from '../../types/Trail';
-import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
+import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
+import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
 import { getTrailDetails, getSpotGpxData } from '../../communication/trails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
-import { getMockSpotData } from '../../mock/mockSpotData';
-
-// ── Display metadata ─────────────────────────────────────────────────────────
-
-const DIR_LABEL: Record<TrailDirection, string> = {
-  'cw':           '↻ Uhrzeigersinn',
-  'ccw':          '↺ Gegen Uhrzeiger',
-  'one-way-down': '⤵ Nur bergab',
-  'one-way-up':   '⤴ Nur bergauf',
-  'both':         '↔ Beide Richtungen',
-};
+import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
+import { DIR_LABEL, toursHTML, trailsHTML } from './spotPanelHtml';
+import { initDragHandle } from './dragHandle';
+import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 
 // ── SpotPanel ────────────────────────────────────────────────────────────────
 
@@ -46,7 +38,7 @@ export class SpotPanel {
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  public open(item: Trail, fallbackData: SpotMtbData | null = null) {
+  public open(item: Trail) {
     this.currentItem = item;
     this.infoLoaded = false;
     this.activeId = null;
@@ -56,25 +48,21 @@ export class SpotPanel {
     this.updateTabsVisibility();
     this.activateTab('info');
 
-    // For trails, fetch real GPX data from Supabase, fall back to mock data
-    // For bikeparks/dirtparks, skip the trails/tours tabs
-    if (fallbackData) {
-      this.loadSpotData(item.id, fallbackData);
+    if (item.type === 'trail') {
+      this.loadSpotData(item.id);
     }
   }
 
-  private async loadSpotData(spotId: string, fallbackData: SpotMtbData) {
+  private async loadSpotData(spotId: string) {
     try {
-      const realData = await getSpotGpxData(spotId);
-      this.data = realData || fallbackData;
+      this.data = await getSpotGpxData(spotId);
     } catch (err) {
-      console.warn('Failed to fetch spot GPX data, using fallback:', err);
-      this.data = fallbackData;
+      console.warn('Failed to fetch spot GPX data:', err);
     }
 
     if (!this.data) return;
     this.renderLists();
-    this.drawPolylines(this.data);
+    drawTrailPolylines(this.data, this.overlayLayer, this.polylineMap);
   }
 
   public close() {
@@ -146,99 +134,7 @@ export class SpotPanel {
       })
     );
 
-    this.initDragHandle();
-  }
-
-  private initDragHandle() {
-    const handle = this.panel.querySelector('.spot-panel-handle') as HTMLElement;
-    let isResizing = false;
-    let startPos = 0;
-    let startSize = 0;
-    let isHorizontal = false; // true = resize width (desktop right), false = resize height (mobile bottom)
-
-    const isDesktopMode = () => window.innerWidth >= 768;
-
-    const updateHandlePosition = () => {
-      if (isDesktopMode()) {
-        const rect = this.panel.getBoundingClientRect();
-        const handleLeft = rect.left - 4;
-        handle.style.left = handleLeft + 'px';
-        handle.style.display = 'block';
-      } else {
-        handle.style.display = '';
-        handle.style.left = '';
-      }
-    };
-
-    const startResize = (clientX: number, clientY: number) => {
-      isResizing = true;
-      isHorizontal = isDesktopMode();
-
-      if (isHorizontal) {
-        startPos = clientX;
-        startSize = this.panel.getBoundingClientRect().width;
-      } else {
-        startPos = clientY;
-        startSize = this.panel.getBoundingClientRect().height;
-      }
-
-      this.panel.style.transition = 'none';
-      this.panel.style.userSelect = 'none';
-    };
-
-    const doResize = (clientX: number, clientY: number) => {
-      if (!isResizing) return;
-
-      if (isHorizontal) {
-        // Resize width (desktop, panel on right)
-        const dx = clientX - startPos;
-        const w = Math.max(280, Math.min(window.innerWidth * 0.6, startSize - dx));
-        this.panel.style.width = w + 'px';
-        updateHandlePosition();
-      } else {
-        // Resize height (mobile, panel on bottom)
-        const dy = startPos - clientY;
-        const h = Math.max(200, Math.min(window.innerHeight * 0.85, startSize + dy));
-        this.panel.style.height = h + 'px';
-      }
-    };
-
-    const stopResize = () => {
-      if (!isResizing) return;
-      isResizing = false;
-      this.panel.style.transition = '';
-      this.panel.style.userSelect = '';
-    };
-
-    // Touch events
-    handle.addEventListener('touchstart', e => {
-      startResize(e.touches[0].clientX, e.touches[0].clientY);
-    }, { passive: true });
-
-    document.addEventListener('touchmove', e => {
-      if (isResizing && e.touches.length > 0) {
-        doResize(e.touches[0].clientX, e.touches[0].clientY);
-      }
-    }, { passive: true });
-
-    document.addEventListener('touchend', stopResize, { passive: true });
-
-    // Mouse events (for desktop)
-    handle.addEventListener('mousedown', e => {
-      startResize(e.clientX, e.clientY);
-    });
-
-    document.addEventListener('mousemove', e => {
-      if (isResizing) {
-        doResize(e.clientX, e.clientY);
-      }
-    });
-
-    document.addEventListener('mouseup', stopResize);
-
-    // Update handle position on window resize and initial load
-    updateHandlePosition();
-    window.addEventListener('resize', updateHandlePosition);
+    initDragHandle(this.panel);
   }
 
   // ── Tabs & rendering ───────────────────────────────────────────────────────
@@ -302,71 +198,9 @@ export class SpotPanel {
 
   private renderLists() {
     if (!this.data) return;
-    this.panel.querySelector('#spot-tours-tab')!.innerHTML = this.toursHTML(this.data.tours);
-    this.panel.querySelector('#spot-trails-tab')!.innerHTML = this.trailsHTML(this.data.trails);
+    this.panel.querySelector('#spot-tours-tab')!.innerHTML = toursHTML(this.data.tours);
+    this.panel.querySelector('#spot-trails-tab')!.innerHTML = trailsHTML(this.data.trails);
     this.bindItemClicks();
-  }
-
-  /** One colored dot per unique trail difficulty in the tour */
-  private tourDifficultyDots(tour: MtbTour): string {
-    const seen = new Set<ImbaColor>();
-    return tour.segments
-      .filter(s => s.type === 'trail' && s.difficulty)
-      .flatMap(s => {
-        const d = s.difficulty as ImbaColor;
-        if (seen.has(d)) return [];
-        seen.add(d);
-        return [`<span class="imba-dot" style="background:${IMBA[d].hex}" title="${IMBA[d].label}"></span>`];
-      }).join('');
-  }
-
-  private toursHTML(tours: MtbTour[]) {
-    if (!tours.length) return '<p class="spot-empty">Keine Touren für diesen Spot.</p>';
-    return tours.map(t => `
-      <div class="spot-item" data-id="${t.id}" data-kind="tour">
-        <div class="spot-item-left">
-          <div class="imba-dots">${this.tourDifficultyDots(t)}</div>
-          <div class="spot-item-info">
-            <div class="spot-item-name">
-              <strong>${t.name}</strong>
-              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>` : ''}
-            </div>
-            <span class="spot-item-sub">${t.trailCount} Trails · ${t.duration_minutes} min</span>
-          </div>
-        </div>
-        <div class="spot-item-right">
-          <div class="spot-item-stats">
-            <span>📍 ${t.distance_km} km</span>
-            <span>↑${t.elevation_gain}m &nbsp;↓${t.elevation_loss}m</span>
-          </div>
-          <span class="spot-item-arrow">›</span>
-        </div>
-      </div>`).join('');
-  }
-
-  private trailsHTML(trails: MtbTrail[]) {
-    if (!trails.length) return '<p class="spot-empty">Keine Trails für diesen Spot.</p>';
-    return trails.map(t => `
-      <div class="spot-item" data-id="${t.id}" data-kind="trail">
-        <div class="spot-item-left">
-          <span class="imba-dot" style="background:${IMBA[t.difficulty].hex}" title="${IMBA[t.difficulty].label}"></span>
-          <div class="spot-item-info">
-            <div class="spot-item-name">
-              <strong>${t.name}</strong>
-              ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>` : ''}
-            </div>
-            <span class="spot-item-sub">${IMBA[t.difficulty].label}</span>
-          </div>
-        </div>
-        <div class="spot-item-right">
-          <div class="spot-item-stats">
-            <span>📍 ${t.distance_km} km</span>
-            <span>↑${t.elevation_gain}m &nbsp;↓${t.elevation_loss}m</span>
-            <span class="direction-tag">${DIR_LABEL[t.direction]}</span>
-          </div>
-          <span class="spot-item-arrow">›</span>
-        </div>
-      </div>`).join('');
   }
 
   private bindItemClicks() {
@@ -446,7 +280,7 @@ export class SpotPanel {
       const latlngs = seg.gpxPoints.map(p => [p[0], p[1]] as [number, number]);
       const pl = L.polyline(latlngs, { color: IMBA[seg.difficulty].hex, weight: 5, opacity: 1 }).addTo(this.map);
       this.tourLayers.push(pl);
-      this.addSegmentLabel(seg, latlngs);
+      addSegmentLabel(seg, latlngs, this.map, this.tourLayers);
     }
 
     if (fullRoute.length)
@@ -454,20 +288,6 @@ export class SpotPanel {
 
     this.showElevation(tour, tour.elevationProfile,
       tour.hasFullGpx ? undefined : tour.segments);
-  }
-
-  /** Small pill badge showing difficulty name, anchored to polyline midpoint */
-  private addSegmentLabel(seg: TourSegment, latlngs: [number, number][]) {
-    if (!seg.difficulty) return;
-    const mid = latlngs[Math.floor(latlngs.length / 2)];
-    const color = IMBA[seg.difficulty].hex;
-    const icon = L.divIcon({
-      html: `<div class="seg-label" style="border-color:${color};color:${color}">${seg.name ?? ''}</div>`,
-      className: '',
-      iconAnchor: [0, 0],
-    });
-    const lbl = L.marker(mid, { icon, interactive: false, keyboard: false }).addTo(this.map);
-    this.tourLayers.push(lbl);
   }
 
   // ── Elevation profile ──────────────────────────────────────────────────────
@@ -534,55 +354,4 @@ export class SpotPanel {
     }
   }
 
-  // ── Polylines ──────────────────────────────────────────────────────────────
-
-  /** Draw one polyline per individual trail. Tours are drawn only when selected. */
-  private drawPolylines(data: SpotMtbData) {
-    this.overlayLayer.clearLayers();
-    this.clearTourLayers();
-    this.polylineMap.clear();
-
-    for (const trail of data.trails) {
-      const latlngs  = trail.gpxPoints.map(p => [p[0], p[1]] as [number, number]);
-      const color    = IMBA[trail.difficulty].hex;
-      const directed = trail.direction !== 'both';
-      const reversed = trail.direction === 'ccw';
-
-      const pl = L.polyline(latlngs, {
-        color,
-        weight: 3,
-        opacity: 0.65,
-        className: directed
-          ? (reversed ? 'trail-line-reversed' : 'trail-line-directed')
-          : '',
-      }).addTo(this.overlayLayer);
-
-      if (directed && latlngs.length >= 2)
-        this.addDirectionMarker(latlngs, color, reversed);
-
-      this.polylineMap.set(trail.id, pl);
-    }
-  }
-
-  private addDirectionMarker(pts: [number, number][], color: string, reverse: boolean) {
-    // Place a small arrow marker at ~20% along the path
-    const idx = Math.max(1, Math.floor(pts.length * 0.2));
-    const [lat1, lng1] = pts[idx - 1];
-    const [lat2, lng2] = pts[idx];
-    const dy = lat2 - lat1;
-    const dx = (lng2 - lng1) * Math.cos(lat1 * Math.PI / 180);
-    const bearing = Math.atan2(dx, dy) * 180 / Math.PI + (reverse ? 180 : 0);
-    const midLat = (lat1 + lat2) / 2;
-    const midLng = (lng1 + lng2) / 2;
-
-    const icon = L.divIcon({
-      html: `<div style="transform:rotate(${bearing}deg);color:${color};font-size:13px;line-height:1;filter:drop-shadow(0 0 1px #fff)">▲</div>`,
-      className: 'trail-arrow-icon',
-      iconSize: [13, 13],
-      iconAnchor: [6.5, 6.5],
-    });
-
-    L.marker([midLat, midLng], { icon, interactive: false, keyboard: false })
-      .addTo(this.overlayLayer);
-  }
 }

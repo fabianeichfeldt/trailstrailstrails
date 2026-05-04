@@ -10,7 +10,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
-import {anyTrailType, BikePark, DirtPark, isAnyTrailType, isTrail, SingleTrail} from "../types/Trail";
+import {anyTrailType, BikePark, DirtPark, isAnyTrailType, SingleTrail} from "../types/Trail";
 import {askNearbyConflict, giveTrailNearBy, reportAbort} from "../near_by_trails";
 import {openCreateTrailPopup} from "./create_trail/popup";
 import {createCustomIcon} from "../communication/trails";
@@ -20,7 +20,6 @@ import {IAuthService} from "../auth/auth_service";
 import {Auth} from "../auth/auth";
 import {setupYT2Click} from "./detail_popup/yt";
 import {SpotPanel} from "./spot_panel/spotPanel";
-import {getMockSpotData} from "../mock/mockSpotData";
 
 export class TrailMap {
   private clusterGroup!: L.MarkerClusterGroup;
@@ -175,8 +174,7 @@ export class TrailMap {
       // All trail types (trails, bikeparks, dirtparks) → open spot panel
       marker.on("click", () => {
         document.getElementById("top-map-buttons")!.style.display = "none";
-        const mockData = isTrail(trail) ? getMockSpotData(trail.id, trail.latitude, trail.longitude) : null;
-        this.spotPanel.open(trail, mockData);
+        this.spotPanel.open(trail);
       });
     }
   }
