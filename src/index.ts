@@ -65,6 +65,8 @@ async function init() {
         (position) => {
           // Permission granted
           locationBtn.classList.add('active');
+          // Fly map to current location
+          map.flyToPlace(position.coords.latitude, position.coords.longitude);
           console.log('Location enabled:', position.coords);
         },
         (error) => {
