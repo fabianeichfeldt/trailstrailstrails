@@ -347,7 +347,6 @@ export class SpotPanel {
           <div class="spot-item-stats">
             <span>📍 ${t.distance_km} km</span>
             <span>↑${t.elevation_gain}m &nbsp;↓${t.elevation_loss}m</span>
-            <span class="direction-tag">${DIR_LABEL[t.direction]}</span>
           </div>
           <span class="spot-item-arrow">›</span>
         </div>
