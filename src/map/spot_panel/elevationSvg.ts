@@ -10,11 +10,14 @@ export const IMBA: Record<ImbaColor, { hex: string; label: string }> = {
   'double-black': { hex: '#000000', label: '⚫⚫ Extrem'            },
 };
 
+// Chart geometry — shared by elevationSVG (rendering) and bindElevationHover (hit-testing)
+const W = 300, H = 88;
+const PL = 30, PR = 6, PT = 6, PB = 18;
+const cW = W - PL - PR;   // 264
+const cH = H - PT - PB;   // 64
+
 export function elevationSVG(profile: ElevationPoint[], item: AnyItem, segments?: TourSegment[]): string {
   if (profile.length < 2) return '';
-  const W = 300, H = 88;
-  const PL = 30, PR = 6, PT = 6, PB = 18;
-  const cW = W - PL - PR, cH = H - PT - PB;
 
   const alts   = profile.map(p => p.alt);
   const minA   = Math.min(...alts), maxA = Math.max(...alts);
@@ -84,4 +87,72 @@ export function elevationSVG(profile: ElevationPoint[], item: AnyItem, segments?
         style="text-shadow:0 0 3px #fff,0 0 3px #fff"/>
     </g>
   </svg>`;
+}
+
+export function bindElevationHover(
+  svgEl: SVGSVGElement,
+  item: AnyItem,
+  onHover: (latlng: [number, number], color: string) => void,
+  onLeave: () => void,
+): void {
+  if (item.gpxPoints.length < 2) return;
+
+  const profile = item.elevationProfile;
+  const maxDist = profile[profile.length - 1]?.dist || 1;
+  const alts    = profile.map(p => p.alt);
+  const minA    = Math.min(...alts);
+  const rangeA  = Math.max(...alts) - minA || 1;
+  const color   = 'difficulty' in item ? IMBA[(item as MtbTrail).difficulty].hex : '#444';
+
+  const scrubber = svgEl.querySelector('.elev-scrubber') as SVGGElement;
+  const scrubLine = svgEl.querySelector('.elev-scrub-line') as SVGLineElement;
+  const scrubDot  = svgEl.querySelector('.elev-scrub-dot')  as SVGCircleElement;
+  const scrubTxt  = svgEl.querySelector('.elev-scrub-txt')  as SVGTextElement;
+
+  const closestIdx = (dist: number): number => {
+    let best = 0, bestDiff = Infinity;
+    for (let i = 0; i < profile.length; i++) {
+      const d = Math.abs(profile[i].dist - dist);
+      if (d < bestDiff) { bestDiff = d; best = i; }
+    }
+    return best;
+  };
+
+  const onMove = (clientX: number) => {
+    const rect   = svgEl.getBoundingClientRect();
+    const scaleX = W / rect.width;                        // viewBox→rendered
+    const svgX   = (clientX - rect.left) * scaleX;
+    const chartX = Math.max(0, Math.min(svgX - PL, cW));
+    const dist   = (chartX / cW) * maxDist;
+    const idx    = closestIdx(dist);
+    const pt     = profile[idx];
+    const gpx    = item.gpxPoints[idx];
+
+    const x = PL + (pt.dist / maxDist) * cW;
+    const y = PT + cH - ((pt.alt - minA) / rangeA) * cH;
+
+    scrubLine.setAttribute('x1', String(x));
+    scrubLine.setAttribute('x2', String(x));
+    scrubDot.setAttribute('cx',  String(x));
+    scrubDot.setAttribute('cy',  String(y));
+    scrubDot.setAttribute('stroke', color);
+
+    const labelY = y > PT + cH / 2 ? y - 7 : y + 14;
+    scrubTxt.setAttribute('x', String(Math.max(18, Math.min(x, 282))));
+    scrubTxt.setAttribute('y', String(labelY));
+    scrubTxt.textContent = `${Math.round(pt.alt)} m`;
+
+    scrubber.removeAttribute('visibility');
+    onHover([gpx[0], gpx[1]], color);
+  };
+
+  const handleLeave = () => {
+    scrubber.setAttribute('visibility', 'hidden');
+    onLeave();
+  };
+
+  svgEl.addEventListener('mousemove', e => onMove(e.clientX));
+  svgEl.addEventListener('mouseleave', handleLeave);
+  svgEl.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
+  svgEl.addEventListener('touchend', handleLeave);
 }

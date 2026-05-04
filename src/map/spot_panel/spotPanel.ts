@@ -3,7 +3,7 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import './spot_panel.css';
 import { ElevationPoint, ImbaColor, MtbTour, MtbTrail, SpotMtbData, TourSegment, TrailDirection } from '../../types/MtbTypes';
 import { SingleTrail, Trail, isBikePark, isDirtPark } from '../../types/Trail';
-import { AnyItem, IMBA, elevationSVG } from './elevationSvg';
+import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
 import { Auth } from '../../auth/auth';
 import { getTrailDetails, getSpotGpxData } from '../../communication/trails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
@@ -494,7 +494,25 @@ export class SpotPanel {
     }
 
     panel.classList.remove('hidden');
-    requestAnimationFrame(() => this.bindElevationHover(item));
+    requestAnimationFrame(() => {
+      const svgEl = this.panel.querySelector('.spot-elevation-chart svg') as SVGSVGElement | null;
+      if (!svgEl) return;
+      bindElevationHover(svgEl, item,
+        (latlng, color) => {
+          if (!this.hoverMarker) {
+            this.hoverMarker = L.circleMarker(latlng, {
+              radius: 7, color, weight: 2.5,
+              fillColor: '#fff', fillOpacity: 1,
+              interactive: false,
+            }).addTo(this.overlayLayer);
+          } else {
+            this.hoverMarker.setLatLng(latlng);
+            this.hoverMarker.setStyle({ color });
+          }
+        },
+        () => this.removeHoverMarker(),
+      );
+    });
   }
 
   private closeElevation() {
@@ -514,85 +532,6 @@ export class SpotPanel {
       this.overlayLayer.removeLayer(this.hoverMarker);
       this.hoverMarker = null;
     }
-  }
-
-  private bindElevationHover(item: AnyItem) {
-    const svgEl = this.panel.querySelector('.spot-elevation-chart svg') as SVGSVGElement | null;
-    if (!svgEl || item.gpxPoints.length < 2) return;
-
-    // Must match elevationSVG constants
-    const PL = 30, PT = 6, cW = 264, cH = 64;
-    const profile = item.elevationProfile;
-    const maxDist = profile[profile.length - 1]?.dist || 1;
-    const alts    = profile.map(p => p.alt);
-    const minA    = Math.min(...alts);
-    const rangeA  = Math.max(...alts) - minA || 1;
-    const color   = 'difficulty' in item ? IMBA[(item as MtbTrail).difficulty].hex : '#444';
-
-    const scrubber = svgEl.querySelector('.elev-scrubber') as SVGGElement;
-    const scrubLine = svgEl.querySelector('.elev-scrub-line') as SVGLineElement;
-    const scrubDot  = svgEl.querySelector('.elev-scrub-dot')  as SVGCircleElement;
-    const scrubTxt  = svgEl.querySelector('.elev-scrub-txt')  as SVGTextElement;
-
-    const closestIdx = (dist: number): number => {
-      let best = 0, bestDiff = Infinity;
-      for (let i = 0; i < profile.length; i++) {
-        const d = Math.abs(profile[i].dist - dist);
-        if (d < bestDiff) { bestDiff = d; best = i; }
-      }
-      return best;
-    };
-
-    const onMove = (clientX: number) => {
-      const rect   = svgEl.getBoundingClientRect();
-      const scaleX = 300 / rect.width;                       // viewBox→rendered
-      const svgX   = (clientX - rect.left) * scaleX;
-      const chartX = Math.max(0, Math.min(svgX - PL, cW));
-      const dist   = (chartX / cW) * maxDist;
-      const idx    = closestIdx(dist);
-      const pt     = profile[idx];
-      const gpx    = item.gpxPoints[idx];
-
-      // SVG coordinates for this point
-      const x  = PL + (pt.dist / maxDist) * cW;
-      const y  = PT + cH - ((pt.alt - minA) / rangeA) * cH;
-
-      scrubLine.setAttribute('x1', String(x));
-      scrubLine.setAttribute('x2', String(x));
-      scrubDot.setAttribute('cx',  String(x));
-      scrubDot.setAttribute('cy',  String(y));
-      scrubDot.setAttribute('stroke', color);
-
-      // Keep label inside SVG bounds; flip above/below the curve
-      const labelY = y > PT + cH / 2 ? y - 7 : y + 14;
-      scrubTxt.setAttribute('x', String(Math.max(18, Math.min(x, 282))));
-      scrubTxt.setAttribute('y', String(labelY));
-      scrubTxt.textContent = `${Math.round(pt.alt)} m`;
-
-      scrubber.removeAttribute('visibility');
-
-      // Map marker
-      if (!this.hoverMarker) {
-        this.hoverMarker = L.circleMarker([gpx[0], gpx[1]], {
-          radius: 7, color, weight: 2.5,
-          fillColor: '#fff', fillOpacity: 1,
-          interactive: false,
-        }).addTo(this.overlayLayer);
-      } else {
-        this.hoverMarker.setLatLng([gpx[0], gpx[1]]);
-        this.hoverMarker.setStyle({ color });
-      }
-    };
-
-    const onLeave = () => {
-      scrubber.setAttribute('visibility', 'hidden');
-      this.removeHoverMarker();
-    };
-
-    svgEl.addEventListener('mousemove', e => onMove(e.clientX));
-    svgEl.addEventListener('mouseleave', onLeave);
-    svgEl.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
-    svgEl.addEventListener('touchend', onLeave);
   }
 
   // ── Polylines ──────────────────────────────────────────────────────────────
