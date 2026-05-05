@@ -48,20 +48,7 @@ export function getTrailPopup(trail: Trail) {
     return popupHtml;
 }
 
-async function renderLikeAndShare(details: TrailDetails, authService: IAuthService, spotcheckHTML: string) {
-  const user = await authService.getUser();
-  return `<div class="popup-section">
-          <h4 class="likes-icon">${details.likes?.find(l => l.user_id === user.id) ?
-            `<button id="like-button" aria-label="Trail liken" class="link-button">⭐</button>` :
-            `<button id="like-button" aria-label="Trail liken" data-mode="like" class="link-button"><i class="fa-regular fa-star"></i></button>`
-            }
-            <button id="share-button" aria-label="Trail teilen" class="link-button"><i class="fas fa-share-alt" style="margin-right: 6px; font-size: 16px;"></i></button>
-            ${spotcheckHTML}
-          </h4>
-        </div>`
-}
-
-export async function renderTrailDetails(trail: Trail, details: TrailDetails, auth : Auth) {
+export function renderTrailDetails(trail: Trail, details: TrailDetails, auth : Auth) {
   const dirtparkInfo = renderDirtparkDetails(trail);
 
   const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
@@ -73,17 +60,17 @@ export async function renderTrailDetails(trail: Trail, details: TrailDetails, au
   const photosHTML = renderPhotos(details, auth.authService);
   const videoHTML = renderVideos(details);
   const spotcheckHTML = trail.spotcheck && trail.spotcheck.trim() !== ""
-    ? `<a href="${trail.spotcheck}" target="_blank" class="spotcheck-badge">
-        <i class="fa-solid fa-circle-check"></i> Trailradar Spotcheck
-       </a>`
+    ? `<div class="popup-section">
+        <a href="${trail.spotcheck}" target="_blank" class="spotcheck-badge">
+          <i class="fa-solid fa-circle-check"></i> Trailradar Spotcheck
+        </a>
+      </div>`
     : "";
-
-  const likesHTML = await renderLikeAndShare(details, auth.authService, spotcheckHTML);
 
   return `
         ${photosHTML}
         ${videoHTML}
-        ${likesHTML}
+        ${spotcheckHTML}
         ${dirtparkInfo}
         ${details.opening_hours ? `
           <div class="popup-section">

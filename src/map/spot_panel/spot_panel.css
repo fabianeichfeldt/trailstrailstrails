@@ -44,10 +44,16 @@
 /* ── Header ───────────────────────────────────────────────── */
 .spot-panel-header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 14px 6px;
+  flex-direction: column;
+  padding: 10px 14px 6px;
   flex-shrink: 0;
+  gap: 3px;
+}
+
+.spot-panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .spot-panel-title {
@@ -57,7 +63,53 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 }
+
+.spot-panel-meta-row {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.spot-panel-org-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #2b6cb0;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.spot-panel-org-link:hover { text-decoration: underline; }
+.spot-panel-org-link.hidden { display: none; }
+
+.spot-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.spot-action-btn {
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  color: #777;
+  padding: 3px 6px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: background 0.15s, color 0.15s;
+}
+.spot-action-btn:hover { background: #f0f0f0; color: #1a1a2e; }
+.spot-action-btn.hidden { display: none; }
 
 .spot-panel-close {
   background: none;
@@ -68,6 +120,7 @@
   padding: 4px 6px;
   line-height: 1;
   border-radius: 50%;
+  flex-shrink: 0;
   transition: background 0.15s;
 }
 .spot-panel-close:hover { background: #f0f0f0; }

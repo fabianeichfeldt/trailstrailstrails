@@ -4,7 +4,9 @@ import './spot_panel.css';
 import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
-import { getTrailDetails, getSpotGpxData } from '../../communication/trails';
+import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail } from '../../communication/trails';
+import { share } from '../../communication/share';
+import { TrailDetails } from '../../types/TrailDetails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
@@ -43,6 +45,19 @@ export class SpotPanel {
     this.infoLoaded = false;
     this.activeId = null;
     this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
+    const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
+    if (item.url) {
+      orgLink.href = item.url;
+      orgLink.classList.remove('hidden');
+    } else {
+      orgLink.classList.add('hidden');
+    }
+    const shareBtn = this.panel.querySelector('.spot-share-btn') as HTMLElement;
+    shareBtn.classList.toggle('hidden', !item.approved);
+    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
+    likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+    likeBtn.dataset.liked = 'false';
+    likeBtn.classList.add('hidden');
     this.closeElevation();
     this.panel.classList.add('open');
     this.updateTabsVisibility();
@@ -88,8 +103,23 @@ export class SpotPanel {
     this.panel.innerHTML = `
       <div class="spot-panel-handle" role="presentation"></div>
       <div class="spot-panel-header">
-        <div class="spot-panel-title"></div>
-        <button class="spot-panel-close" aria-label="Schließen">✕</button>
+        <div class="spot-panel-title-row">
+          <div class="spot-panel-title"></div>
+          <button class="spot-panel-close" aria-label="Schließen">✕</button>
+        </div>
+        <div class="spot-panel-meta-row">
+          <a class="spot-panel-org-link hidden" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Zur Trailcrew
+          </a>
+          <div class="spot-panel-actions">
+            <button class="spot-action-btn spot-like-btn hidden" aria-label="Favorit">
+              <i class="fa-regular fa-star"></i>
+            </button>
+            <button class="spot-action-btn spot-share-btn hidden" aria-label="Teilen">
+              <i class="fas fa-share-alt"></i>
+            </button>
+          </div>
+        </div>
       </div>
       <div class="spot-panel-tabs">
         <button class="spot-tab active" data-tab="info">Spot-Info</button>
@@ -127,6 +157,10 @@ export class SpotPanel {
       .addEventListener('click', () => this.close());
     this.panel.querySelector('.spot-elevation-close')!
       .addEventListener('click', () => this.closeElevation());
+    this.panel.querySelector('.spot-like-btn')!
+      .addEventListener('click', () => this.handleLike());
+    this.panel.querySelector('.spot-share-btn')!
+      .addEventListener('click', () => this.handleShare());
     this.panel.querySelectorAll('.spot-tab').forEach(btn =>
       btn.addEventListener('click', e => {
         const tab = (e.currentTarget as HTMLElement).dataset.tab as 'tours' | 'trails' | 'info';
@@ -177,12 +211,13 @@ export class SpotPanel {
 
     try {
       const details = await getTrailDetails(item);
-      const html = await renderTrailDetails(item, details, this.auth);
+      await this.updateLikeButton(details);
+      const html = renderTrailDetails(item, details, this.auth);
       container.innerHTML = `<div class="spot-info-content">${html}</div>`;
       const content = container.querySelector('.spot-info-content') as HTMLElement;
       await bindPopupEvents(content, this.auth, async () => {
         const freshDetails = await getTrailDetails(item);
-        content.innerHTML = await renderTrailDetails(item, freshDetails, this.auth);
+        content.innerHTML = renderTrailDetails(item, freshDetails, this.auth);
         startPhotoCarousel(content);
         bindPhotoLightbox(content);
         setupYT2Click(content);
@@ -193,6 +228,52 @@ export class SpotPanel {
       this.infoLoaded = true;
     } catch {
       container.innerHTML = '<p class="spot-info-error">⚠️ Details derzeit nicht verfügbar.</p>';
+    }
+  }
+
+  private async updateLikeButton(details: TrailDetails) {
+    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
+    try {
+      const user = await this.auth.authService.getUser();
+      const isLiked = user != null && !!details.likes?.find(l => l.user_id === user.id);
+      likeBtn.innerHTML = isLiked ? '⭐' : '<i class="fa-regular fa-star"></i>';
+      likeBtn.dataset.liked = String(isLiked);
+    } catch {
+      likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+      likeBtn.dataset.liked = 'false';
+    }
+    likeBtn.classList.remove('hidden');
+  }
+
+  private async handleLike() {
+    if (!this.currentItem) return;
+    if (!this.auth.authService.loggedIn) {
+      await this.auth.openSignInModal();
+      return;
+    }
+    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
+    const isLiked = likeBtn.dataset.liked === 'true';
+    if (isLiked) {
+      await dislikeTrail(this.currentItem.id, this.auth.authService);
+      likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
+      likeBtn.dataset.liked = 'false';
+    } else {
+      await likeTrail(this.currentItem.id, this.auth.authService);
+      likeBtn.innerHTML = '⭐';
+      likeBtn.dataset.liked = 'true';
+    }
+  }
+
+  private async handleShare() {
+    if (!this.currentItem) return;
+    try {
+      await navigator.share({
+        title: `Offizieller MTB Trail '${this.currentItem.name}' auf Trailradar`,
+        url: `https://trailradar.org/trails/${this.currentItem.id}`
+      });
+      await share(this.currentItem.id);
+    } catch {
+      // user cancelled or browser doesn't support share API
     }
   }
 
