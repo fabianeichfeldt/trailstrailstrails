@@ -18,9 +18,8 @@ export function drawTrailPolylines(
 
     const pl = L.polyline(latlngs, {
       color,
-      weight: 3,
+      weight: 4,
       opacity: 0.65,
-      className: directed ? (reversed ? 'trail-line-reversed' : 'trail-line-directed') : '',
     }).addTo(overlayLayer);
 
     if (directed && latlngs.length >= 2)
