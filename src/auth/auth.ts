@@ -5,6 +5,7 @@ import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
 import {IAuthService} from "./auth_service";
 import {showToast} from "../toast";
+import {getMyRole} from "../spot_manager/Api";
 
 type UserChangedHandler = (u: User) => Promise<void>;
 
@@ -22,6 +23,7 @@ export class Auth {
   private dropdown: HTMLElement | null = null;
   private nickname: HTMLElement = null!;
   private googleLoginBtns: NodeListOf<HTMLElement> = null!;
+  private spotManagerBtn: HTMLElement | null = null;
   public get authService(): IAuthService { return this.auth; }
 
   public constructor(auth: IAuthService) {
@@ -48,9 +50,17 @@ export class Auth {
         this.showAvatarButton();
         const user = await this.auth.getUser();
         this.nickname.innerHTML = user.nickname;
+        const role = await getMyRole(user.accessToken);
+        if (role === 'admin' || role === 'trailcrew') {
+          this.spotManagerBtn?.classList.remove('hidden');
+        } else {
+          this.spotManagerBtn?.classList.add('hidden');
+        }
       }
-      else
+      else {
         this.hideAvatarButton();
+        this.spotManagerBtn?.classList.add('hidden');
+      }
       this.avatarBtn.innerHTML = u.avatarHTML;
       return Promise.resolve();
     });
@@ -107,6 +117,10 @@ export class Auth {
       .addEventListener('click', async () => {
         window.location.href = '/profile.html';
       });
+    this.spotManagerBtn = this.dropdown?.querySelector('#spot-manager-btn') ?? null;
+    this.spotManagerBtn?.addEventListener('click', () => {
+      window.location.href = '/spot_manager.html';
+    });
     this.avatarBtn?.addEventListener('click', (e) => {
       this.openProfileMenu();
       stopPropagation(e);
