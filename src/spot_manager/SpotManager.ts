@@ -7,10 +7,10 @@ import {
   SpotRow, GpxTrailRow, GpxTourRow,
 } from './Api';
 import {
-  processGpx, matchTrailsInTour, toElevationProfile,
+  processGpx, matchTrailsInTour,
   ProcessedGpx, DIFFICULTIES, DIRECTIONS, DIFF_COLOR,
 } from './GpxProcessor';
-import { MapView, ElevItem, renderElevation } from './MapView';
+import { MapView } from './MapView';
 import { ImbaColor, TrailDirection } from '../types/MtbTypes';
 
 interface PendingImport {
@@ -49,8 +49,6 @@ export class SpotManager {
     this.root = root;
     this.root.innerHTML = this.shellHTML();
     this.mapView = new MapView(this.root.querySelector('#sm-map')!);
-
-    this.root.querySelector('#sm-elev-close')!.addEventListener('click', () => this.closeElevation());
 
     this.renderSidebar('<div class="sm-spinner"></div><p class="sm-center-msg">Checking access…</p>');
 
@@ -150,7 +148,6 @@ export class SpotManager {
           <span class="sm-item-sub">${t.distance_km} km · ↑${t.elevation_gain}m ↓${t.elevation_loss}m</span>
         </div>
         <div class="sm-item-actions">
-          <button class="sm-btn-icon" data-action="preview-trail" data-id="${t.id}" title="Preview"><i class="fas fa-eye"></i></button>
           <button class="sm-btn-icon" data-action="edit-trail" data-id="${t.id}" title="Bearbeiten"><i class="fas fa-pen"></i></button>
           <button class="sm-btn-icon sm-btn-danger" data-action="del-trail" data-id="${t.id}" title="Löschen"><i class="fas fa-trash"></i></button>
         </div>
@@ -164,7 +161,6 @@ export class SpotManager {
           <span class="sm-item-sub">${t.distance_km} km · ${t.duration_minutes} min</span>
         </div>
         <div class="sm-item-actions">
-          <button class="sm-btn-icon" data-action="preview-tour" data-id="${t.id}" title="Preview"><i class="fas fa-eye"></i></button>
           <button class="sm-btn-icon" data-action="edit-tour" data-id="${t.id}" title="Bearbeiten"><i class="fas fa-pen"></i></button>
           <button class="sm-btn-icon sm-btn-danger" data-action="del-tour" data-id="${t.id}" title="Löschen"><i class="fas fa-trash"></i></button>
         </div>
@@ -201,8 +197,6 @@ export class SpotManager {
         if (action === 'edit-tour')     this.openEditTour(id);
         if (action === 'del-trail')     this.confirmDelete(id, 'trail');
         if (action === 'del-tour')      this.confirmDelete(id, 'tour');
-        if (action === 'preview-trail') this.focusItem(id);
-        if (action === 'preview-tour')  this.focusItem(id);
       });
     });
 
@@ -213,26 +207,8 @@ export class SpotManager {
   }
 
   private focusItem(id: string) {
-    const trail = this.trails.find(t => t.id === id);
-    const tour  = this.tours.find(t => t.id === id);
-    const item  = trail ?? tour;
-    if (!item) return;
-
     this.mapView.highlight(id);
     this.mapView.fitTo(id);
-
-    const elev: ElevItem = {
-      name:             item.name,
-      gpxPoints:        item.gpx_points,
-      elevationProfile: toElevationProfile(item.gpx_points),
-      distance_km:      item.distance_km,
-      elevation_gain:   item.elevation_gain,
-      elevation_loss:   item.elevation_loss,
-      direction:        item.direction,
-      difficulty:       trail ? trail.difficulty : undefined,
-      gpx_url:          item.gpx_url,
-    };
-    renderElevation(this.root.querySelector('#sm-elev-panel')!, elev, this.mapView);
   }
 
   // ── Edit existing ─────────────────────────────────────────────────────────
@@ -608,22 +584,6 @@ export class SpotManager {
         this.pending.splice(i, 1);
         this.renderPendingCards();
       });
-
-      card.querySelector(`[data-action="preview-pending"]`)?.addEventListener('click', () => {
-        this.mapView.fitTo(p.key);
-        const panel = this.root.querySelector('#sm-elev-panel')!;
-        const elev: ElevItem = {
-          name: p.name,
-          gpxPoints: p.processed.gpxPoints,
-          elevationProfile: p.processed.elevationProfile,
-          distance_km: p.processed.distance_km,
-          elevation_gain: p.processed.elevation_gain,
-          elevation_loss: p.processed.elevation_loss,
-          direction: p.direction,
-          difficulty: p.kind === 'trail' ? p.difficulty : undefined,
-        };
-        renderElevation(panel as HTMLElement, elev, this.mapView);
-      });
     });
 
     const footer = this.root.querySelector<HTMLElement>('#import-footer')!;
@@ -693,7 +653,6 @@ export class SpotManager {
         </div>
 
         <div class="sm-card-footer">
-          <button class="sm-btn-icon" data-action="preview-pending"><i class="fas fa-eye"></i> Vorschau</button>
           <button class="sm-btn-icon sm-btn-danger" data-action="remove-pending"><i class="fas fa-trash"></i></button>
         </div>
       </div>
@@ -776,8 +735,6 @@ export class SpotManager {
   // ── Elevation panel ───────────────────────────────────────────────────────
 
   private closeElevation() {
-    this.root.querySelector('#sm-elev-panel')!.classList.add('hidden');
-    this.mapView.removeHoverMarker();
     this.mapView.resetHighlights();
   }
 
@@ -825,21 +782,8 @@ export class SpotManager {
             <div id="sm-map"></div>
           </div>
         </div>
-        <div class="sm-elev-panel hidden" id="sm-elev-panel">
-          <div class="sm-elev-header">
-            <span class="sm-elev-name"></span>
-            <div class="sm-elev-actions">
-              <a class="sm-elev-dl hidden" download><i class="fas fa-download"></i></a>
-              <button id="sm-elev-close"><i class="fas fa-times"></i></button>
-            </div>
-          </div>
-          <div class="sm-elev-chart"></div>
-          <div class="sm-elev-stats"></div>
-        </div>
       </div>
     `;
   }
 }
 
-// Re-export ElevItem so MapView.ts import resolves (used above)
-export type { ElevItem };
