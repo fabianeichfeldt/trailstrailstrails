@@ -149,3 +149,31 @@ export async function deleteTour(id: string, jwt: string): Promise<void> {
   });
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
 }
+
+export type SpotStatus = 'open' | 'limited' | 'seasonal' | 'closed';
+
+export interface SpotDetailsRow {
+  trail_id: string;
+  status: SpotStatus;
+  status_hint: string;
+  rules: string[];
+  trail_description: string;
+}
+
+export async function getSpotDetails(spotId: string, jwt: string): Promise<SpotDetailsRow | null> {
+  const res = await fetch(`${REST}/trail_details?trail_id=eq.${spotId}&select=trail_id,status,status_hint,rules,trail_description&limit=1`, {
+    headers: headers(jwt),
+  });
+  const data = await json<SpotDetailsRow[]>(res);
+  return data[0] ?? null;
+}
+
+export async function upsertSpotDetails(row: SpotDetailsRow, jwt: string): Promise<SpotDetailsRow> {
+  const res = await fetch(`${REST}/trail_details`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=representation,resolution=merge-duplicates' }),
+    body: JSON.stringify(row),
+  });
+  const data = await json<SpotDetailsRow | SpotDetailsRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}

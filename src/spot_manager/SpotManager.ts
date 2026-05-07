@@ -4,7 +4,8 @@ import { Supabase } from '../auth/supabase';
 import {
   getMyRole, getManageableSpots, getSpotTrails, getSpotTours,
   uploadGpx, upsertTrail, upsertTour, deleteTrail, deleteTour,
-  SpotRow, GpxTrailRow, GpxTourRow,
+  getSpotDetails, upsertSpotDetails,
+  SpotRow, GpxTrailRow, GpxTourRow, SpotDetailsRow, SpotStatus,
 } from './Api';
 import {
   processGpx, matchTrailsInTour,
@@ -36,6 +37,7 @@ export class SpotManager {
   private spotName = '';
   private trails: GpxTrailRow[] = [];
   private tours:  GpxTourRow[]  = [];
+  private spotDetails: SpotDetailsRow | null = null;
   private pending: PendingImport[] = [];
   private importing = false;
   private editingTrail: GpxTrailRow | null = null;
@@ -119,9 +121,10 @@ export class SpotManager {
     this.renderSidebar('<div class="sm-spinner"></div>');
 
     try {
-      [this.trails, this.tours] = await Promise.all([
+      [this.trails, this.tours, this.spotDetails] = await Promise.all([
         getSpotTrails(id, this.jwt),
         getSpotTours(id, this.jwt),
+        getSpotDetails(id, this.jwt),
       ]);
       this.mapView.showTrails(this.trails);
       this.tours.forEach(t => this.mapView.addTourPolyline(t));
@@ -175,8 +178,29 @@ export class SpotManager {
       ? '<p class="sm-section-hint">Touren erst hochladen, nachdem alle Trails angelegt sind.</p>'
       : '';
 
+    const status = this.spotDetails?.status ?? 'open';
+    const statusMeta: Record<string, { icon: string; label: string; cls: string }> = {
+      open:     { icon: 'fa-circle-check',   label: 'Offen',          cls: 'status-open' },
+      limited:  { icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', cls: 'status-limited' },
+      seasonal: { icon: 'fa-leaf',           label: 'Saisonal',       cls: 'status-seasonal' },
+      closed:   { icon: 'fa-ban',            label: 'Gesperrt',       cls: 'status-closed' },
+    };
+    const sm = statusMeta[status] ?? statusMeta.open;
+
     this.renderSidebar(`
       <div class="sm-list-view">
+
+        <button class="sm-details-banner" id="btn-open-details">
+          <div class="sm-details-banner-left">
+            <span class="sm-details-status-dot ${sm.cls}"><i class="fas ${sm.icon}"></i></span>
+            <div>
+              <span class="sm-details-banner-title">Spot-Details</span>
+              <span class="sm-details-banner-sub">${sm.label}${this.spotDetails?.status_hint ? ' · ' + this.esc(this.spotDetails.status_hint) : ''}</span>
+            </div>
+          </div>
+          <i class="fas fa-chevron-right sm-details-arrow"></i>
+        </button>
+
         <div class="sm-section">
           <div class="sm-section-header">
             <h3>Trails <span class="sm-count">${this.trails.length}</span></h3>
@@ -196,6 +220,7 @@ export class SpotManager {
       </div>
     `);
 
+    this.root.querySelector('#btn-open-details')!.addEventListener('click', () => this.openDetailsEditor());
     this.root.querySelector('#btn-add-trail')!.addEventListener('click', () => this.openImport('trail'));
     this.root.querySelector('#btn-add-tour')!.addEventListener('click', () => this.openImport('tour'));
 
@@ -434,6 +459,163 @@ export class SpotManager {
     } finally {
       this.setBusy(false);
     }
+  }
+
+  // ── Spot Details Editor ───────────────────────────────────────────────────
+
+  private openDetailsEditor() {
+    const d = this.spotDetails ?? {
+      trail_id: this.spotId,
+      status: 'open' as SpotStatus,
+      status_hint: '',
+      rules: [],
+      trail_description: '',
+    };
+
+    const statusOptions: Array<{ value: SpotStatus; icon: string; label: string; color: string }> = [
+      { value: 'open',     icon: 'fa-circle-check',         label: 'Offen',          color: '#2e7d32' },
+      { value: 'limited',  icon: 'fa-triangle-exclamation', label: 'Eingeschränkt',  color: '#e65100' },
+      { value: 'seasonal', icon: 'fa-leaf',                 label: 'Saisonal',       color: '#1565c0' },
+      { value: 'closed',   icon: 'fa-ban',                  label: 'Gesperrt',       color: '#c62828' },
+    ];
+
+    const statusCards = statusOptions.map(s => `
+      <button class="sd-status-card ${d.status === s.value ? 'active' : ''}" data-status="${s.value}" style="--status-color:${s.color}">
+        <i class="fas ${s.icon} sd-status-icon"></i>
+        <span>${s.label}</span>
+      </button>`).join('');
+
+    const rulesHTML = (d.rules ?? []).map((r, i) => `
+      <div class="sd-rule-item" data-rule="${i}">
+        <i class="fas fa-grip-vertical sd-rule-grip"></i>
+        <textarea class="sd-rule-input" rows="1" placeholder="Regel eingeben…">${this.esc(r)}</textarea>
+        <button class="sd-rule-del" data-rule="${i}" title="Entfernen"><i class="fas fa-times"></i></button>
+      </div>`).join('');
+
+    const descLen = (d.trail_description ?? '').length;
+
+    this.renderSidebar(`
+      <div class="sd-editor">
+        <div class="sm-form-header">
+          <button class="sm-btn-back" id="sd-cancel"><i class="fas fa-arrow-left"></i></button>
+          <h3>Spot-Details</h3>
+        </div>
+
+        <div class="sd-section">
+          <div class="sd-section-label"><i class="fas fa-circle-half-stroke"></i> Status</div>
+          <div class="sd-status-grid" id="sd-status-grid">
+            ${statusCards}
+          </div>
+        </div>
+
+        <div class="sd-section" id="sd-hint-section" ${d.status === 'open' ? 'style="display:none"' : ''}>
+          <div class="sd-section-label"><i class="fas fa-comment-dots"></i> Status-Hinweis</div>
+          <input id="sd-hint" class="sd-input" type="text" maxlength="120"
+            value="${this.esc(d.status_hint ?? '')}"
+            placeholder="z.B. Gesperrt bis Ende März wegen Forstarbeiten" />
+          <div class="sd-char-hint" id="sd-hint-chars">${(d.status_hint ?? '').length}/120</div>
+        </div>
+
+        <div class="sd-section">
+          <div class="sd-section-label"><i class="fas fa-list-check"></i> Nutzungsregeln</div>
+          <div id="sd-rules-list">${rulesHTML}</div>
+          <button class="sd-add-rule-btn" id="sd-add-rule">
+            <i class="fas fa-plus"></i> Regel hinzufügen
+          </button>
+        </div>
+
+        <div class="sd-section">
+          <div class="sd-section-label"><i class="fas fa-align-left"></i> Beschreibung</div>
+          <textarea id="sd-desc" class="sd-textarea" placeholder="Allgemeine Infos zum Spot…" maxlength="2000">${this.esc(d.trail_description ?? '')}</textarea>
+          <div class="sd-char-hint" id="sd-desc-chars">${descLen}/2000</div>
+        </div>
+
+        <div class="sd-save-row">
+          <button class="sm-btn-secondary" id="sd-cancel2">Abbrechen</button>
+          <button class="sm-btn-primary" id="sd-save"><i class="fas fa-save"></i> Speichern</button>
+        </div>
+      </div>
+    `);
+
+    // Back / cancel
+    this.root.querySelectorAll('#sd-cancel, #sd-cancel2').forEach(b =>
+      b.addEventListener('click', () => this.renderList())
+    );
+
+    // Status card toggle
+    let currentStatus: SpotStatus = d.status;
+    const hintSection = this.root.querySelector<HTMLElement>('#sd-hint-section')!;
+    this.root.querySelectorAll<HTMLElement>('.sd-status-card').forEach(card => {
+      card.addEventListener('click', () => {
+        this.root.querySelectorAll('.sd-status-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        currentStatus = card.dataset.status as SpotStatus;
+        hintSection.style.display = currentStatus === 'open' ? 'none' : '';
+      });
+    });
+
+    // Status-hint char count
+    const hintInput = this.root.querySelector<HTMLInputElement>('#sd-hint')!;
+    const hintChars = this.root.querySelector('#sd-hint-chars')!;
+    hintInput.addEventListener('input', () => {
+      hintChars.textContent = `${hintInput.value.length}/120`;
+    });
+
+    // Description char count
+    const descArea = this.root.querySelector<HTMLTextAreaElement>('#sd-desc')!;
+    const descChars = this.root.querySelector('#sd-desc-chars')!;
+    descArea.addEventListener('input', () => {
+      descChars.textContent = `${descArea.value.length}/2000`;
+    });
+
+    // Rules — add
+    this.root.querySelector('#sd-add-rule')!.addEventListener('click', () => {
+      const list = this.root.querySelector('#sd-rules-list')!;
+      const idx = list.querySelectorAll('.sd-rule-item').length;
+      const div = document.createElement('div');
+      div.className = 'sd-rule-item';
+      div.dataset.rule = String(idx);
+      div.innerHTML = `
+        <i class="fas fa-grip-vertical sd-rule-grip"></i>
+        <textarea class="sd-rule-input" rows="1" placeholder="Regel eingeben…"></textarea>
+        <button class="sd-rule-del" data-rule="${idx}" title="Entfernen"><i class="fas fa-times"></i></button>
+      `;
+      list.appendChild(div);
+      const ta = div.querySelector<HTMLTextAreaElement>('.sd-rule-input')!;
+      this.autoGrow(ta);
+      ta.focus();
+      div.querySelector('.sd-rule-del')!.addEventListener('click', () => div.remove());
+    });
+
+    // Auto-grow existing rule textareas
+    this.root.querySelectorAll<HTMLTextAreaElement>('.sd-rule-input').forEach(ta => this.autoGrow(ta));
+
+    // Rules — delete existing
+    this.root.querySelectorAll('.sd-rule-del').forEach(btn =>
+      btn.addEventListener('click', () => (btn.closest('.sd-rule-item') as HTMLElement).remove())
+    );
+
+    // Save
+    this.root.querySelector('#sd-save')!.addEventListener('click', async () => {
+      const rules = Array.from(this.root.querySelectorAll<HTMLInputElement>('.sd-rule-input'))
+        .map(i => i.value.trim()).filter(Boolean);
+      const row: SpotDetailsRow = {
+        trail_id: this.spotId,
+        status: currentStatus,
+        status_hint: hintInput.value.trim(),
+        rules,
+        trail_description: descArea.value.trim(),
+      };
+      this.setBusy(true);
+      try {
+        this.spotDetails = await upsertSpotDetails(row, this.jwt);
+        this.renderList();
+      } catch (e: any) {
+        alert(`Fehler: ${e.message}`);
+      } finally {
+        this.setBusy(false);
+      }
+    });
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────
@@ -831,10 +1013,16 @@ export class SpotManager {
   }
 
   private setBusy(busy: boolean) {
-    const btn = this.root.querySelector<HTMLButtonElement>('#import-apply');
-    if (btn) btn.disabled = busy;
-    const save = this.root.querySelector<HTMLButtonElement>('#edit-save');
-    if (save) save.disabled = busy;
+    ['#import-apply', '#edit-save', '#sd-save'].forEach(sel => {
+      const btn = this.root.querySelector<HTMLButtonElement>(sel);
+      if (btn) btn.disabled = busy;
+    });
+  }
+
+  private autoGrow(ta: HTMLTextAreaElement) {
+    const resize = () => { ta.style.height = 'auto'; ta.style.height = ta.scrollHeight + 'px'; };
+    ta.addEventListener('input', resize);
+    resize();
   }
 
   private esc(s: string): string {

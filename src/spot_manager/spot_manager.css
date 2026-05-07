@@ -343,6 +343,112 @@
   margin: 0 0 8px; padding: 6px 10px; border-radius: 0 5px 5px 0;
 }
 
+/* ── Details banner (list view) ───────────────────────────────── */
+.sm-details-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 10px 12px 4px; padding: 11px 14px;
+  background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 10px;
+  cursor: pointer; transition: all .15s; text-align: left;
+  gap: 10px;
+}
+.sm-details-banner:hover { background: #f0f6ff; border-color: #b0ccf0; box-shadow: 0 2px 6px rgba(0,119,204,.1); }
+.sm-details-banner-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.sm-details-status-dot {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+}
+.sm-details-status-dot.status-open     { background: #e8f5e9; color: #2e7d32; }
+.sm-details-status-dot.status-limited  { background: #fff3e0; color: #e65100; }
+.sm-details-status-dot.status-seasonal { background: #e3f2fd; color: #1565c0; }
+.sm-details-status-dot.status-closed   { background: #fdecea; color: #c62828; }
+.sm-details-banner-title { display: block; font-size: 12px; font-weight: 700; color: #333; line-height: 1.2; }
+.sm-details-banner-sub   { display: block; font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.sm-details-arrow { color: #bbb; font-size: 12px; flex-shrink: 0; }
+
+/* ── Details editor ───────────────────────────────────────────── */
+.sd-editor {
+  display: flex; flex-direction: column; gap: 0; padding: 14px 14px 100px;
+}
+.sd-section {
+  padding: 14px 0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px;
+}
+.sd-section:last-of-type { border-bottom: none; }
+.sd-section-label {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888;
+}
+.sd-section-label i { font-size: 12px; }
+
+/* Status cards */
+.sd-status-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.sd-status-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 14px 8px; border-radius: 10px; cursor: pointer; transition: all .15s;
+  border: 2px solid #e8e8e8; background: #fafafa; font-size: 12px; font-weight: 600;
+  color: #555;
+}
+.sd-status-card:hover { border-color: var(--status-color); background: color-mix(in srgb, var(--status-color) 8%, #fff); }
+.sd-status-card.active {
+  border-color: var(--status-color);
+  background: color-mix(in srgb, var(--status-color) 12%, #fff);
+  color: var(--status-color);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--status-color) 25%, transparent);
+}
+.sd-status-icon { font-size: 22px; }
+
+/* Inputs */
+.sd-input {
+  border: 1px solid #d0d0d0; border-radius: 7px; padding: 9px 12px;
+  font-size: 13px; color: #333; background: #fafafa; transition: border-color .15s; width: 100%;
+}
+.sd-input:focus { outline: none; border-color: #0077cc; background: #fff; }
+.sd-char-hint { font-size: 11px; color: #bbb; text-align: right; margin-top: -4px; }
+
+/* Rules */
+.sd-rule-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: #fff; border: 1px solid #e8e8e8; border-radius: 8px;
+  padding: 8px 10px; transition: border-color .15s;
+}
+.sd-rule-item:focus-within { border-color: #0077cc; }
+.sd-rule-grip { color: #ccc; cursor: grab; font-size: 12px; flex-shrink: 0; align-self: flex-start; padding-top: 2px; }
+.sd-rule-input {
+  flex: 1; border: none; background: transparent; font-size: 13px; color: #333; outline: none;
+  min-width: 0; resize: none; overflow: hidden; line-height: 1.45;
+  font-family: inherit; padding: 0;
+}
+.sd-rule-input::placeholder { color: #bbb; }
+.sd-rule-del { align-self: flex-start; }
+.sd-rule-del {
+  background: none; border: none; color: #ccc; cursor: pointer; padding: 2px 4px;
+  border-radius: 4px; transition: all .15s; flex-shrink: 0; font-size: 13px;
+}
+.sd-rule-del:hover { color: #c62828; background: #fdecea; }
+.sd-add-rule-btn {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  color: #0077cc; background: #f0f6ff; border: 1px dashed #a0c8f0; border-radius: 8px;
+  padding: 9px 14px; cursor: pointer; transition: all .15s; width: 100%; justify-content: center;
+}
+.sd-add-rule-btn:hover { background: #daeeff; border-color: #0077cc; }
+
+/* Description textarea */
+.sd-textarea {
+  border: 1px solid #d0d0d0; border-radius: 7px; padding: 10px 12px;
+  font-size: 13px; color: #333; background: #fafafa; resize: vertical;
+  min-height: 120px; width: 100%; font-family: inherit; line-height: 1.5;
+  transition: border-color .15s;
+}
+.sd-textarea:focus { outline: none; border-color: #0077cc; background: #fff; }
+
+/* Save row */
+.sd-save-row {
+  position: sticky; bottom: 0; background: #fff; border-top: 1px solid #eee;
+  padding: 12px 0 4px; display: flex; gap: 10px; justify-content: flex-end;
+  margin-top: 8px;
+}
+
 /* ── Misc helpers ─────────────────────────────────────────────── */
 .sm-spinner {
   width: 32px; height: 32px; margin: 40px auto;
