@@ -166,6 +166,15 @@ export class SpotManager {
         </div>
       </div>`).join('');
 
+    const trailHint = this.trails.length === 0
+      ? '<p class="sm-section-hint">Lade zuerst alle Trails hoch. Bei mehreren Schwierigkeiten einen Trail in Abschnitte aufteilen.</p>'
+      : '';
+    const tourHint = this.tours.length === 0 && this.trails.length > 0
+      ? '<p class="sm-section-hint">Trails sind bereit – jetzt Touren hochladen und die enthaltenen Trails zuordnen.</p>'
+      : this.tours.length === 0
+      ? '<p class="sm-section-hint">Touren erst hochladen, nachdem alle Trails angelegt sind.</p>'
+      : '';
+
     this.renderSidebar(`
       <div class="sm-list-view">
         <div class="sm-section">
@@ -173,6 +182,7 @@ export class SpotManager {
             <h3>Trails <span class="sm-count">${this.trails.length}</span></h3>
             <button class="sm-btn-add" id="btn-add-trail"><i class="fas fa-plus"></i> Trail</button>
           </div>
+          ${trailHint}
           <div class="sm-items">${trailItems || '<p class="sm-empty">Keine Trails</p>'}</div>
         </div>
         <div class="sm-section">
@@ -180,6 +190,7 @@ export class SpotManager {
             <h3>Touren <span class="sm-count">${this.tours.length}</span></h3>
             <button class="sm-btn-add" id="btn-add-tour"><i class="fas fa-plus"></i> Tour</button>
           </div>
+          ${tourHint}
           <div class="sm-items">${tourItems || '<p class="sm-empty">Keine Touren</p>'}</div>
         </div>
       </div>
@@ -473,7 +484,6 @@ export class SpotManager {
             <i class="fas fa-folder-open"></i> Durchsuchen
             <input type="file" id="sm-file-input" accept=".gpx" multiple hidden />
           </label>
-          <span class="sm-drop-hint">Trails & Touren gemischt – kein Problem</span>
         </div>
 
         <div id="sm-pending-cards"></div>
@@ -748,6 +758,7 @@ export class SpotManager {
     const bar = this.root.querySelector('#sm-topbar')!;
     bar.innerHTML = `
       ${backBtn ? '<button class="sm-back-btn" id="sm-back"><i class="fas fa-arrow-left"></i></button>' : '<span class="sm-topbar-logo">Trailradar</span>'}
+      ${backBtn ? '<button class="sm-help-btn" id="sm-help" title="Hilfe"><i class="fas fa-question-circle"></i></button>' : ''}
       <span class="sm-topbar-title">${this.esc(title)}</span>
       <span class="sm-role-badge">${this.role}</span>
     `;
@@ -758,7 +769,61 @@ export class SpotManager {
         this.renderSpotSelector();
         this.setTopbar('Spot Manager');
       });
+      this.root.querySelector('#sm-help')!.addEventListener('click', () => this.openHelpModal());
     }
+  }
+
+  private openHelpModal() {
+    const overlay = document.createElement('div');
+    overlay.className = 'sm-modal-overlay';
+    overlay.innerHTML = `
+      <div class="sm-modal">
+        <div class="sm-modal-header">
+          <h2><i class="fas fa-question-circle"></i> Anleitung – Spot Manager</h2>
+          <button class="sm-modal-close" id="sm-modal-close"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="sm-modal-body">
+          <div class="sm-help-step">
+            <div class="sm-help-step-num">1</div>
+            <div class="sm-help-step-content">
+              <h3>Trails hochladen</h3>
+              <p>Lade zuerst alle Trails des Spots als GPX-Dateien hoch. Klicke auf <strong>+ Trail</strong> und ziehe die Dateien in die Upload-Zone oder wähle sie über den Browser-Dialog aus. Trails und Touren können dabei auch gemischt in einem Schritt importiert werden.</p>
+              <div class="sm-help-tip">
+                <i class="fas fa-lightbulb"></i>
+                <span>Hat ein Trail unterschiedliche Schwierigkeitsgrade auf verschiedenen Abschnitten? Teile die GPX-Datei in mehrere Abschnitte auf. Jeder Abschnitt wird als eigener Trail hochgeladen und bekommt seine eigene Schwierigkeit (grün / blau / rot / schwarz).</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="sm-help-step">
+            <div class="sm-help-step-num">2</div>
+            <div class="sm-help-step-content">
+              <h3>Touren hochladen</h3>
+              <p>Sind alle Trails angelegt, können die Touren importiert werden. Klicke auf <strong>+ Tour</strong>. Eine Tour beschreibt eine vollständige Runde oder Strecke und kann mehrere Trails umfassen.</p>
+            </div>
+          </div>
+
+          <div class="sm-help-step">
+            <div class="sm-help-step-num">3</div>
+            <div class="sm-help-step-content">
+              <h3>Trails einer Tour zuordnen</h3>
+              <p>Dieser Schritt ist manuell: Beim Importieren oder Bearbeiten einer Tour kannst du festlegen, welche Trails sie enthält. Die App versucht enthaltene Trails automatisch zu erkennen (erkannte Trails sind mit <span class="sm-badge-auto">auto</span> markiert), die Zuordnung sollte aber immer überprüft und ggf. korrigiert werden.</p>
+            </div>
+          </div>
+
+          <div class="sm-help-step">
+            <div class="sm-help-step-num">✎</div>
+            <div class="sm-help-step-content">
+              <h3>Umbenennen</h3>
+              <p>Trails und Touren können jederzeit über den <i class="fas fa-pen"></i>-Button bearbeitet und umbenannt werden. Beim Bearbeiten lässt sich auch die GPX-Datei ersetzen, ohne den Eintrag neu anlegen zu müssen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    this.root.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#sm-modal-close')!.addEventListener('click', () => overlay.remove());
   }
 
   private setBusy(busy: boolean) {
