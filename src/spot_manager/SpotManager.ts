@@ -757,7 +757,11 @@ export class SpotManager {
   private setTopbar(title: string, backBtn = false) {
     const bar = this.root.querySelector('#sm-topbar')!;
     bar.innerHTML = `
-      ${backBtn ? '<button class="sm-back-btn" id="sm-back"><i class="fas fa-arrow-left"></i></button>' : '<span class="sm-topbar-logo">Trailradar</span>'}
+      <a href="/" class="sm-topbar-home" title="Zurück zur Karte">
+        <img src="/assets/logo.webp" class="sm-topbar-logo-img" alt="Trailradar" />
+      </a>
+      <div class="sm-topbar-divider"></div>
+      ${backBtn ? '<button class="sm-back-btn" id="sm-back"><i class="fas fa-arrow-left"></i></button>' : ''}
       ${backBtn ? '<button class="sm-help-btn" id="sm-help" title="Hilfe"><i class="fas fa-question-circle"></i></button>' : ''}
       <span class="sm-topbar-title">${this.esc(title)}</span>
       <span class="sm-role-badge">${this.role}</span>

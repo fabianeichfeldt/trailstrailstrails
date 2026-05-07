@@ -13,22 +13,34 @@
 .sm-topbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   height: 52px;
-  padding: 0 16px;
+  padding: 0 16px 0 0;
   background: #1a1a2e;
   color: #fff;
   flex-shrink: 0;
   box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  border-bottom: 3px solid #2e7d32;
 }
-.sm-topbar-logo { font-weight: 700; font-size: 15px; color: #7ec8e3; letter-spacing: .5px; }
+.sm-topbar-home {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; padding: 0 14px;
+  background: rgba(255,255,255,.06);
+  border-right: 1px solid rgba(255,255,255,.08);
+  text-decoration: none; transition: background .15s; flex-shrink: 0;
+}
+.sm-topbar-home:hover { background: rgba(255,255,255,.13); }
+.sm-topbar-logo-img { height: 34px; width: auto; display: block; border-radius: 4px; }
+.sm-topbar-divider {
+  width: 1px; height: 24px; background: rgba(255,255,255,.15); flex-shrink: 0;
+}
 .sm-topbar-title { flex: 1; font-size: 15px; font-weight: 600; }
 .sm-role-badge {
   font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
   padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,.15); color: #ddd;
 }
 .sm-back-btn {
-  background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; padding: 4px 8px 4px 0;
+  background: none; border: none; color: #aaa; cursor: pointer; font-size: 16px; padding: 4px 4px 4px 0;
   transition: color .15s;
 }
 .sm-back-btn:hover { color: #fff; }
