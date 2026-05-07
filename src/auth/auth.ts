@@ -119,7 +119,7 @@ export class Auth {
       });
     this.spotManagerBtn = this.dropdown?.querySelector('#spot-manager-btn') ?? null;
     this.spotManagerBtn?.addEventListener('click', () => {
-      window.location.href = '/spot_manager.html';
+      window.location.href = '/spotmanager.html';
     });
     this.avatarBtn?.addEventListener('click', (e) => {
       this.openProfileMenu();

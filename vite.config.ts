@@ -92,7 +92,7 @@ export default defineConfig({
         spotchecks: resolve(__dirname, "spotchecks/index.html"),
         kulmbach: resolve(__dirname, "spotchecks/kulmbach/index.html"),
         nuernberg: resolve(__dirname, "spotchecks/nuernberg/index.html"),
-        spot_manager: resolve(__dirname, "spot_manager.html"),
+        spot_manager: resolve(__dirname, "spotmanager.html"),
       }
     }
   }
