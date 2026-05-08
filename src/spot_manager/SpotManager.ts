@@ -5,7 +5,7 @@ import {
   getMyRole, getManageableSpots, getSpotTrails, getSpotTours,
   uploadGpx, upsertTrail, upsertTour, deleteTrail, deleteTour,
   getSpotDetails, upsertSpotDetails,
-  SpotRow, GpxTrailRow, GpxTourRow, SpotDetailsRow, SpotStatus,
+  SpotRow, GpxTrailRow, GpxTourRow, SpotDetailsRow, SpotStatus, ClosureRules, RainPolicy, NightPolicy,
 } from './Api';
 import {
   processGpx, matchTrailsInTour,
@@ -180,12 +180,20 @@ export class SpotManager {
 
     const status = this.spotDetails?.status ?? 'open';
     const statusMeta: Record<string, { icon: string; label: string; cls: string }> = {
-      open:     { icon: 'fa-circle-check',   label: 'Offen',          cls: 'status-open' },
-      limited:  { icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', cls: 'status-limited' },
-      seasonal: { icon: 'fa-leaf',           label: 'Saisonal',       cls: 'status-seasonal' },
-      closed:   { icon: 'fa-ban',            label: 'Gesperrt',       cls: 'status-closed' },
+      open:    { icon: 'fa-circle-check',         label: 'Offen',         cls: 'status-open' },
+      limited: { icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', cls: 'status-limited' },
+      closed:  { icon: 'fa-ban',                  label: 'Gesperrt',      cls: 'status-closed' },
     };
     const sm = statusMeta[status] ?? statusMeta.open;
+    const untilDate = this.spotDetails?.status_until
+      ? new Date(this.spotDetails.status_until + 'T00:00:00')
+          .toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : null;
+    const bannerSub = [
+      sm.label,
+      untilDate ? `bis ${untilDate}` : null,
+      this.spotDetails?.status_hint || null,
+    ].filter(Boolean).join(' · ');
 
     this.renderSidebar(`
       <div class="sm-list-view">
@@ -195,7 +203,7 @@ export class SpotManager {
             <span class="sm-details-status-dot ${sm.cls}"><i class="fas ${sm.icon}"></i></span>
             <div>
               <span class="sm-details-banner-title">Spot-Details</span>
-              <span class="sm-details-banner-sub">${sm.label}${this.spotDetails?.status_hint ? ' · ' + this.esc(this.spotDetails.status_hint) : ''}</span>
+              <span class="sm-details-banner-sub">${this.esc(bannerSub)}</span>
             </div>
           </div>
           <i class="fas fa-chevron-right sm-details-arrow"></i>
@@ -473,10 +481,9 @@ export class SpotManager {
     };
 
     const statusOptions: Array<{ value: SpotStatus; icon: string; label: string; color: string }> = [
-      { value: 'open',     icon: 'fa-circle-check',         label: 'Offen',          color: '#2e7d32' },
-      { value: 'limited',  icon: 'fa-triangle-exclamation', label: 'Eingeschränkt',  color: '#e65100' },
-      { value: 'seasonal', icon: 'fa-leaf',                 label: 'Saisonal',       color: '#1565c0' },
-      { value: 'closed',   icon: 'fa-ban',                  label: 'Gesperrt',       color: '#c62828' },
+      { value: 'open',    icon: 'fa-circle-check',         label: 'Offen',         color: '#2e7d32' },
+      { value: 'limited', icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', color: '#e65100' },
+      { value: 'closed',  icon: 'fa-ban',                  label: 'Gesperrt',      color: '#c62828' },
     ];
 
     const statusCards = statusOptions.map(s => `
@@ -484,6 +491,17 @@ export class SpotManager {
         <i class="fas ${s.icon} sd-status-icon"></i>
         <span>${s.label}</span>
       </button>`).join('');
+
+    const notOpen        = d.status !== 'open';
+    const hasUntil       = !!d.status_until;
+    const statusUntilVal = d.status_until ?? '';
+    const affectedIds    = d.affected_trail_ids ?? [];
+    const trailChecks    = this.trails.map(t => `
+      <label class="sd-check-label">
+        <input type="checkbox" class="sd-trail-check" value="${t.id}" ${affectedIds.includes(t.id) ? 'checked' : ''} />
+        <span class="sd-trail-check-dot" style="background:${(DIFF_COLOR as Record<string,string>)[t.difficulty] ?? '#888'}"></span>
+        ${this.esc(t.name)}
+      </label>`).join('');
 
     const rulesHTML = (d.rules ?? []).map((r, i) => `
       <div class="sd-rule-item" data-rule="${i}">
@@ -503,18 +521,39 @@ export class SpotManager {
 
         <div class="sd-section">
           <div class="sd-section-label"><i class="fas fa-circle-half-stroke"></i> Status</div>
-          <div class="sd-status-grid" id="sd-status-grid">
+          <div class="sd-status-grid sd-status-grid-3" id="sd-status-grid">
             ${statusCards}
+          </div>
+          <div class="sd-status-sub" id="sd-status-sub" ${notOpen ? '' : 'style="display:none"'}>
+            <div id="sd-affected-trails-wrap" ${d.status === 'limited' && this.trails.length > 0 ? '' : 'style="display:none"'}>
+              <div class="sd-sub-label"><i class="fas fa-route"></i> Betroffene Trails</div>
+              <div class="sd-trail-check-list">
+                ${trailChecks || '<span class="sm-muted">Keine Trails vorhanden</span>'}
+              </div>
+            </div>
+            <div class="sd-sub-divider" id="sd-sub-divider" ${d.status === 'limited' && this.trails.length > 0 ? '' : 'style="display:none"'}></div>
+            <label class="sd-radio-label">
+              <input type="radio" name="status-limit" value="unlimited" ${!hasUntil ? 'checked' : ''} />
+              <span>Unbegrenzt</span>
+            </label>
+            <label class="sd-radio-label">
+              <input type="radio" name="status-limit" value="until" ${hasUntil ? 'checked' : ''} />
+              <span>Automatisch öffnen am</span>
+            </label>
+            <input type="date" id="sd-status-until" class="sd-input sd-status-until-input"
+              value="${statusUntilVal}" ${hasUntil ? '' : 'style="display:none"'} />
           </div>
         </div>
 
-        <div class="sd-section" id="sd-hint-section" ${d.status === 'open' ? 'style="display:none"' : ''}>
+        <div class="sd-section" id="sd-hint-section" ${notOpen ? '' : 'style="display:none"'}>
           <div class="sd-section-label"><i class="fas fa-comment-dots"></i> Status-Hinweis</div>
           <input id="sd-hint" class="sd-input" type="text" maxlength="120"
             value="${this.esc(d.status_hint ?? '')}"
             placeholder="z.B. Gesperrt bis Ende März wegen Forstarbeiten" />
           <div class="sd-char-hint" id="sd-hint-chars">${(d.status_hint ?? '').length}/120</div>
         </div>
+
+        ${this.closureRulesHTML(d.closure_rules)}
 
         <div class="sd-section">
           <div class="sd-section-label"><i class="fas fa-list-check"></i> Nutzungsregeln</div>
@@ -544,15 +583,37 @@ export class SpotManager {
 
     // Status card toggle
     let currentStatus: SpotStatus = d.status;
-    const hintSection = this.root.querySelector<HTMLElement>('#sd-hint-section')!;
+    const hintSection  = this.root.querySelector<HTMLElement>('#sd-hint-section')!;
+    const statusSub    = this.root.querySelector<HTMLElement>('#sd-status-sub')!;
+    const statusUntilInput = this.root.querySelector<HTMLInputElement>('#sd-status-until')!;
     this.root.querySelectorAll<HTMLElement>('.sd-status-card').forEach(card => {
       card.addEventListener('click', () => {
         this.root.querySelectorAll('.sd-status-card').forEach(c => c.classList.remove('active'));
         card.classList.add('active');
         currentStatus = card.dataset.status as SpotStatus;
-        hintSection.style.display = currentStatus === 'open' ? 'none' : '';
+        const open    = currentStatus === 'open';
+        const limited = currentStatus === 'limited';
+        hintSection.style.display  = open ? 'none' : '';
+        statusSub.style.display    = open ? 'none' : '';
+        const affWrap   = this.root.querySelector<HTMLElement>('#sd-affected-trails-wrap');
+        const subDivider = this.root.querySelector<HTMLElement>('#sd-sub-divider');
+        const hasTrails = this.trails.length > 0;
+        if (affWrap)   affWrap.style.display    = limited && hasTrails ? '' : 'none';
+        if (subDivider) subDivider.style.display = limited && hasTrails ? '' : 'none';
+        if (open) {
+          (this.root.querySelector<HTMLInputElement>('[name="status-limit"][value="unlimited"]')!).checked = true;
+          statusUntilInput.style.display = 'none';
+        }
       });
     });
+
+    // Status-limit radio — show/hide date picker
+    this.root.querySelectorAll<HTMLInputElement>('[name="status-limit"]').forEach(r =>
+      r.addEventListener('change', () => {
+        const isUntil = this.root.querySelector<HTMLInputElement>('[name="status-limit"]:checked')?.value === 'until';
+        statusUntilInput.style.display = isUntil ? '' : 'none';
+      })
+    );
 
     // Status-hint char count
     const hintInput = this.root.querySelector<HTMLInputElement>('#sd-hint')!;
@@ -595,16 +656,29 @@ export class SpotManager {
       btn.addEventListener('click', () => (btn.closest('.sd-rule-item') as HTMLElement).remove())
     );
 
+    // Closure rules interactive bindings
+    this.bindClosureEvents();
+
     // Save
     this.root.querySelector('#sd-save')!.addEventListener('click', async () => {
-      const rules = Array.from(this.root.querySelectorAll<HTMLInputElement>('.sd-rule-input'))
+      const rules = Array.from(this.root.querySelectorAll<HTMLTextAreaElement>('.sd-rule-input'))
         .map(i => i.value.trim()).filter(Boolean);
+      const limitVal  = this.root.querySelector<HTMLInputElement>('[name="status-limit"]:checked')?.value;
+      const status_until = currentStatus !== 'open' && limitVal === 'until'
+        ? statusUntilInput.value || undefined
+        : undefined;
+      const affected_trail_ids = currentStatus === 'limited'
+        ? Array.from(this.root.querySelectorAll<HTMLInputElement>('.sd-trail-check:checked')).map(c => c.value)
+        : [];
       const row: SpotDetailsRow = {
         trail_id: this.spotId,
         status: currentStatus,
+        status_until,
         status_hint: hintInput.value.trim(),
+        affected_trail_ids,
         rules,
         trail_description: descArea.value.trim(),
+        closure_rules: this.readClosureRules(),
       };
       this.setBusy(true);
       try {
@@ -616,6 +690,164 @@ export class SpotManager {
         this.setBusy(false);
       }
     });
+  }
+
+  private closureRulesHTML(cr?: ClosureRules): string {
+    const c = cr ?? { rain_policy: 'none' as RainPolicy, night_policy: 'none' as NightPolicy };
+    const hasSeasonal = !!(c.seasonal_from || c.seasonal_to);
+    const rainAfter   = c.rain_policy === 'after';
+    const hasWindow   = !!(c.rain_window_from || c.rain_window_to);
+    const nightOffset = c.night_policy === 'offset';
+
+    const radio = (name: string, val: string, cur: string, label: string) =>
+      `<label class="sd-radio-label">
+        <input type="radio" name="${name}" value="${val}" ${cur === val ? 'checked' : ''} />
+        <span>${label}</span>
+      </label>`;
+
+    return `
+      <div class="sd-section">
+        <div class="sd-section-label"><i class="fas fa-leaf"></i> Jährliche Saisonsperre</div>
+        <label class="sd-toggle-row">
+          <input type="checkbox" id="sd-has-seasonal" ${hasSeasonal ? 'checked' : ''} />
+          <span>Jedes Jahr in diesem Zeitraum gesperrt</span>
+        </label>
+        <div class="sd-sub-block" id="sd-seasonal-dates" ${hasSeasonal ? '' : 'style="display:none"'}>
+          <p class="sd-field-hint">Format TT.MM — wiederholt sich automatisch jedes Jahr</p>
+          <div class="sd-date-row">
+            <label class="sd-date-label">Von
+              <input type="text" id="sd-seasonal-from" class="sd-input" maxlength="5"
+                placeholder="01.11" value="${this.mmddToDdmm(c.seasonal_from)}" />
+            </label>
+            <label class="sd-date-label">Bis
+              <input type="text" id="sd-seasonal-to" class="sd-input" maxlength="5"
+                placeholder="31.03" value="${this.mmddToDdmm(c.seasonal_to)}" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="sd-section">
+        <div class="sd-section-label"><i class="fas fa-cloud-rain"></i> Regensperre</div>
+        <div class="sd-radio-group">
+          ${radio('rain', 'none',   c.rain_policy, 'Keine Einschränkung')}
+          ${radio('rain', 'during', c.rain_policy, 'Gesperrt bei Regen')}
+          <label class="sd-radio-label sd-radio-inline">
+            <input type="radio" name="rain" value="after" ${rainAfter ? 'checked' : ''} />
+            <span>Gesperrt</span>
+            <input type="number" id="sd-rain-hours" class="sd-inline-num" min="1" max="96"
+              value="${c.rain_closed_hours ?? 24}" ${rainAfter ? '' : 'disabled'} />
+            <span>Stunden nach Regen</span>
+          </label>
+        </div>
+        <div class="sd-sub-block" id="sd-rain-window-wrap" ${rainAfter ? '' : 'style="display:none"'}>
+          <label class="sd-toggle-row">
+            <input type="checkbox" id="sd-has-window" ${hasWindow ? 'checked' : ''} />
+            <span>Nur in bestimmtem Jahres&shy;zeitraum (z.B. Frühjahrs&shy;tauwetter)</span>
+          </label>
+          <div class="sd-sub-block sd-window-dates" id="sd-window-dates" ${hasWindow ? '' : 'style="display:none"'}>
+            <p class="sd-field-hint">Format TT.MM — z.B. 01.03 bis 15.04</p>
+            <div class="sd-date-row">
+              <label class="sd-date-label">Von
+                <input type="text" id="sd-rain-from" class="sd-input" maxlength="5"
+                  placeholder="01.03" value="${this.mmddToDdmm(c.rain_window_from)}" />
+              </label>
+              <label class="sd-date-label">Bis
+                <input type="text" id="sd-rain-to" class="sd-input" maxlength="5"
+                  placeholder="15.04" value="${this.mmddToDdmm(c.rain_window_to)}" />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sd-section">
+        <div class="sd-section-label"><i class="fas fa-moon"></i> Nachtsperrung</div>
+        <div class="sd-radio-group">
+          ${radio('night', 'none',         c.night_policy, 'Keine')}
+          ${radio('night', 'dusk_to_dawn', c.night_policy, 'Gesperrt Sonnenuntergang bis Sonnenaufgang')}
+          ${radio('night', 'offset',       c.night_policy, 'Mit Versatz')}
+        </div>
+        <div class="sd-sub-block sd-offset-grid" id="sd-night-offset" ${nightOffset ? '' : 'style="display:none"'}>
+          <label class="sd-date-label">Minuten vor Sonnenuntergang
+            <input type="number" id="sd-before-dusk" class="sd-input" min="0" max="180"
+              value="${c.night_before_dusk_min ?? 60}" />
+          </label>
+          <label class="sd-date-label">Minuten nach Sonnenaufgang
+            <input type="number" id="sd-after-dawn" class="sd-input" min="0" max="180"
+              value="${c.night_after_dawn_min ?? 60}" />
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  private bindClosureEvents() {
+    const q = <T extends HTMLElement>(sel: string) => this.root.querySelector<T>(sel)!;
+    const show = (el: HTMLElement | null, visible: boolean) => { if (el) el.style.display = visible ? '' : 'none'; };
+
+    // Seasonal toggle
+    const hasSeasonal = q<HTMLInputElement>('#sd-has-seasonal');
+    hasSeasonal.addEventListener('change', () => show(q('#sd-seasonal-dates'), hasSeasonal.checked));
+
+    // Rain policy radios
+    const rainRadios = this.root.querySelectorAll<HTMLInputElement>('[name="rain"]');
+    const rainHoursInput = q<HTMLInputElement>('#sd-rain-hours');
+    const rainWindowWrap = q<HTMLElement>('#sd-rain-window-wrap');
+    rainRadios.forEach(r => r.addEventListener('change', () => {
+      const isAfter = (this.root.querySelector<HTMLInputElement>('[name="rain"]:checked')?.value === 'after');
+      rainHoursInput.disabled = !isAfter;
+      show(rainWindowWrap, isAfter);
+      if (!isAfter) {
+        q<HTMLInputElement>('#sd-has-window').checked = false;
+        show(q('#sd-window-dates'), false);
+      }
+    }));
+
+    // Sensitive window toggle
+    const hasWindow = q<HTMLInputElement>('#sd-has-window');
+    hasWindow.addEventListener('change', () => show(q('#sd-window-dates'), hasWindow.checked));
+
+    // Night policy radios
+    const nightRadios = this.root.querySelectorAll<HTMLInputElement>('[name="night"]');
+    nightRadios.forEach(r => r.addEventListener('change', () => {
+      const val = this.root.querySelector<HTMLInputElement>('[name="night"]:checked')?.value;
+      show(q('#sd-night-offset'), val === 'offset');
+    }));
+  }
+
+  private readClosureRules(): ClosureRules {
+    const q = <T extends HTMLInputElement>(sel: string) => this.root.querySelector<T>(sel);
+    const val = (sel: string) => q(sel)?.value.trim() ?? '';
+    const checked = (sel: string) => (q<HTMLInputElement>(sel)?.checked ?? false);
+    const rainPolicy = (this.root.querySelector<HTMLInputElement>('[name="rain"]:checked')?.value ?? 'none') as RainPolicy;
+    const nightPolicy = (this.root.querySelector<HTMLInputElement>('[name="night"]:checked')?.value ?? 'none') as NightPolicy;
+
+    return {
+      seasonal_from: checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-from')) : undefined,
+      seasonal_to:   checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-to'))   : undefined,
+      rain_policy: rainPolicy,
+      rain_closed_hours:  rainPolicy === 'after' ? parseInt(val('#sd-rain-hours')) || 24 : undefined,
+      rain_window_from: rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-from')) : undefined,
+      rain_window_to:   rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-to'))   : undefined,
+      night_policy: nightPolicy,
+      night_before_dusk_min: nightPolicy === 'offset' ? parseInt(val('#sd-before-dusk')) || 60 : undefined,
+      night_after_dawn_min:  nightPolicy === 'offset' ? parseInt(val('#sd-after-dawn'))  || 60 : undefined,
+    };
+  }
+
+  // "03-01" → "01.03"
+  private mmddToDdmm(mmdd?: string): string {
+    if (!mmdd) return '';
+    const [mm, dd] = mmdd.split('-');
+    return dd && mm ? `${dd}.${mm}` : '';
+  }
+
+  // "01.03" → "03-01"
+  private ddmmToMmdd(ddmm: string): string | undefined {
+    const m = ddmm.match(/^(\d{1,2})\.(\d{1,2})$/);
+    if (!m) return undefined;
+    return `${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
   }
 
   // ── Delete ────────────────────────────────────────────────────────────────

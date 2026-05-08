@@ -380,9 +380,27 @@
 .sd-section-label i { font-size: 12px; }
 
 /* Status cards */
-.sd-status-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+.sd-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sd-status-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* Affected-trails inside status sub-panel */
+.sd-sub-label {
+  font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase;
+  letter-spacing: .5px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
 }
+.sd-trail-check-list { display: flex; flex-direction: column; gap: 5px; }
+.sd-check-label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
+.sd-check-label input[type="checkbox"] { accent-color: #0077cc; width: 15px; height: 15px; flex-shrink: 0; }
+.sd-trail-check-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.sd-sub-divider { height: 1px; background: #e0e0e0; margin: 4px 0; }
+
+/* Status until sub-panel */
+.sd-status-sub {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-top: 4px; padding: 10px 12px;
+  background: #f7f9fc; border-left: 3px solid #d0d8e8; border-radius: 0 6px 6px 0;
+}
+.sd-status-until-input { margin-top: 2px; }
 .sd-status-card {
   display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 14px 8px; border-radius: 10px; cursor: pointer; transition: all .15s;
@@ -441,6 +459,38 @@
   transition: border-color .15s;
 }
 .sd-textarea:focus { outline: none; border-color: #0077cc; background: #fff; }
+
+/* Closure rules controls */
+.sd-toggle-row {
+  display: flex; align-items: flex-start; gap: 9px; cursor: pointer;
+  font-size: 13px; color: #333; line-height: 1.4;
+}
+.sd-toggle-row input[type="checkbox"] { margin-top: 2px; accent-color: #0077cc; width: 15px; height: 15px; flex-shrink: 0; }
+.sd-sub-block {
+  margin-top: 2px; padding: 10px 12px; background: #f7f9fc;
+  border-left: 3px solid #c0d8f0; border-radius: 0 6px 6px 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.sd-date-row { display: flex; gap: 10px; }
+.sd-date-label {
+  display: flex; flex-direction: column; gap: 4px; flex: 1;
+  font-size: 11px; font-weight: 600; color: #666;
+}
+.sd-radio-group { display: flex; flex-direction: column; gap: 8px; }
+.sd-radio-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: #333; cursor: pointer;
+}
+.sd-radio-label input[type="radio"] { accent-color: #0077cc; width: 15px; height: 15px; flex-shrink: 0; }
+.sd-radio-inline { flex-wrap: wrap; gap: 6px; align-items: center; }
+.sd-inline-num {
+  width: 58px; border: 1px solid #d0d0d0; border-radius: 5px;
+  padding: 4px 6px; font-size: 13px; text-align: center; color: #333;
+}
+.sd-inline-num:focus { outline: none; border-color: #0077cc; }
+.sd-inline-num:disabled { opacity: .4; }
+.sd-offset-grid { display: flex; gap: 10px; flex-direction: column; }
+.sd-field-hint { margin: 0; font-size: 11px; color: #999; }
 
 /* Save row */
 .sd-save-row {
