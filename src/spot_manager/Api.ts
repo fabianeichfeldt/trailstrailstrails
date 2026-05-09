@@ -150,35 +150,50 @@ export async function deleteTour(id: string, jwt: string): Promise<void> {
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
 }
 
-export type SpotStatus = 'open' | 'limited' | 'closed';
+export type SpotStatus  = 'open' | 'limited' | 'closed' | 'unknown';
+export type AccessType  = 'free' | 'paid' | 'membership';
 export type RainPolicy  = 'none' | 'during' | 'after';
 export type NightPolicy = 'none' | 'dusk_to_dawn' | 'offset';
 
-export interface ClosureRules {
-  seasonal_from?: string;         // MM-DD — annual closure start  (e.g. "11-01")
-  seasonal_to?: string;           // MM-DD — annual closure end    (e.g. "03-31")
-  rain_policy: RainPolicy;
-  rain_closed_hours?: number;     // hours closed after rain (rain_policy === 'after')
-  rain_window_from?: string;      // MM-DD — sensitivity window start (e.g. "03-01")
-  rain_window_to?: string;        // MM-DD — sensitivity window end   (e.g. "04-15")
-  night_policy: NightPolicy;
-  night_before_dusk_min?: number; // close N min before dusk (night_policy === 'offset')
-  night_after_dawn_min?: number;  // open  N min after dawn  (night_policy === 'offset')
-}
-
 export interface SpotDetailsRow {
   trail_id: string;
+  // Status
   status: SpotStatus;
-  status_until?: string;          // YYYY-MM-DD — auto-reopen date for limited/closed
+  status_until?: string;          // YYYY-MM-DD
   status_hint: string;
-  affected_trail_ids?: string[];  // trail IDs affected when status === 'limited'
+  affected_trail_ids: string[];
+  // Access / payment
+  access_type: AccessType;
+  donation_url?: string;
+  // Content
   rules: string[];
   trail_description: string;
-  closure_rules?: ClosureRules;
+  opening_hours_text?: string;
+  // Annual seasonal closure (MM-DD, repeats every year)
+  seasonal_from?: string;
+  seasonal_to?: string;
+  // Rain policy
+  rain_policy: RainPolicy;
+  rain_closed_hours?: number;
+  rain_window_from?: string;      // MM-DD
+  rain_window_to?: string;        // MM-DD
+  // Night / dusk policy
+  night_policy: NightPolicy;
+  night_before_dusk_min?: number;
+  night_after_dawn_min?: number;
 }
 
+const SPOT_DETAILS_SELECT = [
+  'trail_id', 'status', 'status_until', 'status_hint', 'affected_trail_ids',
+  'access_type', 'donation_url',
+  'rules', 'trail_description', 'opening_hours_text',
+  'seasonal_from', 'seasonal_to',
+  'rain_policy', 'rain_closed_hours', 'rain_window_from', 'rain_window_to',
+  'night_policy', 'night_before_dusk_min', 'night_after_dawn_min',
+].join(',');
+
 export async function getSpotDetails(spotId: string, jwt: string): Promise<SpotDetailsRow | null> {
-  const res = await fetch(`${REST}/trail_details?trail_id=eq.${spotId}&select=trail_id,status,status_hint,rules,trail_description&limit=1`, {
+  const res = await fetch(`${REST}/trail_details?trail_id=eq.${spotId}&select=${SPOT_DETAILS_SELECT}&limit=1`, {
     headers: headers(jwt),
   });
   const data = await json<SpotDetailsRow[]>(res);

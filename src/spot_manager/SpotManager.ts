@@ -5,7 +5,7 @@ import {
   getMyRole, getManageableSpots, getSpotTrails, getSpotTours,
   uploadGpx, upsertTrail, upsertTour, deleteTrail, deleteTour,
   getSpotDetails, upsertSpotDetails,
-  SpotRow, GpxTrailRow, GpxTourRow, SpotDetailsRow, SpotStatus, ClosureRules, RainPolicy, NightPolicy,
+  SpotRow, GpxTrailRow, GpxTourRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy,
 } from './Api';
 import {
   processGpx, matchTrailsInTour,
@@ -183,6 +183,7 @@ export class SpotManager {
       open:    { icon: 'fa-circle-check',         label: 'Offen',         cls: 'status-open' },
       limited: { icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', cls: 'status-limited' },
       closed:  { icon: 'fa-ban',                  label: 'Gesperrt',      cls: 'status-closed' },
+      unknown: { icon: 'fa-circle-question',      label: 'Unbekannt',     cls: 'status-unknown' },
     };
     const sm = statusMeta[status] ?? statusMeta.open;
     const untilDate = this.spotDetails?.status_until
@@ -472,18 +473,23 @@ export class SpotManager {
   // ── Spot Details Editor ───────────────────────────────────────────────────
 
   private openDetailsEditor() {
-    const d = this.spotDetails ?? {
+    const d: SpotDetailsRow = this.spotDetails ?? {
       trail_id: this.spotId,
-      status: 'open' as SpotStatus,
+      status: 'open',
       status_hint: '',
+      affected_trail_ids: [],
+      access_type: 'free',
       rules: [],
       trail_description: '',
+      rain_policy: 'none',
+      night_policy: 'none',
     };
 
     const statusOptions: Array<{ value: SpotStatus; icon: string; label: string; color: string }> = [
       { value: 'open',    icon: 'fa-circle-check',         label: 'Offen',         color: '#2e7d32' },
       { value: 'limited', icon: 'fa-triangle-exclamation', label: 'Eingeschränkt', color: '#e65100' },
       { value: 'closed',  icon: 'fa-ban',                  label: 'Gesperrt',      color: '#c62828' },
+      { value: 'unknown', icon: 'fa-circle-question',      label: 'Unbekannt',     color: '#777777' },
     ];
 
     const statusCards = statusOptions.map(s => `
@@ -553,7 +559,9 @@ export class SpotManager {
           <div class="sd-char-hint" id="sd-hint-chars">${(d.status_hint ?? '').length}/120</div>
         </div>
 
-        ${this.closureRulesHTML(d.closure_rules)}
+        ${this.accessHTML(d)}
+
+        ${this.closureRulesHTML(d)}
 
         <div class="sd-section">
           <div class="sd-section-label"><i class="fas fa-list-check"></i> Nutzungsregeln</div>
@@ -656,6 +664,18 @@ export class SpotManager {
       btn.addEventListener('click', () => (btn.closest('.sd-rule-item') as HTMLElement).remove())
     );
 
+    // Access card toggle
+    let currentAccess: AccessType = d.access_type;
+    const donationWrap = this.root.querySelector<HTMLElement>('#sd-donation-wrap')!;
+    this.root.querySelectorAll<HTMLElement>('.sd-access-card').forEach(card => {
+      card.addEventListener('click', () => {
+        this.root.querySelectorAll('.sd-access-card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        currentAccess = card.dataset.access as AccessType;
+        donationWrap.style.display = currentAccess === 'free' ? '' : 'none';
+      });
+    });
+
     // Closure rules interactive bindings
     this.bindClosureEvents();
 
@@ -670,15 +690,20 @@ export class SpotManager {
       const affected_trail_ids = currentStatus === 'limited'
         ? Array.from(this.root.querySelectorAll<HTMLInputElement>('.sd-trail-check:checked')).map(c => c.value)
         : [];
+      const donation_url = currentAccess === 'donation'
+        ? (this.root.querySelector<HTMLInputElement>('#sd-donation-url')?.value.trim() || undefined)
+        : undefined;
       const row: SpotDetailsRow = {
         trail_id: this.spotId,
         status: currentStatus,
         status_until,
         status_hint: hintInput.value.trim(),
         affected_trail_ids,
+        access_type: currentAccess,
+        donation_url,
         rules,
         trail_description: descArea.value.trim(),
-        closure_rules: this.readClosureRules(),
+        ...this.readClosureFields(),
       };
       this.setBusy(true);
       try {
@@ -692,8 +717,38 @@ export class SpotManager {
     });
   }
 
-  private closureRulesHTML(cr?: ClosureRules): string {
-    const c = cr ?? { rain_policy: 'none' as RainPolicy, night_policy: 'none' as NightPolicy };
+  private accessHTML(d: SpotDetailsRow): string {
+    const options: Array<{ value: AccessType; icon: string; label: string; desc: string; color: string }> = [
+      { value: 'free',       icon: 'fa-unlock',          label: 'Kostenlos',       desc: 'Freier Zugang, Spende freiwillig', color: '#2e7d32' },
+      { value: 'paid',       icon: 'fa-money-bill-wave', label: 'Kostenpflichtig', desc: 'Gebühr vor Ort',                  color: '#e65100' },
+      { value: 'membership', icon: 'fa-id-card',         label: 'Mitgliedschaft',  desc: 'Vereinsmitgliedschaft erforderlich', color: '#6a1b9a' },
+    ];
+
+    const cards = options.map(o => `
+      <button class="sd-access-card ${d.access_type === o.value ? 'active' : ''}"
+        data-access="${o.value}" style="--access-color:${o.color}" title="${o.desc}">
+        <i class="fas ${o.icon} sd-access-icon"></i>
+        <span class="sd-access-label">${o.label}</span>
+        <span class="sd-access-desc">${o.desc}</span>
+      </button>`).join('');
+
+    return `
+      <div class="sd-section">
+        <div class="sd-section-label"><i class="fas fa-ticket"></i> Zugang & Kosten</div>
+        <div class="sd-access-grid sd-access-grid-3">${cards}</div>
+        <div id="sd-donation-wrap" ${d.access_type === 'free' ? '' : 'style="display:none"'}>
+          <label class="sd-date-label" style="margin-top:6px">Spendenlink (optional)
+            <input type="url" id="sd-donation-url" class="sd-input"
+              placeholder="https://…"
+              value="${this.esc(d.donation_url ?? '')}" />
+          </label>
+        </div>
+      </div>
+    `;
+  }
+
+  private closureRulesHTML(d: SpotDetailsRow): string {
+    const c = d;
     const hasSeasonal = !!(c.seasonal_from || c.seasonal_to);
     const rainAfter   = c.rain_policy === 'after';
     const hasWindow   = !!(c.rain_window_from || c.rain_window_to);
@@ -816,21 +871,21 @@ export class SpotManager {
     }));
   }
 
-  private readClosureRules(): ClosureRules {
+  private readClosureFields(): Partial<SpotDetailsRow> {
     const q = <T extends HTMLInputElement>(sel: string) => this.root.querySelector<T>(sel);
     const val = (sel: string) => q(sel)?.value.trim() ?? '';
-    const checked = (sel: string) => (q<HTMLInputElement>(sel)?.checked ?? false);
-    const rainPolicy = (this.root.querySelector<HTMLInputElement>('[name="rain"]:checked')?.value ?? 'none') as RainPolicy;
+    const checked = (sel: string) => (q(sel)?.checked ?? false);
+    const rainPolicy  = (this.root.querySelector<HTMLInputElement>('[name="rain"]:checked')?.value  ?? 'none') as RainPolicy;
     const nightPolicy = (this.root.querySelector<HTMLInputElement>('[name="night"]:checked')?.value ?? 'none') as NightPolicy;
 
     return {
-      seasonal_from: checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-from')) : undefined,
-      seasonal_to:   checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-to'))   : undefined,
-      rain_policy: rainPolicy,
-      rain_closed_hours:  rainPolicy === 'after' ? parseInt(val('#sd-rain-hours')) || 24 : undefined,
-      rain_window_from: rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-from')) : undefined,
-      rain_window_to:   rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-to'))   : undefined,
-      night_policy: nightPolicy,
+      seasonal_from:         checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-from')) : undefined,
+      seasonal_to:           checked('#sd-has-seasonal') ? this.ddmmToMmdd(val('#sd-seasonal-to'))   : undefined,
+      rain_policy:           rainPolicy,
+      rain_closed_hours:     rainPolicy === 'after' ? parseInt(val('#sd-rain-hours')) || 24 : undefined,
+      rain_window_from:      rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-from')) : undefined,
+      rain_window_to:        rainPolicy === 'after' && checked('#sd-has-window') ? this.ddmmToMmdd(val('#sd-rain-to'))   : undefined,
+      night_policy:          nightPolicy,
       night_before_dusk_min: nightPolicy === 'offset' ? parseInt(val('#sd-before-dusk')) || 60 : undefined,
       night_after_dawn_min:  nightPolicy === 'offset' ? parseInt(val('#sd-after-dawn'))  || 60 : undefined,
     };
