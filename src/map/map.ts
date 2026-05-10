@@ -121,16 +121,12 @@ export class TrailMap {
   }
 
   public openTrail(trailID: string) {
-    const specificTrailMarker = this.markersById.get(trailID);
-    console.log("open trail", trailID, specificTrailMarker)
-    if (specificTrailMarker) {
-      this.setView(specificTrailMarker.getLatLng());
-      this.clusterGroup.zoomToShowLayer(specificTrailMarker, () => {
-        specificTrailMarker.openPopup();
-      });
+    const trail = [...this.trails, ...this.bikeparks, ...this.dirtparks].find(t => t.id === trailID);
+    if (trail) {
+      document.getElementById("top-map-buttons")!.style.display = "none";
+      this.mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.2 });
+      this.spotPanel.open(trail);
     }
-    else
-      this.setView({lat: 49.059213, lng: 10.652860 });
   }
 
   public setData(trails: SingleTrail[], bikeparks: BikePark[], dirtparks: DirtPark[]) {
@@ -171,9 +167,9 @@ export class TrailMap {
 
       this.markersById.set(trail.id, marker);
 
-      // All trail types (trails, bikeparks, dirtparks) → open spot panel
       marker.on("click", () => {
         document.getElementById("top-map-buttons")!.style.display = "none";
+        this.mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.0 });
         this.spotPanel.open(trail);
       });
     }
