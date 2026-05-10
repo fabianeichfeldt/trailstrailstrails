@@ -48,7 +48,79 @@ export function getTrailPopup(trail: Trail) {
     return popupHtml;
 }
 
-export function renderTrailDetails(trail: Trail, details: TrailDetails, auth : Auth) {
+function computeEffectiveStatus(d: TrailDetails): {
+  status: 'open' | 'limited' | 'closed' | 'unknown';
+  reason?: string;
+} {
+  const s = d.status ?? 'open';
+  if (s !== 'open' && d.status_until) {
+    if (new Date() > new Date(d.status_until + 'T23:59:59')) return { status: 'open' };
+  }
+  if (d.seasonal_from && d.seasonal_to) {
+    const today = new Date();
+    const mmdd = `${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const from = d.seasonal_from, to = d.seasonal_to;
+    const inSeason = from <= to ? mmdd >= from && mmdd <= to : mmdd >= from || mmdd <= to;
+    if (inSeason) {
+      const [fm, fd] = from.split('-'), [tm, td] = to.split('-');
+      return { status: 'closed', reason: `Saisonale Sperrung ${fd}.${fm}. – ${td}.${tm}.` };
+    }
+  }
+  return { status: s };
+}
+
+const STATUS_META = {
+  open:    { label: 'Geöffnet',          cls: 'ssb-open'    },
+  limited: { label: 'Eingeschränkt',     cls: 'ssb-limited' },
+  closed:  { label: 'Geschlossen',         cls: 'ssb-closed'  },
+  unknown: { label: 'Status unbekannt',  cls: 'ssb-unknown' },
+};
+const ACCESS_META = {
+  paid:       { label: 'Kostenpflichtig', cls: 'ssb-access-paid'       },
+  membership: { label: 'Mitgliedschaft',  cls: 'ssb-access-membership' },
+};
+
+function renderSpotStatusBanner(details: TrailDetails): string {
+  const { status, reason } = computeEffectiveStatus(details);
+  const sm = STATUS_META[status] ?? STATUS_META.unknown;
+
+  let hint = reason || details.status_hint || '';
+  if (!hint && details.status_until && status !== 'open') {
+    const d = new Date(details.status_until);
+    hint = `Gesperrt bis ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+  }
+
+  const accessType = details.access_type;
+  const accessBadge = accessType === 'paid'
+    ? `<span class="ssb-access ssb-access-paid"><i class="fas fa-coins"></i> ${ACCESS_META.paid.label}</span>`
+    : accessType === 'membership'
+      ? `<span class="ssb-access ssb-access-membership"><i class="fas fa-id-card"></i> ${ACCESS_META.membership.label}</span>`
+      : details.donation_url
+        ? `<a class="ssb-donate-cta" href="${details.donation_url}" target="_blank" rel="noopener noreferrer"><i class="fas fa-heart"></i> Kostenlos · Spenden willkommen</a>`
+        : '';
+
+  const rainHint = details.rain_policy === 'during'
+    ? `<span class="ssb-rain"><i class="fas fa-cloud-rain"></i> Geschlossen bei Regen</span>`
+    : details.rain_policy === 'after'
+      ? `<span class="ssb-rain"><i class="fas fa-cloud-rain"></i> Geschlossen ${details.rain_closed_hours ?? 24}h nach Regen</span>`
+      : '';
+
+  return `
+    <div class="spot-status-banner ${sm.cls}">
+      <div class="ssb-info">
+        <span class="ssb-dot"></span>
+        <div class="ssb-labels">
+          <strong>${sm.label}</strong>
+          ${hint ? `<span class="ssb-hint">${hint}</span>` : ''}
+          ${rainHint}
+        </div>
+      </div>
+      ${accessBadge}
+    </div>`;
+}
+
+export function renderTrailDetails(trail: Trail, details: TrailDetails, auth: Auth) {
+  const statusBanner = details.status ? renderSpotStatusBanner(details) : '';
   const dirtparkInfo = renderDirtparkDetails(trail);
 
   const rules = (details.rules && details.rules.length > 0) ? details.rules : ["Keine besonderen Regeln bekannt."];
@@ -68,6 +140,7 @@ export function renderTrailDetails(trail: Trail, details: TrailDetails, auth : A
     : "";
 
   return `
+        ${statusBanner}
         ${photosHTML}
         ${videoHTML}
         ${spotcheckHTML}

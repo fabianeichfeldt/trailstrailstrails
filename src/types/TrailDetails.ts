@@ -15,6 +15,16 @@ export class TrailDetails {
     photos: Photo[] = [];
     videos: VideoDetails[] = [];
     likes: Like[] = [];
+    // Spot management fields — present for trail-type spots (from trail_details select *)
+    status?: 'open' | 'limited' | 'closed' | 'unknown';
+    status_until?: string;
+    status_hint?: string;
+    access_type?: 'free' | 'paid' | 'membership';
+    donation_url?: string;
+    seasonal_from?: string;
+    seasonal_to?: string;
+    rain_policy?: 'none' | 'during' | 'after';
+    rain_closed_hours?: number;
     public constructor(id: string) {
         this.id = id;
     }

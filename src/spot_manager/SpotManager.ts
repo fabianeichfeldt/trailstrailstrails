@@ -690,7 +690,7 @@ export class SpotManager {
       const affected_trail_ids = currentStatus === 'limited'
         ? Array.from(this.root.querySelectorAll<HTMLInputElement>('.sd-trail-check:checked')).map(c => c.value)
         : [];
-      const donation_url = currentAccess === 'donation'
+      const donation_url = currentAccess === 'free'
         ? (this.root.querySelector<HTMLInputElement>('#sd-donation-url')?.value.trim() || undefined)
         : undefined;
       const row: SpotDetailsRow = {
