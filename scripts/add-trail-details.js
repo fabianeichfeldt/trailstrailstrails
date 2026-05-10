@@ -1,28 +1,32 @@
 const trails = require('../../trail-scraper/trail_analysis.json');
 
-const api_key = process.env.ADD_TRAIL_ANON;
-async function pushTrail(trail) {
-  const response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details`, {
-    method: "POST",
+const SUPABASE_URL = 'https://ixafegmxkadbzhxmepsd.supabase.co';
+const service_role_key = process.env.SUPABASE_SERVICE_KEY;
+
+async function upsertTrail(trail) {
+  const { name: _name, confidence: _confidence, ...fields } = trail;
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/trail_details`, {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${api_key}`,
+      'Content-Type': 'application/json',
+      'apikey': service_role_key,
+      'Authorization': `Bearer ${service_role_key}`,
+      'Prefer': 'resolution=merge-duplicates',
     },
-    body: JSON.stringify({ 
-      trail_id: trail.id,
-      // rules: trail.analysis.trail_rules || [],
-      // status: trail.analysis.open_status || 'unknown',
-      // status_hint: trail.analysis.closure_reason || '',
-      // opening_hours: trail.analysis.opening_hours || '',
-      trail_description: trail.analysis.description || '',
-     }),
+    body: JSON.stringify(fields),
   });
-  console.log(response.status, await response.text());
+
+  if (!response.ok) {
+    const text = await response.text();
+    console.error(`[${trail.trail_id}] ${trail.name} — ${response.status}: ${text}`);
+  } else {
+    console.log(`[${trail.trail_id}] ${trail.name} — ok`);
+  }
 }
 
 (async () => {
   for (const trail of trails) {
-    await pushTrail(trail);
-    console.log(`Trail: ${trail.name} pushed`);
+    await upsertTrail(trail);
   }
 })();
