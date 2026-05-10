@@ -4,7 +4,7 @@ import { DirtPark } from "../types/Trail";
 export async function getDirtParks() :Promise<DirtPark[]> {
   const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/dirt_parks?select=*", {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,

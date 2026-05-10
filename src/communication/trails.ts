@@ -14,7 +14,7 @@ const detailsCache = new Map<string, { data: TrailDetails; ts: number }>();
 export async function getTrails(): Promise<SingleTrail[]> {
   const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*", {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -38,7 +38,7 @@ export async function getTrails(): Promise<SingleTrail[]> {
 export async function getFavoriteTrails(userID: string): Promise<BaseTrail[]> {
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites?select=*,trails(*)&user_id=eq.${userID}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -52,7 +52,7 @@ export async function getFavoriteTrails(userID: string): Promise<BaseTrail[]> {
 export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
   const trailResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*&creator_id=eq.${userId}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -62,7 +62,7 @@ export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
 
   const bikeParkResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/parks?creator_id=eq.${userId}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -72,7 +72,7 @@ export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
 
   const dirtParkResponse = fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/dirt_parks?creator_id=eq.${userId}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -116,7 +116,7 @@ export interface PhotoResponse {
 export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]> {
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_photos?select=*,trails(name)&creator=eq.${userId}`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${anon}`,
@@ -132,7 +132,7 @@ export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]
 export async function getLatestPhotos(num: number = 7): Promise<PhotoResponse[]> {
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_photos?select=*,trails(name)&order=created_at.desc`, {
     method: "GET",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Range-Unit": "items",
@@ -220,7 +220,7 @@ export async function likeTrail(trailID: string, authService: IAuthService) {
   const user = await authService.getUser();
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites`, {
     method: "POST",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${user.accessToken}`,
@@ -237,7 +237,7 @@ export async function dislikeTrail(trailID: string, authService: IAuthService) {
   const user = await authService.getUser();
   const trailResponse = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trail_favorites?trail_id=eq.${trailID}&user_id=eq.${user.id}`, {
     method: "DELETE",
-    cache: "force-cache",
+    cache: "no-store",
     headers: {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${user.accessToken}`,
@@ -313,7 +313,7 @@ export async function getSpotGpxData(spotId: string): Promise<SpotMtbData | null
     const [trailsRes, toursRes] = await Promise.all([
       fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/spot_gpx_trails?select=*&spot_id=eq.${spotId}`, {
         method: "GET",
-        cache: "force-cache",
+        cache: "no-store",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${anon}`,
@@ -322,7 +322,7 @@ export async function getSpotGpxData(spotId: string): Promise<SpotMtbData | null
       }),
       fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/spot_gpx_tours?select=*&spot_id=eq.${spotId}`, {
         method: "GET",
-        cache: "force-cache",
+        cache: "no-store",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${anon}`,
