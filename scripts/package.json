@@ -12,7 +12,9 @@
     "add-parks": "node --env-file=.env add-parks.js",
     "preprocess-gpx": "node preprocess-gpx.js",
     "push-gpx": "node --env-file=.env push-gpx.js",
-    "push-gpx-dry": "DRY_RUN=1 node push-gpx.js"
+    "push-gpx-dry": "DRY_RUN=1 node push-gpx.js",
+    "backup": "node --env-file=.env backup.js /Users/fabian/Documents/backups",
+    "restore": "node --env-file=.env restore.js"
   },
   "author": "",
   "license": "ISC",
