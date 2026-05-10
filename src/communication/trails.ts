@@ -8,6 +8,9 @@ function fallbackDetails(trail: Trail): TrailDetails {
   return new TrailDetails(trail.id);
 }
 
+const DETAILS_TTL = 5 * 60 * 1000;
+const detailsCache = new Map<string, { data: TrailDetails; ts: number }>();
+
 export async function getTrails(): Promise<SingleTrail[]> {
   const response = await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/rest/v1/trails?select=*", {
     method: "GET",
@@ -145,11 +148,14 @@ export async function getLatestPhotos(num: number = 7): Promise<PhotoResponse[]>
 }
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
+  const cached = detailsCache.get(trail.id);
+  if (cached && Date.now() - cached.ts < DETAILS_TTL) return cached.data;
+
   let response;
   if (isDirtPark(trail)) {
     response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/dirt-parks-details?id=${trail.id}`, {
       method: "GET",
-      cache: "force-cache",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,
@@ -158,7 +164,7 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   } else if (isBikePark(trail)) {
     response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/bike-parks-details?id=${trail.id}`, {
       method: "GET",
-      cache: "force-cache",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,
@@ -167,7 +173,7 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   } else {
     response = await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details?trail=${trail.id}`, {
       method: "GET",
-      cache: "force-cache",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${anon}`,
@@ -179,7 +185,9 @@ export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
     return fallbackDetails(trail);
 
   const json = await response.json();
-  return json.data ?? fallbackDetails(trail);
+  const data = json.data ?? fallbackDetails(trail);
+  detailsCache.set(trail.id, { data, ts: Date.now() });
+  return data;
 }
 
 export function createCustomIcon(trail: Trail) {
