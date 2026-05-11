@@ -124,7 +124,13 @@ export class TrailMap {
     const trail = [...this.trails, ...this.bikeparks, ...this.dirtparks].find(t => t.id === trailID);
     if (trail) {
       document.getElementById("top-map-buttons")!.style.display = "none";
-      this.mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.2 });
+      const latlng: L.LatLngExpression = [trail.latitude, trail.longitude];
+      // flyTo requires an existing center; fall back to setView on first load (e.g. /trails/:id URL)
+      if (this.mymap.getZoom() !== undefined) {
+        this.mymap.flyTo(latlng, 14, { duration: 1.2 });
+      } else {
+        this.mymap.setView(latlng, 14);
+      }
       this.spotPanel.open(trail);
     }
   }
