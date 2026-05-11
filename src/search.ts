@@ -19,7 +19,7 @@ const TYPE_LABEL: Record<string, string> = {
   dirtpark: "Dirtpark / Pumptrack",
 };
 
-function trailScore(trail: Trail, query: string): number {
+export function trailScore(trail: Trail, query: string): number {
   const name = trail.name.toLowerCase();
   const q = query.toLowerCase();
   if (name === q) return 100;
