@@ -112,3 +112,33 @@ a { color: var(--accent); text-decoration: none; }
   max-width: 700px;
   margin: auto;
 }
+
+/* Article page footer nav */
+.page-footer {
+  background: #0a0b0c;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.page-footer nav {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.page-footer nav a {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.page-footer nav a:hover { color: #fff; }
+
+.page-footer .copyright {
+  color: #555;
+  font-size: 0.8rem;
+  margin: 0;
+}
