@@ -133,40 +133,34 @@ header h1 {
   grid-column: 1 / span 2;
 }
 
-footer {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1em 0 0 0;
-  background: #f9f9f9;
-  color: #555;
-  font-size: 0.9em;
-  border-top: 1px solid #e5e7eb;
+
+.page-footer {
+  background: #0a0b0c;
+  padding: 2rem 1.5rem;
+  text-align: center;
 }
 
-.footer-links {
+.page-footer nav {
   display: flex;
-  flex-wrap: wrap;
+  gap: 1.5rem;
   justify-content: center;
-  gap: 0.4em 1.2em;
-  padding: 0.2em 1em;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
-.footer-links a {
-  font-size: 0.75em;
-  color: #666;
+.page-footer nav a {
+  color: #939393;
+  font-size: 0.85rem;
   text-decoration: none;
+  transition: color 0.15s;
 }
 
-.footer-links a:hover {
-  color: #2b6cb0;
-  text-decoration: underline;
-}
+.page-footer nav a:hover { color: #fff; }
 
-footer p {
-  font-size: 0.7em;
-  margin: 0.8em 0 0 0;
+.page-footer .copyright {
+  color: #555;
+  font-size: 0.8rem;
+  margin: 0;
 }
 
 a {
