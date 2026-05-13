@@ -56,6 +56,58 @@ export default defineNuxtConfig({
     'leaflet.markercluster/dist/MarkerCluster.Default.css',
   ],
 
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'Trailradar - Offizielle MTB Trails',
+      short_name: 'Trailradar',
+      description: 'Alle offiziell genehmigten MTB Trails in Deutschland und Europa auf einer Karte.',
+      theme_color: '#0077cc',
+      background_color: '#ffffff',
+      display: 'standalone',
+      orientation: 'portrait',
+      scope: '/',
+      start_url: '/',
+      lang: 'de',
+      categories: ['sports', 'navigation', 'lifestyle'],
+      icons: [
+        { src: '/assets/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: '/assets/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: '/assets/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    workbox: {
+      maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+      globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+      runtimeCaching: [
+        {
+          urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'osm-tiles',
+            expiration: { maxEntries: 500, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-api',
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+      ],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: false,
+    },
+  },
+
   supabase: {
     url: process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
     key: process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
@@ -80,6 +132,9 @@ export default defineNuxtConfig({
         '/privacy',
         '/support',
         '/terms',
+        '/reset-password',
+        '/trailradar-vs-komoot',
+        '/trailradar-vs-trailforks',
         ...Object.keys(regions).map(slug => `/trails/${slug}`),
       ],
       failOnError: false,
