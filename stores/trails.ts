@@ -1,8 +1,16 @@
+import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { SingleTrail, BikePark, DirtPark, Trail } from '~/src/types/Trail'
 
 export const useTrailsStore = defineStore('trails', () => {
   const client = useSupabaseClient() as SupabaseClient
+
+  // Anon-only client for public tables — parks/dirt_parks have no RLS policy for
+  // the authenticated role, so the session client returns 0 rows when logged in.
+  const { public: { supabase: sbConfig } } = useRuntimeConfig()
+  const anonClient = createClient(sbConfig.url, sbConfig.key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  }) as SupabaseClient
 
   const trails = ref<SingleTrail[]>([])
   const bikeparks = ref<BikePark[]>([])
@@ -15,9 +23,9 @@ export const useTrailsStore = defineStore('trails', () => {
     error.value = null
     try {
       const [trailsRes, parksRes, dirtRes] = await Promise.all([
-        client.from('trails').select('*'),
-        client.from('parks').select('*'),
-        client.from('dirt_parks').select('*'),
+        anonClient.from('trails').select('*'),
+        anonClient.from('parks').select('*'),
+        anonClient.from('dirt_parks').select('*'),
       ])
       trails.value = (trailsRes.data ?? []).map(t => ({ ...t, type: 'trail' as const }))
       bikeparks.value = (parksRes.data ?? []).map(p => ({ ...p, type: 'bikepark' as const }))

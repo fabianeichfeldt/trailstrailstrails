@@ -60,12 +60,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
 
     function createCustomIcon(trail: Trail) {
-      let category = 'unverified'
-      if ((trail as any).approved) {
-        category = 'verified'
-        if ((trail as any).dirtpark !== undefined || (trail as any).pumptrack !== undefined) category = 'dirtpark'
-        else if ((trail as any).type === 'bikepark') category = 'bikepark'
-      }
+      let category: string
+      if (trail.type === 'dirtpark') category = 'dirtpark'
+      else if (trail.type === 'bikepark') category = 'bikepark'
+      else category = trail.approved ? 'verified' : 'unverified'
       return L.divIcon({
         html: `<div class="marker-wrapper marker-${category}"><img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" class="marker-img" /></div>`,
         iconSize: [25, 41],
@@ -118,8 +116,14 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       bikeparks: BikePark[],
       dirtparks: DirtPark[],
     ) {
-      mymap.removeLayer(currentLayer())
-      mymap.addLayer(currentLayer())
+      // Swap cluster/plain layer without remove+re-add (re-add breaks _leaflet_pos)
+      if (filtersStore.useCluster) {
+        if (!mymap.hasLayer(clusterGroup)) mymap.addLayer(clusterGroup)
+        if (mymap.hasLayer(markerGroup)) mymap.removeLayer(markerGroup)
+      } else {
+        if (!mymap.hasLayer(markerGroup)) mymap.addLayer(markerGroup)
+        if (mymap.hasLayer(clusterGroup)) mymap.removeLayer(clusterGroup)
+      }
       clusterGroup.clearLayers()
       markerGroup.clearLayers()
       markersById.clear()
