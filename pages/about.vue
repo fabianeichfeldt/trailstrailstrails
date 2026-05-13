@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <section class="split">
         <img src="/assets/aletsch.webp" alt="MTB Stoneman Glaciera - Aletsch Gletscher" />

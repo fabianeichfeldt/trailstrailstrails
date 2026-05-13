@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <h2>1. Geltungsbereich</h2>
       <p>Diese Nutzungsbedingungen regeln die Nutzung der Website <strong>Trailradar.org</strong> sowie aller

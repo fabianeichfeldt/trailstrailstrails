@@ -6,8 +6,8 @@ import "/src/map/detail_popup/yt.css";
 
 import {isDirtPark, Trail} from "../../types/Trail";
 import {TrailDetails} from "../../types/TrailDetails";
-import {IAuthService} from "../../auth/auth_service";
-import {Auth} from "../../auth/auth";
+import type {IAuthService} from "../../auth/auth_service";
+import type {Auth} from "../../auth/auth";
 
 export function getTrailPopup(trail: Trail) {
     let popupHtml = `

@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <section id="privacy">
         <h2>Verantwortlicher</h2>

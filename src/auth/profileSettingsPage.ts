@@ -1,4 +1,4 @@
-import {IAuthService} from "./auth_service";
+import type {IAuthService} from "./auth_service";
 import {Supabase} from './supabase';
 
 import "/src/css/style.css";

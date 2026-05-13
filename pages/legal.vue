@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <p class="intro">
         In Deutschland, Schweiz, Österreich und allen anderen Nachbarländern existieren tausende Wege,
@@ -82,7 +82,7 @@
           oder per Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
       </div>
 
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
     </main>
   </div>
 </template>

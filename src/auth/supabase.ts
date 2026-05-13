@@ -1,4 +1,4 @@
-import {IAuthService} from "./auth_service";
+import type {IAuthService} from "./auth_service";
 import {User} from "./user";
 import {createClient, SupabaseClient} from "@supabase/supabase-js"
 import * as console from "node:console";

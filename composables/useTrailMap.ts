@@ -1,0 +1,287 @@
+import type { Ref } from 'vue'
+import type { Trail, SingleTrail, BikePark, DirtPark } from '~/src/types/Trail'
+
+export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
+  const trailsStore = useTrailsStore()
+  const filtersStore = useFiltersStore()
+  const authStore = useAuthStore()
+  const mapStore = useMapStore()
+  const user = useSupabaseUser()
+  const client = useSupabaseClient()
+
+  // Exposed for search bar
+  const mapInstance = shallowRef<any>(null)
+  const openTrailFn = ref<((id: string) => void) | null>(null)
+  const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
+
+  // Cleanup registered synchronously — can't call onUnmounted after await
+  let cleanupFn: (() => void) | null = null
+  onUnmounted(() => cleanupFn?.())
+
+  // Nearby conflict state (replaces DOM-based modal)
+  const nearbyConflict = ref<{
+    trail: Trail
+    resolve: (proceed: boolean) => void
+  } | null>(null)
+
+  function openTrail(id: string) { openTrailFn.value?.(id) }
+  function flyToPlace(lat: number, lon: number) { flyToFn.value?.(lat, lon) }
+
+  onMounted(async () => {
+    if (!mapEl.value) return
+
+    // Dynamic imports — all Leaflet code runs client-only
+    const L = (await import('leaflet')).default
+    await import('leaflet.markercluster')
+    await import('leaflet-gesture-handling') // self-registers via addInitHook side effect
+
+    const mymap = L.map(mapEl.value, {
+      gestureHandling: true,
+      gestureHandlingOptions: {
+        text: {
+          touch: 'Benutze 2 Finger um die Karte zu bewegen',
+          scroll: 'Benutze ctrl + scroll um die Karte zu zoomen',
+          scrollMac: 'Benutze ⌘ + scroll um die Karte zu zoomen',
+        },
+      },
+      zoomControl: false,
+    } as any)
+
+    mapInstance.value = mymap
+    mymap.setMaxZoom(19)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(mymap)
+
+    L.control.zoom({ position: 'bottomright' }).addTo(mymap)
+
+    // Cluster + plain layer
+    const clusterGroup = new (L as any).MarkerClusterGroup()
+    const markerGroup = L.layerGroup()
+    mymap.addLayer(clusterGroup)
+
+    const markersById = new Map<string, any>()
+
+    function currentLayer() {
+      return filtersStore.useCluster ? clusterGroup : markerGroup
+    }
+
+    function createCustomIcon(trail: Trail) {
+      let category = 'unverified'
+      if ((trail as any).approved) {
+        category = 'verified'
+        if ((trail as any).dirtpark !== undefined || (trail as any).pumptrack !== undefined) category = 'dirtpark'
+        else if ((trail as any).type === 'bikepark') category = 'bikepark'
+      }
+      return L.divIcon({
+        html: `<div class="marker-wrapper marker-${category}"><img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" class="marker-img" /></div>`,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+        className: '',
+      })
+    }
+
+    // Auth adapter bridging Pinia → legacy Auth interface
+    const authAdapter = {
+      authService: {
+        get loggedIn() { return authStore.isLoggedIn },
+        async getUser() {
+          const session = await (client as any).auth.getSession()
+          return {
+            id: user.value?.id ?? '',
+            email: user.value?.email ?? '',
+            nickname: authStore.nickname,
+            accessToken: session.data.session?.access_token ?? '',
+            avatarUrl: authStore.avatarUrl,
+            avatarHTML: '',
+          }
+        },
+        async signIn(email: string, password: string) {
+          await authStore.signIn(email, password)
+          return {} as any
+        },
+        async signUp(email: string, password: string, nickname: string) { return {} as any },
+        async signOut() { await authStore.signOut() },
+        async uploadAvatar(file: File) { return authStore.uploadAvatar(file) },
+        async updatePassword(old: string, newPw: string) { return authStore.updatePassword(old, newPw) },
+        async updateProfile(params: any) { return authStore.updateProfile(params) },
+        async resetPassword(email: string) { return authStore.resetPassword(email) },
+        async signInWithGoogle() { return authStore.signInWithGoogle() as any },
+        async uploadTrailPhoto(file: File, trailId: string) { return authStore.uploadTrailPhoto(file, trailId) },
+      },
+      async openSignInModal() { mapStore.authModalOpen = true },
+    }
+
+    // SpotPanel
+    const { SpotPanel } = await import('~/src/map/spot_panel/spotPanel')
+    const spotPanel = new SpotPanel(mymap, authAdapter as any, () => {
+      mapStore.panelOpen = false
+    })
+
+    function renderMarkers(
+      trails: SingleTrail[],
+      bikeparks: BikePark[],
+      dirtparks: DirtPark[],
+    ) {
+      mymap.removeLayer(currentLayer())
+      mymap.addLayer(currentLayer())
+      clusterGroup.clearLayers()
+      markerGroup.clearLayers()
+      markersById.clear()
+
+      const visible: Trail[] = [
+        ...(filtersStore.showTrails ? trails : []),
+        ...(filtersStore.showBikeparks ? bikeparks : []),
+        ...(filtersStore.showDirtparks || filtersStore.showPumptracks
+          ? (dirtparks as any[]).filter(dp => {
+              if (filtersStore.showDirtparks && filtersStore.showPumptracks) return true
+              if (filtersStore.showDirtparks && dp.dirtpark) return true
+              return filtersStore.showPumptracks && dp.pumptrack
+            })
+          : []),
+      ]
+
+      for (const trail of visible) {
+        const marker = L.marker([trail.latitude, trail.longitude], {
+          icon: createCustomIcon(trail),
+        }).addTo(currentLayer() as any)
+
+        markersById.set(trail.id, marker)
+        marker.on('click', () => {
+          mapStore.panelOpen = true
+          mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.0 })
+          spotPanel.open(trail as any)
+        })
+      }
+    }
+
+    // Expose trail open + fly-to for search bar
+    openTrailFn.value = (id: string) => {
+      const all = [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
+      const trail = all.find(t => t.id === id)
+      if (!trail) return
+      mapStore.panelOpen = true
+      mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.2 })
+      spotPanel.open(trail as any)
+    }
+    flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
+
+    // Initial location
+    const { getApproxLocation } = await import('~/src/locations')
+    const loc = await getApproxLocation()
+    if (loc.lat !== 0 || loc.lng !== 0) {
+      mymap.setView([loc.lat, loc.lng], 9)
+    } else {
+      mymap.setView([51.163, 10.447], 6)
+    }
+
+    // Load data and watch for changes
+    await trailsStore.fetchAll()
+    renderMarkers(trailsStore.trails, trailsStore.bikeparks, trailsStore.dirtparks)
+
+    watch(
+      [
+        () => trailsStore.trails,
+        () => trailsStore.bikeparks,
+        () => trailsStore.dirtparks,
+        () => filtersStore.showTrails,
+        () => filtersStore.showBikeparks,
+        () => filtersStore.showDirtparks,
+        () => filtersStore.showPumptracks,
+        () => filtersStore.useCluster,
+      ],
+      () => renderMarkers(trailsStore.trails, trailsStore.bikeparks, trailsStore.dirtparks),
+    )
+
+    // Geolocation
+    let posMarker: any = null
+    let watchId: number | null = null
+
+    if (navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        pos => {
+          const { latitude: lat, longitude: lng } = pos.coords
+          mapStore.userLocation = [lat, lng]
+          if (!posMarker) {
+            posMarker = L.circleMarker([lat, lng], {
+              radius: 8, fillColor: '#4285F4', fillOpacity: 0.9,
+              color: '#1e40af', weight: 2.5, interactive: false,
+            }).addTo(mymap)
+          } else {
+            posMarker.setLatLng([lat, lng])
+          }
+        },
+        () => {},
+        { enableHighAccuracy: false, maximumAge: 0, timeout: 10000 },
+      )
+    }
+
+    // Add-trail FAB + map click to place
+    let addMode: string | undefined
+    const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
+    const fabMenu = document.getElementById('fab-menu')
+
+    addBtn?.addEventListener('click', () => {
+      fabMenu?.classList.toggle('hidden')
+      addBtn.classList.toggle('active')
+      if (addMode) {
+        addMode = undefined
+        addBtn.textContent = '+'
+        mymap.getContainer().classList.remove('crosshair-cursor')
+      }
+    })
+
+    fabMenu?.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement
+      if (!target.classList.contains('fab-item')) return
+      const type = target.dataset.type
+      fabMenu.classList.add('hidden')
+      if (!type) return
+      addMode = type
+      if (addBtn) {
+        addBtn.textContent = 'Klick auf Karte, um Trail zu setzen'
+        addBtn.classList.add('active')
+        mymap.getContainer().classList.add('crosshair-cursor')
+      }
+    })
+
+    mymap.on('click', async (e: any) => {
+      if (!addMode) {
+        if (spotPanel.isOpen) spotPanel.close()
+        return
+      }
+      const { giveTrailNearBy } = await import('~/src/near_by_trails')
+      const { openCreateTrailPopup } = await import('~/src/map/create_trail/popup')
+      const nearby = giveTrailNearBy(e.latlng.lat, e.latlng.lng, trailsStore.trails as any)
+
+      const proceed = await new Promise<boolean>(resolve => {
+        if (nearby) {
+          nearbyConflict.value = { trail: nearby as any, resolve }
+        } else {
+          resolve(true)
+        }
+      })
+
+      if (proceed) {
+        openCreateTrailPopup(mymap, e.latlng.lat, e.latlng.lng, addMode as any, authAdapter as any)
+      }
+      addMode = undefined
+      if (addBtn) {
+        addBtn.textContent = '+'
+        addBtn.classList.remove('active')
+        mymap.getContainer().classList.remove('crosshair-cursor')
+      }
+    })
+
+    cleanupFn = () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+      mymap.remove()
+    }
+  })
+
+  return { openTrail, flyToPlace, nearbyConflict }
+}

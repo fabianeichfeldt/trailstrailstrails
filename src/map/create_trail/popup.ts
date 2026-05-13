@@ -2,7 +2,7 @@ import "/src/css/nearby_modal.css";
 import {anyTrailType} from "../../types/Trail";
 import {showToast} from "../../toast";
 import L from "leaflet";
-import {IAuthService} from "../../auth/auth_service";
+import type {IAuthService} from "../../auth/auth_service";
 import {User} from "../../auth/user";
 
 const types = {

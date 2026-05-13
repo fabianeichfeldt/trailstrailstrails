@@ -1,7 +1,7 @@
 import {anon} from "../anon";
 import {BaseTrail, BikePark, DirtPark, isBikePark, isDirtPark, SingleTrail, Trail} from "../types/Trail";
 import {TrailDetails} from "../types/TrailDetails";
-import {IAuthService} from "../auth/auth_service";
+import type {IAuthService} from "../auth/auth_service";
 import {SpotMtbData, MtbTrail, MtbTour, ElevationPoint} from "../types/MtbTypes";
 
 function fallbackDetails(trail: Trail): TrailDetails {

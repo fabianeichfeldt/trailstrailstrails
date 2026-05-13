@@ -1,5 +1,5 @@
 import {User} from "./user";
-import {IAuthService} from "./auth_service";
+import type {IAuthService} from "./auth_service";
 
 export class DummyAuthService implements IAuthService{
   updatePassword(oldPassword: string, newPassword: string): Promise<void> {

@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <nav class="faq-nav">
         <h2>Direkt zu deiner Frage</h2>

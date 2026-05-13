@@ -15,13 +15,45 @@ if (existsSync(envFile)) {
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  components: [
+    { path: '~/components', pathPrefix: false },
+  ],
+
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        verbatimModuleSyntax: false,
+      },
+    },
+  },
+
+  vite: {
+    esbuild: {
+      tsconfigRaw: {
+        compilerOptions: {
+          verbatimModuleSyntax: false,
+        },
+      },
+    },
+  },
+
   modules: [
     '@nuxtjs/supabase',
     '@pinia/nuxt',
     '@vite-pwa/nuxt',
   ],
 
-  css: ['~/assets/css/variables.css', '~/assets/css/base.css'],
+  css: [
+    '~/assets/css/variables.css',
+    '~/assets/css/base.css',
+    '~/assets/css/marker.css',
+    '~/assets/css/spot_panel.css',
+    '~/assets/css/lightbox.css',
+    'leaflet/dist/leaflet.css',
+    'leaflet.markercluster/dist/MarkerCluster.css',
+    'leaflet.markercluster/dist/MarkerCluster.Default.css',
+    'leaflet-gesture-handling/dist/leaflet-gesture-handling.css',
+  ],
 
   supabase: {
     url: process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
@@ -38,6 +70,7 @@ export default defineNuxtConfig({
       crawlLinks: true,
       routes: [
         '/',
+        '/map',
         '/about',
         '/articles',
         '/business',

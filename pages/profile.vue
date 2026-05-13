@@ -6,7 +6,7 @@
     </PageHero>
 
     <main class="container">
-      <NuxtLink to="/" class="back-link">← Zurück zur Karte</NuxtLink>
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <div v-if="!authStore.isLoggedIn" class="not-logged-in">
         <p>Du musst angemeldet sein, um dein Profil zu sehen.</p>
