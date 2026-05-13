@@ -7,8 +7,9 @@
       <div class="hero-content">
         <img src="/assets/logo.webp" alt="Trailradar Logo" class="hero-logo" />
         <div class="hero-text">
-          <h1>Alle offiziellen MTB Trails. Legal. Community getrieben und übersichtlich auf der Karte.</h1>
-          <p class="hero-sub">Bock auf coole MTB-Trails? Hier findest du alle offiziell gebauten Trails auf einer Karte.</p>
+          <h1>Alle offiziellen MTB Trails. Legal. Community-getrieben. Auf der Karte.</h1>
+          <p class="hero-sub">Bock auf coole MTB-Trails? Hier findest du alle offiziell gebauten Trails auf einen Blick.</p>
+          <NuxtLink to="/support" class="hero-support">❤️ Support Trailradar</NuxtLink>
         </div>
       </div>
     </section>
@@ -47,26 +48,119 @@
     </section>
 
     <!-- Features -->
-    <section class="features container">
+    <section class="features-section">
+      <div class="features-grid inner">
       <div class="feature-card">
-        <span class="feature-icon">🗺️</span>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+            <line x1="8" y1="2" x2="8" y2="18"/>
+            <line x1="16" y1="6" x2="16" y2="22"/>
+          </svg>
+        </div>
         <h2>Interaktive Karte</h2>
         <p>Alle offiziell genehmigten Trails auf einem Blick. Filtere nach Trails, Bikeparks und Pumptracks.</p>
       </div>
       <div class="feature-card">
-        <span class="feature-icon">✅</span>
-        <h2>Nur legale Trails</h2>
-        <p>Trailradar listet ausschließlich Strecken, die offiziell genehmigt oder geduldet sind.</p>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <polyline points="9 12 11 14 15 10"/>
+          </svg>
+        </div>
+        <h2>Nur offizielle Trails</h2>
+        <p>Trailradar listet ausschließlich Strecken, die offiziell genehmigt sind – kein Graubereich.</p>
       </div>
       <div class="feature-card">
-        <span class="feature-icon">📍</span>
-        <h2>Immer aktuell</h2>
-        <p>Die Community trägt neue Spots ein und meldet Änderungen – so bleibt die Karte aktuell.</p>
+        <div class="feature-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h2>Community-getrieben</h2>
+        <p>Die Community trägt neue Spots ein und meldet Änderungen – so bleibt die Karte immer aktuell.</p>
+      </div>
+      </div>
+    </section>
+
+    <!-- Quick nav -->
+    <section class="quicknav-section">
+      <div class="inner">
+        <h2 class="section-heading">Mehr auf Trailradar</h2>
+        <div class="quicknav-grid">
+          <NuxtLink to="/articles" class="qn-card">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
+            </div>
+            <span class="qn-label">Trailgespräche</span>
+            <span class="qn-sub">Blog & Berichte</span>
+          </NuxtLink>
+
+          <NuxtLink to="/faq" class="qn-card">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <span class="qn-label">FAQ</span>
+            <span class="qn-sub">Häufige Fragen</span>
+          </NuxtLink>
+
+          <NuxtLink to="/about" class="qn-card">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </div>
+            <span class="qn-label">Über mich</span>
+            <span class="qn-sub">Das Projekt</span>
+          </NuxtLink>
+
+          <NuxtLink to="/support" class="qn-card qn-highlight">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </div>
+            <span class="qn-label">Unterstützen</span>
+            <span class="qn-sub">Trailradar fördern</span>
+          </NuxtLink>
+
+          <NuxtLink to="/business" class="qn-card">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+              </svg>
+            </div>
+            <span class="qn-label">Kooperationen</span>
+            <span class="qn-sub">Für Unternehmen</span>
+          </NuxtLink>
+
+          <NuxtLink to="/privacy" class="qn-card">
+            <div class="qn-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <span class="qn-label">Datenschutz</span>
+            <span class="qn-sub">& Impressum</span>
+          </NuxtLink>
+        </div>
       </div>
     </section>
 
     <!-- Community -->
-    <section class="community-section container">
+    <section class="community-outer">
+    <div class="community-section inner">
       <h2>Trailradar Community 💪</h2>
       <p>
         Wir haben schon <strong>430+ Einträge</strong> in 13 Ländern!<br>
@@ -83,28 +177,43 @@
         <div class="leaderboard-entry">💪 Magster <span>7 Einträge</span></div>
       </div>
       <NuxtLink to="/map" class="btn-community">Trails entdecken →</NuxtLink>
+    </div>
     </section>
 
     <!-- SEO text -->
-    <section class="seo-text container">
+    <section class="seo-outer">
+    <div class="seo-text inner">
       <h2>Entdecke offizielle MTB Trails in deiner Nähe</h2>
       <p>
-        Mountainbiken boomt – doch wirklich <strong>offizielle und genehmigte MTB-Trails</strong> zu finden, ist oft schwierig.
-        Genau hier setzt <strong>Trailradar</strong> an: die zentrale Plattform für legal anerkannte Mountainbike-Projekte in
-        Deutschland und mittlerweile auch in Österreich, der Schweiz und anderen Ländern.
+        Mountainbiken boomt – doch wirklich <strong>offizielle und genehmigte MTB-Trails</strong> zu finden ist oft schwierig.
+        Viele Trails, die online kursieren, befinden sich in einem Graubereich oder sind schlicht illegal.
+        Genau hier setzt <strong>Trailradar</strong> an: die zentrale Plattform für legal anerkannte Mountainbike-Projekte
+        in Deutschland, Österreich, der Schweiz und darüber hinaus.
       </p>
       <p>
         Auf Trailradar findest du ausschließlich behördlich genehmigte <strong>Mountainbike Trails</strong>, <strong>Bikeparks</strong>,
-        <strong>Trailcenter</strong>, Pumptracks und Dirtparks übersichtlich auf einer Karte.
+        <strong>Trailcenter</strong>, Pumptracks und Dirtparks – übersichtlich auf einer Karte.
       </p>
       <hr>
       <h2>Warum offizielle Mountain Bike Trails wichtig sind</h2>
+      <p>Viele Regionen investieren inzwischen viel Energie in den Bau legaler Trails. Offizielle Strecken bieten:</p>
       <ul>
         <li>Rechtssicherheit für Fahrerinnen und Fahrer</li>
         <li>Schutz von Natur &amp; Wildtieren durch gelenkte Nutzung</li>
         <li>Wartung &amp; Pflege durch Vereine oder Betreiber</li>
         <li>Höhere Sicherheit dank gewarteter Strecken</li>
       </ul>
+      <p>
+        Viele legale Trails werden von Vereinen oder ehrenamtlichen Crews betrieben.
+        <strong>Unser Ziel ist es, die Arbeit der Trailbauer:innen sichtbar zu machen und legale Angebote zu stärken.</strong>
+      </p>
+      <hr>
+      <h2>Was bedeutet "offiziell"?</h2>
+      <p>
+        Ein Trail gilt bei Trailradar als offiziell, wenn er behördlich genehmigt oder durch eine Gemeinde,
+        einen Verein oder einen Natursportverband offiziell ausgewiesen wurde. Wildcats oder inoffizielle Trails
+        werden nicht gelistet – das schützt sowohl Fahrer als auch die Natur.
+      </p>
       <hr>
       <h2>Finde Trails in deiner Region</h2>
       <p class="region-links">
@@ -118,15 +227,40 @@
         <NuxtLink to="/trails/taunus">Trails Taunus</NuxtLink>,
         <NuxtLink to="/trails/rhoen">Trails Rhön</NuxtLink>,
         <NuxtLink to="/trails/berlin">Trails Berlin</NuxtLink>,
+        <NuxtLink to="/trails/hamburg">Trails Hamburg</NuxtLink>,
         <NuxtLink to="/trails/muenchen">Trails München</NuxtLink>,
+        <NuxtLink to="/trails/koeln">Trails Köln</NuxtLink>,
+        <NuxtLink to="/trails/stuttgart">Trails Stuttgart</NuxtLink>,
+        <NuxtLink to="/trails/duesseldorf">Trails Düsseldorf</NuxtLink>,
+        <NuxtLink to="/trails/leipzig">Trails Leipzig</NuxtLink>,
+        <NuxtLink to="/trails/dortmund">Trails Dortmund</NuxtLink>,
+        <NuxtLink to="/trails/essen">Trails Essen</NuxtLink>,
         <NuxtLink to="/trails/nuernberg">Trails Nürnberg</NuxtLink>,
+        <NuxtLink to="/trails/augsburg">Trails Augsburg</NuxtLink>,
+        <NuxtLink to="/trails/regensburg">Trails Regensburg</NuxtLink>,
+        <NuxtLink to="/trails/karlsruhe">Trails Karlsruhe</NuxtLink>,
+        <NuxtLink to="/trails/mannheim">Trails Mannheim</NuxtLink>,
+        <NuxtLink to="/trails/freiburg">Trails Freiburg</NuxtLink>,
+        <NuxtLink to="/trails/heidelberg">Trails Heidelberg</NuxtLink>,
         <NuxtLink to="/trails/frankfurt">Trails Frankfurt</NuxtLink>,
+        <NuxtLink to="/trails/wiesbaden">Trails Wiesbaden</NuxtLink>,
+        <NuxtLink to="/trails/kassel">Trails Kassel</NuxtLink>,
+        <NuxtLink to="/trails/darmstadt">Trails Darmstadt</NuxtLink>,
+        <NuxtLink to="/trails/saarbruecken">Trails Saarbrücken</NuxtLink>,
         <NuxtLink to="/trails/bayerischerwald">Trails Bayerischer Wald</NuxtLink>,
         <NuxtLink to="/trails/innsbruck">Trails Innsbruck</NuxtLink>,
         <NuxtLink to="/trails/salzburg">Trails Salzburg</NuxtLink>,
-        <NuxtLink to="/trails/wien">Trails Wien</NuxtLink>
+        <NuxtLink to="/trails/wien">Trails Wien</NuxtLink>,
+        <NuxtLink to="/trails/graz">Trails Graz</NuxtLink>,
+        <NuxtLink to="/trails/tirol">Trails Tirol</NuxtLink>,
+        <NuxtLink to="/trails/vorarlberg">Trails Vorarlberg</NuxtLink>,
+        <NuxtLink to="/trails/kaernten">Trails Kärnten</NuxtLink>,
+        <NuxtLink to="/trails/schweiz">Trails Schweiz</NuxtLink>,
+        <NuxtLink to="/trails/oesterreich">Trails Österreich</NuxtLink>,
+        <NuxtLink to="/trails/tschechien">Trails Tschechien</NuxtLink>
         und viele mehr.
       </p>
+    </div>
     </section>
 
   </div>
@@ -154,39 +288,71 @@ useHead({
   overflow: hidden;
   display: flex;
   align-items: center;
-  min-height: 220px;
+  min-height: 260px;
   border-radius: 0 0 14px 14px;
   background: url('/assets/hero-mobile.webp') center/cover no-repeat, #121212;
 }
 @media (min-width: 800px) {
-  .hero { background-image: url('/assets/hero-desktop.webp'); }
+  .hero { background-image: url('/assets/hero-desktop.webp'); min-height: 300px; }
 }
 .hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.4));
-  backdrop-filter: brightness(0.8);
+  background: linear-gradient(135deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.38) 100%);
 }
 .hero-content {
   position: relative;
   z-index: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.2rem;
-  padding: 1.2rem 1.5rem;
+  padding: 1.6rem 1.5rem;
   color: white;
   max-width: 860px;
   margin: 0 auto;
   width: 100%;
 }
-.hero-logo { width: 54px; height: 54px; flex-shrink: 0; }
-.hero-text h1 {
-  font-size: clamp(1rem, 2.5vw, 1.3rem);
-  font-weight: 700;
-  text-shadow: 0 2px 6px rgba(0,0,0,0.6);
-  margin: 0 0 0.4rem;
+.hero-logo {
+  height: clamp(80px, 16vw, 140px);
+  width: auto;
+  flex-shrink: 0;
+  border-radius: 0.5em;
+  box-shadow: var(--shadow-logo, 2px 2px 15px rgb(225, 193, 146));
 }
-.hero-sub { font-size: 0.82rem; opacity: 0.88; margin: 0; }
+.hero-text h1 {
+  font-size: clamp(1rem, 2.8vw, 1.4rem);
+  font-weight: 800;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+.hero-sub {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin: 0 0 0.9rem;
+  line-height: 1.5;
+}
+.hero-support {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.45em 1em;
+  border-radius: 20px;
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s, border-color 0.2s;
+}
+.hero-support:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.55);
+  text-decoration: none;
+}
 
 /* ── Map teaser ── */
 .map-teaser-section {
@@ -238,7 +404,6 @@ useHead({
   position: relative;
   height: 340px;
   background:
-    /* OSM tile centered on Germany ~zoom 6 */
     url('https://tile.openstreetmap.org/6/33/21.png') -120px -80px / 512px 512px,
     url('https://tile.openstreetmap.org/6/34/21.png') 392px -80px / 512px 512px,
     url('https://tile.openstreetmap.org/6/33/22.png') -120px 432px / 512px 512px,
@@ -326,74 +491,196 @@ useHead({
 }
 
 /* ── Features ── */
-.features {
+.features-section {
+  background: #f4f6f9;
+  padding: 2.8rem 1rem 2.2rem;
+}
+.features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.2rem;
-  padding-top: 3rem;
-  padding-bottom: 2rem;
 }
 .feature-card {
-  background: rgba(255,255,255,0.9);
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  padding: 1.8rem 1.4rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.feature-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+}
+.feature-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 1rem;
+  background: rgba(42,157,92,0.1);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a9d5c;
+}
+.feature-icon svg { width: 26px; height: 26px; }
+.feature-card h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1a2035;
+}
+.feature-card p { font-size: 0.83rem; color: #5a6478; line-height: 1.55; margin: 0; }
+
+/* ── Quick nav ── */
+.quicknav-section {
+  background: #eef1f7;
+  padding: 2.5rem 1rem;
+}
+.section-heading {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #8a96a8;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 1.2rem;
+}
+.quicknav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.9rem;
+}
+@media (max-width: 600px) {
+  .quicknav-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.qn-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.2rem 0.8rem 1rem;
+  background: #fff;
+  border: 1px solid #e4e9f0;
   border-radius: 12px;
-  padding: 1.6rem 1.2rem;
-  box-shadow: var(--shadow-md, 0 2px 8px rgba(0,0,0,0.1));
+  text-decoration: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  transition: transform 0.18s, box-shadow 0.18s;
   text-align: center;
 }
-.feature-icon { font-size: 2rem; display: block; margin-bottom: 0.7rem; }
-.feature-card h2 { font-size: 1rem; font-weight: 700; margin-bottom: 0.4rem; }
-.feature-card p { font-size: 0.85rem; color: #555; line-height: 1.5; margin: 0; }
+.qn-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+  text-decoration: none;
+}
+.qn-highlight {
+  border-color: rgba(220,80,80,0.2);
+}
+.qn-highlight .qn-icon { background: rgba(220,80,80,0.08); color: #dc5050; }
+.qn-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(42,157,92,0.1);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2a9d5c;
+  flex-shrink: 0;
+}
+.qn-icon svg { width: 20px; height: 20px; }
+.qn-label {
+  font-size: 0.83rem;
+  font-weight: 700;
+  color: #1a2035;
+  line-height: 1.2;
+}
+.qn-sub {
+  font-size: 0.72rem;
+  color: #8a96a8;
+  line-height: 1.2;
+}
 
 /* ── Community ── */
-.community-section {
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(3px);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
-  padding: 1.5rem 1.2rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  max-width: 620px !important;
+.community-outer {
+  background: #f4f6f9;
+  padding: 0 1rem 2rem;
 }
-.community-section h2 { color: #2b6cb0; font-size: 1rem; margin-top: 0; }
-.community-section p { font-size: 0.82rem; color: #555; line-height: 1.5; }
+.community-section {
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  padding: 1.8rem 1.4rem;
+  text-align: center;
+  max-width: 620px;
+  margin: 0 auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.community-section h2 {
+  color: #2a9d5c;
+  font-size: 1.05rem;
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+}
+.community-section p { font-size: 0.84rem; color: #5a6478; line-height: 1.55; margin: 0 0 0.3rem; }
+.community-section strong { color: #1a2035; }
 .leaderboard-mini { display: flex; flex-direction: column; gap: 0.35rem; margin: 1rem 0; }
 .leaderboard-entry {
   display: flex; justify-content: space-between;
-  background: #f9fafb; padding: 0.4em 0.6em;
-  border-radius: 8px; font-size: 0.78rem;
+  background: #f8f9fb;
+  padding: 0.45em 0.7em;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #444;
 }
-.leaderboard-entry.gold   { background: linear-gradient(90deg,#fff7cc,#fff2a8); }
-.leaderboard-entry.silver { background: linear-gradient(90deg,#f7f7f7,#e9e9e9); }
-.leaderboard-entry.bronze { background: linear-gradient(90deg,#f9e2c3,#f7d2a8); }
-.leaderboard-entry span { font-weight: 500; color: #555; }
+.leaderboard-entry.gold   { background: linear-gradient(90deg,#fff9e0,#fff4c2); color: #7a6000; }
+.leaderboard-entry.silver { background: linear-gradient(90deg,#f5f5f5,#ebebeb); color: #555; }
+.leaderboard-entry.bronze { background: linear-gradient(90deg,#fdf0e0,#f9e4c4); color: #7a4a10; }
+.leaderboard-entry span { font-weight: 500; color: #888; }
 .btn-community {
   display: inline-block;
-  background: #2b6cb0; color: white;
-  font-weight: 600; font-size: 0.85rem;
-  padding: 0.6rem 1.4rem;
+  background: #2a9d5c;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  padding: 0.65rem 1.6rem;
   border-radius: 8px;
   text-decoration: none;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
+  transition: background 0.2s;
 }
-.btn-community:hover { background: #3182ce; }
+.btn-community:hover { background: #239052; text-decoration: none; }
 
 /* ── SEO text ── */
-.seo-text {
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(3px);
-  border-radius: 12px;
-  padding: 1.5rem 1.5rem;
-  margin-bottom: 2rem;
-  font-size: 0.88rem;
-  color: #444;
-  line-height: 1.6;
+.seo-outer {
+  background: #f4f6f9;
+  padding: 0 1rem 2rem;
 }
-.seo-text h2 { font-size: 1rem; color: #0e1a2b; margin-top: 1.2rem; }
+.seo-text {
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 14px;
+  padding: 1.8rem 1.8rem;
+  font-size: 0.88rem;
+  color: #4a5568;
+  line-height: 1.65;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.seo-text h2 { font-size: 1rem; color: #1a2035; margin-top: 1.4rem; margin-bottom: 0.6rem; }
 .seo-text h2:first-child { margin-top: 0; }
-.seo-text ul { padding-left: 1.3rem; margin: 0.5rem 0; }
-.seo-text hr { border: none; border-top: 1px solid #eee; margin: 1.2rem 0; }
-.region-links { font-size: 0.8rem; }
-.region-links a { color: var(--color-link, #0077cc); text-decoration: none; }
-.region-links a:hover { text-decoration: underline; }
+.seo-text p { margin: 0 0 0.8rem; }
+.seo-text strong { color: #1a2035; }
+.seo-text ul { padding-left: 1.4rem; margin: 0.5rem 0 0.8rem; }
+.seo-text li { margin-bottom: 0.3em; }
+.seo-text hr { border: none; border-top: 1px solid #e8ecf2; margin: 1.4rem 0; }
+.region-links { font-size: 0.8rem; line-height: 1.8; }
+.region-links a { color: #2a9d5c; text-decoration: none; }
+.region-links a:hover { text-decoration: underline; color: #1e7a46; }
+
+/* ── Inner centering wrapper (avoids default layout .container overrides) ── */
+.inner {
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+}
 </style>
