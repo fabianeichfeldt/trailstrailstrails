@@ -6,5 +6,6 @@
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'map' })
 useHead({ title: 'Trailradar — Legal MTB Trails' })
 </script>

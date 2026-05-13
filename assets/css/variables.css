@@ -43,4 +43,11 @@
   /* Typography */
   --font-base: Arial, sans-serif;
   --font-size-base: 1.3em;
+
+  /* Content pages (dark theme) */
+  --color-page-bg: #0e0f10;
+  --color-page-bg-light: #16181a;
+  --color-page-text: #ffffff;
+  --color-page-accent: #58c27d;
+  --color-page-muted: #939393;
 }

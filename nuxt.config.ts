@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     '@vite-pwa/nuxt',
   ],
 
-  css: ['~/assets/css/variables.css'],
+  css: ['~/assets/css/variables.css', '~/assets/css/base.css'],
 
   supabase: {
     // Reads existing .env.local keys — no rename needed during migration
