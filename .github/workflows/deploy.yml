@@ -19,6 +19,7 @@ jobs:
     env:
       VITE_SUPABASE_URL: https://placeholder.supabase.co
       VITE_SUPABASE_ANON_KEY: placeholder-anon-key
+      NUXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -48,6 +49,10 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      VITE_SUPABASE_URL: https://placeholder.supabase.co
+      VITE_SUPABASE_ANON_KEY: placeholder-anon-key
+      NUXT_TELEMETRY_DISABLED: 1
     steps:
       - uses: actions/checkout@v4
 
@@ -57,11 +62,11 @@ jobs:
           cache: npm
 
       - run: npm ci
-      - run: npm run build:pages
+      - run: npm run generate
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: .output/public
 
   deploy:
     needs: build

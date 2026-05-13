@@ -2,13 +2,11 @@
   "name": "trailradar",
   "version": "1.0.0",
   "description": "**Legal MTB Trails. Real Fun. Community-Contributed.**",
-  "main": "src/index.ts",
   "scripts": {
-    "dev": "vite --host 0.0.0.0",
-    "build": "vite build",
-    "generate": "tsx --env-file=.env.local build/generate.ts",
-    "preview": "vite preview",
-    "build:pages": "npm run build && npm run generate",
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
@@ -21,7 +19,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/fabianeichfeldt/trailstrailstrails/issues"
   },
@@ -30,19 +27,21 @@
     "@playwright/test": "^1.59.1",
     "@types/leaflet": "^1.9.21",
     "@types/leaflet.markercluster": "^1.5.6",
-    "tsx": "^4.21.0",
+    "happy-dom": "^20.9.0",
     "typescript": "^5.9.3",
-    "vite": "^7.2.7",
-    "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.6"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
-    "@supabase/auth-js": "^2.89.0",
+    "@nuxtjs/supabase": "^1.4.6",
+    "@pinia/nuxt": "^0.10.1",
     "@supabase/supabase-js": "^2.89.0",
+    "@vite-pwa/nuxt": "^0.10.6",
     "leaflet": "^1.9.4",
     "leaflet-gesture-handling": "^1.2.2",
     "leaflet.fullscreen": "^5.1.1",
-    "leaflet.markercluster": "^1.5.3"
+    "leaflet.markercluster": "^1.5.3",
+    "nuxt": "^3.16.0",
+    "pinia": "^3.0.1"
   }
 }

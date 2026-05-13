@@ -6,3 +6,7 @@ scripts/backups/
 # Playwright
 playwright-report/
 test-results/
+
+# Nuxt
+.nuxt/
+.output/
