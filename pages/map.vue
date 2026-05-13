@@ -48,6 +48,8 @@ useHead({
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()
+const trailsStore = useTrailsStore()
+const route = useRoute()
 
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
@@ -56,6 +58,21 @@ const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } |
 function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (lat: number, lon: number) => void }) {
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
+}
+
+// Auto-open trail from ?trail=<id> query param
+const trailIdFromQuery = route.query.trail as string | undefined
+if (trailIdFromQuery) {
+  const stop = watch(
+    () => trailsStore.all.length,
+    (n) => {
+      if (n > 0) {
+        openTrail(trailIdFromQuery)
+        stop()
+      }
+    },
+    { immediate: true },
+  )
 }
 
 function onNearbyConflict(conflict: { trail: any; resolve: (proceed: boolean) => void }) {
