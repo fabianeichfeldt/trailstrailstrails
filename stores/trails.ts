@@ -1,0 +1,40 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { SingleTrail, BikePark, DirtPark, Trail } from '~/src/types/Trail'
+
+export const useTrailsStore = defineStore('trails', () => {
+  const client = useSupabaseClient() as SupabaseClient
+
+  const trails = ref<SingleTrail[]>([])
+  const bikeparks = ref<BikePark[]>([])
+  const dirtparks = ref<DirtPark[]>([])
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  async function fetchAll() {
+    loading.value = true
+    error.value = null
+    try {
+      const [trailsRes, parksRes, dirtRes] = await Promise.all([
+        client.from('trails').select('*'),
+        client.from('parks').select('*'),
+        client.from('dirt_parks').select('*'),
+      ])
+      trails.value = (trailsRes.data ?? []).map(t => ({ ...t, type: 'trail' as const }))
+      bikeparks.value = (parksRes.data ?? []).map(p => ({ ...p, type: 'bikepark' as const }))
+      dirtparks.value = (dirtRes.data ?? []).map(d => ({ ...d, type: 'dirtpark' as const }))
+    } catch {
+      error.value = 'Trails konnten nicht geladen werden'
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // All trail types combined — used by the map for marker rendering
+  const all = computed<Trail[]>(() => [
+    ...trails.value,
+    ...bikeparks.value,
+    ...dirtparks.value,
+  ])
+
+  return { trails, bikeparks, dirtparks, all, loading, error, fetchAll }
+})
