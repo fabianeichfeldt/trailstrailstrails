@@ -132,9 +132,12 @@ function flyToUserLocation() {
 
 .add-trail-btn {
   background: #2b6cb0; color: white; border: none;
-  border-radius: 0.3em; padding: 0.7em 0.8em;
-  cursor: pointer; font-size: 0.8em;
+  border-radius: 0.4em;
+  min-width: 44px; min-height: 44px;
+  padding: 0 0.9em;
+  cursor: pointer; font-size: 0.85em; font-weight: 600;
   box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
 }
 .add-trail-btn:hover { background: #3182ce; }
 .add-trail-btn.active { background: #38a169; }
@@ -142,16 +145,18 @@ function flyToUserLocation() {
 .location-btn {
   position: absolute;
   right: 0.75em;
-  bottom: 8.5em;
+  bottom: 8em;
   z-index: 1000;
   background: #2b6cb0;
   color: white;
   border: none;
-  border-radius: 0.3em;
-  padding: 0.7em 0.8em;
+  border-radius: 0.4em;
+  min-width: 44px; min-height: 44px;
+  padding: 0;
   cursor: pointer;
-  font-size: 0.7em;
+  font-size: 1em;
   box-shadow: 0 3px 6px rgba(0,0,0,0.25);
+  display: flex; align-items: center; justify-content: center;
 }
 .location-btn:hover { background: #3182ce; }
 </style>

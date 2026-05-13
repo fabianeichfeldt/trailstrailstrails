@@ -1,11 +1,12 @@
 <template>
   <footer class="page-footer">
     <nav>
-      <NuxtLink to="/">Karte</NuxtLink>
+      <NuxtLink to="/">Startseite</NuxtLink>
+      <NuxtLink to="/map">Karte</NuxtLink>
       <NuxtLink to="/articles">Trailgespräche</NuxtLink>
       <NuxtLink to="/faq">FAQ</NuxtLink>
       <NuxtLink to="/about">Über mich</NuxtLink>
-      <NuxtLink to="/support">Support</NuxtLink>
+      <NuxtLink to="/support">Unterstützen</NuxtLink>
       <NuxtLink to="/privacy">Datenschutz & Impressum</NuxtLink>
       <a href="https://www.instagram.com/trailradar.germany" target="_blank" rel="noopener noreferrer">Instagram</a>
     </nav>
@@ -38,12 +39,12 @@ const year = new Date().getFullYear()
   font-size: 0.85rem;
   text-decoration: none;
   transition: color 0.15s;
+  padding: 0.25rem 0;
 }
 
 .page-footer nav a:hover,
 .page-footer nav :deep(a):hover {
   color: #fff;
-  text-decoration: none;
 }
 
 .copyright {

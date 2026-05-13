@@ -168,17 +168,20 @@ onMounted(() => {
 <style scoped>
 .search-toggle-btn {
   position: absolute;
-  top: 1em;
+  top: 0.75em;
   right: 4.5em;
   z-index: 1100;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.95);
   border: none;
-  padding: 0.4em 0.6em;
-  border-radius: 0.3em;
-  font-size: 0.9em;
+  border-radius: 0.4em;
+  width: 44px;
+  height: 44px;
+  font-size: 1em;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   display: none;
+  align-items: center;
+  justify-content: center;
 }
 
 .search-wrapper {
@@ -247,7 +250,7 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
-  .search-toggle-btn { display: inline-block; }
+  .search-toggle-btn { display: flex; }
   .search-wrapper { display: none; top: 0; left: 0; right: 0; transform: none; width: 100%; padding: 8px 10px; box-sizing: border-box; background: rgba(255,255,255,0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.15); border-radius: 0; }
   .search-wrapper.open { display: block; }
   .search-input-row { border-radius: 8px; }
