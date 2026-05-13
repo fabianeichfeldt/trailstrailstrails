@@ -9,7 +9,7 @@
         @nearby-conflict="onNearbyConflict"
       />
 
-      <SearchBar @open-trail="openTrail" @fly-to="flyToPlace" />
+      <SearchBar @open-trail="handleOpenTrail" @fly-to="handleFlyTo" />
 
       <UserAvatar />
 
@@ -62,6 +62,9 @@ function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (la
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
 }
+
+function handleOpenTrail(id: string) { openTrail(id) }
+function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
 
 // Auto-open trail from ?trail=<id> query param
 const trailIdFromQuery = route.query.trail as string | undefined

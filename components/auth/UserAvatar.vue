@@ -79,7 +79,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 0.3em;
-  z-index: 20;
+  z-index: 1060;
 }
 
 .auth-login-btn {
@@ -87,8 +87,8 @@ onUnmounted(() => {
   color: #111;
   border: none;
   border-radius: 9px;
-  padding: 0.45em 0.9em;
-  font-size: 0.75em;
+  padding: 0.35em 0.75em;
+  font-size: 0.68em;
   font-weight: 600;
   cursor: pointer;
 }
@@ -96,7 +96,7 @@ onUnmounted(() => {
 .auth-login-btn:hover { background: #ea8f3d; }
 
 .auth-signup-btn {
-  font-size: 0.65em;
+  font-size: 0.58em;
   color: #e7dbc7;
   text-decoration: underline;
   cursor: pointer;
@@ -104,19 +104,25 @@ onUnmounted(() => {
 
 @media (max-width: 800px) {
   .auth-signup-btn { font-size: 0.5em; }
-  .user-menu { top: 0.3em; right: 0.3em; }
-  .auth-login-btn { padding: 0.3em; font-size: 0.5em; }
+  .user-menu { top: 0.6em; right: 0.6em; }
+  .auth-login-btn { padding: 0.3em 0.6em; font-size: 0.65em; }
+}
+
+/* On mobile map: hide login text buttons (drawer handles them), show avatar in topbar */
+@media (max-width: 600px) {
+  .auth-login-btn, .auth-signup-btn { display: none; }
+  .user-menu { top: 9px; right: 8px; z-index: 1110; }
 }
 
 .user-avatar-btn {
-  width: 60px;
-  height: 60px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   padding: 0;
   border: none;
   background: rgba(255,255,255,.85);
   backdrop-filter: blur(4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,.25);
   cursor: pointer;
   transition: transform .15s;
 }
@@ -124,15 +130,15 @@ onUnmounted(() => {
 .user-avatar-btn:hover { transform: scale(1.04); }
 
 .user-avatar {
-  width: 60px;
-  height: 60px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #1f2937, #374151);
-  box-shadow: 0 4px 10px rgba(0,0,0,.25);
+  box-shadow: 0 2px 8px rgba(0,0,0,.2);
   border: 1px solid rgba(255,255,255,.2);
 }
 
@@ -176,20 +182,20 @@ onUnmounted(() => {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
-  min-width: 200px;
+  min-width: 160px;
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 0.3em 0;
-  box-shadow: 0 20px 40px rgba(0,0,0,.2);
+  box-shadow: 0 8px 24px rgba(0,0,0,.2);
   animation: dropdownFade .2s ease;
 }
 
 .user-dropdown-header {
-  padding: 0.5em 1em;
+  padding: 0.4em 0.8em;
 }
 
 .user-nickname {
-  font-size: 0.85em;
+  font-size: 0.72em;
   font-weight: 600;
   color: #111827;
 }
@@ -197,16 +203,16 @@ onUnmounted(() => {
 .user-dropdown .divider {
   height: 1px;
   background: #e5e7eb;
-  margin: 0.4em 0;
+  margin: 0.3em 0;
 }
 
 .user-dropdown button {
   width: 100%;
-  padding: 0.5em 1em;
+  padding: 0.4em 0.8em;
   background: none;
   border: none;
   text-align: left;
-  font-size: 0.85em;
+  font-size: 0.72em;
   font-weight: 500;
   color: #111827;
   cursor: pointer;

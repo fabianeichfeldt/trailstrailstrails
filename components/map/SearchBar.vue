@@ -9,7 +9,7 @@
         class="search_input"
         placeholder="Trails, Parks, Orte …"
         @input="onInput"
-        @keydown.escape="close"
+        @keydown="onKeydown"
       />
       <button v-if="query" class="search-clear" @click="clear">✕</button>
     </div>
@@ -21,7 +21,9 @@
           v-for="item in group.items"
           :key="item.key"
           class="search-result-item"
+          :class="{ highlighted: flatResults[selectedIndex]?.key === item.key }"
           @click="select(item)"
+          @mouseenter="selectedIndex = flatResults.findIndex(r => r.key === item.key)"
         >
           <span class="search-result-icon">{{ item.icon }}</span>
           <div class="search-result-text">
@@ -68,8 +70,13 @@ const results = ref<ResultGroup[]>([])
 const noResults = ref(false)
 const isOpen = ref(false)
 const inputEl = ref<HTMLInputElement | null>(null)
+const selectedIndex = ref(-1)
 let debounceTimer: ReturnType<typeof setTimeout>
 let currentQuery = ''
+
+const flatResults = computed(() => results.value.flatMap(g => g.items))
+
+watch(results, () => { selectedIndex.value = -1 })
 
 const TYPE_ICON: Record<string, string> = { trail: '🚵️', bikepark: '🚵', dirtpark: '🚵' }
 const TYPE_LABEL: Record<string, string> = { trail: 'Trail', bikepark: 'Bikepark', dirtpark: 'Dirtpark / Pumptrack' }
@@ -139,6 +146,31 @@ function onInput() {
   clearTimeout(debounceTimer)
   if (query.value.length < 2) { results.value = []; noResults.value = false; return }
   debounceTimer = setTimeout(() => runSearch(query.value.trim()), 250)
+}
+
+function onKeydown(e: KeyboardEvent) {
+  const total = flatResults.value.length
+  if (e.key === 'Escape') { close(); return }
+  if (!total) return
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    selectedIndex.value = selectedIndex.value < total - 1 ? selectedIndex.value + 1 : 0
+    scrollSelected()
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    selectedIndex.value = selectedIndex.value > 0 ? selectedIndex.value - 1 : total - 1
+    scrollSelected()
+  } else if (e.key === 'Enter' && selectedIndex.value >= 0) {
+    e.preventDefault()
+    select(flatResults.value[selectedIndex.value])
+  }
+}
+
+function scrollSelected() {
+  nextTick(() => {
+    const el = document.querySelector('.search-result-item.highlighted') as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest' })
+  })
 }
 
 function select(item: ResultItem) {
@@ -223,6 +255,7 @@ onMounted(() => {
 }
 .search-result-item:last-child { border-bottom: none; }
 .search-result-item:hover { background: #f5f9ff; }
+.search-result-item.highlighted { background: #e8f2ff; }
 
 .search-result-icon { font-size: 16px; flex-shrink: 0; width: 22px; text-align: center; }
 .search-result-text { flex: 1; min-width: 0; }
@@ -239,7 +272,7 @@ onMounted(() => {
   .search-wrapper {
     top: 9px;
     left: 64px;   /* 12px margin + 44px burger + 8px gap */
-    right: 8px;
+    right: 60px;  /* 44px avatar + 8px gap + 8px margin */
     transform: none;
     width: auto;
     z-index: 1100;

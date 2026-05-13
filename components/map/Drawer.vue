@@ -33,6 +33,19 @@
       </div>
     </div>
 
+    <!-- Auth (mobile only — desktop uses the UserAvatar overlay) -->
+    <div class="drawer-auth">
+      <template v-if="!authStore.isLoggedIn">
+        <button class="drawer-login-btn" @click="openLogin">Anmelden / Registrieren</button>
+      </template>
+      <template v-else>
+        <div class="drawer-user-info">
+          <span class="drawer-user-name">{{ authStore.nickname }}</span>
+        </div>
+        <button class="drawer-logout-btn" @click="handleLogout">Abmelden</button>
+      </template>
+    </div>
+
     <!-- Back to main page -->
     <NuxtLink to="/" class="home-link" @click="mapStore.drawerOpen = false">
       ← Zur Startseite
@@ -43,6 +56,17 @@
 <script setup lang="ts">
 const mapStore = useMapStore()
 const filtersStore = useFiltersStore()
+const authStore = useAuthStore()
+
+function openLogin() {
+  mapStore.drawerOpen = false
+  mapStore.authModalOpen = true
+}
+
+async function handleLogout() {
+  mapStore.drawerOpen = false
+  await authStore.signOut()
+}
 
 const filters = [
   { key: 'showTrails' as const, label: 'Trails', color: 'var(--color-trail)' },
@@ -193,6 +217,50 @@ const filters = [
 }
 .filter-item input:checked + .filter-toggle { background: #2b6cb0; }
 .filter-item input:checked + .filter-toggle::before { transform: translateX(16px); }
+
+.drawer-auth {
+  margin: 0 0.8em 0.6em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4em;
+}
+.drawer-login-btn {
+  width: 100%;
+  background: #2b6cb0;
+  color: white;
+  border: none;
+  border-radius: 0.6em;
+  padding: 0.75em 1em;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  transition: background 0.15s;
+}
+.drawer-login-btn:hover { background: #3182ce; }
+.drawer-user-info {
+  padding: 0.4em 0.2em;
+}
+.drawer-user-name {
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #333;
+}
+.drawer-logout-btn {
+  width: 100%;
+  background: #f5f5f5;
+  color: #b91c1c;
+  border: none;
+  border-radius: 0.6em;
+  padding: 0.75em 1em;
+  font-size: 0.85em;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+  text-align: left;
+  transition: background 0.15s;
+}
+.drawer-logout-btn:hover { background: #fee2e2; }
 
 .home-link {
   display: flex;
