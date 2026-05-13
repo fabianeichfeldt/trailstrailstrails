@@ -1,3 +1,17 @@
+import { readFileSync, existsSync } from 'node:fs'
+
+// Load .env.local explicitly — c12 loads it after config evaluation, so
+// process.env is empty for VITE_* / NUXT_PUBLIC_* vars at config parse time.
+const envFile = '.env.local'
+if (existsSync(envFile)) {
+  readFileSync(envFile, 'utf8').split('\n').forEach(line => {
+    const eq = line.indexOf('=')
+    if (eq > 0 && !process.env[line.slice(0, eq)]) {
+      process.env[line.slice(0, eq)] = line.slice(eq + 1)
+    }
+  })
+}
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
@@ -10,9 +24,8 @@ export default defineNuxtConfig({
   css: ['~/assets/css/variables.css', '~/assets/css/base.css'],
 
   supabase: {
-    // Reads existing .env.local keys — no rename needed during migration
-    url: process.env.VITE_SUPABASE_URL,
-    key: process.env.VITE_SUPABASE_ANON_KEY,
+    url: process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL,
+    key: process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
@@ -23,7 +36,18 @@ export default defineNuxtConfig({
   nitro: {
     prerender: {
       crawlLinks: true,
-      routes: ['/'],
+      routes: [
+        '/',
+        '/about',
+        '/articles',
+        '/business',
+        '/faq',
+        '/legal',
+        '/privacy',
+        '/support',
+        '/terms',
+      ],
+      failOnError: false,
     },
   },
 
