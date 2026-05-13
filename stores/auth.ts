@@ -15,11 +15,31 @@ export const useAuthStore = defineStore('auth', () => {
 
   const avatarUrl = computed(() => user.value?.user_metadata?.avatar_url ?? '')
 
-  const isAdmin = computed(() => user.value?.user_metadata?.role === 'admin')
+  // DB role — loaded via RPC on login (user_metadata.role is not reliably set)
+  const dbRole = ref<'admin' | 'trailcrew' | 'user'>('user')
+
+  async function loadDbRole() {
+    if (!user.value) { dbRole.value = 'user'; return }
+    try {
+      const { data } = await client.rpc('get_my_role')
+      dbRole.value = data ?? 'user'
+    } catch {
+      const { data } = await client.from('user_roles').select('role').limit(1)
+      dbRole.value = (data as any)?.[0]?.role ?? 'user'
+    }
+  }
+
+  watch(user, loadDbRole, { immediate: true })
+
+  const isAdmin = computed(() =>
+    user.value?.user_metadata?.role === 'admin' || dbRole.value === 'admin'
+  )
 
   const isTrailcrew = computed(() =>
     user.value?.user_metadata?.role === 'trailcrew' ||
-    user.value?.user_metadata?.role === 'admin'
+    user.value?.user_metadata?.role === 'admin' ||
+    dbRole.value === 'trailcrew' ||
+    dbRole.value === 'admin'
   )
 
   async function signIn(email: string, password: string) {
@@ -101,6 +121,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     nickname,
     avatarUrl,
+    dbRole,
     isAdmin,
     isTrailcrew,
     signIn,

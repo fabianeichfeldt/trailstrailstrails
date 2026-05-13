@@ -45,6 +45,7 @@ export default defineNuxtConfig({
   ],
 
   css: [
+    '@fortawesome/fontawesome-free/css/all.css',
     '~/assets/css/variables.css',
     '~/assets/css/base.css',
     '~/assets/css/marker.css',

@@ -69,7 +69,8 @@ function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (la
     if (trailsStore.all.length > 0) {
       openTrail(trailIdFromQuery)
     } else {
-      const stop = watch(() => trailsStore.all.length, (n) => {
+      let stop: () => void
+      stop = watch(() => trailsStore.all.length, (n) => {
         if (n > 0) { openTrail(trailIdFromQuery); stop() }
       })
     }
