@@ -58,28 +58,26 @@ let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
 
+const trailIdFromQuery = route.query.trail as string | undefined
+
 function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (lat: number, lon: number) => void }) {
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
+
+  // Open trail from query param — only after map is ready so openTrail is the real function
+  if (trailIdFromQuery) {
+    if (trailsStore.all.length > 0) {
+      openTrail(trailIdFromQuery)
+    } else {
+      const stop = watch(() => trailsStore.all.length, (n) => {
+        if (n > 0) { openTrail(trailIdFromQuery); stop() }
+      })
+    }
+  }
 }
 
 function handleOpenTrail(id: string) { openTrail(id) }
 function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
-
-// Auto-open trail from ?trail=<id> query param
-const trailIdFromQuery = route.query.trail as string | undefined
-if (trailIdFromQuery) {
-  const stop = watch(
-    () => trailsStore.all.length,
-    (n) => {
-      if (n > 0) {
-        openTrail(trailIdFromQuery)
-        stop()
-      }
-    },
-    { immediate: true },
-  )
-}
 
 function onNearbyConflict(conflict: { trail: any; resolve: (proceed: boolean) => void }) {
   const origResolve = conflict.resolve

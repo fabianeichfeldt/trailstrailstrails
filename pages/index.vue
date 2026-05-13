@@ -158,6 +158,32 @@
       </div>
     </section>
 
+    <!-- News feed -->
+    <section class="news-outer">
+      <div class="inner">
+        <h2 class="section-heading">Zuletzt passiert</h2>
+        <div class="news-grid">
+          <a
+            v-for="item in activity"
+            :key="`${item.type}-${item.trailId}`"
+            :href="`/map?trail=${item.trailId}`"
+            class="news-card"
+          >
+            <div class="news-card-top">
+              <span class="news-tag" :class="`tag--${item.type}`">
+                {{ item.type === 'spot' ? 'Neuer Spot' : item.type === 'photo' ? 'Foto' : 'GPX-Track' }}
+              </span>
+              <span class="news-date">{{ formatDate(item.created_at) }}</span>
+            </div>
+            <h3 class="news-title">{{ item.name }}</h3>
+            <span class="news-read">
+              {{ item.type === 'spot' ? 'Auf der Karte ansehen →' : item.type === 'photo' ? 'Foto ansehen →' : 'Track ansehen →' }}
+            </span>
+          </a>
+        </div>
+      </div>
+    </section>
+
     <!-- Community -->
     <section class="community-outer">
     <div class="community-section inner">
@@ -267,6 +293,16 @@
 </template>
 
 <script setup lang="ts">
+const { data: activity } = await useAsyncData('activity', () =>
+  $fetch<{ type: 'spot' | 'photo' | 'gpx'; trailId: string; name: string; created_at: string }[]>('/api/activity'),
+  { default: () => [] },
+)
+
+function formatDate(iso: string) {
+  if (!iso) return ''
+  return new Date(iso).toLocaleDateString('de-DE', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 useSeoMeta({
   title: 'Trailradar – Offizielle MTB-Trails in Deutschland',
   description: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
@@ -676,6 +712,76 @@ useHead({
 .region-links { font-size: 0.8rem; line-height: 1.8; }
 .region-links a { color: #2a9d5c; text-decoration: none; }
 .region-links a:hover { text-decoration: underline; color: #1e7a46; }
+
+/* ── News & Articles ── */
+.news-outer {
+  background: #f4f6f9;
+  padding: 2.5rem 1rem 2rem;
+}
+.news-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.news-card {
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  border-radius: 12px;
+  padding: 1.2rem 1.2rem 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.news-card:hover {
+  box-shadow: 0 5px 16px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+  text-decoration: none;
+}
+.news-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.news-tag {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2em 0.55em;
+  border-radius: 4px;
+}
+.tag--spot  { background: #dcfce7; color: #166534; }
+.tag--photo { background: #dbeafe; color: #1e40af; }
+.tag--gpx   { background: #fef9c3; color: #854d0e; }
+.news-date {
+  font-size: 0.72rem;
+  color: #9aa;
+}
+.news-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a2035;
+  line-height: 1.3;
+  margin: 0;
+}
+.news-text {
+  font-size: 0.8rem;
+  color: #5a6478;
+  line-height: 1.5;
+  margin: 0;
+  flex-grow: 1;
+}
+.news-read {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #2a9d5c;
+  margin-top: 0.2rem;
+}
 
 /* ── Inner centering wrapper (avoids default layout .container overrides) ── */
 .inner {
