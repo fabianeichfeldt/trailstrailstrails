@@ -1,5 +1,8 @@
 <template>
   <div class="map-page">
+    <!-- Mobile top bar background — gives burger + search a clean backing -->
+    <div class="mobile-topbar" />
+
     <ClientOnly>
       <MapView
         @ready="onMapReady"
@@ -98,6 +101,21 @@ function flyToUserLocation() {
   position: fixed;
   inset: 0;
   overflow: hidden;
+}
+
+.mobile-topbar {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .mobile-topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 62px;
+    background: white;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+    z-index: 1050;
+  }
 }
 
 .add-btn-wrapper {

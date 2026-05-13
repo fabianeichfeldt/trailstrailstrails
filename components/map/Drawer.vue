@@ -5,11 +5,6 @@
   <!-- Burger button — hidden while drawer is open -->
   <button v-show="!mapStore.drawerOpen" class="burger-btn" @click="mapStore.drawerOpen = true" aria-label="Menü öffnen">☰</button>
 
-  <!-- Home button — one tap back to main page -->
-  <NuxtLink v-show="!mapStore.drawerOpen" to="/" class="home-btn" aria-label="Zur Startseite">
-    <img src="/assets/logo.webp" alt="Trailradar" />
-  </NuxtLink>
-
   <!-- Drawer -->
   <div class="drawer" :class="{ open: mapStore.drawerOpen }">
     <div class="drawer-header">
@@ -65,7 +60,7 @@ const filters = [
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
-  z-index: 1090;
+  z-index: 1200;
 }
 .drawer-overlay.active { opacity: 1; pointer-events: all; }
 
@@ -89,26 +84,16 @@ const filters = [
 }
 .burger-btn:hover { background: white; }
 
-/* Home button — right of burger */
-.home-btn {
-  position: absolute;
-  top: 0.75em;
-  left: calc(0.75em + 44px + 0.5em);
-  z-index: 1100;
-  background: rgba(255,255,255,0.95);
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 0.4em;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
+@media (max-width: 600px) {
+  /* Align burger vertically inside the mobile top bar (62px tall) */
+  .burger-btn {
+    top: 9px;
+    box-shadow: none;
+    background: #f0f0f0;
+  }
+  .burger-btn:hover { background: #e0e0e0; }
 }
-.home-btn:hover { background: white; }
-.home-btn img { width: 28px; height: 28px; }
+
 
 .drawer {
   position: fixed;
@@ -118,13 +103,17 @@ const filters = [
   height: 100%;
   background: #fff;
   box-shadow: 2px 0 12px rgba(0,0,0,0.18);
-  z-index: 1099;
+  z-index: 1210;
   display: flex;
   flex-direction: column;
   transition: left 0.3s ease;
   overflow-y: auto;
 }
 .drawer.open { left: 0; }
+
+@media (max-width: 480px) {
+  .drawer { width: 100%; left: -100%; }
+}
 
 .drawer-header {
   display: flex;

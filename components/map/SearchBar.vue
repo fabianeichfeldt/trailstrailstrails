@@ -149,7 +149,6 @@ function select(item: ResultItem) {
 
 function clear() {
   query.value = ''; results.value = []; noResults.value = false
-  if (window.matchMedia('(max-width: 600px)').matches) close()
 }
 
 function open() { isOpen.value = true; nextTick(() => inputEl.value?.focus()) }
@@ -167,21 +166,7 @@ onMounted(() => {
 
 <style scoped>
 .search-toggle-btn {
-  position: absolute;
-  top: 0.75em;
-  right: 4.5em;
-  z-index: 1100;
-  background: rgba(255,255,255,0.95);
-  border: none;
-  border-radius: 0.4em;
-  width: 44px;
-  height: 44px;
-  font-size: 1em;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-  display: none;
-  align-items: center;
-  justify-content: center;
+  display: none; /* never shown — mobile uses inline search bar */
 }
 
 .search-wrapper {
@@ -250,10 +235,32 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
-  .search-toggle-btn { display: flex; }
-  .search-wrapper { display: none; top: 0; left: 0; right: 0; transform: none; width: 100%; padding: 8px 10px; box-sizing: border-box; background: rgba(255,255,255,0.97); box-shadow: 0 2px 8px rgba(0,0,0,0.15); border-radius: 0; }
-  .search-wrapper.open { display: block; }
-  .search-input-row { border-radius: 8px; }
-  .search-results { border-radius: 8px; }
+  /* Inline search bar — sits in the white mobile top bar */
+  .search-wrapper {
+    top: 9px;
+    left: 64px;   /* 12px margin + 44px burger + 8px gap */
+    right: 8px;
+    transform: none;
+    width: auto;
+    z-index: 1100;
+  }
+
+  .search-input-row {
+    border-radius: 8px;
+    height: 44px;
+  }
+
+  .search_input {
+    font-size: 14px;
+  }
+
+  .search-results {
+    border-radius: 8px;
+    left: 0; right: 0;
+    /* Expand to full width so results are readable */
+    margin-left: -52px;
+    margin-right: 0;
+    width: auto;
+  }
 }
 </style>

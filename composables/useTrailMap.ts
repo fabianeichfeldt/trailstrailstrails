@@ -33,19 +33,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Dynamic imports — all Leaflet code runs client-only
     const L = (await import('leaflet')).default
     await import('leaflet.markercluster')
-    await import('leaflet-gesture-handling') // self-registers via addInitHook side effect
 
     const mymap = L.map(mapEl.value, {
-      gestureHandling: true,
-      gestureHandlingOptions: {
-        text: {
-          touch: 'Benutze 2 Finger um die Karte zu bewegen',
-          scroll: 'Benutze ctrl + scroll um die Karte zu zoomen',
-          scrollMac: 'Benutze ⌘ + scroll um die Karte zu zoomen',
-        },
-      },
       zoomControl: false,
-    } as any)
+    })
 
     mapInstance.value = mymap
     mymap.setMaxZoom(19)

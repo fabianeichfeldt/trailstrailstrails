@@ -53,7 +53,6 @@ export default defineNuxtConfig({
     'leaflet/dist/leaflet.css',
     'leaflet.markercluster/dist/MarkerCluster.css',
     'leaflet.markercluster/dist/MarkerCluster.Default.css',
-    'leaflet-gesture-handling/dist/leaflet-gesture-handling.css',
   ],
 
   supabase: {
