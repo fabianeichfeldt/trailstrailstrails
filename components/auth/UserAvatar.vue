@@ -2,8 +2,8 @@
   <div class="user-menu">
     <!-- Logged out: login + signup buttons -->
     <template v-if="!authStore.isLoggedIn">
-      <button class="auth-login-btn" @click="mapStore.authModalOpen = true">Anmelden</button>
-      <span class="auth-signup-btn" @click="openSignUp">Registrieren</span>
+      <button data-testid="login-btn" class="auth-login-btn" @click="mapStore.authModalOpen = true">Anmelden</button>
+      <span data-testid="signup-btn" class="auth-signup-btn" @click="openSignUp">Registrieren</span>
     </template>
 
     <!-- Logged in: avatar button + dropdown -->

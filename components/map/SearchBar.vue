@@ -5,16 +5,17 @@
       <input
         ref="inputEl"
         v-model="query"
+        data-testid="search-input"
         type="search"
         class="search_input"
         placeholder="Trails, Parks, Orte …"
         @input="onInput"
         @keydown="onKeydown"
       />
-      <button v-if="query" class="search-clear" @click="clear">✕</button>
+      <button v-if="query" data-testid="search-clear" class="search-clear" @click="clear">✕</button>
     </div>
 
-    <div v-if="results.length" class="search-results visible">
+    <div v-if="results.length || noResults" data-testid="search-results" class="search-results visible">
       <template v-for="group in results" :key="group.label">
         <div class="search-result-separator">{{ group.label }}</div>
         <div

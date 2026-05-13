@@ -1,18 +1,18 @@
 <template>
   <!-- Overlay -->
-  <div class="drawer-overlay" :class="{ active: mapStore.drawerOpen }" @click="mapStore.drawerOpen = false" />
+  <div data-testid="drawer-overlay" class="drawer-overlay" :class="{ active: mapStore.drawerOpen }" @click="mapStore.drawerOpen = false" />
 
   <!-- Burger button — hidden while drawer is open -->
-  <button v-show="!mapStore.drawerOpen" class="burger-btn" @click="mapStore.drawerOpen = true" aria-label="Menü öffnen">☰</button>
+  <button v-show="!mapStore.drawerOpen" data-testid="burger-btn" class="burger-btn" @click="mapStore.drawerOpen = true" aria-label="Menü öffnen">☰</button>
 
   <!-- Drawer -->
-  <div class="drawer" :class="{ open: mapStore.drawerOpen }">
+  <div data-testid="drawer" class="drawer" :class="{ open: mapStore.drawerOpen }">
     <div class="drawer-header">
       <NuxtLink to="/" class="drawer-brand" @click="mapStore.drawerOpen = false">
         <img src="/assets/logo.webp" alt="Trailradar" class="drawer-logo" />
         <span class="drawer-brand-name">Trailradar</span>
       </NuxtLink>
-      <button class="drawer-close" @click="mapStore.drawerOpen = false" aria-label="Menü schließen">✕</button>
+      <button data-testid="drawer-close" class="drawer-close" @click="mapStore.drawerOpen = false" aria-label="Menü schließen">✕</button>
     </div>
 
     <!-- Filter box -->
@@ -22,15 +22,15 @@
       <label class="filter-item" v-for="f in filters" :key="f.key">
         <span class="filter-dot" :style="{ background: f.color }" />
         <span class="filter-label">{{ f.label }}</span>
-        <input type="checkbox" v-model="filtersStore[f.key]" @change="mapStore.drawerOpen = false" />
+        <input type="checkbox" :data-filter="f.filter" v-model="filtersStore[f.key]" @change="mapStore.drawerOpen = false" />
         <span class="filter-toggle" />
       </label>
 
-      <div class="filter-item" style="margin-top:0.4em">
+      <label class="filter-item" style="margin-top:0.4em">
         <span class="filter-label" style="font-size:0.75em">Clustering</span>
-        <input type="checkbox" v-model="filtersStore.useCluster" />
+        <input data-testid="cluster-toggle" type="checkbox" v-model="filtersStore.useCluster" />
         <span class="filter-toggle" />
-      </div>
+      </label>
     </div>
 
     <!-- Auth (mobile only — desktop uses the UserAvatar overlay) -->
@@ -69,10 +69,10 @@ async function handleLogout() {
 }
 
 const filters = [
-  { key: 'showTrails' as const, label: 'Trails', color: 'var(--color-trail)' },
-  { key: 'showBikeparks' as const, label: 'Bikeparks', color: 'var(--color-bikepark)' },
-  { key: 'showDirtparks' as const, label: 'Dirtparks', color: 'var(--color-dirtpark)' },
-  { key: 'showPumptracks' as const, label: 'Pumptracks', color: 'var(--color-dirtpark)' },
+  { key: 'showTrails' as const, filter: 'trail', label: 'Trails', color: 'var(--color-trail)' },
+  { key: 'showBikeparks' as const, filter: 'bikepark', label: 'Bikeparks', color: 'var(--color-bikepark)' },
+  { key: 'showDirtparks' as const, filter: 'dirtpark', label: 'Dirtparks', color: 'var(--color-dirtpark)' },
+  { key: 'showPumptracks' as const, filter: 'pumptrack', label: 'Pumptracks', color: 'var(--color-dirtpark)' },
 ]
 </script>
 
