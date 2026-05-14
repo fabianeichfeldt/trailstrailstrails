@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { uploadTrailPhoto as uploadTrailPhotoImpl } from '~/src/communication/photos'
 
 export const useAuthStore = defineStore('auth', () => {
   const client = useSupabaseClient() as SupabaseClient
@@ -100,20 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadTrailPhoto(file: File, trailId: string): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    const filePath = `${trailId}/${crypto.randomUUID()}.webp`
-    const resized = await transformImage(file, 1000, 0.8)
-    const { error } = await client.storage
-      .from('trail-photos')
-      .upload(filePath, resized, { cacheControl: '86400', upsert: false, contentType: 'image/webp' })
-    if (error) throw new Error('Photo upload failed')
-    const { data } = client.storage.from('trail-photos').getPublicUrl(filePath)
-    const { error: dbError } = await client.from('trail_photos').insert({
-      trail_id: trailId,
-      url: data.publicUrl,
-      creator: user.value.id,
-    })
-    if (dbError) throw new Error('Photo record insert failed')
-    return data.publicUrl
+    return uploadTrailPhotoImpl(file, trailId, client, user.value.id)
   }
 
   return {
@@ -135,24 +123,3 @@ export const useAuthStore = defineStore('auth', () => {
     uploadTrailPhoto,
   }
 })
-
-// Client-only: resizes and converts an image to WebP using Canvas API
-async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<Blob> {
-  const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const el = new Image()
-    el.onload = () => resolve(el)
-    el.onerror = reject
-    el.src = URL.createObjectURL(file)
-  })
-
-  const scale = Math.min(1, maxWidth / img.width)
-  const w = Math.round(img.width * scale)
-  const h = Math.round(img.height * scale)
-
-  const canvas = document.createElement('canvas')
-  canvas.width = w
-  canvas.height = h
-  canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-
-  return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/webp', quality))
-}

@@ -1,5 +1,5 @@
 import type { Ref } from 'vue'
-import type { Trail, SingleTrail, BikePark, DirtPark } from '~/src/types/Trail'
+import type { Trail } from '~/src/types/Trail'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -114,11 +114,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       mapStore.panelOpen = false
     })
 
-    function renderMarkers(
-      trails: SingleTrail[],
-      bikeparks: BikePark[],
-      dirtparks: DirtPark[],
-    ) {
+    function renderMarkers() {
       // Swap cluster/plain layer without remove+re-add (re-add breaks _leaflet_pos)
       if (filtersStore.useCluster) {
         if (!mymap.hasLayer(clusterGroup)) mymap.addLayer(clusterGroup)
@@ -131,17 +127,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       markerGroup.clearLayers()
       markersById.clear()
 
-      const visible: Trail[] = [
-        ...(filtersStore.showTrails ? trails : []),
-        ...(filtersStore.showBikeparks ? bikeparks : []),
-        ...(filtersStore.showDirtparks || filtersStore.showPumptracks
-          ? (dirtparks as any[]).filter(dp => {
-              if (filtersStore.showDirtparks && filtersStore.showPumptracks) return true
-              if (filtersStore.showDirtparks && dp.dirtpark) return true
-              return filtersStore.showPumptracks && dp.pumptrack
-            })
-          : []),
+      const all: Trail[] = [
+        ...trailsStore.trails,
+        ...trailsStore.bikeparks,
+        ...trailsStore.dirtparks,
       ]
+      const visible = filtersStore.apply(all)
 
       for (const trail of visible) {
         const marker = L.marker([trail.latitude, trail.longitude], {
@@ -159,8 +150,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // Expose trail open + fly-to for search bar
     openTrailFn.value = (id: string) => {
-      const all = [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
-      const trail = all.find(t => t.id === id)
+      const trail = trailsStore.all.find(t => t.id === id)
       if (!trail) return
       mapStore.panelOpen = true
       mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.2 })
@@ -179,7 +169,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // Load data and watch for changes
     await trailsStore.fetchAll()
-    renderMarkers(trailsStore.trails, trailsStore.bikeparks, trailsStore.dirtparks)
+    renderMarkers()
 
     watch(
       [
@@ -192,7 +182,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         () => filtersStore.showPumptracks,
         () => filtersStore.useCluster,
       ],
-      () => renderMarkers(trailsStore.trails, trailsStore.bikeparks, trailsStore.dirtparks),
+      renderMarkers,
     )
 
     // Geolocation
