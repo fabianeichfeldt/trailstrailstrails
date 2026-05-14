@@ -134,7 +134,6 @@
       </div>
     </main>
 
-    <AuthModal />
   </div>
 </template>
 
