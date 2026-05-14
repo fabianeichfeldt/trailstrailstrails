@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { processGpx, toElevationProfile } from './GpxProcessor';
+import { processGpx, toElevationProfile, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from './GpxProcessor';
+import type { GpxPoint } from './GpxProcessor';
 
 // L-shaped path: climbs north then descends east. The corner is far off the
 // start→end line (~600 m perpendicular), so RDP always keeps it and
@@ -145,5 +146,121 @@ describe('toElevationProfile', () => {
     const profile = toElevationProfile(points);
     expect(profile[0].alt).toBe(500);
     expect(profile[1].alt).toBe(600);
+  });
+});
+
+// ── processGpx edge cases ──────────────────────────────────────────────────────
+
+describe('processGpx edge cases', () => {
+  it('returns empty suggestedName when GPX has no <name> tag', () => {
+    const noName = `<?xml version="1.0"?>
+<gpx>
+  <trk>
+    <trkseg>
+      <trkpt lat="48.0" lon="11.5"><ele>500</ele></trkpt>
+      <trkpt lat="48.001" lon="11.5"><ele>510</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>`;
+    const result = processGpx(noName);
+    expect(result).not.toBeNull();
+    expect(result!.suggestedName).toBe('');
+  });
+
+  it('handles a single trackpoint without crashing', () => {
+    const single = `<?xml version="1.0"?>
+<gpx>
+  <trk><trkseg>
+    <trkpt lat="48.0" lon="11.5"><ele>500</ele></trkpt>
+  </trkseg></trk>
+</gpx>`;
+    const result = processGpx(single);
+    expect(result).not.toBeNull();
+    expect(result!.distance_km).toBe(0);
+    expect(result!.elevation_gain).toBe(0);
+    expect(result!.elevation_loss).toBe(0);
+    expect(result!.rawCount).toBe(1);
+  });
+});
+
+// ── matchTrailsInTour ──────────────────────────────────────────────────────────
+
+describe('matchTrailsInTour', () => {
+  // Points ~222 m apart going north — enough separation to avoid boundary ambiguity.
+  const pt = (lat: number, lng: number): GpxPoint => ({ lat, lng, alt: 0, time: null });
+
+  const TOUR = [
+    pt(48.000, 11.500), // 0
+    pt(48.002, 11.500), // 1  (~222 m north)
+    pt(48.004, 11.500), // 2
+    pt(48.006, 11.500), // 3
+    pt(48.008, 11.500), // 4
+  ];
+
+  it('returns empty array when no trails are provided', () => {
+    expect(matchTrailsInTour(TOUR, [])).toEqual([]);
+  });
+
+  it('skips trails with fewer than 3 points', () => {
+    const short = { name: 'Short', rawPoints: [TOUR[0], TOUR[1]] };
+    expect(matchTrailsInTour(TOUR, [short])).toEqual([]);
+  });
+
+  it('detects a single trail contained in the tour', () => {
+    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    expect(matchTrailsInTour(TOUR, [trailA])).toEqual(['Trail A']);
+  });
+
+  it('returns two sequential trails in order of appearance', () => {
+    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    const trailB = { name: 'Trail B', rawPoints: [TOUR[2], TOUR[3], TOUR[4]] };
+    expect(matchTrailsInTour(TOUR, [trailA, trailB])).toEqual(['Trail A', 'Trail B']);
+  });
+
+  it('sorts by position in tour regardless of input order', () => {
+    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    const trailB = { name: 'Trail B', rawPoints: [TOUR[2], TOUR[3], TOUR[4]] };
+    // Pass B first — result must still reflect order in the tour
+    expect(matchTrailsInTour(TOUR, [trailB, trailA])).toEqual(['Trail A', 'Trail B']);
+  });
+
+  it('does not include a trail whose path is nowhere near the tour', () => {
+    const distant = {
+      name: 'Alps Trail',
+      rawPoints: [pt(46.0, 8.0), pt(46.001, 8.001), pt(46.002, 8.002)],
+    };
+    expect(matchTrailsInTour(TOUR, [distant])).toEqual([]);
+  });
+
+  it('includes a matched trail only once even when it matches multiple windows', () => {
+    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    expect(matchTrailsInTour(TOUR, [trailA])).toHaveLength(1);
+  });
+});
+
+// ── DIFFICULTIES / DIRECTIONS / DIFF_COLOR constants ──────────────────────────
+
+describe('DIFFICULTIES constant', () => {
+  it('every entry has a non-empty value, label and hex color', () => {
+    for (const d of DIFFICULTIES) {
+      expect(d.value).toBeTruthy();
+      expect(d.label).toBeTruthy();
+      expect(d.color).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
+  });
+
+  it('DIFF_COLOR has an entry for every difficulty value', () => {
+    for (const d of DIFFICULTIES) {
+      expect(DIFF_COLOR[d.value]).toBeDefined();
+    }
+  });
+});
+
+describe('DIRECTIONS constant', () => {
+  it('every entry has a non-empty value and label', () => {
+    for (const d of DIRECTIONS) {
+      expect(d.value).toBeTruthy();
+      expect(d.label).toBeTruthy();
+    }
   });
 });
