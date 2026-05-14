@@ -149,6 +149,47 @@ useHead({
 .check   { color: #2a9d2a; font-weight: 700; }
 .partial { color: #e08700; font-weight: 700; }
 
+@media (max-width: 640px) {
+  .comparison-table { font-size: 0.85rem; }
+  .comparison-table thead { display: none; }
+
+  .comparison-table tr {
+    display: block;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+  }
+  .comparison-table tr:nth-child(even) td { background: transparent; }
+
+  .comparison-table td {
+    display: block;
+    padding: 0.55rem 1rem;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  .comparison-table td:last-child { border-bottom: none; }
+
+  .comparison-table td:first-child,
+  .comparison-table tr:nth-child(even) td:first-child {
+    background: #111;
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .comparison-table td:nth-child(2)::before,
+  .comparison-table td:nth-child(3)::before {
+    display: block;
+    font-size: 0.7em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.2em;
+  }
+  .comparison-table td:nth-child(2)::before { content: "TrailRadar"; color: #2a9d2a; }
+  .comparison-table td:nth-child(3)::before { content: "Trailforks"; color: #777; }
+}
+
 .highlight-box {
   background: #f0faf4; border-left: 4px solid #2a9d2a;
   padding: 1.2rem 1.5rem; margin: 2rem 0; border-radius: 0 8px 8px 0;
