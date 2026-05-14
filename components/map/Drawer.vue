@@ -27,7 +27,7 @@
       </label>
 
       <label class="filter-item" style="margin-top:0.4em">
-        <span class="filter-label" style="font-size:0.75em">Clustering</span>
+        <span class="filter-label" style="font-size:0.75em">Gruppierung</span>
         <input data-testid="cluster-toggle" type="checkbox" v-model="filtersStore.useCluster" />
         <span class="filter-toggle" />
       </label>
