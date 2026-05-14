@@ -11,21 +11,21 @@
       <p class="intro">Gedanken, die einem auf dem Bike kommen.</p>
 
       <div class="articles-grid">
-        <div class="article-card">
+        <NuxtLink to="/trailradar-vs-trailforks" class="article-card">
           <span class="tag">Vergleich</span>
           <h2>TrailRadar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?</h2>
           <p>Trailforks hat mehr Trails weltweit – aber warum TrailRadar für Deutschland die besseren Daten
             liefert und was das für deine Tourenplanung bedeutet.</p>
-          <a href="/trailradar-vs-trailforks" class="read-link">Artikel lesen →</a>
-        </div>
+          <span class="read-link">Artikel lesen →</span>
+        </NuxtLink>
 
-        <div class="article-card">
+        <NuxtLink to="/trailradar-vs-komoot" class="article-card">
           <span class="tag">Vergleich</span>
           <h2>TrailRadar vs. Komoot – Wer schickt dich besser auf die Trails?</h2>
           <p>Komoot plant Routen. Aber wenn es um maximalen MTB-Fahrspaß geht, stößt es schnell an
             Grenzen – unklare Trailzustände, falscher Schwierigkeitsgrad und öfter mal ein Brombeerstrauch.</p>
-          <a href="/trailradar-vs-komoot" class="read-link">Artikel lesen →</a>
-        </div>
+          <span class="read-link">Artikel lesen →</span>
+        </NuxtLink>
       </div>
     </main>
 
@@ -67,17 +67,27 @@ useHead({
 }
 
 .article-card {
-  background: #f5f5f5;
+  background: #fff;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.5rem 1.5rem 0;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  transition: box-shadow 0.15s;
+  transition: box-shadow 0.2s, transform 0.15s, border-color 0.2s;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1.5px solid #e0e0e0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
 .article-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  border-color: var(--color-primary);
+}
+
+.article-card:active {
+  transform: scale(0.98);
 }
 
 .tag {
@@ -105,14 +115,24 @@ useHead({
   color: #555;
   margin: 0;
   flex-grow: 1;
+  padding-bottom: 1rem;
 }
 
 .read-link {
-  font-size: 0.9rem;
+  display: block;
+  margin: 0.25rem -1.5rem 0;
+  padding: 0.65rem 1.5rem;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--color-primary);
-  align-self: flex-start;
+  background: #f0f6ff;
+  border-top: 1px solid #dbeafe;
+  transition: background 0.15s, color 0.15s;
 }
 
-.read-link:hover { color: #1a4a80; }
+.article-card:hover .read-link {
+  background: var(--color-primary);
+  color: #fff;
+  border-top-color: var(--color-primary);
+}
 </style>

@@ -598,21 +598,40 @@ useHead({
   padding: 1.2rem 0.8rem 1rem;
   background: #fff;
   border: 1px solid #e4e9f0;
+  border-top: 3px solid #2a9d5c;
   border-radius: 12px;
   text-decoration: none;
   box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-  transition: transform 0.18s, box-shadow 0.18s;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
   text-align: center;
+  position: relative;
+  cursor: pointer;
+}
+.qn-card::after {
+  content: '→';
+  position: absolute;
+  bottom: 0.6rem;
+  right: 0.75rem;
+  font-size: 0.75rem;
+  color: #2a9d5c;
+  opacity: 0.55;
+  transition: opacity 0.18s, transform 0.18s;
 }
 .qn-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 5px 14px rgba(0,0,0,0.1);
+  background: #f2fbf6;
   text-decoration: none;
 }
+.qn-card:hover::after {
+  opacity: 1;
+  transform: translateX(3px);
+}
 .qn-highlight {
-  border-color: rgba(220,80,80,0.2);
+  border-top-color: #dc5050;
 }
 .qn-highlight .qn-icon { background: rgba(220,80,80,0.08); color: #dc5050; }
+.qn-highlight::after { color: #dc5050; }
 .qn-icon {
   width: 42px;
   height: 42px;

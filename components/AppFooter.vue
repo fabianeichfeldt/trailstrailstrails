@@ -37,14 +37,17 @@ const year = new Date().getFullYear()
 .page-footer nav :deep(a) {
   color: var(--color-footer-text);
   font-size: 0.85rem;
-  text-decoration: none;
-  transition: color 0.15s;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(147, 147, 147, 0.35);
+  transition: color 0.15s, text-decoration-color 0.15s;
   padding: 0.25rem 0;
 }
 
 .page-footer nav a:hover,
 .page-footer nav :deep(a):hover {
   color: #fff;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
 }
 
 .copyright {
