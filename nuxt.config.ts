@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'node:fs'
 import { regions } from './build/region'
+import svgLoader from 'vite-svg-loader'
 
 // Load .env.local explicitly — c12 loads it after config evaluation, so
 // process.env is empty for VITE_* / NUXT_PUBLIC_* vars at config parse time.
@@ -29,6 +30,7 @@ export default defineNuxtConfig({
   },
 
   vite: {
+    plugins: [svgLoader({ defaultImport: 'component' })],
     esbuild: {
       tsconfigRaw: {
         compilerOptions: {

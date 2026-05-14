@@ -52,33 +52,21 @@
       <div class="features-grid inner">
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
-            <line x1="8" y1="2" x2="8" y2="18"/>
-            <line x1="16" y1="6" x2="16" y2="22"/>
-          </svg>
+          <IconMap />
         </div>
         <h2>Interaktive Karte</h2>
         <p>Alle offiziell genehmigten Trails auf einem Blick. Filtere nach Trails, Bikeparks und Pumptracks.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            <polyline points="9 12 11 14 15 10"/>
-          </svg>
+          <IconShieldCheck />
         </div>
         <h2>Nur offizielle Trails</h2>
         <p>Trailradar listet ausschließlich Strecken, die offiziell genehmigt sind – kein Graubereich.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
+          <IconUsers />
         </div>
         <h2>Community-getrieben</h2>
         <p>Die Community trägt neue Spots ein und meldet Änderungen – so bleibt die Karte immer aktuell.</p>
@@ -93,9 +81,7 @@
         <div class="quicknav-grid">
           <NuxtLink to="/articles" class="qn-card">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-              </svg>
+              <IconMessageSquare />
             </div>
             <span class="qn-label">Trailgespräche</span>
             <span class="qn-sub">Blog & Berichte</span>
@@ -103,11 +89,7 @@
 
           <NuxtLink to="/faq" class="qn-card">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
+              <IconHelpCircle />
             </div>
             <span class="qn-label">FAQ</span>
             <span class="qn-sub">Häufige Fragen</span>
@@ -115,10 +97,7 @@
 
           <NuxtLink to="/about" class="qn-card">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
+              <IconUser />
             </div>
             <span class="qn-label">Über mich</span>
             <span class="qn-sub">Das Projekt</span>
@@ -126,9 +105,7 @@
 
           <NuxtLink to="/support" class="qn-card qn-highlight">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
+              <IconHeart />
             </div>
             <span class="qn-label">Unterstützen</span>
             <span class="qn-sub">Trailradar fördern</span>
@@ -136,10 +113,7 @@
 
           <NuxtLink to="/business" class="qn-card">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-              </svg>
+              <IconBriefcase />
             </div>
             <span class="qn-label">Kooperationen</span>
             <span class="qn-sub">Für Unternehmen</span>
@@ -147,9 +121,7 @@
 
           <NuxtLink to="/privacy" class="qn-card">
             <div class="qn-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
+              <IconShield />
             </div>
             <span class="qn-label">Datenschutz</span>
             <span class="qn-sub">& Impressum</span>
@@ -293,6 +265,16 @@
 </template>
 
 <script setup lang="ts">
+import IconMap from '~/assets/icons/map.svg'
+import IconShieldCheck from '~/assets/icons/shield-check.svg'
+import IconUsers from '~/assets/icons/users.svg'
+import IconMessageSquare from '~/assets/icons/message-square.svg'
+import IconHelpCircle from '~/assets/icons/help-circle.svg'
+import IconUser from '~/assets/icons/user.svg'
+import IconHeart from '~/assets/icons/heart.svg'
+import IconBriefcase from '~/assets/icons/briefcase.svg'
+import IconShield from '~/assets/icons/shield.svg'
+
 const { data: activity } = await useAsyncData('activity', () =>
   $fetch<{ type: 'spot' | 'photo' | 'gpx'; trailId: string; name: string; created_at: string }[]>('/api/activity'),
   { default: () => [] },
