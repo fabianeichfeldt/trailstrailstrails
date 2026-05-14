@@ -24,6 +24,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     resolve: (proceed: boolean) => void
   } | null>(null)
 
+  // Emitted when user picks a location in add mode
+  const addSpotPicked = ref<{ lat: number; lng: number; type: string } | null>(null)
+
   function openTrail(id: string) { openTrailFn.value?.(id) }
   function flyToPlace(lat: number, lon: number) { flyToFn.value?.(lat, lon) }
 
@@ -217,31 +220,45 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // Add-trail FAB + map click to place
     let addMode: string | undefined
-    const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
-    const fabMenu = document.getElementById('fab-menu')
+    let fabController: AbortController | null = null
 
-    addBtn?.addEventListener('click', () => {
-      fabMenu?.classList.toggle('hidden')
-      addBtn.classList.toggle('active')
-      if (addMode) {
-        addMode = undefined
-        addBtn.textContent = '+'
-        mymap.getContainer().classList.remove('crosshair-cursor')
-      }
-    })
+    function attachFabListeners() {
+      fabController?.abort()
+      fabController = new AbortController()
+      const signal = fabController.signal
 
-    fabMenu?.addEventListener('click', async (e) => {
-      const target = e.target as HTMLElement
-      if (!target.classList.contains('fab-item')) return
-      const type = target.dataset.type
-      fabMenu.classList.add('hidden')
-      if (!type) return
-      addMode = type
-      if (addBtn) {
+      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
+      const fabMenu = document.getElementById('fab-menu')
+      if (!addBtn || !fabMenu) return
+
+      addBtn.addEventListener('click', () => {
+        fabMenu.classList.toggle('hidden')
+        addBtn.classList.toggle('active')
+        if (addMode) {
+          addMode = undefined
+          addBtn.textContent = '+'
+          mymap.getContainer().classList.remove('crosshair-cursor')
+        }
+      }, { signal })
+
+      fabMenu.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement
+        if (!target.classList.contains('fab-item')) return
+        const type = target.dataset.type
+        fabMenu.classList.add('hidden')
+        if (!type) return
+        addMode = type
         addBtn.textContent = 'Klick auf Karte, um Trail zu setzen'
         addBtn.classList.add('active')
         mymap.getContainer().classList.add('crosshair-cursor')
-      }
+      }, { signal })
+    }
+
+    // FAB is v-if'd on isLoggedIn — re-attach listeners whenever it enters the DOM
+    watch(() => authStore.isLoggedIn, async (isLoggedIn) => {
+      if (!isLoggedIn) return
+      await nextTick()
+      attachFabListeners()
     })
 
     mymap.on('click', async (e: any) => {
@@ -250,8 +267,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         return
       }
       const { giveTrailNearBy } = await import('~/src/near_by_trails')
-      const { openCreateTrailPopup } = await import('~/src/map/create_trail/popup')
-      const nearby = giveTrailNearBy(e.latlng.lat, e.latlng.lng, trailsStore.trails as any)
+      const nearby = giveTrailNearBy(e.latlng.lat, e.latlng.lng, trailsStore.all as any)
 
       const proceed = await new Promise<boolean>(resolve => {
         if (nearby) {
@@ -262,9 +278,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       })
 
       if (proceed) {
-        openCreateTrailPopup(mymap, e.latlng.lat, e.latlng.lng, addMode as any, authAdapter as any)
+        addSpotPicked.value = { lat: e.latlng.lat, lng: e.latlng.lng, type: addMode }
       }
       addMode = undefined
+      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
       if (addBtn) {
         addBtn.textContent = '+'
         addBtn.classList.remove('active')
@@ -278,5 +295,5 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
   })
 
-  return { openTrail, flyToPlace, nearbyConflict }
+  return { openTrail, flyToPlace, nearbyConflict, addSpotPicked }
 }

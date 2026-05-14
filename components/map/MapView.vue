@@ -11,13 +11,21 @@ const props = defineProps<{
 const emit = defineEmits<{
   ready: [{ openTrail: (id: string) => void; flyToPlace: (lat: number, lon: number) => void }]
   nearbyConflict: [{ trail: any; resolve: (proceed: boolean) => void }]
+  spotPicked: [{ lat: number; lng: number; type: string }]
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
-const { openTrail, flyToPlace, nearbyConflict } = useTrailMap(mapEl)
+const { openTrail, flyToPlace, nearbyConflict, addSpotPicked } = useTrailMap(mapEl)
 
 watch(nearbyConflict, (v) => {
   if (v) emit('nearbyConflict', v)
+})
+
+watch(addSpotPicked, (v) => {
+  if (v) {
+    emit('spotPicked', v)
+    addSpotPicked.value = null
+  }
 })
 
 onMounted(() => {

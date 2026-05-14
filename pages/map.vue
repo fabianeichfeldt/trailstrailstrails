@@ -7,6 +7,7 @@
       <MapView
         @ready="onMapReady"
         @nearby-conflict="onNearbyConflict"
+        @spot-picked="onSpotPicked"
       />
 
       <SearchBar @open-trail="handleOpenTrail" @fly-to="handleFlyTo" />
@@ -29,6 +30,13 @@
 
       <Drawer />
       <NearbyModal :conflict="nearbyConflict" />
+      <AddSpotModal
+        :open="addSpotModal.open"
+        :lat="addSpotModal.lat"
+        :lng="addSpotModal.lng"
+        :initial-type="addSpotModal.type"
+        @close="addSpotModal.open = false"
+      />
     </ClientOnly>
 
     <AuthModal />
@@ -57,6 +65,7 @@ const route = useRoute()
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
+const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
 const trailIdFromQuery = route.query.trail as string | undefined
 
@@ -79,6 +88,13 @@ function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (la
 
 function handleOpenTrail(id: string) { openTrail(id) }
 function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
+
+function onSpotPicked(pick: { lat: number; lng: number; type: string }) {
+  addSpotModal.lat = pick.lat
+  addSpotModal.lng = pick.lng
+  addSpotModal.type = pick.type
+  addSpotModal.open = true
+}
 
 function onNearbyConflict(conflict: { trail: any; resolve: (proceed: boolean) => void }) {
   const origResolve = conflict.resolve

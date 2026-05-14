@@ -28,7 +28,7 @@ export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, 
 
 export function giveTrailNearBy(lat: number, lng: number, trails: Trail[]) {
     const R_KM = 111.32; // km per degree lat approx
-    const R = 3; // km radius
+    const R = 5; // km radius
   
     const dLat = R / R_KM;
     for(const trail of trails) {
