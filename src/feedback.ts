@@ -1,4 +1,4 @@
-import { anon } from "./anon";
+import { FUNCTIONS, anonHeaders } from "./communication/http";
 import "/src/css/feedback_button.css";
 
 export async function upVote(trailId: string, el: HTMLElement) {
@@ -24,12 +24,9 @@ export async function downVote(trailId: string, el: HTMLElement) {
   
     el.classList.add("selected");
   
-    await fetch(`https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/trail-details-feedback`, {
+    await fetch(`${FUNCTIONS}/trail-details-feedback`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${anon}`,
-        },
+        headers: anonHeaders(),
         body: JSON.stringify({trail_id: trailId, up: isUpvote}),
       });
   }

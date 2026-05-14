@@ -1,4 +1,4 @@
-import { anon } from "./anon";
+import { FUNCTIONS, anonHeaders } from "./communication/http";
 import { Trail } from "./types/Trail";
 
 export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, onCancel: OnCancel) {
@@ -40,12 +40,9 @@ export function giveTrailNearBy(lat: number, lng: number, trails: Trail[]) {
   }
 
   export async function reportAbort() {
-    await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/new-entry-abort", {
+    await fetch(`${FUNCTIONS}/new-entry-abort`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${anon}`,
-        },
+        headers: anonHeaders(),
       });
   }
 
