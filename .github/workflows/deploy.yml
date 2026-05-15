@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [feat/nuxt]
 
 permissions:
   contents: read
