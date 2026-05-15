@@ -422,8 +422,8 @@ useHead({
   position: relative;
   height: 340px;
   background:
-    url('https://tile.openstreetmap.org/6/33/21.png') -120px -80px / 512px 512px no-repeat,
-    url('https://tile.openstreetmap.org/6/34/21.png') 392px -80px / 512px 512px no-repeat,
+    url('/assets/map1.webp') -120px -80px / 512px 512px no-repeat,
+    url('/assets/map2.webp') 392px -80px / 512px 512px no-repeat,
     #e8f0e8;
   overflow: hidden;
 }
