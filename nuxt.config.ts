@@ -17,6 +17,15 @@ if (existsSync(envFile)) {
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  app: {
+    head: {
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/assets/icon-192.png' },
+        { rel: 'apple-touch-icon', href: '/assets/apple-touch-icon.png' },
+      ],
+    },
+  },
+
   components: [
     { path: '~/components', pathPrefix: false },
   ],
