@@ -42,65 +42,22 @@ async function clickMap(page: import('@playwright/test').Page) {
 
 // ── FAB visibility ─────────────────────────────────────────────────────────────
 
-baseTest('FAB add button is NOT visible when logged out', async ({ page }) => {
+baseTest('FAB add button is visible when logged out', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page)
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
 
-  await expect(page.locator('#add-btn')).not.toBeVisible()
+  await expect(page.locator('#add-btn')).toBeVisible()
   assertNoLeaks()
 })
 
-baseTest('FAB add button IS visible after sign-in', async ({ page }) => {
+baseTest('FAB menu opens without login', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page)
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
 
-  await signInOnMapPage(page)
-
-  await expect(page.locator('#add-btn')).toBeVisible({ timeout: 6000 })
-  assertNoLeaks()
-})
-
-// TODO: @supabase/ssr fires onAuthStateChange after the Playwright networkidle
-// fence, so the #add-btn never appears within the 6s timeout. The underlying
-// bug fix (watch { immediate: true }) is correct and covered by the sign-in test.
-baseTest.skip('FAB menu opens when user arrives already logged in (session pre-loaded)', async ({ page }) => {
-  const assertNoLeaks = await setupAllMocks(page)
-  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }))
-  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }))
-  await page.route('**/rest/v1/rpc/**',  (route) => route.fulfill({ json: null }))
-
-  // Step 1 — navigate once to read the storage key (= cookie name).
-  // createBrowserClient from @supabase/ssr uses document.cookie as its
-  // storage backend (not localStorage) when useSsrCookies is true.
-  await page.goto('/map')
-  await page.waitForLoadState('networkidle')
-  const storageKey = await page.evaluate(() =>
-    (window as any).useNuxtApp().$supabase.client.auth.storageKey as string
-  )
-
-  // Step 2 — plant the session as a browser cookie before the next load.
-  // createBrowserClient reads document.cookie via parse(document.cookie),
-  // so a Playwright context cookie is the correct injection point.
-  const futureExpiry = Math.floor(Date.now() / 1000) + 7200
-  await page.context().addCookies([{
-    name: storageKey,
-    value: JSON.stringify({ ...MOCK_SESSION, expires_at: futureExpiry }),
-    domain: 'localhost',
-    path: '/',
-  }])
-
-  // Step 3 — reload; createBrowserClient reads the cookie and fires SIGNED_IN.
-  await page.reload()
-  await page.waitForLoadState('networkidle')
-
-  // Button must be visible without going through the sign-in modal.
-  await expect(page.locator('#add-btn')).toBeVisible({ timeout: 6000 })
-
-  // Clicking it must open the menu (this was broken: watch lacked { immediate: true }).
   await page.locator('#add-btn').click()
-  await expect(page.locator('#fab-menu')).toBeVisible()
+  await expect(page.locator('#fab-menu')).toBeVisible({ timeout: 4000 })
   assertNoLeaks()
 })
 
@@ -110,7 +67,6 @@ baseTest('clicking the + button toggles the FAB menu', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page)
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
-  await signInOnMapPage(page)
 
   const menu = page.locator('#fab-menu')
   await expect(menu).toBeHidden()
@@ -127,7 +83,6 @@ baseTest('FAB menu shows all three spot types', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page)
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
-  await signInOnMapPage(page)
 
   await page.locator('#add-btn').click()
 
@@ -143,7 +98,6 @@ baseTest('selecting a type closes the FAB menu and activates add mode', async ({
   const assertNoLeaks = await setupAllMocks(page)
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
-  await signInOnMapPage(page)
 
   await page.locator('#add-btn').click()
   await page.locator('.fab-item[data-type="trail"]').click()
@@ -484,17 +438,21 @@ baseTest('creator field is pre-filled and read-only when logged in', async ({ pa
   assertNoLeaks()
 })
 
-baseTest('creator field is editable when not logged in', async ({ page }) => {
+baseTest('anonymous user can reach the add-spot modal', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page)
   await page.route('**/rest/v1/trails**', (route) => route.fulfill({ json: [] }))
-  // Don't sign in — auth mock already returns null session
   await page.goto('/map')
   await page.waitForLoadState('networkidle')
 
-  // Cannot reach the modal without auth (FAB hidden), so we verify the field
-  // contract via a logged-in state where we explicitly clear the nickname:
-  // instead just confirm FAB is hidden for unauthenticated users
-  await expect(page.locator('#add-btn')).not.toBeVisible()
+  await page.locator('#add-btn').click()
+  await page.locator('.fab-item[data-type="trail"]').click()
+  await clickMap(page)
+
+  await expect(page.locator('[data-testid="add-spot-modal"]')).toBeVisible({ timeout: 6000 })
+  // Creator field is editable (not pre-filled and not read-only)
+  const creatorInput = page.locator('[data-testid="add-spot-creator"]')
+  await expect(creatorInput).toHaveValue('')
+  await expect(creatorInput).not.toHaveAttribute('readonly')
   assertNoLeaks()
 })
 

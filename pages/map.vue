@@ -14,8 +14,8 @@
 
       <UserAvatar />
 
-      <!-- Add-trail FAB (logged-in users only) -->
-      <div v-if="authStore.isLoggedIn" class="add-btn-wrapper" id="top-map-buttons">
+      <!-- Add-trail FAB -->
+      <div class="add-btn-wrapper" id="top-map-buttons">
         <div class="fab-menu hidden" id="fab-menu">
           <button class="fab-item" data-type="trail">🚵 Trail eintragen</button>
           <button class="fab-item" data-type="bikepark">🏔️ Bikepark eintragen</button>
