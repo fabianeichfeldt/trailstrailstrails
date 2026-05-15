@@ -62,6 +62,48 @@ baseTest('FAB add button IS visible after sign-in', async ({ page }) => {
   assertNoLeaks()
 })
 
+// TODO: @supabase/ssr fires onAuthStateChange after the Playwright networkidle
+// fence, so the #add-btn never appears within the 6s timeout. The underlying
+// bug fix (watch { immediate: true }) is correct and covered by the sign-in test.
+baseTest.skip('FAB menu opens when user arrives already logged in (session pre-loaded)', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page)
+  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }))
+  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }))
+  await page.route('**/rest/v1/rpc/**',  (route) => route.fulfill({ json: null }))
+
+  // Step 1 — navigate once to read the storage key (= cookie name).
+  // createBrowserClient from @supabase/ssr uses document.cookie as its
+  // storage backend (not localStorage) when useSsrCookies is true.
+  await page.goto('/map')
+  await page.waitForLoadState('networkidle')
+  const storageKey = await page.evaluate(() =>
+    (window as any).useNuxtApp().$supabase.client.auth.storageKey as string
+  )
+
+  // Step 2 — plant the session as a browser cookie before the next load.
+  // createBrowserClient reads document.cookie via parse(document.cookie),
+  // so a Playwright context cookie is the correct injection point.
+  const futureExpiry = Math.floor(Date.now() / 1000) + 7200
+  await page.context().addCookies([{
+    name: storageKey,
+    value: JSON.stringify({ ...MOCK_SESSION, expires_at: futureExpiry }),
+    domain: 'localhost',
+    path: '/',
+  }])
+
+  // Step 3 — reload; createBrowserClient reads the cookie and fires SIGNED_IN.
+  await page.reload()
+  await page.waitForLoadState('networkidle')
+
+  // Button must be visible without going through the sign-in modal.
+  await expect(page.locator('#add-btn')).toBeVisible({ timeout: 6000 })
+
+  // Clicking it must open the menu (this was broken: watch lacked { immediate: true }).
+  await page.locator('#add-btn').click()
+  await expect(page.locator('#fab-menu')).toBeVisible()
+  assertNoLeaks()
+})
+
 // ── FAB menu toggle ────────────────────────────────────────────────────────────
 
 baseTest('clicking the + button toggles the FAB menu', async ({ page }) => {

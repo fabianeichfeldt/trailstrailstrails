@@ -138,8 +138,8 @@ function flyToUserLocation() {
 
 .add-btn-wrapper {
   position: absolute;
-  right: 0.4em;
-  bottom: 2.5em;
+  right: 10px;
+  bottom: 5.5em;
   z-index: 1000;
 }
 
@@ -180,7 +180,7 @@ function flyToUserLocation() {
 
 .location-btn {
   position: absolute;
-  right: 0.75em;
+  right: 10px;
   bottom: 8em;
   z-index: 1000;
   background: #2b6cb0;

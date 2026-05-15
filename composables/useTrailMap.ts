@@ -244,12 +244,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }, { signal })
     }
 
-    // FAB is v-if'd on isLoggedIn — re-attach listeners whenever it enters the DOM
+    // FAB is v-if'd on isLoggedIn — attach on mount if already logged in, and re-attach on login
     watch(() => authStore.isLoggedIn, async (isLoggedIn) => {
       if (!isLoggedIn) return
       await nextTick()
       attachFabListeners()
-    })
+    }, { immediate: true })
 
     mymap.on('click', async (e: any) => {
       if (!addMode) {
