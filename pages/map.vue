@@ -17,9 +17,9 @@
       <!-- Add-trail FAB -->
       <div class="add-btn-wrapper" id="top-map-buttons">
         <div class="fab-menu hidden" id="fab-menu">
-          <button class="fab-item" data-type="trail">🚵 Trail eintragen</button>
-          <button class="fab-item" data-type="bikepark">🏔️ Bikepark eintragen</button>
-          <button class="fab-item" data-type="dirtpark">🌿 Dirtpark / Pumptrack</button>
+          <button class="fab-item" data-type="trail">Trail Spot</button>
+          <button class="fab-item" data-type="bikepark">Bikepark eintragen</button>
+          <button class="fab-item" data-type="dirtpark">Dirtpark / Pumptrack</button>
         </div>
         <button class="add-trail-btn" id="add-btn">+</button>
       </div>
