@@ -84,7 +84,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         async getUser() {
           const session = await (client as any).auth.getSession()
           return {
-            id: user.value?.id ?? '',
+            id: user.value?.sub ?? '',
             email: user.value?.email ?? '',
             nickname: authStore.nickname,
             accessToken: session.data.session?.access_token ?? '',

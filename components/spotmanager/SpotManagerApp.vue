@@ -682,7 +682,7 @@ onMounted(async () => {
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
   try {
-    const userId = authStore.user?.id ?? ''
+    const userId = authStore.user?.sub ?? ''
     if (role.value === 'admin') {
       const { data } = await supabase.from('trails').select('id,name').order('name')
       spots.value = (data ?? []) as SpotRow[]

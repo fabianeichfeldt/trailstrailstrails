@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.1.0",
-    "@nuxtjs/supabase": "^1.4.6",
+    "@nuxtjs/supabase": "^2.0.8",
     "@pinia/nuxt": "^0.10.1",
     "@supabase/supabase-js": "^2.89.0",
     "@vite-pwa/nuxt": "^0.10.6",

@@ -90,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadAvatar(file: File): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    const filePath = `${user.value.id}/avatar.webp`
+    const filePath = `${user.value.sub}/avatar.webp`
     const { error } = await client.storage
       .from('avatars')
       .upload(filePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
@@ -101,7 +101,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadTrailPhoto(file: File, trailId: string): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    return uploadTrailPhotoImpl(file, trailId, client, user.value.id)
+    return uploadTrailPhotoImpl(file, trailId, client, user.value.sub)
   }
 
   return {
