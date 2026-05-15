@@ -28,7 +28,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      - run: npm install
 
       - name: Unit tests (Vitest)
         run: npm test
@@ -61,7 +61,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      - run: npm install
       - run: npm run generate
 
       - uses: actions/upload-pages-artifact@v3
