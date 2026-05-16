@@ -181,12 +181,6 @@
                 </label>
               </template>
               <template v-else>
-                <label>Richtung
-                  <select v-model="p.direction">
-                    <option value="cw">↻ Uhrzeigersinn</option>
-                    <option value="ccw">↺ Gegen Uhrzeiger</option>
-                  </select>
-                </label>
                 <div v-if="trails.length > 0" class="sm-trail-checks">
                   <span class="sm-label">Enthaltene Trails</span>
                   <label v-for="t in trails" :key="t.name" class="sm-check-label">
