@@ -1,31 +1,41 @@
+import type { SupabaseClient } from '@supabase/supabase-js'
+
 export default defineNuxtPlugin({
   enforce: 'post',
   setup() {
+    const client = useSupabaseClient() as SupabaseClient
     const session = useSupabaseSession()
     const user = useSupabaseUser()
 
-    // The @nuxtjs/supabase plugin has two failure modes that leave user as null
-    // even when a valid session is in localStorage:
+    // @nuxtjs/supabase's page:start hook calls getClaims() on every navigation.
+    // getClaims() has two failure modes that incorrectly wipe user AND session:
+    //   1. JWT expired while page:start races the token refresh in progress.
+    //   2. Cold start: getClaims() falls back to getUser() (network call) before
+    //      the connection is warm.
     //
-    // 1. On cold start: getClaims() falls back to getUser() (network call) which
-    //    can fail before the connection is warm.
-    // 2. page:start hook re-runs getClaims() on every navigation (incl. initial
-    //    page load) and blindly sets user = null when getClaims() fails.
-    //
-    // Fix: watch session → fill user from session.user when user is null.
-    // Also watch user → if it gets cleared while session still has a user
-    // (only getClaims failure can cause this; real logout clears session first),
-    // restore it immediately.
-
-    watch(session, (s) => {
-      if (s?.user && !user.value) {
+    // When both are wiped the watch-based approach can't recover. Fix: drive
+    // user/session from the Supabase client's own auth events, which are
+    // authoritative. TOKEN_REFRESHED fires once the refresh completes and
+    // restores state that getClaims() already cleared. Only clear on SIGNED_OUT.
+    client.auth.onAuthStateChange((event, s) => {
+      if (s) {
         user.value = s.user as any
+        session.value = s as any
+      } else if (event === 'SIGNED_OUT') {
+        user.value = null
+        session.value = null
       }
-    }, { immediate: true })
+    })
 
-    watch(user, (u) => {
-      if (!u && session.value?.user) {
-        user.value = session.value.user as any
+    // Belt-and-suspenders for the getUser() network-failure case (no auth state
+    // change fires): if user is wiped but getSession() still holds a valid session,
+    // restore immediately.
+    watch(user, async (u) => {
+      if (u) return
+      const { data } = await client.auth.getSession()
+      if (data.session?.user) {
+        user.value = data.session.user as any
+        session.value = data.session as any
       }
     })
   },

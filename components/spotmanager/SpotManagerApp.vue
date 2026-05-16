@@ -455,6 +455,25 @@
             <div class="sd-char-hint">{{ sdDescription.length }}/2000</div>
           </div>
 
+          <!-- Invitation codes -->
+          <div class="sd-section">
+            <div class="sd-section-label"><i class="fas fa-key" /> Einladungscodes (Trailcrew)</div>
+            <div v-if="invNewCode" class="inv-new-code">
+              <span class="inv-code-chip">{{ invNewCode }}</span>
+              <span class="inv-code-meta">Gültig 7 Tage · einmalig verwendbar</span>
+            </div>
+            <div v-if="invCodes.length" class="inv-list">
+              <div v-for="c in invCodes" :key="c.code" class="inv-row" :class="{ 'inv-row--used': c.used_by }">
+                <span class="inv-code">{{ c.code }}</span>
+                <span class="inv-expires">bis {{ formatInvDate(c.expires_at) }}</span>
+                <span class="inv-badge">{{ c.used_by ? 'verwendet' : 'offen' }}</span>
+              </div>
+            </div>
+            <button class="sd-add-rule-btn" :disabled="invGenerating" @click="generateInvCode">
+              <i class="fas fa-plus" /> Code erstellen
+            </button>
+          </div>
+
           <div class="sd-save-row">
             <button class="sm-btn-secondary" @click="view = 'list'">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveDetails">
@@ -543,6 +562,8 @@ import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, Acce
 import { processGpx, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
 import type { ImbaColor } from '../../src/types/MtbTypes'
+import { listInvitationCodes, createInvitationCode } from '../../src/communication/invitations'
+import type { InvCode } from '../../src/communication/invitations'
 
 type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details'
 
@@ -576,6 +597,44 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
+
+// ── Invitation codes ─────────────────────────────────────────────────────────
+const invCodes = ref<InvCode[]>([])
+const invGenerating = ref(false)
+const invNewCode = ref<string | null>(null)
+
+function formatInvDate(iso: string) {
+  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
+}
+
+async function getToken(): Promise<string> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ?? ''
+}
+
+async function loadInvCodes() {
+  try {
+    invCodes.value = await listInvitationCodes(spotId.value, await getToken())
+  } catch {
+    invCodes.value = []
+  }
+}
+
+async function generateInvCode() {
+  invGenerating.value = true
+  invNewCode.value = null
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token ?? ''
+    const uid = session?.user.id ?? ''
+    invNewCode.value = await createInvitationCode(spotId.value, uid, token)
+    await loadInvCodes()
+  } catch (e: any) {
+    alert(`Fehler: ${e.message}`)
+  } finally {
+    invGenerating.value = false
+  }
+}
 
 // ── Edit form state ───────────────────────────────────────────────────────────
 const editingTrail = ref<GpxTrailRow | null>(null)
@@ -1005,6 +1064,8 @@ function openDetailsEditor() {
   sdNightPolicy.value = d?.night_policy ?? 'none'
   sdBeforeDusk.value = d?.night_before_dusk_min ?? 60
   sdAfterDawn.value = d?.night_after_dawn_min ?? 60
+  invNewCode.value = null
+  loadInvCodes()
   view.value = 'details'
 }
 
@@ -1455,6 +1516,29 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-center-msg { text-align: center; padding: 40px 20px; color: #666; font-size: 14px; }
 .sm-error { color: #c62828; }
 .sm-muted { font-size: 12px; color: #aaa; }
+
+/* ── Invitation codes ─────────────────────────────────────────────── */
+.inv-new-code {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  background: #f0f9eb; border: 1px solid #b7e1a0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
+}
+.inv-code-chip {
+  font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: .2em; color: #2d6a1f;
+}
+.inv-code-meta { font-size: 11px; color: #5a8a4a; }
+.inv-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
+.inv-row {
+  display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+  border-radius: 6px; background: #f8f8f8; font-size: 12px;
+}
+.inv-row--used { opacity: .5; }
+.inv-code { font-family: monospace; font-weight: 700; letter-spacing: .1em; color: #333; flex: 0 0 auto; }
+.inv-expires { color: #888; flex: 1; }
+.inv-badge {
+  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+  background: #e0f0e0; color: #2d6a1f;
+}
+.inv-row--used .inv-badge { background: #eee; color: #999; }
 
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 700px) {

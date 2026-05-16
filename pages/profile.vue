@@ -90,6 +90,23 @@
           </form>
         </section>
 
+        <!-- Invitation code -->
+        <section class="profile-section">
+          <h3 class="section-title">Trailcrew Einladungscode</h3>
+          <p class="inv-hint">Hast du einen Einladungscode erhalten? Gib ihn hier ein, um Trailcrew-Zugang zu erhalten.</p>
+          <div v-if="invSuccess" class="inv-success">{{ invSuccess }}</div>
+          <div v-if="invError" class="auth-error">{{ invError }}</div>
+          <form class="profile-form" @submit.prevent="onRedeemCode">
+            <div class="field">
+              <label>Einladungscode</label>
+              <input v-model="invCode" type="text" maxlength="6" placeholder="z.B. A3K9P2" autocomplete="off" style="text-transform:uppercase;letter-spacing:.15em;font-family:monospace" />
+            </div>
+            <div class="profile-actions">
+              <button type="submit" class="btn-primary" :class="{ loading: invSubmitting }" :disabled="invCode.length !== 6 || invSubmitting">Einlösen</button>
+            </div>
+          </form>
+        </section>
+
         <!-- Contributions -->
         <section class="profile-section">
           <h3 class="section-title">Meine Beiträge</h3>
@@ -160,6 +177,32 @@ const savingPw = ref(false)
 const pwError = ref('')
 
 const avatarInput = ref<HTMLInputElement | null>(null)
+
+const invCode = ref('')
+const invSubmitting = ref(false)
+const invSuccess = ref<string | null>(null)
+const invError = ref<string | null>(null)
+
+async function onRedeemCode() {
+  invError.value = null
+  invSuccess.value = null
+  invSubmitting.value = true
+  try {
+    const { data, error } = await client.rpc('redeem_invitation', { p_code: invCode.value.toUpperCase().trim() })
+    if (error) throw new Error(error.message)
+    invSuccess.value = 'Trailcrew-Zugang aktiviert! Bitte Seite neu laden.'
+    invCode.value = ''
+  } catch (e: any) {
+    console.error('Error redeeming invitation:', e)
+    const msg = (e.message ?? '') as string
+    if (msg.includes('invalid_code')) invError.value = 'Ungültiger Code.'
+    else if (msg.includes('expired_code')) invError.value = 'Dieser Code ist abgelaufen.'
+    else if (msg.includes('already_used')) invError.value = 'Dieser Code wurde bereits verwendet.'
+    else invError.value = 'Code konnte nicht eingelöst werden.'
+  } finally {
+    invSubmitting.value = false
+  }
+}
 
 interface BaseTrail { id: string; name: string; created_at: string }
 interface PhotoItem { url: string; created_at: string; trailName: string; trailID: string }
@@ -442,6 +485,16 @@ async function onUpdatePassword() {
 }
 
 .empty-hint { font-size: 0.8em; color: #888; margin: 0; }
+
+.inv-hint { font-size: 0.8em; color: #666; margin: 0 0 0.8em; }
+.inv-success {
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.85rem;
+  margin-bottom: 0.8rem;
+}
 
 .photo-grid {
   display: grid;
