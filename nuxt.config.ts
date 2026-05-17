@@ -23,6 +23,9 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/assets/icon-192.png' },
         { rel: 'apple-touch-icon', href: '/assets/apple-touch-icon.png' },
       ],
+      meta: [
+        { name: 'theme-color', content: '#1b4332' },
+      ],
     },
   },
 
@@ -73,7 +76,7 @@ export default defineNuxtConfig({
       name: 'Trailradar - Offizielle MTB Trails',
       short_name: 'Trailradar',
       description: 'Alle offiziell genehmigten MTB Trails in Deutschland und Europa auf einer Karte.',
-      theme_color: '#0077cc',
+      theme_color: '#1b4332',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',
