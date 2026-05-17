@@ -103,8 +103,8 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
   await signInOnSpotmanagerPage(page, 'admin');
   await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
 
-  await expect(page.locator('.sm-spot-btn')).toHaveCount(2, { timeout: 6000 });
-  await expect(page.locator('.sm-spot-btn').nth(0)).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('.sm-spot-btn').nth(1)).toContainText('Bikepark Lenggries');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)')).toHaveCount(2, { timeout: 6000 });
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Flowtrail Tegernsee');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Bikepark Lenggries');
   assertNoLeaks();
 });
