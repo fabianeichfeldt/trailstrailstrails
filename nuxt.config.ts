@@ -17,6 +17,14 @@ if (existsSync(envFile)) {
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
+  experimental: {
+    defaults: {
+      nuxtLink: {
+        prefetch: false,
+      },
+    },
+  },
+
   app: {
     head: {
       link: [
