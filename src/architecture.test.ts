@@ -87,6 +87,38 @@ describe('Filter logic (DRY / single source of truth)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Embed page — self-contained, no store imports
+// ─────────────────────────────────────────────────────────────────────────────
+describe('Embed page (self-contained)', () => {
+  test('embed page does not import from stores/', () => {
+    const src = read('pages/embed/[token].vue')
+    expect(src, 'embed page must not import stores directly').not.toMatch(/from\s+['"]([~@]\/)?stores\//)
+  })
+
+  test('embed page does not use useTrailMap (no store/filter machinery needed)', () => {
+    const src = read('pages/embed/[token].vue')
+    expect(src, 'embed page must not pull in useTrailMap').not.toContain('useTrailMap')
+  })
+
+  test('embed page uses shared markerIconOptions instead of inline icon creation', () => {
+    const src = read('pages/embed/[token].vue')
+    expect(src, 'embed page must import markerIconOptions').toContain('markerIconOptions')
+  })
+
+  test('useTrailMap uses shared markerIconOptions instead of inline icon creation', () => {
+    const src = read('composables/useTrailMap.ts')
+    expect(src, 'useTrailMap must import markerIconOptions').toContain('markerIconOptions')
+    expect(src, 'useTrailMap must not inline the marker HTML').not.toContain('marker-wrapper')
+  })
+
+  test('server host validation utility has no browser dependencies', () => {
+    const src = read('server/utils/embedHostValidation.ts')
+    expect(src, 'must not import from stores').not.toMatch(/from\s+['"]([~@]\/)?stores\//)
+    expect(src, 'must not import from composables').not.toMatch(/from\s+['"]([~@]\/)?composables\//)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // No dead UI code in the data layer
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Communication layer has no UI concerns', () => {
@@ -104,5 +136,30 @@ describe('Communication layer has no UI concerns', () => {
       if (/from\s+['"]([~@]\/)?composables\//.test(content)) violations.push(`${file} → composables/`)
     }
     expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trail tooltip utility — pure, no browser/store/composable deps
+// ─────────────────────────────────────────────────────────────────────────────
+describe('trailTooltip utility (pure layer)', () => {
+  test('trailTooltip.ts does not import from stores/ or composables/', () => {
+    const src = read('src/map/trailTooltip.ts')
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?stores\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?composables\//)
+  })
+
+  test('trailTooltip.ts does not import leaflet (no browser dep at module level)', () => {
+    const src = read('src/map/trailTooltip.ts')
+    expect(src).not.toMatch(/from\s+['"]leaflet/)
+    expect(src).not.toMatch(/import\s+.*leaflet/)
+  })
+
+  test('trailTooltip.ts exports DIFF_COLOR, computeTrailStats, trailTooltipHtml, positionTooltip', () => {
+    const src = read('src/map/trailTooltip.ts')
+    expect(src).toContain('export const DIFF_COLOR')
+    expect(src).toContain('export function computeTrailStats')
+    expect(src).toContain('export function trailTooltipHtml')
+    expect(src).toContain('export function positionTooltip')
   })
 })

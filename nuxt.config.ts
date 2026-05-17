@@ -65,6 +65,7 @@ export default defineNuxtConfig({
     '~/assets/css/marker.css',
     '~/assets/css/spot_panel.css',
     '~/assets/css/lightbox.css',
+    '~/assets/css/trail-tooltip.css',
     'leaflet/dist/leaflet.css',
     'leaflet.markercluster/dist/MarkerCluster.css',
     'leaflet.markercluster/dist/MarkerCluster.Default.css',
@@ -127,6 +128,17 @@ export default defineNuxtConfig({
     key: process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY,
     redirect: false,
     useSsrCookies: false,
+  },
+
+  routeRules: {
+    // Allow the embed page to be loaded inside iframes on any external domain.
+    // Host-level security is enforced server-side in /api/embed/[token].
+    '/embed/**': {
+      headers: {
+        'Content-Security-Policy': "frame-ancestors *",
+        'X-Frame-Options': '',
+      },
+    },
   },
 
   nitro: {

@@ -237,3 +237,45 @@ export async function getSpotGpxData(spotId: string): Promise<SpotMtbData | null
     return null
   }
 }
+
+// ── Lightweight GPX fetch for the elevation tooltip ───────────────────────────
+
+export interface SpotGpxTrail {
+  name: string
+  difficulty: string
+  gpx_points: [number, number, number][]
+}
+
+export interface SpotGpxTour {
+  name: string
+  gpx_points: [number, number, number][]
+}
+
+/** Batch-fetch GPX for many spots in two round trips (used by the main map GPX view). */
+export async function fetchMultipleSpotGpx(
+  spotIds: string[],
+): Promise<Map<string, { trails: SpotGpxTrail[]; tours: SpotGpxTour[] }>> {
+  if (!spotIds.length) return new Map()
+
+  const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
+  const [tRes, rRes] = await Promise.all([
+    fetch(`${REST}/spot_gpx_trails?spot_id=in.(${idList})&select=spot_id,name,difficulty,gpx_points`, {
+      headers: anonHeaders(),
+    }),
+    fetch(`${REST}/spot_gpx_tours?spot_id=in.(${idList})&select=spot_id,name,gpx_points`, {
+      headers: anonHeaders(),
+    }),
+  ])
+
+  type RawT = SpotGpxTrail & { spot_id: string }
+  type RawR = SpotGpxTour  & { spot_id: string }
+
+  const rawTrails: RawT[] = tRes.ok ? await tRes.json() : []
+  const rawTours:  RawR[] = rRes.ok ? await rRes.json() : []
+
+  const result = new Map<string, { trails: SpotGpxTrail[]; tours: SpotGpxTour[] }>()
+  for (const id of spotIds) result.set(id, { trails: [], tours: [] })
+  for (const t of rawTrails) result.get(t.spot_id)?.trails.push({ name: t.name, difficulty: t.difficulty, gpx_points: t.gpx_points })
+  for (const t of rawTours)  result.get(t.spot_id)?.tours.push({ name: t.name, gpx_points: t.gpx_points })
+  return result
+}

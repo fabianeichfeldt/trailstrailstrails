@@ -209,3 +209,121 @@ export async function upsertSpotDetails(row: SpotDetailsRow, jwt: string): Promi
   const data = await json<SpotDetailsRow | SpotDetailsRow[]>(res);
   return Array.isArray(data) ? data[0] : data;
 }
+
+// ─── Embed token management ───────────────────────────────────────────────────
+
+export interface EmbedTokenRow {
+  id: string;
+  token: string;
+  name: string;
+  allowed_hosts: string[];
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface EmbedTokenTrailRow {
+  id: string;
+  token_id: string;
+  trail_id: string;
+  trail_type: 'trail' | 'bikepark' | 'dirtpark';
+}
+
+export interface TrailPickerRow {
+  id: string;
+  name: string;
+  type: 'trail' | 'bikepark' | 'dirtpark';
+}
+
+export async function getEmbedTokens(jwt: string): Promise<EmbedTokenRow[]> {
+  const res = await fetch(`${REST}/embed_tokens?select=*&order=created_at.desc`, {
+    headers: headers(jwt),
+  });
+  return json<EmbedTokenRow[]>(res);
+}
+
+export async function createEmbedToken(
+  row: Pick<EmbedTokenRow, 'name' | 'allowed_hosts'>,
+  jwt: string,
+): Promise<EmbedTokenRow> {
+  const res = await fetch(`${REST}/embed_tokens`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=representation' }),
+    body: JSON.stringify(row),
+  });
+  const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function updateEmbedToken(
+  id: string,
+  patch: Partial<Pick<EmbedTokenRow, 'name' | 'allowed_hosts' | 'is_active'>>,
+  jwt: string,
+): Promise<EmbedTokenRow> {
+  const res = await fetch(`${REST}/embed_tokens?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: headers(jwt, { Prefer: 'return=representation' }),
+    body: JSON.stringify(patch),
+  });
+  const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function deleteEmbedToken(id: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/embed_tokens?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: headers(jwt),
+  });
+  if (!res.ok) throw new Error(`Delete embed token failed: ${await res.text()}`);
+}
+
+export async function getEmbedTokenTrails(tokenId: string, jwt: string): Promise<EmbedTokenTrailRow[]> {
+  const res = await fetch(
+    `${REST}/embed_token_trails?token_id=eq.${tokenId}&select=*`,
+    { headers: headers(jwt) },
+  );
+  return json<EmbedTokenTrailRow[]>(res);
+}
+
+/** Replaces all trail associations for a token (delete-all + insert). */
+export async function setEmbedTokenTrails(
+  tokenId: string,
+  trails: Array<{ trail_id: string; trail_type: string }>,
+  jwt: string,
+): Promise<void> {
+  // Delete existing
+  const del = await fetch(`${REST}/embed_token_trails?token_id=eq.${tokenId}`, {
+    method: 'DELETE',
+    headers: headers(jwt),
+  });
+  if (!del.ok) throw new Error(`Clear embed trail links failed: ${await del.text()}`);
+
+  if (trails.length === 0) return;
+
+  const rows = trails.map(t => ({ token_id: tokenId, ...t }));
+  const ins = await fetch(`${REST}/embed_token_trails`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=minimal' }),
+    body: JSON.stringify(rows),
+  });
+  if (!ins.ok) throw new Error(`Insert embed trail links failed: ${await ins.text()}`);
+}
+
+/** Fetches a flat list of all trails (all types) for the token trail picker. */
+export async function getAllTrailsForPicker(jwt: string): Promise<TrailPickerRow[]> {
+  const fields = 'id,name';
+  const [trailsRes, parksRes, dirtRes] = await Promise.all([
+    fetch(`${REST}/trails?select=${fields}&order=name&visible=eq.true`, { headers: headers(jwt) }),
+    fetch(`${REST}/parks?select=${fields}&order=name`, { headers: headers(jwt) }),
+    fetch(`${REST}/dirt_parks?select=${fields}&order=name`, { headers: headers(jwt) }),
+  ]);
+  const [trails, parks, dirtParks] = await Promise.all([
+    json<Array<{ id: string; name: string }>>(trailsRes),
+    json<Array<{ id: string; name: string }>>(parksRes),
+    json<Array<{ id: string; name: string }>>(dirtRes),
+  ]);
+  return [
+    ...trails.map(t  => ({ ...t, type: 'trail'    as const })),
+    ...parks.map(p   => ({ ...p, type: 'bikepark'  as const })),
+    ...dirtParks.map(d => ({ ...d, type: 'dirtpark' as const })),
+  ];
+}

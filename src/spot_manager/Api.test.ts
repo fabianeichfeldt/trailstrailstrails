@@ -9,9 +9,16 @@ import {
   deleteTour,
   getSpotDetails,
   upsertSpotDetails,
+  getEmbedTokens,
+  createEmbedToken,
+  updateEmbedToken,
+  deleteEmbedToken,
+  setEmbedTokenTrails,
+  getAllTrailsForPicker,
   type GpxTrailRow,
   type GpxTourRow,
   type SpotDetailsRow,
+  type EmbedTokenRow,
 } from './Api';
 
 // BASE URL defined in vitest.config.ts via `define`
@@ -315,5 +322,94 @@ describe('upsertSpotDetails', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(422, 'unprocessable')));
     await expect(upsertSpotDetails(DETAILS, JWT)).rejects.toThrow('422');
+  });
+});
+
+// ── Embed token CRUD ──────────────────────────────────────────────────────────
+
+const TOKEN: EmbedTokenRow = {
+  id: 'tok-1', token: 'abc123', name: 'Test Embed',
+  allowed_hosts: ['localhost'], is_active: true, created_at: '2026-01-01T00:00:00Z',
+};
+
+describe('getEmbedTokens', () => {
+  it('fetches and returns list of tokens', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([TOKEN])));
+    expect(await getEmbedTokens(JWT)).toEqual([TOKEN]);
+  });
+});
+
+describe('createEmbedToken', () => {
+  it('POSTs and returns the created token', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([TOKEN])));
+    const result = await createEmbedToken({ name: 'Test Embed', allowed_hosts: ['localhost'] }, JWT);
+    expect(result).toEqual(TOKEN);
+  });
+
+  it('unwraps a single-object response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(TOKEN)));
+    expect(await createEmbedToken({ name: 'Test Embed', allowed_hosts: [] }, JWT)).toEqual(TOKEN);
+  });
+});
+
+describe('updateEmbedToken', () => {
+  it('PATCHes and returns the updated token', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([{ ...TOKEN, name: 'Renamed' }])));
+    const result = await updateEmbedToken('tok-1', { name: 'Renamed' }, JWT);
+    expect(result.name).toBe('Renamed');
+  });
+});
+
+describe('deleteEmbedToken', () => {
+  it('sends DELETE and resolves on success', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(null)));
+    await expect(deleteEmbedToken('tok-1', JWT)).resolves.toBeUndefined();
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'forbidden')));
+    await expect(deleteEmbedToken('tok-1', JWT)).rejects.toThrow();
+  });
+});
+
+describe('setEmbedTokenTrails', () => {
+  it('DELETEs existing links then POSTs new ones', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      calls.push(init.method as string);
+      return ok(null);
+    }));
+    await setEmbedTokenTrails('tok-1', [{ trail_id: 't1', trail_type: 'trail' }], JWT);
+    expect(calls).toEqual(['DELETE', 'POST']);
+  });
+
+  it('only DELETEs when trails array is empty', async () => {
+    const calls: string[] = [];
+    vi.stubGlobal('fetch', vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      calls.push(init.method as string);
+      return ok(null);
+    }));
+    await setEmbedTokenTrails('tok-1', [], JWT);
+    expect(calls).toEqual(['DELETE']);
+  });
+});
+
+describe('getAllTrailsForPicker', () => {
+  it('merges trails, bikeparks, and dirtparks with correct type labels', async () => {
+    let call = 0;
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(() => {
+      const bodies = [
+        [{ id: 't1', name: 'Trail A' }],
+        [{ id: 'p1', name: 'Park B' }],
+        [{ id: 'd1', name: 'Dirt C' }],
+      ];
+      return ok(bodies[call++]);
+    }));
+    const result = await getAllTrailsForPicker(JWT);
+    expect(result).toEqual([
+      { id: 't1', name: 'Trail A', type: 'trail' },
+      { id: 'p1', name: 'Park B', type: 'bikepark' },
+      { id: 'd1', name: 'Dirt C', type: 'dirtpark' },
+    ]);
   });
 });

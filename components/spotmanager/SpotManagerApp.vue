@@ -12,7 +12,7 @@
       <button v-if="view === 'list'" class="sm-help-btn" title="Hilfe" @click="helpOpen = true">
         <i class="fas fa-question-circle" />
       </button>
-      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : spotName }}</span>
+      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : spotName }}</span>
       <span class="sm-role-badge">{{ role }}</span>
       <UserAvatar />
     </div>
@@ -39,7 +39,34 @@
             <span class="sm-spot-name">{{ s.name }}</span>
             <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
           </button>
+          <div v-if="authStore.isAdmin" class="sm-admin-section">
+            <div class="sm-admin-divider">Admin</div>
+            <button class="sm-spot-btn sm-embed-btn" @click="openEmbedList">
+              <span class="sm-spot-name"><i class="fas fa-code" /> Embed-Tokens verwalten</span>
+            </button>
+          </div>
         </div>
+
+        <!-- Embed token list (admin only) -->
+        <EmbedTokenList
+          v-else-if="view === 'embed-list'"
+          :tokens="embedTokens"
+          :trail-counts="embedTokenCounts"
+          :loading="embedLoading"
+          :error="embedError"
+          @create="openEmbedEditor(null)"
+          @edit="openEmbedEditor"
+          @delete="confirmEmbedDelete"
+        />
+
+        <!-- Embed token editor (admin only) -->
+        <EmbedTokenEditor
+          v-else-if="view === 'embed-edit'"
+          :token="embedEditTarget"
+          :jwt="embedJwt"
+          @cancel="openEmbedList"
+          @saved="openEmbedList"
+        />
 
         <!-- Spot list -->
         <div v-else-if="view === 'list'" class="sm-list-view">
@@ -483,8 +510,8 @@
         </div>
       </aside>
 
-      <!-- Map pane -->
-      <div class="sm-map-pane">
+      <!-- Map pane (hidden in embed views) -->
+      <div v-if="view !== 'embed-list' && view !== 'embed-edit'" class="sm-map-pane">
         <div ref="mapEl" id="sm-map" />
       </div>
     </div>
@@ -535,7 +562,7 @@
       </div>
     </div>
 
-    <!-- Delete confirmation -->
+    <!-- Delete confirmation (trails/tours) -->
     <div v-if="deleteTarget" class="sm-modal-overlay" @click.self="deleteTarget = null">
       <div class="sm-modal sm-confirm-modal">
         <div class="sm-modal-header">
@@ -553,19 +580,39 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete confirmation (embed token) -->
+    <div v-if="embedDeleteTarget" class="sm-modal-overlay" @click.self="embedDeleteTarget = null">
+      <div class="sm-modal sm-confirm-modal">
+        <div class="sm-modal-header">
+          <h2><i class="fas fa-trash" /> Token löschen</h2>
+          <button class="sm-modal-close" @click="embedDeleteTarget = null"><i class="fas fa-times" /></button>
+        </div>
+        <div class="sm-modal-body">
+          <p style="margin:0">Token „{{ embedDeleteTarget.name }}" wirklich löschen? Alle Websites, die diesen Token nutzen, zeigen danach einen Fehler.</p>
+        </div>
+        <div class="sm-confirm-actions">
+          <button class="sm-btn-secondary" @click="embedDeleteTarget = null">Abbrechen</button>
+          <button class="sm-btn-primary sm-btn-delete-confirm" :disabled="busy" @click="executeEmbedDelete">
+            <i class="fas fa-trash" /> Löschen
+          </button>
+        </div>
+      </div>
+    </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy } from '../../src/spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../src/spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken } from '../../src/spot_manager/Api'
 import { processGpx, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
 import type { ImbaColor } from '../../src/types/MtbTypes'
 import { listInvitationCodes, createInvitationCode } from '../../src/communication/invitations'
 import type { InvCode } from '../../src/communication/invitations'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit'
 
 interface PendingImport {
   key: string
@@ -597,6 +644,59 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
+
+// ── Embed tokens (admin only) ─────────────────────────────────────────────────
+const embedTokens      = ref<EmbedTokenRow[]>([])
+const embedTokenCounts = ref(new Map<string, number>())
+const embedEditTarget  = ref<EmbedTokenRow | null>(null)
+const embedLoading     = ref(false)
+const embedError       = ref<string | null>(null)
+const embedJwt         = ref('')
+const embedDeleteTarget = ref<EmbedTokenRow | null>(null)
+
+async function openEmbedList() {
+  view.value    = 'embed-list'
+  embedLoading.value = true
+  embedError.value   = null
+  try {
+    embedJwt.value = await getToken()
+    const tokens = await getEmbedTokens(embedJwt.value)
+    embedTokens.value = tokens
+    const counts = new Map<string, number>()
+    await Promise.all(tokens.map(async t => {
+      const linked = await getEmbedTokenTrails(t.id, embedJwt.value)
+      counts.set(t.id, linked.length)
+    }))
+    embedTokenCounts.value = counts
+  } catch (e: any) {
+    embedError.value = `Fehler: ${e.message}`
+  } finally {
+    embedLoading.value = false
+  }
+}
+
+function openEmbedEditor(token: EmbedTokenRow | null) {
+  embedEditTarget.value = token
+  view.value = 'embed-edit'
+}
+
+function confirmEmbedDelete(token: EmbedTokenRow) {
+  embedDeleteTarget.value = token
+}
+
+async function executeEmbedDelete() {
+  if (!embedDeleteTarget.value) return
+  busy.value = true
+  try {
+    await deleteEmbedToken(embedDeleteTarget.value.id, embedJwt.value)
+    embedDeleteTarget.value = null
+    await openEmbedList()
+  } catch (e: any) {
+    alert(`Fehler: ${e.message}`)
+  } finally {
+    busy.value = false
+  }
+}
 
 // ── Invitation codes ─────────────────────────────────────────────────────────
 const invCodes = ref<InvCode[]>([])
@@ -784,7 +884,11 @@ async function openSpot(id: string, name: string) {
 }
 
 function goBack() {
-  if (view.value === 'list') {
+  if (view.value === 'embed-edit') {
+    openEmbedList()
+  } else if (view.value === 'embed-list') {
+    view.value = 'selector'
+  } else if (view.value === 'list') {
     mapView.value?.clear()
     view.value = 'selector'
   } else {
@@ -1239,6 +1343,14 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-spot-btn:hover { border-color: #0077cc; background: #f0f6ff; box-shadow: 0 2px 6px rgba(0,119,204,.12); }
 .sm-spot-name { font-weight: 700; font-size: 14px; }
 .sm-spot-id { font-size: 11px; color: #aaa; font-family: monospace; }
+
+.sm-admin-section { margin-top: 16px; }
+.sm-admin-divider {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  color: #aaa; padding: 0 2px 6px; border-bottom: 1px solid #e5e7eb; margin-bottom: 8px;
+}
+.sm-embed-btn { border-color: #d1fae5; }
+.sm-embed-btn:hover { border-color: #1b4332; background: #f0fdf4; box-shadow: 0 2px 6px rgba(27,67,50,.12); }
 
 /* ── List view ────────────────────────────────────────────────────── */
 .sm-list-view { padding: 0 0 80px; }

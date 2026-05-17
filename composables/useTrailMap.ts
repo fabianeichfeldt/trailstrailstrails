@@ -1,5 +1,12 @@
 import type { Ref } from 'vue'
 import type { Trail } from '~/src/types/Trail'
+import { markerIconOptions } from '~/src/map/markerIcon'
+import {
+  DIFF_COLOR,
+  computeTrailStats, trailTooltipHtml, placeholderDesc,
+  positionTooltip, createTooltipEl,
+} from '~/src/map/trailTooltip'
+import { fetchMultipleSpotGpx } from '~/src/communication/trails'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -51,30 +58,27 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     L.control.zoom({ position: 'bottomright' }).addTo(mymap)
 
+    // Elevation tooltip — repositioned on GPX polyline hover
+    const tooltipEl = createTooltipEl(mymap.getContainer())
+    const gpxCache  = new Map<string, { trails: any[]; tours: any[] }>()
+
+    // ── View mode ────────────────────────────────────────────────────────────
+    const GPX_ZOOM_THRESHOLD = 11
+    let viewMode: 'markers' | 'gpx' = 'markers'
+    let gpxLayers: any[] = []
+    let renderGen  = 0   // incremented per renderGpxView call; stale renders bail early
+
     // Cluster + plain layer
     const clusterGroup = new (L as any).MarkerClusterGroup()
     const markerGroup = L.layerGroup()
     mymap.addLayer(clusterGroup)
-
-    const markersById = new Map<string, any>()
 
     function currentLayer() {
       return filtersStore.useCluster ? clusterGroup : markerGroup
     }
 
     function createCustomIcon(trail: Trail) {
-      let category: string
-      if (trail.type === 'dirtpark') category = 'dirtpark'
-      else if (trail.type === 'bikepark') category = 'bikepark'
-      else category = trail.approved ? 'verified' : 'unverified'
-      return L.divIcon({
-        html: `<div class="marker-wrapper marker-${category}"><img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" class="marker-img" /></div>`,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-        className: '',
-      })
+      return L.divIcon(markerIconOptions(trail.type, trail.approved))
     }
 
     // Auth adapter bridging Pinia → legacy Auth interface
@@ -125,7 +129,6 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }
       clusterGroup.clearLayers()
       markerGroup.clearLayers()
-      markersById.clear()
 
       const all: Trail[] = [
         ...trailsStore.trails,
@@ -139,12 +142,188 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
           icon: createCustomIcon(trail),
         }).addTo(currentLayer() as any)
 
-        markersById.set(trail.id, marker)
         marker.on('click', () => {
           mapStore.panelOpen = true
-          mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.0 })
+          mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.0 })
           spotPanel.open(trail as any)
         })
+      }
+    }
+
+    // ── GPX view — shown when zoom >= GPX_ZOOM_THRESHOLD ────────────────────
+    async function renderGpxView() {
+      const gen = ++renderGen
+
+      // Hide marker layers while in GPX mode
+      if (mymap.hasLayer(clusterGroup)) mymap.removeLayer(clusterGroup)
+      if (mymap.hasLayer(markerGroup))  mymap.removeLayer(markerGroup)
+
+      // Clear previous GPX layers
+      for (const l of gpxLayers) mymap.removeLayer(l)
+      gpxLayers = []
+      tooltipEl.style.display = 'none'
+
+      // No bounds filter — spot marker coords can be far from the actual trail
+      // geometry (e.g. city-centre marker whose trails are 5 km into the hills).
+      const all: Trail[] = [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
+      const filtered = filtersStore.apply(all)
+      if (!filtered.length) return
+
+      // Batch-fetch GPX for any uncached spots
+      const uncached = filtered.filter(t => !gpxCache.has(t.id)).map(t => t.id)
+      if (uncached.length) {
+        const fetched = await fetchMultipleSpotGpx(uncached)
+        fetched.forEach((gpx, id) => gpxCache.set(id, gpx))
+      }
+      if (gen !== renderGen) return  // a newer render superseded this one
+
+      const containerW = () => mymap.getContainer().clientWidth
+
+      // Tooltip hide is delayed so the mouse can move from the polyline to the
+      // tooltip card and click "Spot öffnen" without the card vanishing mid-way.
+      let hideTimer: ReturnType<typeof setTimeout> | null = null
+      function scheduleHide() {
+        if (hideTimer) clearTimeout(hideTimer)
+        hideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 180)
+      }
+      function cancelHide() {
+        if (hideTimer) clearTimeout(hideTimer)
+      }
+      tooltipEl.addEventListener('mouseenter', cancelHide)
+      tooltipEl.addEventListener('mouseleave', () => { tooltipEl.style.display = 'none' })
+
+      // Double-tap state — shared across all hit lines so consecutive taps on the
+      // same trail are detected even if the hit objects differ.
+      let lastTapMs   = 0
+      let lastTapId   = ''
+
+      function openPanel(trail: Trail) {
+        mapStore.panelOpen = true
+        spotPanel.open(trail as any)
+        tooltipEl.style.display = 'none'
+      }
+
+      function showTooltip(
+        name: string,
+        difficulty: string | null,
+        desc: string,
+        stats: ReturnType<typeof computeTrailStats>,
+        x: number,
+        y: number,
+        trail: Trail,
+      ) {
+        tooltipEl.innerHTML = trailTooltipHtml(name, difficulty, desc, stats)
+        positionTooltip(tooltipEl, x, y, containerW())
+        // Bind the "Spot öffnen" button each time the HTML is refreshed
+        tooltipEl.querySelector('.ttr-open')?.addEventListener('click', (e) => {
+          e.stopPropagation()
+          openPanel(trail)
+        }, { once: true })
+      }
+
+      function addGpxLine(
+        latlngs: [number, number][],
+        visibleOpts: any,
+        name: string,
+        difficulty: string | null,
+        points: [number, number, number][],
+        trail: Trail,
+      ) {
+        // Decorative visible line (non-interactive — events go to hit area)
+        const line = L.polyline(latlngs, { ...visibleOpts, interactive: false }).addTo(mymap)
+
+        // Wide nearly-invisible hit area (weight 20, opacity 0.001 keeps it a
+        // valid SVG pointer-events target while being visually transparent)
+        const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(mymap)
+
+        const stats = computeTrailStats(points)
+        const desc  = difficulty ? placeholderDesc(difficulty) : 'Eine abwechslungsreiche Tour durch die Trailanlage.'
+
+        // ── Desktop hover ─────────────────────────────────────────────────────
+        hit.on('mouseover', (e: any) => {
+          cancelHide()
+          showTooltip(name, difficulty, desc, stats, e.containerPoint.x, e.containerPoint.y, trail)
+        })
+        hit.on('mousemove', (e: any) => positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW()))
+        hit.on('mouseout',  scheduleHide)
+
+        // ── Desktop double-click → open panel ────────────────────────────────
+        hit.on('dblclick', (e: any) => {
+          L.DomEvent.stop(e)
+          openPanel(trail)
+        })
+
+        // ── Mobile touch ─────────────────────────────────────────────────────
+        let touchHideTimer: ReturnType<typeof setTimeout> | null = null
+        hit.on('touchstart', (e: any) => {
+          const now = Date.now()
+          if (now - lastTapMs < 350 && lastTapId === trail.id) {
+            // Double-tap → open panel
+            L.DomEvent.stop(e)
+            if (touchHideTimer) clearTimeout(touchHideTimer)
+            openPanel(trail)
+            lastTapMs = 0
+            return
+          }
+          lastTapMs = now
+          lastTapId = trail.id
+
+          // Single tap → show tooltip for 3 s
+          const touch = e.originalEvent.touches[0]
+          const rect  = mymap.getContainer().getBoundingClientRect()
+          cancelHide()
+          showTooltip(name, difficulty, desc, stats, touch.clientX - rect.left, touch.clientY - rect.top, trail)
+          if (touchHideTimer) clearTimeout(touchHideTimer)
+          touchHideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 3000)
+        }, { passive: false })
+
+        gpxLayers.push(line, hit)
+      }
+
+      // Fallback layer for spots that have no GPX data — their marker stays
+      // visible in GPX view so the spot is never invisible to the user.
+      const fallbackLayer = L.layerGroup().addTo(mymap)
+      gpxLayers.push(fallbackLayer)
+
+      for (const trail of filtered) {
+        const gpx = gpxCache.get(trail.id)
+        const hasGpx = gpx && (gpx.trails.length > 0 || gpx.tours.length > 0)
+
+        if (!hasGpx) {
+          // Keep the marker for spots without any GPX tracks
+          const marker = L.marker([trail.latitude, trail.longitude], {
+            icon: createCustomIcon(trail),
+          }).addTo(fallbackLayer)
+          marker.on('click', () => {
+            mapStore.panelOpen = true
+            spotPanel.open(trail as any)
+          })
+          continue
+        }
+
+        // Tours first → lower z-order; trails second → win when stacked
+        for (const t of gpx.tours) {
+          const latlngs = t.gpx_points.map(([la, ln]: [number, number, number]) => [la, ln] as [number, number])
+          addGpxLine(latlngs, { color: '#555', weight: 3, opacity: 0.6, dashArray: '8, 6' }, t.name, null, t.gpx_points, trail)
+        }
+        for (const t of gpx.trails) {
+          const latlngs = t.gpx_points.map(([la, ln]: [number, number, number]) => [la, ln] as [number, number])
+          addGpxLine(latlngs, { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 }, t.name, t.difficulty, t.gpx_points, trail)
+        }
+      }
+    }
+
+    function switchView() {
+      if (mymap.getZoom() >= GPX_ZOOM_THRESHOLD) {
+        viewMode = 'gpx'
+        renderGpxView()
+      } else {
+        viewMode = 'markers'
+        // Remove GPX layers and restore marker layers
+        for (const l of gpxLayers) mymap.removeLayer(l)
+        gpxLayers = []
+        tooltipEl.style.display = 'none'
+        renderMarkers()
       }
     }
 
@@ -153,7 +332,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       const trail = trailsStore.all.find(t => t.id === id)
       if (!trail) return
       mapStore.panelOpen = true
-      mymap.flyTo([trail.latitude, trail.longitude], 14, { duration: 1.2 })
+      mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.2 })
       spotPanel.open(trail as any)
     }
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
@@ -167,10 +346,11 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       mymap.setView([51.163, 10.447], 6)
     }
 
-    // Load data and watch for changes
+    // Load data and do initial render
     await trailsStore.fetchAll()
-    renderMarkers()
+    switchView()
 
+    // React to filter / data changes in whichever view is active
     watch(
       [
         () => trailsStore.trails,
@@ -182,8 +362,13 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         () => filtersStore.showPumptracks,
         () => filtersStore.useCluster,
       ],
-      renderMarkers,
+      () => { if (viewMode === 'markers') renderMarkers(); else renderGpxView() },
     )
+
+    // Switch between marker / GPX view on zoom change
+    mymap.on('zoomend', switchView)
+    // Re-render GPX for newly visible spots after panning (markers self-manage via layer group)
+    mymap.on('moveend', () => { if (viewMode === 'gpx') renderGpxView() })
 
     // Geolocation
     let posMarker: any = null
