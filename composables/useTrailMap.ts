@@ -184,7 +184,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       let hideTimer: ReturnType<typeof setTimeout> | null = null
       function scheduleHide() {
         if (hideTimer) clearTimeout(hideTimer)
-        hideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 180)
+        hideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 800)
       }
       function cancelHide() {
         if (hideTimer) clearTimeout(hideTimer)
