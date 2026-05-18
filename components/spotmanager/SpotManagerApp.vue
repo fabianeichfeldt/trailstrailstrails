@@ -256,6 +256,13 @@
               <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">{{ d.label }}</option>
             </select>
           </label>
+          <label>Beschreibung
+            <textarea
+              v-model="efTrailDesc"
+              rows="3"
+              placeholder="Kurze Beschreibung des Trails – z. B. Schneller Flowtrail mit zwei Sprüngen und einem steinigen Auslauf. Max. 1–2 Sätze."
+            />
+          </label>
           <label class="sm-file-label">GPX ersetzen (optional)
             <input type="file" accept=".gpx" @change="onEditGpx" />
           </label>
@@ -744,6 +751,7 @@ const efDiff = ref<ImbaColor>('blue')
 const efDir = ref('one-way-down')
 const efDuration = ref(0)
 const efTrailNames = ref<string[]>([])
+const efTrailDesc = ref('')
 const editGpxInfo = ref('')
 const editNewGpx = ref<ProcessedGpx | null>(null)
 
@@ -903,6 +911,7 @@ function openEditTrail(id: string) {
   efName.value = t.name
   efDiff.value = t.difficulty as ImbaColor
   efDir.value = t.direction
+  efTrailDesc.value = t.trail_description ?? ''
   editGpxInfo.value = ''
   editNewGpx.value = null
   mapView.value?.highlight(id)
@@ -959,7 +968,7 @@ async function saveTrailEdit() {
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
     const { data, error } = await supabase.from('spot_gpx_trails')
-      .update({ name, difficulty: efDiff.value, direction: efDir.value, gpx_points: gpxPoints, gpx_url, ...stats })
+      .update({ name, difficulty: efDiff.value, direction: efDir.value, trail_description: efTrailDesc.value.trim() || null, gpx_points: gpxPoints, gpx_url, ...stats })
       .eq('id', t.id)
       .select()
       .single()
@@ -1428,11 +1437,13 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-edit-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #555; }
 .sm-edit-form input[type="text"],
 .sm-edit-form input[type="number"],
-.sm-edit-form select {
+.sm-edit-form select,
+.sm-edit-form textarea {
   border: 1px solid #d0d0d0; border-radius: 6px; padding: 8px 10px;
-  font-size: 13px; color: #333; background: #fafafa;
+  font-size: 13px; color: #333; background: #fafafa; font-family: inherit;
 }
-.sm-edit-form input:focus, .sm-edit-form select:focus { outline: none; border-color: #0077cc; background: #fff; }
+.sm-edit-form input:focus, .sm-edit-form select:focus, .sm-edit-form textarea:focus { outline: none; border-color: #0077cc; background: #fff; }
+.sm-edit-form textarea { resize: vertical; line-height: 1.5; }
 .sm-file-label { cursor: pointer; }
 .sm-gpx-info {
   font-size: 12px; color: #2e7d32; background: #f1f8e9;

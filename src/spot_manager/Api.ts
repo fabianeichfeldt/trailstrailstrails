@@ -30,6 +30,7 @@ export interface GpxTrailRow {
   elevation_loss: number;
   gpx_points: [number, number, number][];
   gpx_url?: string;
+  trail_description?: string;
 }
 export interface GpxTourRow {
   id: string;
