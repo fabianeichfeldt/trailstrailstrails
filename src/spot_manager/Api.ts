@@ -136,18 +136,29 @@ export async function upsertTour(row: Partial<GpxTourRow> & { spot_id: string },
   return Array.isArray(data) ? data[0] : data;
 }
 
-export async function deleteTrail(id: string, jwt: string): Promise<void> {
+async function deleteGpxFile(gpx_url: string, jwt: string): Promise<void> {
+  const path = gpx_url.split('/gpx-files/')[1];
+  if (!path) return;
+  const res = await fetch(`${STORE}/object/gpx-files`, {
+    method: 'DELETE', headers: headers(jwt), body: JSON.stringify({ prefixes: [path] }),
+  });
+  if (!res.ok) throw new Error(`Storage delete failed: ${await res.text()}`);
+}
+
+export async function deleteTrail(id: string, jwt: string, gpx_url?: string): Promise<void> {
   const res = await fetch(`${REST}/spot_gpx_trails?id=eq.${id}`, {
     method: 'DELETE', headers: headers(jwt),
   });
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
+  if (gpx_url) await deleteGpxFile(gpx_url, jwt);
 }
 
-export async function deleteTour(id: string, jwt: string): Promise<void> {
+export async function deleteTour(id: string, jwt: string, gpx_url?: string): Promise<void> {
   const res = await fetch(`${REST}/spot_gpx_tours?id=eq.${id}`, {
     method: 'DELETE', headers: headers(jwt),
   });
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
+  if (gpx_url) await deleteGpxFile(gpx_url, jwt);
 }
 
 export type SpotStatus  = 'open' | 'limited' | 'closed' | 'unknown';

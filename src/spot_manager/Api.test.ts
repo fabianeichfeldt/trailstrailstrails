@@ -234,6 +234,8 @@ describe('upsertTour', () => {
 
 // ── deleteTrail / deleteTour ──────────────────────────────────────────────────
 
+const GPX_URL = `${BASE}/storage/v1/object/public/gpx-files/spot1/trails/loop.gpx`;
+
 describe('deleteTrail', () => {
   it('sends DELETE to the correct endpoint', async () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
@@ -241,6 +243,24 @@ describe('deleteTrail', () => {
     await deleteTrail('t1', JWT);
     expect(fetch.mock.calls[0][0]).toContain('spot_gpx_trails?id=eq.t1');
     expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+  });
+
+  it('also deletes the GPX file from storage when gpx_url is provided', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await deleteTrail('t1', JWT, GPX_URL);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [storageUrl, storageOpts] = fetch.mock.calls[1];
+    expect(storageUrl).toContain('/storage/v1/object/gpx-files');
+    expect(storageOpts.method).toBe('DELETE');
+    expect(JSON.parse(storageOpts.body)).toEqual({ prefixes: ['spot1/trails/loop.gpx'] });
+  });
+
+  it('skips storage delete when gpx_url is absent', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await deleteTrail('t1', JWT);
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 
   it('throws on non-ok response', async () => {
@@ -256,6 +276,16 @@ describe('deleteTour', () => {
     await deleteTour('tour1', JWT);
     expect(fetch.mock.calls[0][0]).toContain('spot_gpx_tours?id=eq.tour1');
     expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+  });
+
+  it('also deletes the GPX file from storage when gpx_url is provided', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    const tourGpxUrl = `${BASE}/storage/v1/object/public/gpx-files/spot1/tours/loop.gpx`;
+    await deleteTour('tour1', JWT, tourGpxUrl);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const [, storageOpts] = fetch.mock.calls[1];
+    expect(JSON.parse(storageOpts.body)).toEqual({ prefixes: ['spot1/tours/loop.gpx'] });
   });
 
   it('throws on non-ok response', async () => {

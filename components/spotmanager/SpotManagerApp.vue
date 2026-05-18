@@ -1132,8 +1132,18 @@ async function executeDelete() {
   busy.value = true
   try {
     const table = kind === 'trail' ? 'spot_gpx_trails' : 'spot_gpx_tours'
+    const item = kind === 'trail'
+      ? trails.value.find(t => t.id === id)
+      : tours.value.find(t => t.id === id)
     const { error } = await supabase.from(table).delete().eq('id', id)
     if (error) throw new Error(error.message)
+    if (item?.gpx_url) {
+      const path = item.gpx_url.split('/gpx-files/')[1]
+      if (path) {
+        const { error: storageError } = await supabase.storage.from('gpx-files').remove([path])
+        if (storageError) console.warn('Storage delete failed:', storageError.message)
+      }
+    }
     if (kind === 'trail') trails.value = trails.value.filter(t => t.id !== id)
     else tours.value = tours.value.filter(t => t.id !== id)
     mapView.value?.removeLayer(id)
