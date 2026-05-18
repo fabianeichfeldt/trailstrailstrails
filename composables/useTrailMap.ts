@@ -237,7 +237,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(mymap)
 
         const stats = computeTrailStats(points)
-        const desc  = difficulty ? placeholderDesc(difficulty) : 'Eine abwechslungsreiche Tour durch die Trailanlage.'
+        const desc  = ''
 
         // ── Desktop hover ─────────────────────────────────────────────────────
         hit.on('mouseover', (e: any) => {
