@@ -228,6 +228,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         difficulty: string | null,
         points: [number, number, number][],
         trail: Trail,
+        trailDesc = '',
       ) {
         // Decorative visible line (non-interactive — events go to hit area)
         const line = L.polyline(latlngs, { ...visibleOpts, interactive: false }).addTo(mymap)
@@ -237,7 +238,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(mymap)
 
         const stats = computeTrailStats(points)
-        const desc  = ''
+        const words = trailDesc ? trailDesc.split(/\s+/) : []
+        const desc  = words.length > 150 ? words.slice(0, 150).join(' ') + '…' : trailDesc
 
         // ── Desktop hover ─────────────────────────────────────────────────────
         hit.on('mouseover', (e: any) => {
@@ -308,7 +310,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }
         for (const t of gpx.trails) {
           const latlngs = t.gpx_points.map(([la, ln]: [number, number, number]) => [la, ln] as [number, number])
-          addGpxLine(latlngs, { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 }, t.name, t.difficulty, t.gpx_points, trail)
+          addGpxLine(latlngs, { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 }, t.name, t.difficulty, t.gpx_points, trail, t.trail_description ?? '')
         }
       }
     }
