@@ -67,6 +67,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     const GPX_ZOOM_THRESHOLD = 11
     const renderGuard = new GpxRenderGuard()
     let gpxLayers: any[] = []
+    // Visible line layers grouped by spot ID for hover highlighting
+    let gpxSpotLines = new Map<string, Array<{ line: L.Polyline; opts: any }>>()
 
     // Cluster + plain layer
     const clusterGroup = new (L as any).MarkerClusterGroup()
@@ -160,6 +162,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       // Clear previous GPX layers
       for (const l of gpxLayers) mymap.removeLayer(l)
       gpxLayers = []
+      gpxSpotLines = new Map()
       tooltipEl.style.display = 'none'
 
       // No bounds filter — spot marker coords can be far from the actual trail
@@ -220,6 +223,27 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }, { once: true })
       }
 
+      function highlightLine(target: L.Polyline) {
+        gpxSpotLines.forEach(entries => {
+          for (const { line, opts } of entries) {
+            if (line === target) {
+              line.setStyle({ weight: (opts.weight ?? 4) + 2, opacity: 1 })
+              line.bringToFront()
+            } else {
+              line.setStyle({ weight: (opts.weight ?? 4) - 1, opacity: 0.3 })
+            }
+          }
+        })
+      }
+
+      function resetSpotHighlights() {
+        gpxSpotLines.forEach(entries => {
+          for (const { line, opts } of entries) {
+            line.setStyle({ weight: opts.weight, opacity: opts.opacity })
+          }
+        })
+      }
+
       function addGpxLine(
         latlngs: [number, number][],
         visibleOpts: any,
@@ -232,6 +256,11 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         // Decorative visible line (non-interactive — events go to hit area)
         const line = L.polyline(latlngs, { ...visibleOpts, interactive: false }).addTo(mymap)
 
+        // Register for hover highlighting (flat list per spot for reset)
+        const spotEntry = gpxSpotLines.get(trail.id) ?? []
+        spotEntry.push({ line, opts: visibleOpts })
+        gpxSpotLines.set(trail.id, spotEntry)
+
         // Wide nearly-invisible hit area (weight 20, opacity 0.001 keeps it a
         // valid SVG pointer-events target while being visually transparent)
         const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(mymap)
@@ -242,11 +271,15 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
         // ── Desktop hover ─────────────────────────────────────────────────────
         hit.on('mouseover', (e: any) => {
+          highlightLine(line)
           cancelHide()
           showTooltip(name, difficulty, desc, stats, e.containerPoint.x, e.containerPoint.y, trail)
         })
         hit.on('mousemove', (e: any) => positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW()))
-        hit.on('mouseout',  scheduleHide)
+        hit.on('mouseout', () => {
+          resetSpotHighlights()
+          scheduleHide()
+        })
 
         // ── Desktop double-click → open panel ────────────────────────────────
         hit.on('dblclick', (e: any) => {
@@ -262,6 +295,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             // Double-tap → open panel
             L.DomEvent.stop(e)
             if (touchHideTimer) clearTimeout(touchHideTimer)
+            resetSpotHighlights()
             openPanel(trail)
             lastTapMs = 0
             return
@@ -269,13 +303,17 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
           lastTapMs = now
           lastTapId = trail.id
 
-          // Single tap → show tooltip for 3 s
+          // Single tap → show tooltip for 3 s, highlight trail
+          highlightLine(line)
           const touch = e.originalEvent.touches[0]
           const rect  = mymap.getContainer().getBoundingClientRect()
           cancelHide()
           showTooltip(name, difficulty, desc, stats, touch.clientX - rect.left, touch.clientY - rect.top, trail)
           if (touchHideTimer) clearTimeout(touchHideTimer)
-          touchHideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 3000)
+          touchHideTimer = setTimeout(() => {
+            tooltipEl.style.display = 'none'
+            resetSpotHighlights()
+          }, 3000)
         }, { passive: false })
 
         gpxLayers.push(line, hit)
@@ -323,6 +361,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         // Remove GPX layers and restore marker layers
         for (const l of gpxLayers) mymap.removeLayer(l)
         gpxLayers = []
+        gpxSpotLines = new Map()
         tooltipEl.style.display = 'none'
         renderMarkers()
       }
