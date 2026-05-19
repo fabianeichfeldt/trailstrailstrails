@@ -18,6 +18,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
 
   experimental: {
+    payloadExtraction: false,
     defaults: {
       nuxtLink: {
         prefetch: false,
