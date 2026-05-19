@@ -31,6 +31,7 @@ export interface GpxTrailRow {
   gpx_points: [number, number, number][];
   gpx_url?: string;
   trail_description?: string;
+  sort_order: number;
 }
 export interface GpxTourRow {
   id: string;
@@ -44,6 +45,7 @@ export interface GpxTourRow {
   elevation_loss: number;
   gpx_points: [number, number, number][];
   gpx_url?: string;
+  sort_order: number;
 }
 
 export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'user'> {
@@ -78,17 +80,31 @@ export async function getManageableSpots(jwt: string, userId: string, role: stri
 }
 
 export async function getSpotTrails(spotId: string, jwt: string): Promise<GpxTrailRow[]> {
-  const res = await fetch(`${REST}/spot_gpx_trails?select=*&spot_id=eq.${spotId}&order=name`, {
+  const res = await fetch(`${REST}/spot_gpx_trails?select=*&spot_id=eq.${spotId}&order=sort_order`, {
     headers: headers(jwt),
   });
   return json<GpxTrailRow[]>(res);
 }
 
 export async function getSpotTours(spotId: string, jwt: string): Promise<GpxTourRow[]> {
-  const res = await fetch(`${REST}/spot_gpx_tours?select=*&spot_id=eq.${spotId}&order=name`, {
+  const res = await fetch(`${REST}/spot_gpx_tours?select=*&spot_id=eq.${spotId}&order=sort_order`, {
     headers: headers(jwt),
   });
   return json<GpxTourRow[]>(res);
+}
+
+export async function updateSortOrder(
+  table: 'spot_gpx_trails' | 'spot_gpx_tours',
+  id: string,
+  sort_order: number,
+  jwt: string,
+): Promise<void> {
+  const res = await fetch(`${REST}/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: headers(jwt, { Prefer: 'return=minimal' }),
+    body: JSON.stringify({ sort_order }),
+  });
+  if (!res.ok) throw new Error(`Sort order update failed: ${await res.text()}`);
 }
 
 export async function uploadGpx(

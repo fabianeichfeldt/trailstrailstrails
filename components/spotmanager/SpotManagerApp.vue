@@ -96,7 +96,7 @@
             <div class="sm-items">
               <p v-if="trails.length === 0" class="sm-empty">Keine Trails</p>
               <div
-                v-for="t in trails"
+                v-for="(t, i) in trails"
                 :key="t.id"
                 class="sm-item"
                 @mouseenter="mapView?.highlight(t.id)"
@@ -108,6 +108,14 @@
                   <span class="sm-item-sub">{{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
                 </div>
                 <div class="sm-item-actions">
+                  <div class="sm-order-btns">
+                    <button class="sm-btn-icon" title="Nach oben" :disabled="i === 0" @click.stop="moveTrail(i, -1)">
+                      <i class="fas fa-chevron-up" />
+                    </button>
+                    <button class="sm-btn-icon" title="Nach unten" :disabled="i === trails.length - 1" @click.stop="moveTrail(i, 1)">
+                      <i class="fas fa-chevron-down" />
+                    </button>
+                  </div>
                   <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTrail(t.id)">
                     <i class="fas fa-pen" />
                   </button>
@@ -135,7 +143,7 @@
             <div class="sm-items">
               <p v-if="tours.length === 0" class="sm-empty">Keine Touren</p>
               <div
-                v-for="t in tours"
+                v-for="(t, i) in tours"
                 :key="t.id"
                 class="sm-item"
                 @mouseenter="mapView?.highlight(t.id)"
@@ -147,6 +155,14 @@
                   <span class="sm-item-sub">{{ t.distance_km }} km · {{ t.duration_minutes }} min</span>
                 </div>
                 <div class="sm-item-actions">
+                  <div class="sm-order-btns">
+                    <button class="sm-btn-icon" title="Nach oben" :disabled="i === 0" @click.stop="moveTour(i, -1)">
+                      <i class="fas fa-chevron-up" />
+                    </button>
+                    <button class="sm-btn-icon" title="Nach unten" :disabled="i === tours.length - 1" @click.stop="moveTour(i, 1)">
+                      <i class="fas fa-chevron-down" />
+                    </button>
+                  </div>
                   <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTour(t.id)">
                     <i class="fas fa-pen" />
                   </button>
@@ -612,7 +628,7 @@
 <script setup lang="ts">
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../src/spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken } from '../../src/spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder } from '../../src/spot_manager/Api'
 import { processGpx, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
 import type { ImbaColor } from '../../src/types/MtbTypes'
@@ -865,8 +881,8 @@ async function openSpot(id: string, name: string) {
 
   try {
     const [{ data: t }, { data: to }, { data: d }] = await Promise.all([
-      supabase.from('spot_gpx_trails').select('*').eq('spot_id', id).order('name'),
-      supabase.from('spot_gpx_tours').select('*').eq('spot_id', id).order('name'),
+      supabase.from('spot_gpx_trails').select('*').eq('spot_id', id).order('sort_order'),
+      supabase.from('spot_gpx_tours').select('*').eq('spot_id', id).order('sort_order'),
       supabase.from('trail_details').select('*').eq('trail_id', id).limit(1),
     ])
     trails.value = (t ?? []) as GpxTrailRow[]
@@ -1008,6 +1024,55 @@ async function saveTourEdit() {
   }
 }
 
+// ── Reorder trails / tours ────────────────────────────────────────────────────
+async function moveTrail(idx: number, dir: -1 | 1) {
+  const newIdx = idx + dir
+  if (newIdx < 0 || newIdx >= trails.value.length) return
+  const a = trails.value[idx]
+  const b = trails.value[newIdx]
+  trails.value.splice(idx, 1, b)
+  trails.value.splice(newIdx, 1, a)
+  a.sort_order = newIdx
+  b.sort_order = idx
+  try {
+    const jwt = await authStore.getToken()
+    await Promise.all([
+      updateSortOrder('spot_gpx_trails', a.id, a.sort_order, jwt),
+      updateSortOrder('spot_gpx_trails', b.id, b.sort_order, jwt),
+    ])
+  } catch (e: any) {
+    trails.value.splice(newIdx, 1, b)
+    trails.value.splice(idx, 1, a)
+    a.sort_order = idx
+    b.sort_order = newIdx
+    alert(`Fehler beim Speichern der Reihenfolge: ${e.message}`)
+  }
+}
+
+async function moveTour(idx: number, dir: -1 | 1) {
+  const newIdx = idx + dir
+  if (newIdx < 0 || newIdx >= tours.value.length) return
+  const a = tours.value[idx]
+  const b = tours.value[newIdx]
+  tours.value.splice(idx, 1, b)
+  tours.value.splice(newIdx, 1, a)
+  a.sort_order = newIdx
+  b.sort_order = idx
+  try {
+    const jwt = await authStore.getToken()
+    await Promise.all([
+      updateSortOrder('spot_gpx_tours', a.id, a.sort_order, jwt),
+      updateSortOrder('spot_gpx_tours', b.id, b.sort_order, jwt),
+    ])
+  } catch (e: any) {
+    tours.value.splice(newIdx, 1, b)
+    tours.value.splice(idx, 1, a)
+    a.sort_order = idx
+    b.sort_order = newIdx
+    alert(`Fehler beim Speichern der Reihenfolge: ${e.message}`)
+  }
+}
+
 // ── Import ─────────────────────────────────────────────────────────────────────
 function openImport(kind: 'trail' | 'tour') {
   importDefaultKind.value = kind
@@ -1091,7 +1156,8 @@ async function applyImports() {
         const { data, error } = await supabase.from('spot_gpx_trails')
           .insert({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
             distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url })
+            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
+            sort_order: trails.value.length })
           .select().single()
         if (error) throw new Error(error.message)
         trails.value.push(data as GpxTrailRow)
@@ -1102,7 +1168,8 @@ async function applyImports() {
           .insert({ spot_id: spotId.value, name, direction: p.direction,
             duration_minutes: p.processed.duration_minutes ?? 0, trail_names: p.trailNames,
             distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url })
+            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
+            sort_order: tours.value.length })
           .select().single()
         if (error) throw new Error(error.message)
         tours.value.push(data as GpxTourRow)
@@ -1387,7 +1454,10 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-item-info { flex: 1; min-width: 0; }
 .sm-item-info strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sm-item-sub { font-size: 11px; color: #888; }
-.sm-item-actions { display: flex; gap: 4px; }
+.sm-item-actions { display: flex; gap: 4px; align-items: center; }
+.sm-order-btns { display: flex; flex-direction: column; gap: 1px; margin-right: 2px; }
+.sm-order-btns .sm-btn-icon { padding: 2px 6px; font-size: 10px; }
+.sm-btn-icon:disabled { opacity: .25; cursor: default; pointer-events: none; }
 
 /* ── Buttons ──────────────────────────────────────────────────────── */
 .sm-btn-icon {
