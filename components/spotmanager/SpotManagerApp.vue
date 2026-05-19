@@ -99,23 +99,23 @@
                 v-for="(t, i) in trails"
                 :key="t.id"
                 class="sm-item"
+                :class="{ 'sm-item-dragging': trailDragIdx === i, 'sm-item-drag-over': trailDragOverIdx === i && trailDragIdx !== i }"
+                draggable="true"
+                @dragstart="trailDragIdx = i"
+                @dragenter.prevent="trailDragOverIdx = i"
+                @dragover.prevent
+                @drop.prevent="dropTrail(i)"
+                @dragend="trailDragIdx = null; trailDragOverIdx = null"
                 @mouseenter="mapView?.highlight(t.id)"
                 @mouseleave="mapView?.resetHighlights()"
               >
+                <div class="sm-drag-handle" title="Ziehen zum Sortieren"><i class="fas fa-grip-vertical" /></div>
                 <div class="sm-item-dot" :style="`background:${DIFF_COLOR[t.difficulty as ImbaColor] ?? '#888'}`" />
                 <div class="sm-item-info">
                   <strong>{{ t.name }}</strong>
                   <span class="sm-item-sub">{{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
                 </div>
-                <div class="sm-item-actions">
-                  <div class="sm-order-btns">
-                    <button class="sm-btn-icon" title="Nach oben" :disabled="i === 0" @click.stop="moveTrail(i, -1)">
-                      <i class="fas fa-chevron-up" />
-                    </button>
-                    <button class="sm-btn-icon" title="Nach unten" :disabled="i === trails.length - 1" @click.stop="moveTrail(i, 1)">
-                      <i class="fas fa-chevron-down" />
-                    </button>
-                  </div>
+                <div class="sm-item-actions" @dragstart.stop.prevent>
                   <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTrail(t.id)">
                     <i class="fas fa-pen" />
                   </button>
@@ -146,23 +146,23 @@
                 v-for="(t, i) in tours"
                 :key="t.id"
                 class="sm-item"
+                :class="{ 'sm-item-dragging': tourDragIdx === i, 'sm-item-drag-over': tourDragOverIdx === i && tourDragIdx !== i }"
+                draggable="true"
+                @dragstart="tourDragIdx = i"
+                @dragenter.prevent="tourDragOverIdx = i"
+                @dragover.prevent
+                @drop.prevent="dropTour(i)"
+                @dragend="tourDragIdx = null; tourDragOverIdx = null"
                 @mouseenter="mapView?.highlight(t.id)"
                 @mouseleave="mapView?.resetHighlights()"
               >
+                <div class="sm-drag-handle" title="Ziehen zum Sortieren"><i class="fas fa-grip-vertical" /></div>
                 <div class="sm-item-dot sm-item-dot-tour" />
                 <div class="sm-item-info">
                   <strong>{{ t.name }}</strong>
                   <span class="sm-item-sub">{{ t.distance_km }} km · {{ t.duration_minutes }} min</span>
                 </div>
-                <div class="sm-item-actions">
-                  <div class="sm-order-btns">
-                    <button class="sm-btn-icon" title="Nach oben" :disabled="i === 0" @click.stop="moveTour(i, -1)">
-                      <i class="fas fa-chevron-up" />
-                    </button>
-                    <button class="sm-btn-icon" title="Nach unten" :disabled="i === tours.length - 1" @click.stop="moveTour(i, 1)">
-                      <i class="fas fa-chevron-down" />
-                    </button>
-                  </div>
+                <div class="sm-item-actions" @dragstart.stop.prevent>
                   <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTour(t.id)">
                     <i class="fas fa-pen" />
                   </button>
@@ -1025,50 +1025,43 @@ async function saveTourEdit() {
 }
 
 // ── Reorder trails / tours ────────────────────────────────────────────────────
-async function moveTrail(idx: number, dir: -1 | 1) {
-  const newIdx = idx + dir
-  if (newIdx < 0 || newIdx >= trails.value.length) return
-  const a = trails.value[idx]
-  const b = trails.value[newIdx]
-  trails.value.splice(idx, 1, b)
-  trails.value.splice(newIdx, 1, a)
-  a.sort_order = newIdx
-  b.sort_order = idx
+const trailDragIdx    = ref<number | null>(null)
+const trailDragOverIdx = ref<number | null>(null)
+const tourDragIdx     = ref<number | null>(null)
+const tourDragOverIdx  = ref<number | null>(null)
+
+async function dropTrail(dropIdx: number) {
+  const fromIdx = trailDragIdx.value
+  trailDragIdx.value = null
+  trailDragOverIdx.value = null
+  if (fromIdx === null || fromIdx === dropIdx) return
+  const item = trails.value.splice(fromIdx, 1)[0]
+  trails.value.splice(dropIdx, 0, item)
+  const lo = Math.min(fromIdx, dropIdx)
+  const hi = Math.max(fromIdx, dropIdx)
+  for (let i = lo; i <= hi; i++) trails.value[i].sort_order = i
   try {
     const jwt = await authStore.getToken()
-    await Promise.all([
-      updateSortOrder('spot_gpx_trails', a.id, a.sort_order, jwt),
-      updateSortOrder('spot_gpx_trails', b.id, b.sort_order, jwt),
-    ])
+    await Promise.all(trails.value.slice(lo, hi + 1).map(t => updateSortOrder('spot_gpx_trails', t.id, t.sort_order, jwt)))
   } catch (e: any) {
-    trails.value.splice(newIdx, 1, b)
-    trails.value.splice(idx, 1, a)
-    a.sort_order = idx
-    b.sort_order = newIdx
     alert(`Fehler beim Speichern der Reihenfolge: ${e.message}`)
   }
 }
 
-async function moveTour(idx: number, dir: -1 | 1) {
-  const newIdx = idx + dir
-  if (newIdx < 0 || newIdx >= tours.value.length) return
-  const a = tours.value[idx]
-  const b = tours.value[newIdx]
-  tours.value.splice(idx, 1, b)
-  tours.value.splice(newIdx, 1, a)
-  a.sort_order = newIdx
-  b.sort_order = idx
+async function dropTour(dropIdx: number) {
+  const fromIdx = tourDragIdx.value
+  tourDragIdx.value = null
+  tourDragOverIdx.value = null
+  if (fromIdx === null || fromIdx === dropIdx) return
+  const item = tours.value.splice(fromIdx, 1)[0]
+  tours.value.splice(dropIdx, 0, item)
+  const lo = Math.min(fromIdx, dropIdx)
+  const hi = Math.max(fromIdx, dropIdx)
+  for (let i = lo; i <= hi; i++) tours.value[i].sort_order = i
   try {
     const jwt = await authStore.getToken()
-    await Promise.all([
-      updateSortOrder('spot_gpx_tours', a.id, a.sort_order, jwt),
-      updateSortOrder('spot_gpx_tours', b.id, b.sort_order, jwt),
-    ])
+    await Promise.all(tours.value.slice(lo, hi + 1).map(t => updateSortOrder('spot_gpx_tours', t.id, t.sort_order, jwt)))
   } catch (e: any) {
-    tours.value.splice(newIdx, 1, b)
-    tours.value.splice(idx, 1, a)
-    a.sort_order = idx
-    b.sort_order = newIdx
     alert(`Fehler beim Speichern der Reihenfolge: ${e.message}`)
   }
 }
@@ -1455,9 +1448,14 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-item-info strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sm-item-sub { font-size: 11px; color: #888; }
 .sm-item-actions { display: flex; gap: 4px; align-items: center; }
-.sm-order-btns { display: flex; flex-direction: column; gap: 1px; margin-right: 2px; }
-.sm-order-btns .sm-btn-icon { padding: 2px 6px; font-size: 10px; }
-.sm-btn-icon:disabled { opacity: .25; cursor: default; pointer-events: none; }
+.sm-drag-handle {
+  color: #ccc; cursor: grab; font-size: 13px; padding: 0 3px; flex-shrink: 0; line-height: 1;
+  transition: color .15s;
+}
+.sm-item:hover .sm-drag-handle { color: #aaa; }
+.sm-drag-handle:active { cursor: grabbing; }
+.sm-item-dragging { opacity: 0.35; }
+.sm-item-drag-over { border-color: #0077cc; background: #e8f4fd; box-shadow: 0 0 0 1px #0077cc; }
 
 /* ── Buttons ──────────────────────────────────────────────────────── */
 .sm-btn-icon {
