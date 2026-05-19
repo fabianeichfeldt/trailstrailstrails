@@ -147,6 +147,7 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/nominatim.openstreetmap.org/**', (route) => route.fulfill({ json: [] }));
   // OSM map tiles — abort; not needed for logic tests
   await page.route('**tile.openstreetmap.org/**',   (route) => route.abort());
+  await page.route('**tile.tracestrack.com/**',   (route) => route.abort());
   // Leaflet default marker icon fetched from unpkg CDN
   await page.route('**unpkg.com/**',                (route) => route.abort());
 }
