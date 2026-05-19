@@ -52,6 +52,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     mapInstance.value = mymap
     mymap.setMaxZoom(19)
 
+    //L.tileLayer('https://tile.tracestrack.com/topo__/{z}/{x}/{y}.webp?key=4380ddf8c7e3d985c0835d43bb748130&style=contrast-', {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',

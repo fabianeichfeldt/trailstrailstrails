@@ -14,9 +14,9 @@ export class MapView {
 
   constructor(container: HTMLElement) {
     this.map = L.map(container, { zoomControl: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
+    L.tileLayer('https://tile.tracestrack.com/topo__/{z}/{x}/{y}.webp?key=4380ddf8c7e3d985c0835d43bb748130&style=contrast-', {
+      attribution: '© Tracestrack | © OpenStreetMap contributors',
+      maxZoom: 17,
     }).addTo(this.map);
     this.map.setView([51.0, 10.5], 6);
   }
