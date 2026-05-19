@@ -43,6 +43,23 @@ export const MOCK_SESSION = {
   user: MOCK_USER,
 };
 
+/**
+ * Simulates a Google OAuth user where sub (Google numeric subject) differs from
+ * id (Supabase UUID). The DB stores user.id — using user.sub would miss the row.
+ */
+export const MOCK_GOOGLE_USER = {
+  ...MOCK_USER,
+  id: 'supabase-uuid-google-user',
+  sub: '10293847561234567890',
+  app_metadata: { provider: 'google', providers: ['google'] },
+  user_metadata: { name: 'GoogleRider', avatar_url: '' },
+};
+
+export const MOCK_GOOGLE_SESSION = {
+  ...MOCK_SESSION,
+  user: MOCK_GOOGLE_USER,
+};
+
 const TRAIL_DETAILS_MOCK = {
   data: { id: 'mock', rules: [], description: '', last_update: '2024-01-01', opening_hours: '', trail_description: '', photos: [], videos: [], likes: [] },
 };

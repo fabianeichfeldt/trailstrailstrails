@@ -90,7 +90,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadAvatar(file: File): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    const filePath = `${user.value.sub}/avatar.webp`
+    const filePath = `${user.value.id}/avatar.webp`
     const { error } = await client.storage
       .from('avatars')
       .upload(filePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
@@ -101,11 +101,19 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadTrailPhoto(file: File, trailId: string): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    return uploadTrailPhotoImpl(file, trailId, client, user.value.sub)
+    return uploadTrailPhotoImpl(file, trailId, client, user.value.id)
+  }
+
+  const userId = computed(() => user.value?.id ?? '')
+
+  async function getToken(): Promise<string> {
+    const { data: { session } } = await client.auth.getSession()
+    return session?.access_token ?? ''
   }
 
   return {
     user,
+    userId,
     isLoggedIn,
     nickname,
     avatarUrl,
@@ -121,5 +129,6 @@ export const useAuthStore = defineStore('auth', () => {
     updatePassword,
     uploadAvatar,
     uploadTrailPhoto,
+    getToken,
   }
 })

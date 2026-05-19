@@ -666,7 +666,7 @@ async function openEmbedList() {
   embedLoading.value = true
   embedError.value   = null
   try {
-    embedJwt.value = await getToken()
+    embedJwt.value = await authStore.getToken()
     const tokens = await getEmbedTokens(embedJwt.value)
     embedTokens.value = tokens
     const counts = new Map<string, number>()
@@ -714,14 +714,9 @@ function formatInvDate(iso: string) {
   return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
 }
 
-async function getToken(): Promise<string> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token ?? ''
-}
-
 async function loadInvCodes() {
   try {
-    invCodes.value = await listInvitationCodes(spotId.value, await getToken())
+    invCodes.value = await listInvitationCodes(spotId.value, await authStore.getToken())
   } catch {
     invCodes.value = []
   }
@@ -731,10 +726,7 @@ async function generateInvCode() {
   invGenerating.value = true
   invNewCode.value = null
   try {
-    const { data: { session } } = await supabase.auth.getSession()
-    const token = session?.access_token ?? ''
-    const uid = session?.user.id ?? ''
-    invNewCode.value = await createInvitationCode(spotId.value, uid, token)
+    invNewCode.value = await createInvitationCode(spotId.value, authStore.userId, await authStore.getToken())
     await loadInvCodes()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -843,7 +835,7 @@ onMounted(async () => {
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
   try {
-    const userId = authStore.user?.sub ?? ''
+    const userId = authStore.userId
     if (role.value === 'admin') {
       const { data } = await supabase.from('trails').select('id,name').order('name')
       spots.value = (data ?? []) as SpotRow[]

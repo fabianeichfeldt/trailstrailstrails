@@ -14,7 +14,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const authStore = useAuthStore()
   const mapStore = useMapStore()
   const user = useSupabaseUser()
-  const client = useSupabaseClient()
+
 
   // Exposed for search bar
   const mapInstance = shallowRef<any>(null)
@@ -86,12 +86,11 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       authService: {
         get loggedIn() { return authStore.isLoggedIn },
         async getUser() {
-          const session = await (client as any).auth.getSession()
           return {
-            id: user.value?.sub ?? '',
+            id: user.value?.id ?? '',
             email: user.value?.email ?? '',
             nickname: authStore.nickname,
-            accessToken: session.data.session?.access_token ?? '',
+            accessToken: await authStore.getToken(),
             avatarUrl: authStore.avatarUrl,
             avatarHTML: '',
           }
