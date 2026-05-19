@@ -209,7 +209,7 @@ function renderPhotos(details: TrailDetails, auth: IAuthService) {
             <div class="photo-wrap${i === 0 ? " active" : ""}" style="--img:url('${p.url}')">
               <img alt="offizieller MTB Trail" src="${p.url}" class="${i === 0 ? "active" : ""}">
                 <div class="photo-meta">
-                  <span class="photo-uploader">von ${p.profiles.display_name}</span>
+                  <span class="photo-uploader">von ${p.profiles?.display_name || ""}</span>
                   <span class="photo-date">${date}</span>
                 </div>
             </div>
