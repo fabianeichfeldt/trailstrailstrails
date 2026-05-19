@@ -6,6 +6,7 @@ import {
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
 } from '~/src/map/trailTooltip'
+import { GpxRenderGuard } from '~/src/map/gpxRenderGuard'
 import { fetchMultipleSpotGpx } from '~/src/communication/trails'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
@@ -64,9 +65,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // ── View mode ────────────────────────────────────────────────────────────
     const GPX_ZOOM_THRESHOLD = 11
-    let viewMode: 'markers' | 'gpx' = 'markers'
+    const renderGuard = new GpxRenderGuard()
     let gpxLayers: any[] = []
-    let renderGen  = 0   // incremented per renderGpxView call; stale renders bail early
 
     // Cluster + plain layer
     const clusterGroup = new (L as any).MarkerClusterGroup()
@@ -152,7 +152,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // ── GPX view — shown when zoom >= GPX_ZOOM_THRESHOLD ────────────────────
     async function renderGpxView() {
-      const gen = ++renderGen
+      const gen = renderGuard.beginRender()
 
       // Hide marker layers while in GPX mode
       if (mymap.hasLayer(clusterGroup)) mymap.removeLayer(clusterGroup)
@@ -175,7 +175,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         const fetched = await fetchMultipleSpotGpx(uncached)
         fetched.forEach((gpx, id) => gpxCache.set(id, gpx))
       }
-      if (gen !== renderGen) return  // a newer render superseded this one
+      if (renderGuard.isStale(gen)) return  // superseded by newer render or mode switched to markers
 
       const containerW = () => mymap.getContainer().clientWidth
 
@@ -317,10 +317,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     function switchView() {
       if (mymap.getZoom() >= GPX_ZOOM_THRESHOLD) {
-        viewMode = 'gpx'
+        renderGuard.enterGpxMode()
         renderGpxView()
       } else {
-        viewMode = 'markers'
+        renderGuard.enterMarkerMode()
         // Remove GPX layers and restore marker layers
         for (const l of gpxLayers) mymap.removeLayer(l)
         gpxLayers = []
@@ -364,13 +364,13 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         () => filtersStore.showPumptracks,
         () => filtersStore.useCluster,
       ],
-      () => { if (viewMode === 'markers') renderMarkers(); else renderGpxView() },
+      () => { if (renderGuard.viewMode === 'markers') renderMarkers(); else renderGpxView() },
     )
 
     // Switch between marker / GPX view on zoom change
     mymap.on('zoomend', switchView)
     // Re-render GPX for newly visible spots after panning (markers self-manage via layer group)
-    mymap.on('moveend', () => { if (viewMode === 'gpx') renderGpxView() })
+    mymap.on('moveend', () => { if (renderGuard.viewMode === 'gpx') renderGpxView() })
 
     // Geolocation
     let posMarker: any = null
