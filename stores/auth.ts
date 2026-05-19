@@ -111,9 +111,14 @@ export const useAuthStore = defineStore('auth', () => {
     return session?.access_token ?? ''
   }
 
+  async function getUserId(): Promise<string> {
+    if (user.value?.id) return user.value.id
+    const { data: { session } } = await client.auth.getSession()
+    return session?.user?.id ?? ''
+  }
+
   return {
     user,
-    userId,
     isLoggedIn,
     nickname,
     avatarUrl,
@@ -130,5 +135,6 @@ export const useAuthStore = defineStore('auth', () => {
     uploadAvatar,
     uploadTrailPhoto,
     getToken,
+    getUserId,
   }
 })

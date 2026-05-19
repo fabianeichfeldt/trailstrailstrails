@@ -112,7 +112,7 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
 // ── Google OAuth: user.id vs user.sub ────────────────────────────────────────
 //
 // Regression guard for the bug where SpotManagerApp used authStore.user?.sub
-// (Google's numeric subject) instead of authStore.userId (Supabase UUID).
+// (Google's numeric subject) instead of authStore.getUserId (Supabase UUID).
 // For Google OAuth users these values differ; the DB stores user.id.
 //
 // The test signs in with a session where user.sub !== user.id, mocks

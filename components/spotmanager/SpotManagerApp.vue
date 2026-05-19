@@ -726,7 +726,8 @@ async function generateInvCode() {
   invGenerating.value = true
   invNewCode.value = null
   try {
-    invNewCode.value = await createInvitationCode(spotId.value, authStore.userId, await authStore.getToken())
+    const [createdBy, token] = await Promise.all([authStore.getUserId(), authStore.getToken()])
+    invNewCode.value = await createInvitationCode(spotId.value, createdBy, token)
     await loadInvCodes()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -835,7 +836,7 @@ onMounted(async () => {
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
   try {
-    const userId = authStore.userId
+    const userId = await authStore.getUserId()
     if (role.value === 'admin') {
       const { data } = await supabase.from('trails').select('id,name').order('name')
       spots.value = (data ?? []) as SpotRow[]
