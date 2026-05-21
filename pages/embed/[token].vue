@@ -62,7 +62,15 @@ onMounted(async () => {
 
   const L = (await import('leaflet')).default
 
-  const map = L.map(mapEl.value, { zoomControl: false })
+  const map = L.map(mapEl.value, {
+    zoomControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    doubleClickZoom: false,
+    touchZoom: false,
+    boxZoom: false,
+    keyboard: false,
+  })
   map.setView([lat, lng], zoom)
   map.setMaxZoom(19)
 

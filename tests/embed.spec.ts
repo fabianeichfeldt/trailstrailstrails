@@ -71,3 +71,32 @@ embedTest('embed page shows error overlay for inactive token', async ({ page }) 
   await expect(page.locator('.embed-error')).toBeVisible();
   await expect(page.locator('.embed-error-msg')).toContainText('deaktiviert');
 });
+
+embedTest('embed map drag and scroll-wheel zoom are disabled', async ({ page }) => {
+  await page.route('**/_embed/**', route =>
+    route.fulfill({ json: EMBED_TRAILS }),
+  );
+
+  await page.goto('/embed/test-token?lat=47.71&lng=11.76&zoom=12');
+  await page.waitForLoadState('networkidle');
+
+  const getPaneTransform = () =>
+    page.evaluate(() => document.querySelector<HTMLElement>('.leaflet-map-pane')?.style.transform ?? '');
+
+  const before = await getPaneTransform();
+
+  // Attempt drag — pane transform must not change
+  const box = await page.locator('.embed-map').boundingBox();
+  const cx = box!.x + box!.width / 2;
+  const cy = box!.y + box!.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx + 150, cy + 100, { steps: 10 });
+  await page.mouse.up();
+  expect(await getPaneTransform()).toBe(before);
+
+  // Attempt scroll zoom — pane transform must not change
+  await page.mouse.wheel(0, -500);
+  await page.waitForTimeout(300);
+  expect(await getPaneTransform()).toBe(before);
+});
