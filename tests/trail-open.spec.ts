@@ -38,7 +38,7 @@ baseTest('/trails/[id] shows the trail name and map link', async ({ page }) => {
   await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('a[href="/map?trail=t1"]')).toBeVisible();
+  await expect(page.locator('a[href="/map?trail=t1"]').first()).toBeVisible();
   assertNoLeaks();
 });
 
