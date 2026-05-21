@@ -78,7 +78,7 @@ function trailCount(tokenId: string): number {
 function copySnippet(t: EmbedTokenRow) {
   const snippet =
     `<div id="trailradar-embed" style="height:500px"></div>\n` +
-    `<script src="https://trailradar.app/embed.js"><\/script>\n` +
+    `<script src="https://trailradar.org/embed.js"><\/script>\n` +
     `<script>\n` +
     `  TrailRadar.mount({\n` +
     `    token: '${t.token}',\n` +

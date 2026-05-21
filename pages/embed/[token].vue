@@ -5,8 +5,8 @@
     <div v-if="error" class="embed-error">
       <img src="/assets/logo.webp" class="embed-error-logo" alt="Trailradar" />
       <p class="embed-error-msg">{{ errorMessage }}</p>
-      <a href="https://trailradar.app" target="_blank" rel="noopener" class="embed-error-link">
-        trailradar.app
+      <a href="https://trailradar.org" target="_blank" rel="noopener" class="embed-error-link">
+        trailradar.org
       </a>
     </div>
   </div>
@@ -129,7 +129,7 @@ onMounted(async () => {
   }
 
   for (const trail of trails) {
-    const appUrl = `https://trailradar.app/trails/${trail.id}`
+    const appUrl = `https://trailradar.org/trails/${trail.id}`
     const popup  = `<strong>${trail.name}</strong><br><a href="${appUrl}" target="_blank" rel="noopener">In Trailradar öffnen ↗</a>`
     const hasGpx = trail.gpx_trails.length > 0 || trail.gpx_tours.length > 0
 

@@ -56,11 +56,11 @@ describe('isHostAllowed', () => {
 
 describe('resolveHostname', () => {
   test('uses parentHost first when present', () => {
-    expect(resolveHostname('trailradar.org', 'https://trailradar.app', 'https://trailradar.app/embed/tok')).toBe('trailradar.org')
+    expect(resolveHostname('trailradar.org', 'https://trailradar.org', 'https://trailradar.org/embed/tok')).toBe('trailradar.org')
   })
 
   test('falls back to origin when parentHost is null', () => {
-    expect(resolveHostname(null, 'https://trailradar.app', null)).toBe('trailradar.app')
+    expect(resolveHostname(null, 'https://trailradar.org', null)).toBe('trailradar.org')
   })
 
   test('falls back to referer when parentHost and origin are absent', () => {
@@ -72,6 +72,6 @@ describe('resolveHostname', () => {
   })
 
   test('empty string parentHost is returned as-is (caller should pass null, not empty string)', () => {
-    expect(resolveHostname('', 'https://trailradar.app', null)).toBe('')
+    expect(resolveHostname('', 'https://trailradar.org', null)).toBe('')
   })
 })
