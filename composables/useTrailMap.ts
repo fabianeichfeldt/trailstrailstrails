@@ -379,7 +379,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
 
     // Initial location
-    const { getApproxLocation } = await import('~/src/locations')
+    const { getApproxLocation } = await import('~/src/communication/location')
     const loc = await getApproxLocation()
     if (loc.lat !== 0 || loc.lng !== 0) {
       mymap.setView([loc.lat, loc.lng], 9)

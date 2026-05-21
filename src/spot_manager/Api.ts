@@ -13,6 +13,14 @@ function headers(jwt: string, extra?: Record<string, string>) {
   };
 }
 
+function anonHeaders(extra?: Record<string, string>) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey':       anon,
+    ...extra,
+  };
+}
+
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
   return res.json();
@@ -79,16 +87,16 @@ export async function getManageableSpots(jwt: string, userId: string, role: stri
   return rows.map(r => r.trails).filter(Boolean);
 }
 
-export async function getSpotTrails(spotId: string, jwt: string): Promise<GpxTrailRow[]> {
+export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
   const res = await fetch(`${REST}/spot_gpx_trails?select=*&spot_id=eq.${spotId}&order=sort_order`, {
-    headers: headers(jwt),
+    headers: anonHeaders(),
   });
   return json<GpxTrailRow[]>(res);
 }
 
-export async function getSpotTours(spotId: string, jwt: string): Promise<GpxTourRow[]> {
+export async function getSpotTours(spotId: string): Promise<GpxTourRow[]> {
   const res = await fetch(`${REST}/spot_gpx_tours?select=*&spot_id=eq.${spotId}&order=sort_order`, {
-    headers: headers(jwt),
+    headers: anonHeaders(),
   });
   return json<GpxTourRow[]>(res);
 }
@@ -220,9 +228,9 @@ const SPOT_DETAILS_SELECT = [
   'night_policy', 'night_before_dusk_min', 'night_after_dawn_min',
 ].join(',');
 
-export async function getSpotDetails(spotId: string, jwt: string): Promise<SpotDetailsRow | null> {
+export async function getSpotDetails(spotId: string): Promise<SpotDetailsRow | null> {
   const res = await fetch(`${REST}/trail_details?trail_id=eq.${spotId}&select=${SPOT_DETAILS_SELECT}&limit=1`, {
-    headers: headers(jwt),
+    headers: anonHeaders(),
   });
   const data = await json<SpotDetailsRow[]>(res);
   return data[0] ?? null;

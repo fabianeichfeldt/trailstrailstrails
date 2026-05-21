@@ -1,4 +1,3 @@
-import { FUNCTIONS, anonHeaders } from "./communication/http";
 import { Trail } from "./types/Trail";
 
 export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, onCancel: OnCancel) {
@@ -37,13 +36,6 @@ export function giveTrailNearBy(lat: number, lng: number, trails: Trail[]) {
         return trail;
     }
     return undefined;
-  }
-
-  export async function reportAbort() {
-    await fetch(`${FUNCTIONS}/new-entry-abort`, {
-        method: "POST",
-        headers: anonHeaders(),
-      });
   }
 
 type OnContinue = () => void;

@@ -626,9 +626,8 @@
 </template>
 
 <script setup lang="ts">
-import type { SupabaseClient } from '@supabase/supabase-js'
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../src/spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder } from '../../src/spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../src/spot_manager/Api'
 import { processGpx, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
 import type { ImbaColor } from '../../src/types/MtbTypes'
@@ -649,7 +648,6 @@ interface PendingImport {
   autoDetectedTrailNames: string[]
 }
 
-const supabase = useSupabaseClient() as SupabaseClient
 const authStore = useAuthStore()
 
 // ── Layout state ──────────────────────────────────────────────────────────────
@@ -852,16 +850,8 @@ onMounted(async () => {
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
   try {
-    const userId = await authStore.getUserId()
-    if (role.value === 'admin') {
-      const { data } = await supabase.from('trails').select('id,name').order('name')
-      spots.value = (data ?? []) as SpotRow[]
-    } else {
-      const { data } = await supabase.from('trailcrew_spots')
-        .select('spot_id,trails(id,name)')
-        .eq('user_id', userId)
-      spots.value = ((data ?? []) as any[]).map((r: any) => r.trails).filter(Boolean)
-    }
+    const [userId, jwt] = await Promise.all([authStore.getUserId(), authStore.getToken()])
+    spots.value = await getManageableSpots(jwt, userId, role.value)
   } catch (e: any) {
     accessError.value = `Fehler: ${e.message}`
   }
@@ -880,14 +870,14 @@ async function openSpot(id: string, name: string) {
   loading.value = true
 
   try {
-    const [{ data: t }, { data: to }, { data: d }] = await Promise.all([
-      supabase.from('spot_gpx_trails').select('*').eq('spot_id', id).order('sort_order'),
-      supabase.from('spot_gpx_tours').select('*').eq('spot_id', id).order('sort_order'),
-      supabase.from('trail_details').select('*').eq('trail_id', id).limit(1),
+    const [t, to, d] = await Promise.all([
+      getSpotTrails(id),
+      getSpotTours(id),
+      getSpotDetails(id),
     ])
-    trails.value = (t ?? []) as GpxTrailRow[]
-    tours.value = (to ?? []) as GpxTourRow[]
-    spotDetails.value = (d as any)?.[0] ?? null
+    trails.value = t
+    tours.value = to
+    spotDetails.value = d
     trails.value.forEach(tr => mapView.value?.addTrailPolyline(tr))
     tours.value.forEach(to => mapView.value?.addTourPolyline(to))
     mapView.value?.setClickHandler(itemId => {
@@ -968,23 +958,19 @@ async function saveTrailEdit() {
   if (!name) { alert('Name darf nicht leer sein.'); return }
   busy.value = true
   try {
+    const jwt = await authStore.getToken()
     let gpx_url = t.gpx_url
     let gpxPoints = t.gpx_points
     let stats = { distance_km: t.distance_km, elevation_gain: t.elevation_gain, elevation_loss: t.elevation_loss }
     if (editNewGpx.value) {
-      gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, editNewGpx.value.gpxContent)
+      gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, editNewGpx.value.gpxContent, jwt)
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
-    const { data, error } = await supabase.from('spot_gpx_trails')
-      .update({ name, difficulty: efDiff.value, direction: efDir.value, trail_description: efTrailDesc.value.trim() || null, gpx_points: gpxPoints, gpx_url, ...stats })
-      .eq('id', t.id)
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    trails.value = trails.value.map(tr => tr.id === t.id ? (data as GpxTrailRow) : tr)
+    const updated = await upsertTrail({ id: t.id, spot_id: t.spot_id, name, difficulty: efDiff.value, direction: efDir.value, trail_description: efTrailDesc.value.trim() || '', gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
+    trails.value = trails.value.map(tr => tr.id === t.id ? updated : tr)
     mapView.value?.removeLayer('edit-preview')
-    mapView.value?.addTrailPolyline(data as GpxTrailRow)
+    mapView.value?.addTrailPolyline(updated)
     cancelEdit()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -999,23 +985,19 @@ async function saveTourEdit() {
   if (!name) { alert('Name darf nicht leer sein.'); return }
   busy.value = true
   try {
+    const jwt = await authStore.getToken()
     let gpx_url = t.gpx_url
     let gpxPoints = t.gpx_points
     let stats = { distance_km: t.distance_km, elevation_gain: t.elevation_gain, elevation_loss: t.elevation_loss }
     if (editNewGpx.value) {
-      gpx_url = await uploadGpx(spotId.value, 'tours', `${name}.gpx`, editNewGpx.value.gpxContent)
+      gpx_url = await uploadGpx(spotId.value, 'tours', `${name}.gpx`, editNewGpx.value.gpxContent, jwt)
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
-    const { data, error } = await supabase.from('spot_gpx_tours')
-      .update({ name, direction: efDir.value, duration_minutes: efDuration.value, trail_names: efTrailNames.value, gpx_points: gpxPoints, gpx_url, ...stats })
-      .eq('id', t.id)
-      .select()
-      .single()
-    if (error) throw new Error(error.message)
-    tours.value = tours.value.map(to => to.id === t.id ? (data as GpxTourRow) : to)
+    const updated = await upsertTour({ id: t.id, spot_id: t.spot_id, name, direction: efDir.value, duration_minutes: efDuration.value, trail_names: efTrailNames.value, gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
+    tours.value = tours.value.map(to => to.id === t.id ? updated : to)
     mapView.value?.removeLayer('edit-preview')
-    mapView.value?.addTourPolyline(data as GpxTourRow)
+    mapView.value?.addTourPolyline(updated)
     cancelEdit()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -1141,33 +1123,28 @@ async function applyImports() {
   if (!pending.value.length) return
   busy.value = true
   const errors: string[] = []
+  const jwt = await authStore.getToken()
   for (const p of pending.value) {
     try {
       const name = p.name.trim() || p.filename.replace(/\.gpx$/i, '')
-      const gpx_url = await uploadGpx(spotId.value, `${p.kind}s` as 'trails' | 'tours', `${name}.gpx`, p.processed.gpxContent)
+      const gpx_url = await uploadGpx(spotId.value, `${p.kind}s` as 'trails' | 'tours', `${name}.gpx`, p.processed.gpxContent, jwt)
       if (p.kind === 'trail') {
-        const { data, error } = await supabase.from('spot_gpx_trails')
-          .insert({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
-            distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
-            sort_order: trails.value.length })
-          .select().single()
-        if (error) throw new Error(error.message)
-        trails.value.push(data as GpxTrailRow)
+        const newTrail = await upsertTrail({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
+          distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
+          elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
+          sort_order: trails.value.length }, jwt)
+        trails.value.push(newTrail)
         mapView.value?.removeLayer(p.key)
-        mapView.value?.addTrailPolyline(data as GpxTrailRow)
+        mapView.value?.addTrailPolyline(newTrail)
       } else {
-        const { data, error } = await supabase.from('spot_gpx_tours')
-          .insert({ spot_id: spotId.value, name, direction: p.direction,
-            duration_minutes: p.processed.duration_minutes ?? 0, trail_names: p.trailNames,
-            distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-            elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
-            sort_order: tours.value.length })
-          .select().single()
-        if (error) throw new Error(error.message)
-        tours.value.push(data as GpxTourRow)
+        const newTour = await upsertTour({ spot_id: spotId.value, name, direction: p.direction,
+          duration_minutes: p.processed.duration_minutes ?? 0, trail_names: p.trailNames,
+          distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
+          elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
+          sort_order: tours.value.length }, jwt)
+        tours.value.push(newTour)
         mapView.value?.removeLayer(p.key)
-        mapView.value?.addTourPolyline(data as GpxTourRow)
+        mapView.value?.addTourPolyline(newTour)
       }
     } catch (e: any) {
       errors.push(`${p.name}: ${e.message}`)
@@ -1193,18 +1170,14 @@ async function executeDelete() {
   const { id, kind } = deleteTarget.value
   busy.value = true
   try {
-    const table = kind === 'trail' ? 'spot_gpx_trails' : 'spot_gpx_tours'
+    const jwt = await authStore.getToken()
     const item = kind === 'trail'
       ? trails.value.find(t => t.id === id)
       : tours.value.find(t => t.id === id)
-    const { error } = await supabase.from(table).delete().eq('id', id)
-    if (error) throw new Error(error.message)
-    if (item?.gpx_url) {
-      const path = item.gpx_url.split('/gpx-files/')[1]
-      if (path) {
-        const { error: storageError } = await supabase.storage.from('gpx-files').remove([path])
-        if (storageError) console.warn('Storage delete failed:', storageError.message)
-      }
+    if (kind === 'trail') {
+      await deleteTrail(id, jwt, item?.gpx_url)
+    } else {
+      await deleteTour(id, jwt, item?.gpx_url)
     }
     if (kind === 'trail') trails.value = trails.value.filter(t => t.id !== id)
     else tours.value = tours.value.filter(t => t.id !== id)
@@ -1268,34 +1241,14 @@ async function saveDetails() {
       night_before_dusk_min: sdNightPolicy.value === 'offset' ? sdBeforeDusk.value : undefined,
       night_after_dawn_min: sdNightPolicy.value === 'offset' ? sdAfterDawn.value : undefined,
     }
-    const { data, error } = await supabase.from('trail_details')
-      .upsert(row, { onConflict: 'trail_id' })
-      .select().single()
-    if (error) throw new Error(error.message)
-    spotDetails.value = data as SpotDetailsRow
+    const jwt = await authStore.getToken()
+    spotDetails.value = await upsertSpotDetails(row, jwt)
     view.value = 'list'
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
   } finally {
     busy.value = false
   }
-}
-
-// ── GPX upload ────────────────────────────────────────────────────────────────
-async function uploadGpx(sid: string, kind: 'trails' | 'tours', filename: string, content: string): Promise<string> {
-  const safe = filename.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9._-]/g, '')
-  const path = `${sid}/${kind}/${safe}`
-  let { error } = await supabase.storage.from('gpx-files').upload(path, content, {
-    contentType: 'application/gpx+xml', upsert: false,
-  })
-  if (error) {
-    const { error: e2 } = await supabase.storage.from('gpx-files').update(path, content, {
-      contentType: 'application/gpx+xml',
-    })
-    if (e2) throw new Error(`GPX upload failed: ${e2.message}`)
-  }
-  const { data } = supabase.storage.from('gpx-files').getPublicUrl(path)
-  return data.publicUrl
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────

@@ -1,14 +1,14 @@
-import { FUNCTIONS, anonHeaders } from "./communication/http";
+import { submitFeedback } from "./communication/feedback";
 import "/src/css/feedback_button.css";
 
 export async function upVote(trailId: string, el: HTMLElement) {
     await setFeedback(trailId, true, el);
   }
-  
+
 export async function downVote(trailId: string, el: HTMLElement) {
     await setFeedback(trailId, false, el);
   }
-  
+
   async function setFeedback(trailId: string, isUpvote: boolean, el: HTMLElement) {
     const parent = el.closest(".feedback-buttons");
     if(!parent)
@@ -18,15 +18,11 @@ export async function downVote(trailId: string, el: HTMLElement) {
 
     if(!upBtn || !downBtn)
         return;
-  
+
     upBtn.classList.remove("selected");
     downBtn.classList.remove("selected");
-  
+
     el.classList.add("selected");
-  
-    await fetch(`${FUNCTIONS}/trail-details-feedback`, {
-        method: "POST",
-        headers: anonHeaders(),
-        body: JSON.stringify({trail_id: trailId, up: isUpvote}),
-      });
+
+    await submitFeedback(trailId, isUpvote);
   }
