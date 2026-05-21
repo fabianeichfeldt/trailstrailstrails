@@ -7,19 +7,21 @@ export default defineEventHandler(async (event) => {
 
   const headers = { apikey: key, Authorization: `Bearer ${key}` }
 
-  // Search all three tables in parallel, plus trail_details
-  const [trailsRes, parksRes, dirtRes, detailRes] = await Promise.all([
+  // Search all three tables in parallel, plus trail_details and photos
+  const [trailsRes, parksRes, dirtRes, detailRes, photosRes] = await Promise.all([
     fetch(`${url}/rest/v1/trails?id=eq.${id}&select=*`, { headers }),
     fetch(`${url}/rest/v1/parks?id=eq.${id}&select=*`, { headers }),
     fetch(`${url}/rest/v1/dirt_parks?id=eq.${id}&select=*`, { headers }),
     fetch(`${url}/rest/v1/trail_details?trail_id=eq.${id}&select=*`, { headers }),
+    fetch(`${url}/rest/v1/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { headers }),
   ])
 
-  const [trails, parks, dirtParks, details] = await Promise.all([
+  const [trails, parks, dirtParks, details, photos] = await Promise.all([
     trailsRes.json(),
     parksRes.json(),
     dirtRes.json(),
     detailRes.json(),
+    photosRes.json(),
   ])
 
   let base: any = null
@@ -31,5 +33,5 @@ export default defineEventHandler(async (event) => {
 
   if (!base) throw createError({ statusCode: 404, statusMessage: 'Trail not found' })
 
-  return { ...base, ...((details[0]) ?? {}), type }
+  return { ...base, ...((details[0]) ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
 })
