@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EmbedTrail } from '~/server/api/embed/[token].get'
+import type { EmbedTrail } from '~/server/routes/_embed/[token].get'
 import { markerIconOptions } from '~/src/map/markerIcon'
 import {
   DIFF_COLOR,
@@ -39,7 +39,7 @@ onMounted(async () => {
 
   try {
     const qs = parentHost ? `?parentHost=${encodeURIComponent(parentHost)}` : ''
-    const res = await fetch(`/api/embed/${encodeURIComponent(token)}${qs}`)
+    const res = await fetch(`/_embed/${encodeURIComponent(token)}${qs}`)
     if (!res.ok) {
       const body = await res.json().catch(() => ({}))
       const msg: Record<string, string> = {

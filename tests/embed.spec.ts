@@ -15,7 +15,7 @@ const embedTest = base.extend<{ page: base.PlaywrightTestArgs['page'] }>({
 });
 
 embedTest('embed page renders map and markers with a valid token', async ({ page }) => {
-  await page.route('**/api/embed/**', route =>
+  await page.route('**/_embed/**', route =>
     route.fulfill({ json: EMBED_TRAILS }),
   );
 
@@ -28,7 +28,7 @@ embedTest('embed page renders map and markers with a valid token', async ({ page
 });
 
 embedTest('embed page shows error overlay when API returns 403', async ({ page }) => {
-  await page.route('**/api/embed/**', route =>
+  await page.route('**/_embed/**', route =>
     route.fulfill({
       status: 403,
       json: { statusMessage: 'HOST_NOT_ALLOWED' },
@@ -43,7 +43,7 @@ embedTest('embed page shows error overlay when API returns 403', async ({ page }
 });
 
 embedTest('embed page shows error overlay for unknown token', async ({ page }) => {
-  await page.route('**/api/embed/**', route =>
+  await page.route('**/_embed/**', route =>
     route.fulfill({
       status: 403,
       json: { statusMessage: 'TOKEN_NOT_FOUND' },
@@ -58,7 +58,7 @@ embedTest('embed page shows error overlay for unknown token', async ({ page }) =
 });
 
 embedTest('embed page shows error overlay for inactive token', async ({ page }) => {
-  await page.route('**/api/embed/**', route =>
+  await page.route('**/_embed/**', route =>
     route.fulfill({
       status: 403,
       json: { statusMessage: 'TOKEN_INACTIVE' },

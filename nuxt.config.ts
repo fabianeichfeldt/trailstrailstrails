@@ -143,7 +143,7 @@ export default defineNuxtConfig({
 
   routeRules: {
     // Allow the embed page to be loaded inside iframes on any external domain.
-    // Host-level security is enforced server-side in /api/embed/[token].
+    // Host-level security is enforced server-side in /_embed/[token].
     '/embed/**': {
       headers: {
         'Content-Security-Policy': "frame-ancestors *",
