@@ -12,6 +12,17 @@
         </div>
       </section>
 
+      <section class="map-section content-section region-map-section">
+        <iframe
+          v-if="regionEmbedSrc"
+          :src="regionEmbedSrc"
+          class="trail-map region-map"
+          frameborder="0"
+          loading="lazy"
+          title="Trailradar Karte"
+        />
+      </section>
+
       <section v-if="region!.descr" class="region-descr content-section">
         <div class="prose" v-html="region!.descr" />
       </section>
@@ -47,7 +58,14 @@
 
       <!-- Map CTA -->
       <section class="map-section content-section">
-        <div ref="mapEl" class="trail-map" />
+        <iframe
+          v-if="embedSrc"
+          :src="embedSrc"
+          class="trail-map"
+          frameborder="0"
+          loading="lazy"
+          title="Trailradar Karte"
+        />
         <NuxtLink :to="`/map?trail=${slug}`" class="map-cta-overlay">
           <div class="map-cta-inner">
             <IconSend class="btn-icon" />
@@ -113,9 +131,11 @@
 
 <script setup lang="ts">
 import { regions } from '~/build/region'
-import { markerIconOptions } from '~/src/map/markerIcon'
 import IconSend from '~/assets/icons/send.svg'
 
+const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
+//const EMBED_BASE = 'https://trailradar.org'
+const EMBED_BASE = ''
 const route = useRoute()
 const slug = route.params.slug as string
 const region = regions[slug as keyof typeof regions] ?? null
@@ -130,36 +150,14 @@ const { data: trail } = await useAsyncData(`trail-${slug}`, async () => {
   }
 })
 
-const mapEl = ref<HTMLElement | null>(null)
+const embedSrc = computed(() => {
+  if (!trail.value) return ''
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org`
+})
 
-onMounted(async () => {
-  if (!trail.value || !mapEl.value) return
-
-  const L = (await import('leaflet')).default
-  await import('leaflet/dist/leaflet.css')
-
-  const map = L.map(mapEl.value, {
-    zoomControl: false,
-    scrollWheelZoom: false,
-    dragging: false,
-    touchZoom: false,
-    doubleClickZoom: false,
-    keyboard: false,
-    boxZoom: false,
-  })
-  map.setView([trail.value.latitude, trail.value.longitude], 14)
-  map.setMaxZoom(19)
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map)
-
-  const icon = L.divIcon(markerIconOptions(trail.value.type, trail.value.approved ?? false))
-  L.marker([trail.value.latitude, trail.value.longitude], { icon })
-    .addTo(map)
-    .bindPopup(`<strong>${trail.value.name}</strong>`)
-    .openPopup()
+const regionEmbedSrc = computed(() => {
+  if (!region) return ''
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${region.lat}&lng=${region.lng}&zoom=${region.zoom}&parentHost=trailradar.org`
 })
 
 const otherRegions = computed(() =>
@@ -554,6 +552,10 @@ useHead({
 .not-found h1 { color: #8a96a8; font-size: 1.5em; }
 .not-found p { color: #8a96a8; margin-bottom: 1.5em; font-size: 0.9em; }
 
+.region-map {
+  height: 480px;
+}
+
 /* ── Responsive ── */
 @media (min-width: 600px) {
   .map-section {
@@ -563,6 +565,10 @@ useHead({
     overflow: hidden;
     border: 1px solid #e4e9f0;
     box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+
+  .region-map {
+    height: 540px;
   }
 }
 </style>

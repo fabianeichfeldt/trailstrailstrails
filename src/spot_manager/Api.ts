@@ -254,6 +254,7 @@ export interface EmbedTokenRow {
   name: string;
   allowed_hosts: string[];
   is_active: boolean;
+  is_wildcard: boolean;
   created_at: string;
 }
 

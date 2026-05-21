@@ -1,4 +1,4 @@
-import { extractHostname, isHostAllowed } from '~/server/utils/embedHostValidation'
+import { resolveHostname, isHostAllowed } from '~/server/utils/embedHostValidation'
 
 export interface EmbedGpxTrail {
   name: string
@@ -44,11 +44,11 @@ export default defineEventHandler(async (event) => {
   const originHeader  = getRequestHeader(event, 'origin')
   const refererHeader = getRequestHeader(event, 'referer')
   const parentHost    = (getQuery(event).parentHost as string) || null
-  const hostname = extractHostname(originHeader) ?? extractHostname(refererHeader) ?? parentHost
+  const hostname = resolveHostname(parentHost, originHeader, refererHeader)
 
   // Fetch the token row
   const tokenRes = await fetch(
-    `${url}/rest/v1/embed_tokens?token=eq.${encodeURIComponent(token)}&select=id,allowed_hosts,is_active&limit=1`,
+    `${url}/rest/v1/embed_tokens?token=eq.${encodeURIComponent(token)}&select=id,allowed_hosts,is_active,is_wildcard&limit=1`,
     { headers },
   )
   if (!tokenRes.ok) throw createError({ statusCode: 502, statusMessage: 'Upstream error' })
@@ -57,6 +57,7 @@ export default defineEventHandler(async (event) => {
     id: string
     allowed_hosts: string[]
     is_active: boolean
+    is_wildcard: boolean
   }>
 
   if (!tokenRow) throw createError({ statusCode: 403, statusMessage: 'TOKEN_NOT_FOUND' })
@@ -65,57 +66,74 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 403, statusMessage: 'HOST_NOT_ALLOWED' })
   }
 
-  // Fetch the linked trail IDs
-  const tokenTrailsRes = await fetch(
-    `${url}/rest/v1/embed_token_trails?token_id=eq.${tokenRow.id}&select=trail_id,trail_type`,
-    { headers },
-  )
-  if (!tokenTrailsRes.ok) throw createError({ statusCode: 502, statusMessage: 'Upstream error' })
+  // Fetch spot data and GPX data.
+  // Wildcard tokens fetch everything directly — no IN-list, no URL-length issues.
+  // Specific tokens filter by the trail IDs linked in embed_token_trails.
+  let spotResults: any[][]
+  let gpxTrailsRes: Response
+  let gpxToursRes: Response
 
-  const tokenTrails = await tokenTrailsRes.json() as Array<{
-    trail_id: string
-    trail_type: string
-  }>
-
-  if (tokenTrails.length === 0) {
-    setResponseHeader(event, 'Access-Control-Allow-Origin', originHeader ?? '*')
-    return [] as EmbedTrail[]
-  }
-
-  const allTrailIds = tokenTrails.map(t => t.trail_id)
-  const idList = allTrailIds.map(id => encodeURIComponent(id)).join(',')
-
-  // Fetch spot data and GPX data in parallel
-  const byType = new Map<string, string[]>()
-  for (const { trail_id, trail_type } of tokenTrails) {
-    if (!byType.has(trail_type)) byType.set(trail_type, [])
-    byType.get(trail_type)!.push(trail_id)
-  }
-
-  const [spotResults, gpxTrailsRes, gpxToursRes] = await Promise.all([
-    Promise.all(
-      Array.from(byType.entries()).map(async ([type, ids]) => {
-        const table = TABLE[type]
-        if (!table) return []
-        const inClause = ids.map(id => encodeURIComponent(id)).join(',')
-        const res = await fetch(
-          `${url}/rest/v1/${table}?id=in.(${inClause})&select=id,name,latitude,longitude,approved`,
-          { headers },
-        )
-        if (!res.ok) return []
-        const rows = await res.json() as any[]
-        return rows.map(r => ({ ...r, type }))
-      }),
-    ),
-    fetch(
-      `${url}/rest/v1/spot_gpx_trails?spot_id=in.(${idList})&select=spot_id,name,difficulty,gpx_points`,
+  if (tokenRow.is_wildcard) {
+    const SPOT_FIELDS = 'id,name,latitude,longitude,approved'
+    ;[spotResults, [gpxTrailsRes, gpxToursRes]] = await Promise.all([
+      Promise.all([
+        fetch(`${url}/rest/v1/trails?select=${SPOT_FIELDS}&limit=1000`, { headers })
+          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'trail' }))) : []),
+        fetch(`${url}/rest/v1/parks?select=${SPOT_FIELDS}&limit=1000`, { headers })
+          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'bikepark' }))) : []),
+        fetch(`${url}/rest/v1/dirt_parks?select=${SPOT_FIELDS}&limit=1000`, { headers })
+          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'dirtpark' }))) : []),
+      ]),
+      Promise.all([
+        fetch(`${url}/rest/v1/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points&limit=5000`, { headers }),
+        fetch(`${url}/rest/v1/spot_gpx_tours?select=spot_id,name,gpx_points&limit=5000`, { headers }),
+      ]),
+    ])
+  } else {
+    const tokenTrailsRes = await fetch(
+      `${url}/rest/v1/embed_token_trails?token_id=eq.${tokenRow.id}&select=trail_id,trail_type`,
       { headers },
-    ),
-    fetch(
-      `${url}/rest/v1/spot_gpx_tours?spot_id=in.(${idList})&select=spot_id,name,gpx_points`,
-      { headers },
-    ),
-  ])
+    )
+    if (!tokenTrailsRes.ok) throw createError({ statusCode: 502, statusMessage: 'Upstream error' })
+
+    const tokenTrails = await tokenTrailsRes.json() as Array<{
+      trail_id: string
+      trail_type: string
+    }>
+
+    if (tokenTrails.length === 0) {
+      setResponseHeader(event, 'Access-Control-Allow-Origin', originHeader ?? '*')
+      return [] as EmbedTrail[]
+    }
+
+    const byType = new Map<string, string[]>()
+    for (const { trail_id, trail_type } of tokenTrails) {
+      if (!byType.has(trail_type)) byType.set(trail_type, [])
+      byType.get(trail_type)!.push(trail_id)
+    }
+    const idList = tokenTrails.map(t => encodeURIComponent(t.trail_id)).join(',')
+
+    ;[spotResults, [gpxTrailsRes, gpxToursRes]] = await Promise.all([
+      Promise.all(
+        Array.from(byType.entries()).map(async ([type, ids]) => {
+          const table = TABLE[type]
+          if (!table || ids.length === 0) return []
+          const inClause = ids.map(id => encodeURIComponent(id)).join(',')
+          const res = await fetch(
+            `${url}/rest/v1/${table}?id=in.(${inClause})&select=id,name,latitude,longitude,approved`,
+            { headers },
+          )
+          if (!res.ok) return []
+          const rows = await res.json() as any[]
+          return rows.map(r => ({ ...r, type }))
+        }),
+      ),
+      Promise.all([
+        fetch(`${url}/rest/v1/spot_gpx_trails?spot_id=in.(${idList})&select=spot_id,name,difficulty,gpx_points&limit=5000`, { headers }),
+        fetch(`${url}/rest/v1/spot_gpx_tours?spot_id=in.(${idList})&select=spot_id,name,gpx_points&limit=5000`, { headers }),
+      ]),
+    ])
+  }
 
   const spots = spotResults.flat() as Array<{ id: string; name: string; latitude: number; longitude: number; type: string; approved?: boolean }>
 

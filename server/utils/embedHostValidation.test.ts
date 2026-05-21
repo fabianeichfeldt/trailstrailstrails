@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, test, expect } from 'vitest'
-import { extractHostname, isHostAllowed } from './embedHostValidation'
+import { extractHostname, isHostAllowed, resolveHostname } from './embedHostValidation'
 
 describe('extractHostname', () => {
   test('extracts hostname from Origin header', () => {
@@ -51,5 +51,27 @@ describe('isHostAllowed', () => {
 
   test('does not allow subdomains implicitly', () => {
     expect(isHostAllowed('sub.deutscheralpenverein.de', ['deutscheralpenverein.de'])).toBe(false)
+  })
+})
+
+describe('resolveHostname', () => {
+  test('uses parentHost first when present', () => {
+    expect(resolveHostname('trailradar.org', 'https://trailradar.app', 'https://trailradar.app/embed/tok')).toBe('trailradar.org')
+  })
+
+  test('falls back to origin when parentHost is null', () => {
+    expect(resolveHostname(null, 'https://trailradar.app', null)).toBe('trailradar.app')
+  })
+
+  test('falls back to referer when parentHost and origin are absent', () => {
+    expect(resolveHostname(null, null, 'https://example.com/page')).toBe('example.com')
+  })
+
+  test('returns null when all sources are absent', () => {
+    expect(resolveHostname(null, null, null)).toBeNull()
+  })
+
+  test('empty string parentHost is returned as-is (caller should pass null, not empty string)', () => {
+    expect(resolveHostname('', 'https://trailradar.app', null)).toBe('')
   })
 })
