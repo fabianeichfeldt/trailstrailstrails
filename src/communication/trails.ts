@@ -260,10 +260,10 @@ export async function fetchMultipleSpotGpx(
 
   const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
   const [tRes, rRes] = await Promise.all([
-    fetch(`${REST}/spot_gpx_trails?spot_id=in.(${idList})&select=spot_id,name,difficulty,gpx_points,trail_description`, {
+    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description`, {
       headers: anonHeaders(),
     }),
-    fetch(`${REST}/spot_gpx_tours?spot_id=in.(${idList})&select=spot_id,name,gpx_points`, {
+    fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points`, {
       headers: anonHeaders(),
     }),
   ])
