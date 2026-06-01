@@ -261,6 +261,15 @@
     </div>
     </section>
 
+    <section class="foerderung-outer">
+      <div class="foerderung-section inner">
+        <span class="foerderung-label">Trailradar wird gefördert durch</span>
+        <a href="https://www.alpenverein.de/" target="_blank" rel="noopener">
+          <img src="/assets/dav_logo.webp" alt="DAV Deutscher Alpen Verein" class="dav-logo" />
+        </a>
+      </div>
+    </section>
+
   </div>
 </template>
 
@@ -787,5 +796,27 @@ useHead({
   max-width: 860px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* ── DAV Förderung ── */
+.foerderung-outer {
+  background: #f5f7fa;
+  border-top: 1px solid #e5e9f0;
+  padding: 1.5rem 1rem;
+}
+.foerderung-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.foerderung-label {
+  font-size: 0.85rem;
+  color: #5a6478;
+}
+.dav-logo {
+  height: 48px;
+  width: auto;
 }
 </style>
