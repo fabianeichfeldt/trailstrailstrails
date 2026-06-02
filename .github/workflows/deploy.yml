@@ -28,7 +28,8 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install
+      - run: npm install -g npm@11
+      - run: npm ci
       - run: npx nuxt prepare
 
       - name: Unit tests (Vitest)
@@ -73,7 +74,8 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install
+      - run: npm install -g npm@11
+      - run: npm ci
       - run: npm run generate
 
       - uses: actions/upload-pages-artifact@v3
