@@ -28,7 +28,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      - run: npm install
       - run: npx nuxt prepare
 
       - name: Unit tests (Vitest)
