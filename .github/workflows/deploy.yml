@@ -28,14 +28,27 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install
+      - run: npm ci
       - run: npx nuxt prepare
 
       - name: Unit tests (Vitest)
         run: npm test
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system deps only
+        run: npx playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: E2E tests (Playwright)
         run: npm run test:e2e
