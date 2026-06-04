@@ -1,7 +1,52 @@
 # TrailRadar — Claude Code instructions
 
 ## Project in one line
-Nuxt 3 + Pinia + Supabase + Leaflet app for discovering legal MTB trails. SSG via `nuxt generate`, deployed to GitHub Pages.
+Nuxt 3 + Pinia + Supabase + Leaflet app for discovering legal MTB trails. SSG via `nuxt generate`, deployed to GitHub Pages + Cloudflare Workers. PWA for mobile. Target audience: mountainbikers — tech-savvy, expect a polished modern app aesthetic (custom CSS, no component framework).
+
+---
+
+## Features & roles
+
+### User roles
+
+| Role | How assigned | What they can do |
+|---|---|---|
+| anonymous | no login | browse map, view trail details, view photos |
+| registered user | self-signup | + upload photos, like/favorite spots |
+| trailcrew | **invite-only by admin** | + access SpotManager for their assigned spots |
+| admin | set directly in DB | + SpotManager for all spots, approve new spots, manage embed tokens, assign trailcrew |
+
+**Why trailcrew is invite-only:** trailcrew members are real trail builders with real-world accountability for the accuracy of a spot's data. Self-signup would let anyone corrupt official status, closure rules, or GPS tracks for a live spot. admin assigns spots to trailcrew via the `trailcrew_spots` junction table in Supabase.
+
+**Trail approval** (new spots submitted by any user) is admin-only and currently handled directly in Supabase — there is no approval UI yet.
+
+### SpotManager (`src/spot_manager/`)
+The SpotManager is the privileged maintenance interface, visible only to trailcrew and admin. It allows editing all operational fields of a spot:
+
+- **GPX tracks** — upload, reorder, delete trail and tour GPX files; automatic RDP thinning + Fréchet-based tour segment matching (`GpxProcessor.ts`)
+- **Spot details** — open/closed status, status hint, affected trails, seasonal dates, access type, donation URL, rules, description, opening hours
+- **Rain/night policies** — rain closure window, night riding window
+- **Embed tokens** (admin-only) — create and manage iframe embed tokens with host allowlists and trail pickers
+
+The SpotManager is **not a separate app** — it lives inside the same Nuxt project but is guarded at the UI level (`isTrailcrew` / `isAdmin` computed from `stores/auth.ts`) and at the DB level via RLS.
+
+### Other features
+- **Map** — Leaflet markers for trails, bikeparks, dirtparks; filter by type; geolocation FAB
+- **Trail detail pages** — full info, photos, GPX elevation profiles, likes
+- **Activity feed** — latest community contributions (new spots, photos, GPX routes)
+- **Embed widget** — token-scoped iframe embeds served via Cloudflare Worker (`/_embed/[token]`)
+
+---
+
+## Supabase rules
+
+These facts are not derivable from reading the TypeScript code — get them wrong and writes silently fail or bypass security.
+
+- **Role resolution:** always use the `get_my_role()` SECURITY DEFINER RPC (see `stores/auth.ts`). Never query `user_roles` directly from client code — it requires a fallback only if the RPC fails.
+- **Write gate for trailcrew:** `can_edit_spot(spot_id)` is the single Postgres function that authorises trailcrew writes. It returns true if the caller is admin, or if the caller is trailcrew with a matching row in `trailcrew_spots`. Any new INSERT/UPDATE policy on spot-related tables must use this function.
+- **DELETE is admin-only** on `spot_gpx_trails`, `spot_gpx_tours`. Trailcrew can insert and update but not delete.
+- **RLS is enforced on all write tables.** The anon key is embedded in client JS — all write protection is in Postgres, not in application code.
+- **Key tables:** `user_roles` (role per user), `trailcrew_spots` (user ↔ assigned spot), `trail_details` (status/rules/description per spot), `spot_gpx_trails`, `spot_gpx_tours`, `embed_tokens`, `embed_token_trails`.
 
 ---
 
