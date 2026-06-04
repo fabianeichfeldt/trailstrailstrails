@@ -1,9 +1,7 @@
-import "/src/auth/avatar.css"
-import "/src/auth/auth_modal.css"
 import {User} from "./user";
 import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
-import {IAuthService} from "./auth_service";
+import type {IAuthService} from "./auth_service";
 import {showToast} from "../toast";
 import {getMyRole} from "../spot_manager/Api";
 

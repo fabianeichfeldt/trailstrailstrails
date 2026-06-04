@@ -1,7 +1,7 @@
 import {downVote, upVote} from "../../feedback";
 import {showToast} from "../../toast";
-import {IAuthService} from "../../auth/auth_service";
-import {Auth} from "../../auth/auth";
+import type {IAuthService} from "../../auth/auth_service";
+import type {Auth} from "../../auth/auth";
 
 const MAX_FILE_SIZE_MB = 8;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];

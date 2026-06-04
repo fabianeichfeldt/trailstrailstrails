@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trailradar Embed — Testseite</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f5f5; color: #333; }
+    h1   { font-size: 18px; margin: 0 0 4px; }
+    p    { font-size: 13px; color: #777; margin: 0 0 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    #trailradar-embed { height: 500px; border-radius: 8px; overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Trailradar Embed — Testseite</h1>
+    <p>Lokaler Test unter <code>localhost</code>. Token und Koordinaten unten anpassen.</p>
+    <div id="trailradar-embed"></div>
+  </div>
+
+  <script src="/embed.js"></script>
+  <script>
+    TrailRadar.mount({
+      token:   '00b90a944ab67ea6cdf775d5ea817589e342a4f9459411d2',
+      target:  '#trailradar-embed',
+      center:  [47.8, 13.0],   // Koordinaten anpassen
+      zoom:    6,
+      baseUrl: 'http://localhost:3000',  // Nuxt dev server
+    });
+  </script>
+</body>
+</html>

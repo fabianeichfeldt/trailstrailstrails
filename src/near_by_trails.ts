@@ -1,4 +1,3 @@
-import { anon } from "./anon";
 import { Trail } from "./types/Trail";
 
 export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, onCancel: OnCancel) {
@@ -28,7 +27,7 @@ export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, 
 
 export function giveTrailNearBy(lat: number, lng: number, trails: Trail[]) {
     const R_KM = 111.32; // km per degree lat approx
-    const R = 3; // km radius
+    const R = 5; // km radius
   
     const dLat = R / R_KM;
     for(const trail of trails) {
@@ -37,16 +36,6 @@ export function giveTrailNearBy(lat: number, lng: number, trails: Trail[]) {
         return trail;
     }
     return undefined;
-  }
-
-  export async function reportAbort() {
-    await fetch("https://ixafegmxkadbzhxmepsd.supabase.co/functions/v1/new-entry-abort", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${anon}`,
-        },
-      });
   }
 
 type OnContinue = () => void;

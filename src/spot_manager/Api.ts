@@ -13,6 +13,14 @@ function headers(jwt: string, extra?: Record<string, string>) {
   };
 }
 
+function anonHeaders(extra?: Record<string, string>) {
+  return {
+    'Content-Type': 'application/json',
+    'apikey':       anon,
+    ...extra,
+  };
+}
+
 async function json<T>(res: Response): Promise<T> {
   if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
   return res.json();
@@ -30,6 +38,8 @@ export interface GpxTrailRow {
   elevation_loss: number;
   gpx_points: [number, number, number][];
   gpx_url?: string;
+  trail_description?: string;
+  sort_order: number;
 }
 export interface GpxTourRow {
   id: string;
@@ -43,6 +53,7 @@ export interface GpxTourRow {
   elevation_loss: number;
   gpx_points: [number, number, number][];
   gpx_url?: string;
+  sort_order: number;
 }
 
 export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'user'> {
@@ -76,18 +87,32 @@ export async function getManageableSpots(jwt: string, userId: string, role: stri
   return rows.map(r => r.trails).filter(Boolean);
 }
 
-export async function getSpotTrails(spotId: string, jwt: string): Promise<GpxTrailRow[]> {
-  const res = await fetch(`${REST}/spot_gpx_trails?select=*&spot_id=eq.${spotId}&order=name`, {
-    headers: headers(jwt),
+export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
+  const res = await fetch(`${REST}/spot_gpx_trails?select=*&spot_id=eq.${spotId}&order=sort_order`, {
+    headers: anonHeaders(),
   });
   return json<GpxTrailRow[]>(res);
 }
 
-export async function getSpotTours(spotId: string, jwt: string): Promise<GpxTourRow[]> {
-  const res = await fetch(`${REST}/spot_gpx_tours?select=*&spot_id=eq.${spotId}&order=name`, {
-    headers: headers(jwt),
+export async function getSpotTours(spotId: string): Promise<GpxTourRow[]> {
+  const res = await fetch(`${REST}/spot_gpx_tours?select=*&spot_id=eq.${spotId}&order=sort_order`, {
+    headers: anonHeaders(),
   });
   return json<GpxTourRow[]>(res);
+}
+
+export async function updateSortOrder(
+  table: 'spot_gpx_trails' | 'spot_gpx_tours',
+  id: string,
+  sort_order: number,
+  jwt: string,
+): Promise<void> {
+  const res = await fetch(`${REST}/${table}?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: headers(jwt, { Prefer: 'return=minimal' }),
+    body: JSON.stringify({ sort_order }),
+  });
+  if (!res.ok) throw new Error(`Sort order update failed: ${await res.text()}`);
 }
 
 export async function uploadGpx(
@@ -136,18 +161,29 @@ export async function upsertTour(row: Partial<GpxTourRow> & { spot_id: string },
   return Array.isArray(data) ? data[0] : data;
 }
 
-export async function deleteTrail(id: string, jwt: string): Promise<void> {
+async function deleteGpxFile(gpx_url: string, jwt: string): Promise<void> {
+  const path = gpx_url.split('/gpx-files/')[1];
+  if (!path) return;
+  const res = await fetch(`${STORE}/object/gpx-files`, {
+    method: 'DELETE', headers: headers(jwt), body: JSON.stringify({ prefixes: [path] }),
+  });
+  if (!res.ok) throw new Error(`Storage delete failed: ${await res.text()}`);
+}
+
+export async function deleteTrail(id: string, jwt: string, gpx_url?: string): Promise<void> {
   const res = await fetch(`${REST}/spot_gpx_trails?id=eq.${id}`, {
     method: 'DELETE', headers: headers(jwt),
   });
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
+  if (gpx_url) await deleteGpxFile(gpx_url, jwt);
 }
 
-export async function deleteTour(id: string, jwt: string): Promise<void> {
+export async function deleteTour(id: string, jwt: string, gpx_url?: string): Promise<void> {
   const res = await fetch(`${REST}/spot_gpx_tours?id=eq.${id}`, {
     method: 'DELETE', headers: headers(jwt),
   });
   if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
+  if (gpx_url) await deleteGpxFile(gpx_url, jwt);
 }
 
 export type SpotStatus  = 'open' | 'limited' | 'closed' | 'unknown';
@@ -192,9 +228,9 @@ const SPOT_DETAILS_SELECT = [
   'night_policy', 'night_before_dusk_min', 'night_after_dawn_min',
 ].join(',');
 
-export async function getSpotDetails(spotId: string, jwt: string): Promise<SpotDetailsRow | null> {
+export async function getSpotDetails(spotId: string): Promise<SpotDetailsRow | null> {
   const res = await fetch(`${REST}/trail_details?trail_id=eq.${spotId}&select=${SPOT_DETAILS_SELECT}&limit=1`, {
-    headers: headers(jwt),
+    headers: anonHeaders(),
   });
   const data = await json<SpotDetailsRow[]>(res);
   return data[0] ?? null;
@@ -208,4 +244,123 @@ export async function upsertSpotDetails(row: SpotDetailsRow, jwt: string): Promi
   });
   const data = await json<SpotDetailsRow | SpotDetailsRow[]>(res);
   return Array.isArray(data) ? data[0] : data;
+}
+
+// ─── Embed token management ───────────────────────────────────────────────────
+
+export interface EmbedTokenRow {
+  id: string;
+  token: string;
+  name: string;
+  allowed_hosts: string[];
+  is_active: boolean;
+  is_wildcard: boolean;
+  created_at: string;
+}
+
+export interface EmbedTokenTrailRow {
+  id: string;
+  token_id: string;
+  trail_id: string;
+  trail_type: 'trail' | 'bikepark' | 'dirtpark';
+}
+
+export interface TrailPickerRow {
+  id: string;
+  name: string;
+  type: 'trail' | 'bikepark' | 'dirtpark';
+}
+
+export async function getEmbedTokens(jwt: string): Promise<EmbedTokenRow[]> {
+  const res = await fetch(`${REST}/embed_tokens?select=*&order=created_at.desc`, {
+    headers: headers(jwt),
+  });
+  return json<EmbedTokenRow[]>(res);
+}
+
+export async function createEmbedToken(
+  row: Pick<EmbedTokenRow, 'name' | 'allowed_hosts'>,
+  jwt: string,
+): Promise<EmbedTokenRow> {
+  const res = await fetch(`${REST}/embed_tokens`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=representation' }),
+    body: JSON.stringify(row),
+  });
+  const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function updateEmbedToken(
+  id: string,
+  patch: Partial<Pick<EmbedTokenRow, 'name' | 'allowed_hosts' | 'is_active'>>,
+  jwt: string,
+): Promise<EmbedTokenRow> {
+  const res = await fetch(`${REST}/embed_tokens?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: headers(jwt, { Prefer: 'return=representation' }),
+    body: JSON.stringify(patch),
+  });
+  const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function deleteEmbedToken(id: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/embed_tokens?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: headers(jwt),
+  });
+  if (!res.ok) throw new Error(`Delete embed token failed: ${await res.text()}`);
+}
+
+export async function getEmbedTokenTrails(tokenId: string, jwt: string): Promise<EmbedTokenTrailRow[]> {
+  const res = await fetch(
+    `${REST}/embed_token_trails?token_id=eq.${tokenId}&select=*`,
+    { headers: headers(jwt) },
+  );
+  return json<EmbedTokenTrailRow[]>(res);
+}
+
+/** Replaces all trail associations for a token (delete-all + insert). */
+export async function setEmbedTokenTrails(
+  tokenId: string,
+  trails: Array<{ trail_id: string; trail_type: string }>,
+  jwt: string,
+): Promise<void> {
+  // Delete existing
+  const del = await fetch(`${REST}/embed_token_trails?token_id=eq.${tokenId}`, {
+    method: 'DELETE',
+    headers: headers(jwt),
+  });
+  if (!del.ok) throw new Error(`Clear embed trail links failed: ${await del.text()}`);
+
+  if (trails.length === 0) return;
+
+  const rows = trails.map(t => ({ token_id: tokenId, ...t }));
+  const ins = await fetch(`${REST}/embed_token_trails`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=minimal' }),
+    body: JSON.stringify(rows),
+  });
+  if (!ins.ok) throw new Error(`Insert embed trail links failed: ${await ins.text()}`);
+}
+
+/** Fetches a flat list of all trails (all types) for the token trail picker. */
+export async function getAllTrailsForPicker(jwt: string): Promise<TrailPickerRow[]> {
+  const fields = 'id,name';
+  const [trailsRes, parksRes, dirtRes] = await Promise.all([
+    fetch(`${REST}/trails?select=${fields}&order=name&visible=eq.true`, { headers: headers(jwt) }),
+    fetch(`${REST}/parks?select=${fields}&order=name`, { headers: headers(jwt) }),
+    fetch(`${REST}/dirt_parks?select=${fields}&order=name`, { headers: headers(jwt) }),
+  ]);
+  const [trails, parks, dirtParks] = await Promise.all([
+    json<Array<{ id: string; name: string }>>(trailsRes),
+    json<Array<{ id: string; name: string }>>(parksRes),
+    json<Array<{ id: string; name: string }>>(dirtRes),
+  ]);
+  return [
+    ...trails.map(t  => ({ ...t, type: 'trail'    as const })),
+    ...parks.map(p   => ({ ...p, type: 'bikepark'  as const })),
+    ...dirtParks.map(d => ({ ...d, type: 'dirtpark' as const })),
+  ];
 }

@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [main]
+    branches: [feat/nuxt]
 
 permissions:
   contents: read
@@ -19,26 +19,41 @@ jobs:
     env:
       VITE_SUPABASE_URL: https://placeholder.supabase.co
       VITE_SUPABASE_ANON_KEY: placeholder-anon-key
+      NUXT_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
-      - run: npm ci
+      - run: npm install
+      - run: npx nuxt prepare
 
       - name: Unit tests (Vitest)
         run: npm test
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ hashFiles('package-lock.json') }}
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+
+      - name: Install Playwright system deps only
+        run: npx playwright install-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
 
       - name: E2E tests (Playwright)
         run: npm run test:e2e
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
@@ -48,23 +63,25 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
+    env:
+      NUXT_TELEMETRY_DISABLED: 1
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
-      - run: npm ci
-      - run: npm run build:pages
+      - run: npm install
+      - run: npm run generate
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
-          path: dist
+          path: .output/public
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/deploy-pages@v4
+      - uses: actions/deploy-pages@v5

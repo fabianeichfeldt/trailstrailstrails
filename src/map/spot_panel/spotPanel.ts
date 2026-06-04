@@ -226,7 +226,8 @@ export class SpotPanel {
       bindPhotoLightbox(content);
       setupYT2Click(content);
       this.infoLoaded = true;
-    } catch {
+    } catch (e) {
+      console.error('Failed to fetch trail details:', e);
       container.innerHTML = '<p class="spot-info-error">⚠️ Details derzeit nicht verfügbar.</p>';
     }
   }

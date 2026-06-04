@@ -1,0 +1,27 @@
+.leaflet-marker-icon {
+  transition: transform 0.2s;
+}
+
+.map-pin {
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.map-pin::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  top: 5px;
+  left: 5px;
+}
+
+.map-pin-verified   { background: #3b82f6; }
+.map-pin-unverified { background: #9ca3af; }
+.map-pin-bikepark   { background: #10b981; }
+.map-pin-dirtpark   { background: #b91794; }

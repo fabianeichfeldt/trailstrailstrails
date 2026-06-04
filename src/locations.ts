@@ -42,30 +42,6 @@ export const locations : Region[] = [
   { "name": "kaernten", "lat": 46.732976, "lng": 13.967933 },
 ];
 
-export async function getApproxLocation(): Promise<Coord> {
-  try {
-    const res = await fetch('https://trailradar.org/geo');
-    if (!res.ok) throw new Error('no geo data');
-    const data = await res.json();
-    if (data.lat && data.lon) {
-      const lat = Math.round(data.lat * 10) / 10;
-      const lng = Math.round(data.lon * 10) / 10;
-      return {lat, lng};
-    }
-  } catch (err) {
-    console.error('geo failed', err);
-  }
-  return {
-    lat: 0,
-    lng: 0,
-  };
-}
-
-export class Coord {
-  lat: number = 0;
-  lng: number = 0;
-}
-
 export class Region {
   name: string = "";
   lat: number = 0;

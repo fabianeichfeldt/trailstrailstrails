@@ -7,62 +7,46 @@ async function expectPanelOpen(page: import('@playwright/test').Page, trailName:
   await expect(page.locator('.spot-panel-title')).toContainText(trailName);
 }
 
-// ── Via URL ────────────────────────────────────────────────────────────────────
-// These use baseTest (no pre-navigation) so the URL is the first and only load,
-// letting getInitialLocation() see /trails/[id] and call map.openTrail() on boot.
+// ── Via ?trail= query param ────────────────────────────────────────────────────
+// The news cards on the landing page link to /map?trail=ID.
+// The map page reads this query param on mount and opens the spot panel.
 
-baseTest('navigating to /trails/[id] opens spot panel for that trail', async ({ page }) => {
+baseTest('/map?trail= opens the spot panel on load', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
-  await page.goto('/trails/t1');
+  await page.goto('/map?trail=t1');
   await page.waitForLoadState('networkidle');
 
   await expectPanelOpen(page, 'Flowtrail Tegernsee');
   assertNoLeaks();
 });
 
-baseTest('URL trail open works for a bikepark too', async ({ page }) => {
+baseTest('/map?trail= works for a bikepark', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
-  await page.goto('/trails/b1');
+  await page.goto('/map?trail=b1');
   await page.waitForLoadState('networkidle');
 
   await expectPanelOpen(page, 'Bikepark Lenggries');
   assertNoLeaks();
 });
 
-// ── Via news section ───────────────────────────────────────────────────────────
-// Mock news items after sort (ascending created_at, at(-i) for i=1..N):
-//   show-last-1 → t3 Schotterpiste
-//   show-last-2 → t2 Waldpfad Ingolstadt
-//   show-last-3 → t1 Flowtrail Tegernsee
+// ── Trail detail page ──────────────────────────────────────────────────────────
+// /trails/[id] is a static SEO page — it shows trail details and links to the map.
 
-test('clicking a news item link opens the spot panel for that trail', async ({ page }) => {
-  // Wait for news to be rendered
-  await expect(page.locator('#show-last-2')).toBeVisible();
+baseTest('/trails/[id] shows the trail name and map link', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
 
-  await page.locator('#show-last-2 a').first().click();
-
-  await expectPanelOpen(page, 'Waldpfad Ingolstadt');
-});
-
-test('different news items open different trails', async ({ page }) => {
-  await expect(page.locator('#show-last-1')).toBeVisible();
-  await page.locator('#show-last-1 a').first().click();
-  await expectPanelOpen(page, 'Schotterpiste');
-
-  // Close and open a different one
-  await page.locator('.spot-panel-close').click();
-  await expect(page.locator('.spot-panel')).not.toHaveClass(/open/);
-
-  await expect(page.locator('#show-last-3')).toBeVisible();
-  await page.locator('#show-last-3 a').first().click();
-  await expectPanelOpen(page, 'Flowtrail Tegernsee');
+  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
+  await expect(page.locator('a[href="/map?trail=t1"]').first()).toBeVisible();
+  assertNoLeaks();
 });
 
 // ── Via search ─────────────────────────────────────────────────────────────────
 
 test('clicking a search result opens the spot panel for that trail', async ({ page }) => {
-  await page.locator('#search').fill('Flow');
-  await expect(page.locator('#search-results')).toBeVisible();
+  await page.locator('[data-testid="search-input"]').fill('Flow');
+  await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   // Click the result item (not just the text — click the whole row)
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
@@ -71,8 +55,8 @@ test('clicking a search result opens the spot panel for that trail', async ({ pa
 });
 
 test('clicking a bikepark in search results opens the spot panel', async ({ page }) => {
-  await page.locator('#search').fill('Bikepark');
-  await expect(page.locator('#search-results')).toBeVisible();
+  await page.locator('[data-testid="search-input"]').fill('Bikepark');
+  await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
 
@@ -83,7 +67,7 @@ test('clicking a bikepark in search results opens the spot panel', async ({ page
 
 test('spot panel close button closes the panel', async ({ page }) => {
   // Open via search
-  await page.locator('#search').fill('Flow');
+  await page.locator('[data-testid="search-input"]').fill('Flow');
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
   await expect(page.locator('.spot-panel')).toHaveClass(/open/);
 
@@ -93,12 +77,12 @@ test('spot panel close button closes the panel', async ({ page }) => {
 });
 
 test('opening a second trail replaces the first one in the panel', async ({ page }) => {
-  await page.locator('#search').fill('Flow');
+  await page.locator('[data-testid="search-input"]').fill('Flow');
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
   await expectPanelOpen(page, 'Flowtrail Tegernsee');
 
   // After clicking a result the search input is cleared automatically — just fill again
-  await page.locator('#search').fill('Bikepark');
+  await page.locator('[data-testid="search-input"]').fill('Bikepark');
   await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
 
   await expectPanelOpen(page, 'Bikepark Lenggries');

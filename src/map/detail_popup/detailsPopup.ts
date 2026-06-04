@@ -6,8 +6,8 @@ import "/src/map/detail_popup/yt.css";
 
 import {isDirtPark, Trail} from "../../types/Trail";
 import {TrailDetails} from "../../types/TrailDetails";
-import {IAuthService} from "../../auth/auth_service";
-import {Auth} from "../../auth/auth";
+import type {IAuthService} from "../../auth/auth_service";
+import type {Auth} from "../../auth/auth";
 
 export function getTrailPopup(trail: Trail) {
     let popupHtml = `
@@ -209,7 +209,7 @@ function renderPhotos(details: TrailDetails, auth: IAuthService) {
             <div class="photo-wrap${i === 0 ? " active" : ""}" style="--img:url('${p.url}')">
               <img alt="offizieller MTB Trail" src="${p.url}" class="${i === 0 ? "active" : ""}">
                 <div class="photo-meta">
-                  <span class="photo-uploader">von ${p.profiles.display_name}</span>
+                  <span class="photo-uploader">von ${p.profiles?.display_name || ""}</span>
                   <span class="photo-date">${date}</span>
                 </div>
             </div>

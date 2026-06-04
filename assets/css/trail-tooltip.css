@@ -1,0 +1,120 @@
+/* ── Trail elevation tooltip card ─────────────────────────────────────────── */
+
+.ttr-wrapper {
+  position: absolute;
+  z-index: 1200;
+  pointer-events: auto;   /* allows clicking the "Spot öffnen" button */
+  width: 292px;
+  /* default: centered horizontally, above the cursor — overridden per-interaction */
+  transform: translate(-50%, calc(-100% - 16px));
+  cursor: default;
+}
+
+.ttr-card {
+  background: var(--ttr-color, #1565c0);
+  border-radius: 12px;
+  padding: 12px 14px 10px;
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.28);
+}
+
+.ttr-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  min-width: 0;
+}
+
+.ttr-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 2px 8px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.ttr-name {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.ttr-desc {
+  font-size: 12px;
+  line-height: 1.45;
+  opacity: 0.82;
+  margin: 0 0 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ttr-chart {
+  margin: 0 -2px 7px;
+  border-radius: 5px;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.ttr-svg {
+  width: 100%;
+  height: 44px;
+  display: block;
+}
+
+.ttr-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.ttr-stats {
+  display: flex;
+  gap: 12px;
+}
+
+.ttr-stat {
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.ttr-si {
+  opacity: 0.7;
+  font-size: 10px;
+}
+
+.ttr-open {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.ttr-open:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
