@@ -30,6 +30,8 @@ The SpotManager is the privileged maintenance interface, visible only to trailcr
 
 The SpotManager is **not a separate app** — it lives inside the same Nuxt project but is guarded at the UI level (`isTrailcrew` / `isAdmin` computed from `stores/auth.ts`) and at the DB level via RLS.
 
+**SpotManager must use the shared `stores/auth.ts` Pinia store.** Never create a second auth store or local auth state inside SpotManager. A second store causes `sub`/`userId` mismatches and silent auth failures.
+
 ### Other features
 - **Map** — Leaflet markers for trails, bikeparks, dirtparks; filter by type; geolocation FAB
 - **Trail detail pages** — full info, photos, GPX elevation profiles, likes
@@ -57,6 +59,12 @@ These facts are not derivable from reading the TypeScript code — get them wron
 - Playwright E2E: run `npm run test:e2e` when touching map interaction, auth flow, or add-spot flow.
 - **Every bug fix and every new feature needs a corresponding test.** If you add a function, add a unit test. If you add a user flow, extend the Playwright spec.
 - The architecture tests in `src/architecture.test.ts` enforce structural invariants — if you change architecture, update those tests to match the new target, don't just delete the assertion.
+- **When fixing a bug, write a failing test first.** The test must fail on the broken code before you touch the fix. A test that passes before the fix is not acceptable.
+- **Tests must never call the production database.** Use a placeholder `SUPABASE_URL` (e.g. `http://localhost:54321`) in the test environment. Mock at the HTTP boundary if DB behaviour is needed.
+- **Prefer vitest over Playwright.** Default to vitest for all new tests. Only use Playwright when the behaviour genuinely cannot be tested with vitest (e.g. real browser rendering, real auth cookie flows).
+
+### Mobile is first-class
+- Every UI change must work on mobile. Check touch targets, scrolling, and layout at small viewports before reporting done.
 
 ### Ask, don't assume
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
