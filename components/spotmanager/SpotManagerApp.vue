@@ -12,7 +12,7 @@
       <button v-if="view === 'list'" class="sm-help-btn" title="Hilfe" @click="helpOpen = true">
         <i class="fas fa-question-circle" />
       </button>
-      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : spotName }}</span>
+      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : view === 'segment-upload' ? 'Tour hochladen' : view === 'segment-editor' ? 'Segmente definieren' : spotName }}</span>
       <span class="sm-role-badge">{{ role }}</span>
       <UserAvatar />
     </div>
@@ -85,60 +85,13 @@
 
           <div class="sm-section">
             <div class="sm-section-header">
-              <h3>Trails <span class="sm-count">{{ trails.length }}</span></h3>
-              <button class="sm-btn-add" @click="openImport('trail')">
-                <i class="fas fa-plus" /> Trail
-              </button>
-            </div>
-            <p v-if="trails.length === 0" class="sm-section-hint">
-              Lade zuerst alle Trails hoch. Bei mehreren Schwierigkeiten einen Trail in Abschnitte aufteilen.
-            </p>
-            <div class="sm-items">
-              <p v-if="trails.length === 0" class="sm-empty">Keine Trails</p>
-              <div
-                v-for="(t, i) in trails"
-                :key="t.id"
-                class="sm-item"
-                :class="{ 'sm-item-dragging': trailDragIdx === i, 'sm-item-drag-over': trailDragOverIdx === i && trailDragIdx !== i }"
-                draggable="true"
-                @dragstart="trailDragIdx = i"
-                @dragenter.prevent="trailDragOverIdx = i"
-                @dragover.prevent
-                @drop.prevent="dropTrail(i)"
-                @dragend="trailDragIdx = null; trailDragOverIdx = null"
-                @mouseenter="mapView?.highlight(t.id)"
-                @mouseleave="mapView?.resetHighlights()"
-              >
-                <div class="sm-drag-handle" title="Ziehen zum Sortieren"><i class="fas fa-grip-vertical" /></div>
-                <div class="sm-item-dot" :style="`background:${DIFF_COLOR[t.difficulty as ImbaColor] ?? '#888'}`" />
-                <div class="sm-item-info">
-                  <strong>{{ t.name }}</strong>
-                  <span class="sm-item-sub">{{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
-                </div>
-                <div class="sm-item-actions" @dragstart.stop.prevent>
-                  <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTrail(t.id)">
-                    <i class="fas fa-pen" />
-                  </button>
-                  <button class="sm-btn-icon sm-btn-danger" title="Löschen" @click.stop="confirmDelete(t.id, 'trail')">
-                    <i class="fas fa-trash" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="sm-section">
-            <div class="sm-section-header">
               <h3>Touren <span class="sm-count">{{ tours.length }}</span></h3>
-              <button class="sm-btn-add" @click="openImport('tour')">
+              <button class="sm-btn-add" @click="openSegmentUpload">
                 <i class="fas fa-plus" /> Tour
               </button>
             </div>
-            <p v-if="tours.length === 0 && trails.length > 0" class="sm-section-hint">
-              Trails sind bereit – jetzt Touren hochladen und die enthaltenen Trails zuordnen.
-            </p>
-            <p v-else-if="tours.length === 0" class="sm-section-hint">
-              Touren erst hochladen, nachdem alle Trails angelegt sind.
+            <p v-if="tours.length === 0" class="sm-section-hint">
+              Lade eine Tour hoch und schneide die Trails im nächsten Schritt manuell aus. Einzelne Trails kannst du auch direkt im Bereich <strong>Trails</strong> als GPX hochladen.
             </p>
             <div class="sm-items">
               <p v-if="tours.length === 0" class="sm-empty">Keine Touren</p>
@@ -167,6 +120,50 @@
                     <i class="fas fa-pen" />
                   </button>
                   <button class="sm-btn-icon sm-btn-danger" title="Löschen" @click.stop="confirmDelete(t.id, 'tour')">
+                    <i class="fas fa-trash" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sm-section">
+            <div class="sm-section-header">
+              <h3>Trails <span class="sm-count">{{ trails.length }}</span></h3>
+              <button class="sm-btn-add" @click="openImport()">
+                <i class="fas fa-plus" /> Trail
+              </button>
+            </div>
+            <p v-if="trails.length === 0" class="sm-section-hint">
+              Einzelne Trails als GPX hochladen – oder aus einer Tour oben manuell herausschneiden.
+            </p>
+            <div class="sm-items">
+              <p v-if="trails.length === 0" class="sm-empty">Keine Trails</p>
+              <div
+                v-for="(t, i) in trails"
+                :key="t.id"
+                class="sm-item"
+                :class="{ 'sm-item-dragging': trailDragIdx === i, 'sm-item-drag-over': trailDragOverIdx === i && trailDragIdx !== i }"
+                draggable="true"
+                @dragstart="trailDragIdx = i"
+                @dragenter.prevent="trailDragOverIdx = i"
+                @dragover.prevent
+                @drop.prevent="dropTrail(i)"
+                @dragend="trailDragIdx = null; trailDragOverIdx = null"
+                @mouseenter="mapView?.highlight(t.id)"
+                @mouseleave="mapView?.resetHighlights()"
+              >
+                <div class="sm-drag-handle" title="Ziehen zum Sortieren"><i class="fas fa-grip-vertical" /></div>
+                <div class="sm-item-dot" :style="`background:${DIFF_COLOR[t.difficulty as ImbaColor] ?? '#888'}`" />
+                <div class="sm-item-info">
+                  <strong>{{ t.name }}</strong>
+                  <span class="sm-item-sub">{{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
+                </div>
+                <div class="sm-item-actions" @dragstart.stop.prevent>
+                  <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTrail(t.id)">
+                    <i class="fas fa-pen" />
+                  </button>
+                  <button class="sm-btn-icon sm-btn-danger" title="Löschen" @click.stop="confirmDelete(t.id, 'trail')">
                     <i class="fas fa-trash" />
                   </button>
                 </div>
@@ -204,35 +201,18 @@
                 <span class="sm-card-stats">{{ p.processed.rawCount }} → {{ p.processed.thinnedCount }} Punkte</span>
               </div>
 
-              <div class="pk-kind-toggle">
-                <button class="pk-kind-btn" :class="{ active: p.kind === 'trail' }" @click="setKind(i, 'trail')">Trail</button>
-                <button class="pk-kind-btn" :class="{ active: p.kind === 'tour' }" @click="setKind(i, 'tour')">Tour</button>
-              </div>
-
               <label>Name<input type="text" v-model="p.name" /></label>
 
-              <template v-if="p.kind === 'trail'">
-                <label>Schwierigkeit
-                  <select v-model="p.difficulty" @change="updatePendingColor(i)">
-                    <option v-for="d in DIFFICULTIES" :key="d.value" :value="d.value">{{ d.label }}</option>
-                  </select>
-                </label>
-                <label>Richtung
-                  <select v-model="p.direction">
-                    <option v-for="d in DIRECTIONS.filter(d => d.value !== 'cw' && d.value !== 'ccw')" :key="d.value" :value="d.value">{{ d.label }}</option>
-                  </select>
-                </label>
-              </template>
-              <template v-else>
-                <div v-if="trails.length > 0" class="sm-trail-checks">
-                  <span class="sm-label">Enthaltene Trails</span>
-                  <label v-for="t in trails" :key="t.name" class="sm-check-label">
-                    <input type="checkbox" :value="t.name" v-model="p.trailNames" />
-                    {{ t.name }}
-                    <span v-if="p.autoDetectedTrailNames.includes(t.name)" class="sm-badge-auto">auto</span>
-                  </label>
-                </div>
-              </template>
+              <label>Schwierigkeit
+                <select v-model="p.difficulty" @change="updatePendingColor(i)">
+                  <option v-for="d in DIFFICULTIES" :key="d.value" :value="d.value">{{ d.label }}</option>
+                </select>
+              </label>
+              <label>Richtung
+                <select v-model="p.direction">
+                  <option v-for="d in DIRECTIONS.filter(d => d.value !== 'cw' && d.value !== 'ccw')" :key="d.value" :value="d.value">{{ d.label }}</option>
+                </select>
+              </label>
 
               <div class="sm-card-stats-row">
                 <span>📍 {{ p.processed.distance_km }} km</span>
@@ -255,26 +235,108 @@
           </div>
         </div>
 
+        <!-- Segment upload (step 1) -->
+        <div v-else-if="view === 'segment-upload'" class="sm-import-view">
+          <div class="sm-form-header">
+            <h3><i class="fas fa-route" /> Tour hochladen</h3>
+          </div>
+          <p class="sm-section-hint">Lade die GPX-Aufnahme der Tour hoch. Im nächsten Schritt kannst du optional Trails interaktiv ausschneiden und die Tour speichern.</p>
+          <div
+            class="sm-dropzone"
+            :class="{ 'drag-over': uploadDragOver }"
+            @dragover.prevent="uploadDragOver = true"
+            @dragleave="uploadDragOver = false"
+            @drop.prevent="onSegmentFileDrop"
+          >
+            <i class="fas fa-route sm-drop-icon" />
+            <p>GPX-Datei hier ablegen</p>
+            <label class="sm-btn-secondary sm-drop-browse">
+              <i class="fas fa-folder-open" /> Durchsuchen
+              <input type="file" accept=".gpx" hidden @change="onSegmentFileInput" />
+            </label>
+          </div>
+          <div class="sm-import-footer">
+            <button class="sm-btn-secondary" @click="view = 'list'">Abbrechen</button>
+          </div>
+        </div>
+
+        <!-- Segment editor (step 2) -->
+        <div v-else-if="view === 'segment-editor'" class="sm-seg-editor">
+          <p class="sm-section-hint">Wähle auf der Karte einen Abschnitt aus, gib ihm einen Namen und eine Schwierigkeit, und klicke <strong>+ Segment</strong>. Wiederhole das für jeden Trail dieser Tour.</p>
+          <div class="sm-seg-form">
+            <label>Name<input type="text" v-model="segmentName" placeholder="z.B. Flowtrail Blau" /></label>
+            <label>Schwierigkeit
+              <select v-model="segmentDifficulty">
+                <option v-for="d in DIFFICULTIES" :key="d.value" :value="d.value">{{ d.label }}</option>
+              </select>
+            </label>
+            <label>Richtung
+              <select v-model="segmentDirection">
+                <option v-for="d in DIRECTIONS.filter(d => d.value !== 'cw' && d.value !== 'ccw')" :key="d.value" :value="d.value">{{ d.label }}</option>
+              </select>
+            </label>
+            <button class="sm-btn-primary sm-seg-add-btn" @click="addSegment">
+              <i class="fas fa-plus" /> Segment
+            </button>
+          </div>
+
+          <div v-if="pendingSegments.length > 0" class="sm-seg-pending">
+            <div class="sm-seg-pending-label">Ausstehend ({{ pendingSegments.length }})</div>
+            <div v-for="(seg, i) in pendingSegments" :key="seg.key" class="sm-seg-item">
+              <div class="sm-seg-dot" :style="`background:${DIFF_COLOR[seg.difficulty]}`" />
+              <div class="sm-seg-info">
+                <strong>{{ seg.name }}</strong>
+                <span>{{ seg.distance_km }} km</span>
+              </div>
+              <button class="sm-btn-icon sm-btn-danger" @click="removeSegment(i)"><i class="fas fa-trash" /></button>
+            </div>
+          </div>
+
+          <div class="sm-seg-tour-section">
+            <label class="sd-toggle-row">
+              <input type="checkbox" v-model="saveAsTour" />
+              <span>Als Tour speichern <span class="sm-hint-inline">– zusätzlich zu den Trails oben</span></span>
+            </label>
+            <div v-if="saveAsTour" class="sm-seg-tour-fields">
+              <label>Name<input type="text" v-model="tourName" /></label>
+              <label>Richtung
+                <select v-model="tourDirection">
+                  <option value="cw">↻ Uhrzeigersinn</option>
+                  <option value="ccw">↺ Gegen Uhrzeiger</option>
+                </select>
+              </label>
+            </div>
+          </div>
+
+          <div class="sm-seg-actions">
+            <button class="sm-btn-secondary" @click="cancelSegmentEditor(); view = 'list'">Abbrechen</button>
+            <button class="sm-btn-primary" :disabled="segmentBusy || (!pendingSegments.length && !saveAsTour)" @click="applySegments">
+              <i class="fas fa-check" />
+              {{ pendingSegments.length > 0 ? `Übernehmen (${pendingSegments.length})` : 'Tour speichern' }}
+            </button>
+          </div>
+        </div>
+
         <!-- Edit Trail -->
         <div v-else-if="view === 'edit-trail'" class="sm-edit-form">
           <div class="sm-form-header">
             <button class="sm-btn-back" @click="cancelEdit"><i class="fas fa-arrow-left" /></button>
             <h3>Trail bearbeiten</h3>
           </div>
-          <label>Name<input type="text" v-model="efName" /></label>
+          <label>Name<input type="text" v-model="editFormName" /></label>
           <label>Schwierigkeit
-            <select v-model="efDiff">
+            <select v-model="editFormDifficulty">
               <option v-for="d in DIFFICULTIES" :key="d.value" :value="d.value">{{ d.label }}</option>
             </select>
           </label>
           <label>Richtung
-            <select v-model="efDir">
+            <select v-model="editFormDirection">
               <option v-for="d in DIRECTIONS" :key="d.value" :value="d.value">{{ d.label }}</option>
             </select>
           </label>
           <label>Beschreibung
             <textarea
-              v-model="efTrailDesc"
+              v-model="editFormTrailDescription"
               rows="3"
               placeholder="Kurze Beschreibung des Trails – z. B. Schneller Flowtrail mit zwei Sprüngen und einem steinigen Auslauf. Max. 1–2 Sätze."
             />
@@ -297,18 +359,18 @@
             <button class="sm-btn-back" @click="cancelEdit"><i class="fas fa-arrow-left" /></button>
             <h3>Tour bearbeiten</h3>
           </div>
-          <label>Name<input type="text" v-model="efName" /></label>
+          <label>Name<input type="text" v-model="editFormName" /></label>
           <label>Richtung
-            <select v-model="efDir">
+            <select v-model="editFormDirection">
               <option value="cw">↻ Uhrzeigersinn</option>
               <option value="ccw">↺ Gegen Uhrzeiger</option>
             </select>
           </label>
-          <label>Dauer (min)<input type="number" min="1" v-model.number="efDuration" /></label>
+          <label>Dauer (min)<input type="number" min="1" v-model.number="editFormDuration" /></label>
           <div v-if="trails.length > 0" class="sm-trail-checks">
             <span class="sm-label">Enthaltene Trails</span>
             <label v-for="t in trails" :key="t.name" class="sm-check-label">
-              <input type="checkbox" :value="t.name" v-model="efTrailNames" />
+              <input type="checkbox" :value="t.name" v-model="editFormTrailNames" />
               {{ t.name }}
             </label>
           </div>
@@ -339,20 +401,20 @@
                 v-for="s in STATUS_OPTIONS"
                 :key="s.value"
                 class="sd-status-card"
-                :class="{ active: sdStatus === s.value }"
+                :class="{ active: detailsStatus === s.value }"
                 :style="`--status-color:${s.color}`"
-                @click="sdStatus = s.value"
+                @click="detailsStatus = s.value"
               >
                 <i class="fas sd-status-icon" :class="s.icon" />
                 <span>{{ s.label }}</span>
               </button>
             </div>
-            <div v-show="sdStatus !== 'open'" class="sd-status-sub">
-              <div v-show="sdStatus === 'limited' && trails.length > 0">
+            <div v-show="detailsStatus !== 'open'" class="sd-status-sub">
+              <div v-show="detailsStatus === 'limited' && trails.length > 0">
                 <div class="sd-sub-label"><i class="fas fa-route" /> Betroffene Trails</div>
                 <div class="sd-trail-check-list">
                   <label v-for="t in trails" :key="t.id" class="sd-check-label">
-                    <input type="checkbox" :value="t.id" v-model="sdAffectedIds" />
+                    <input type="checkbox" :value="t.id" v-model="detailsAffectedTrailIds" />
                     <span class="sd-trail-check-dot" :style="`background:${DIFF_COLOR[t.difficulty as ImbaColor] ?? '#888'}`" />
                     {{ t.name }}
                   </label>
@@ -360,21 +422,21 @@
                 <div class="sd-sub-divider" />
               </div>
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdUseUntil" :value="false" /><span>Unbegrenzt</span>
+                <input type="radio" v-model="detailsUseStatusUntil" :value="false" /><span>Unbegrenzt</span>
               </label>
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdUseUntil" :value="true" /><span>Automatisch öffnen am</span>
+                <input type="radio" v-model="detailsUseStatusUntil" :value="true" /><span>Automatisch öffnen am</span>
               </label>
-              <input v-show="sdUseUntil" type="date" v-model="sdStatusUntil" class="sd-input sd-status-until-input" />
+              <input v-show="detailsUseStatusUntil" type="date" v-model="detailsStatusUntil" class="sd-input sd-status-until-input" />
             </div>
           </div>
 
           <!-- Status hint -->
-          <div v-show="sdStatus !== 'open'" class="sd-section">
+          <div v-show="detailsStatus !== 'open'" class="sd-section">
             <div class="sd-section-label"><i class="fas fa-comment-dots" /> Status-Hinweis</div>
-            <input type="text" v-model="sdHint" class="sd-input" maxlength="120"
+            <input type="text" v-model="detailsStatusHint" class="sd-input" maxlength="120"
               placeholder="z.B. Gesperrt bis Ende März wegen Forstarbeiten" />
-            <div class="sd-char-hint">{{ sdHint.length }}/120</div>
+            <div class="sd-char-hint">{{ detailsStatusHint.length }}/120</div>
           </div>
 
           <!-- Access & costs -->
@@ -385,19 +447,19 @@
                 v-for="a in ACCESS_OPTIONS"
                 :key="a.value"
                 class="sd-access-card"
-                :class="{ active: sdAccessType === a.value }"
+                :class="{ active: detailsAccessType === a.value }"
                 :style="`--access-color:${a.color}`"
                 :title="a.desc"
-                @click="sdAccessType = a.value"
+                @click="detailsAccessType = a.value"
               >
                 <i class="fas sd-access-icon" :class="a.icon" />
                 <span class="sd-access-label">{{ a.label }}</span>
                 <span class="sd-access-desc">{{ a.desc }}</span>
               </button>
             </div>
-            <div v-show="sdAccessType === 'free'" style="margin-top:6px">
+            <div v-show="detailsAccessType === 'free'" style="margin-top:6px">
               <label class="sd-date-label">Spendenlink (optional)
-                <input type="url" v-model="sdDonationUrl" class="sd-input" placeholder="https://…" />
+                <input type="url" v-model="detailsDonationUrl" class="sd-input" placeholder="https://…" />
               </label>
             </div>
           </div>
@@ -406,17 +468,17 @@
           <div class="sd-section">
             <div class="sd-section-label"><i class="fas fa-leaf" /> Jährliche Saisonsperre</div>
             <label class="sd-toggle-row">
-              <input type="checkbox" v-model="sdHasSeasonal" />
+              <input type="checkbox" v-model="detailsHasSeasonal" />
               <span>Jedes Jahr in diesem Zeitraum gesperrt</span>
             </label>
-            <div v-show="sdHasSeasonal" class="sd-sub-block">
+            <div v-show="detailsHasSeasonal" class="sd-sub-block">
               <p class="sd-field-hint">Format TT.MM — wiederholt sich automatisch jedes Jahr</p>
               <div class="sd-date-row">
                 <label class="sd-date-label">Von
-                  <input type="text" v-model="sdSeasonalFrom" class="sd-input" maxlength="5" placeholder="01.11" />
+                  <input type="text" v-model="detailsSeasonalFrom" class="sd-input" maxlength="5" placeholder="01.11" />
                 </label>
                 <label class="sd-date-label">Bis
-                  <input type="text" v-model="sdSeasonalTo" class="sd-input" maxlength="5" placeholder="31.03" />
+                  <input type="text" v-model="detailsSeasonalTo" class="sd-input" maxlength="5" placeholder="31.03" />
                 </label>
               </div>
             </div>
@@ -427,32 +489,32 @@
             <div class="sd-section-label"><i class="fas fa-cloud-rain" /> Regensperre</div>
             <div class="sd-radio-group">
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdRainPolicy" value="none" /><span>Keine Einschränkung</span>
+                <input type="radio" v-model="detailsRainPolicy" value="none" /><span>Keine Einschränkung</span>
               </label>
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdRainPolicy" value="during" /><span>Gesperrt bei Regen</span>
+                <input type="radio" v-model="detailsRainPolicy" value="during" /><span>Gesperrt bei Regen</span>
               </label>
               <label class="sd-radio-label sd-radio-inline">
-                <input type="radio" v-model="sdRainPolicy" value="after" />
+                <input type="radio" v-model="detailsRainPolicy" value="after" />
                 <span>Gesperrt</span>
-                <input type="number" v-model.number="sdRainHours" class="sd-inline-num" min="1" max="96"
-                  :disabled="sdRainPolicy !== 'after'" />
+                <input type="number" v-model.number="detailsRainHours" class="sd-inline-num" min="1" max="96"
+                  :disabled="detailsRainPolicy !== 'after'" />
                 <span>Stunden nach Regen</span>
               </label>
             </div>
-            <div v-show="sdRainPolicy === 'after'" class="sd-sub-block">
+            <div v-show="detailsRainPolicy === 'after'" class="sd-sub-block">
               <label class="sd-toggle-row">
-                <input type="checkbox" v-model="sdHasWindow" />
+                <input type="checkbox" v-model="detailsHasRainWindow" />
                 <span>Nur in bestimmtem Jahreszeitraum (z.B. Frühjahrsschmelze)</span>
               </label>
-              <div v-show="sdHasWindow" class="sd-window-dates">
+              <div v-show="detailsHasRainWindow" class="sd-window-dates">
                 <p class="sd-field-hint">Format TT.MM — z.B. 01.03 bis 15.04</p>
                 <div class="sd-date-row">
                   <label class="sd-date-label">Von
-                    <input type="text" v-model="sdRainFrom" class="sd-input" maxlength="5" placeholder="01.03" />
+                    <input type="text" v-model="detailsRainWindowFrom" class="sd-input" maxlength="5" placeholder="01.03" />
                   </label>
                   <label class="sd-date-label">Bis
-                    <input type="text" v-model="sdRainTo" class="sd-input" maxlength="5" placeholder="15.04" />
+                    <input type="text" v-model="detailsRainWindowTo" class="sd-input" maxlength="5" placeholder="15.04" />
                   </label>
                 </div>
               </div>
@@ -464,21 +526,21 @@
             <div class="sd-section-label"><i class="fas fa-moon" /> Nachtsperrung</div>
             <div class="sd-radio-group">
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdNightPolicy" value="none" /><span>Keine</span>
+                <input type="radio" v-model="detailsNightPolicy" value="none" /><span>Keine</span>
               </label>
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdNightPolicy" value="dusk_to_dawn" /><span>Gesperrt Sonnenuntergang bis Sonnenaufgang</span>
+                <input type="radio" v-model="detailsNightPolicy" value="dusk_to_dawn" /><span>Gesperrt Sonnenuntergang bis Sonnenaufgang</span>
               </label>
               <label class="sd-radio-label">
-                <input type="radio" v-model="sdNightPolicy" value="offset" /><span>Mit Versatz</span>
+                <input type="radio" v-model="detailsNightPolicy" value="offset" /><span>Mit Versatz</span>
               </label>
             </div>
-            <div v-show="sdNightPolicy === 'offset'" class="sd-sub-block sd-offset-grid">
+            <div v-show="detailsNightPolicy === 'offset'" class="sd-sub-block sd-offset-grid">
               <label class="sd-date-label">Minuten vor Sonnenuntergang
-                <input type="number" v-model.number="sdBeforeDusk" class="sd-input" min="0" max="180" />
+                <input type="number" v-model.number="detailsMinutesBeforeDusk" class="sd-input" min="0" max="180" />
               </label>
               <label class="sd-date-label">Minuten nach Sonnenaufgang
-                <input type="number" v-model.number="sdAfterDawn" class="sd-input" min="0" max="180" />
+                <input type="number" v-model.number="detailsMinutesAfterDawn" class="sd-input" min="0" max="180" />
               </label>
             </div>
           </div>
@@ -487,13 +549,13 @@
           <div class="sd-section">
             <div class="sd-section-label"><i class="fas fa-list-check" /> Nutzungsregeln</div>
             <div class="sd-rules-list">
-              <div v-for="(_, i) in sdRules" :key="i" class="sd-rule-item">
+              <div v-for="(_, i) in detailsRules" :key="i" class="sd-rule-item">
                 <i class="fas fa-grip-vertical sd-rule-grip" />
-                <textarea v-model="sdRules[i]" class="sd-rule-input" rows="1" placeholder="Regel eingeben…" />
-                <button class="sd-rule-del" @click="sdRules.splice(i, 1)"><i class="fas fa-times" /></button>
+                <textarea v-model="detailsRules[i]" class="sd-rule-input" rows="1" placeholder="Regel eingeben…" />
+                <button class="sd-rule-del" @click="detailsRules.splice(i, 1)"><i class="fas fa-times" /></button>
               </div>
             </div>
-            <button class="sd-add-rule-btn" @click="sdRules.push('')">
+            <button class="sd-add-rule-btn" @click="detailsRules.push('')">
               <i class="fas fa-plus" /> Regel hinzufügen
             </button>
           </div>
@@ -501,25 +563,25 @@
           <!-- Description -->
           <div class="sd-section">
             <div class="sd-section-label"><i class="fas fa-align-left" /> Beschreibung</div>
-            <textarea v-model="sdDescription" class="sd-textarea" maxlength="2000" placeholder="Allgemeine Infos zum Spot…" />
-            <div class="sd-char-hint">{{ sdDescription.length }}/2000</div>
+            <textarea v-model="detailsDescription" class="sd-textarea" maxlength="2000" placeholder="Allgemeine Infos zum Spot…" />
+            <div class="sd-char-hint">{{ detailsDescription.length }}/2000</div>
           </div>
 
           <!-- Invitation codes -->
           <div class="sd-section">
             <div class="sd-section-label"><i class="fas fa-key" /> Einladungscodes (Trailcrew)</div>
-            <div v-if="invNewCode" class="inv-new-code">
-              <span class="inv-code-chip">{{ invNewCode }}</span>
+            <div v-if="newInvitationCode" class="inv-new-code">
+              <span class="inv-code-chip">{{ newInvitationCode }}</span>
               <span class="inv-code-meta">Gültig 7 Tage · einmalig verwendbar</span>
             </div>
-            <div v-if="invCodes.length" class="inv-list">
-              <div v-for="c in invCodes" :key="c.code" class="inv-row" :class="{ 'inv-row--used': c.used_by }">
+            <div v-if="invitationCodes.length" class="inv-list">
+              <div v-for="c in invitationCodes" :key="c.code" class="inv-row" :class="{ 'inv-row--used': c.used_by }">
                 <span class="inv-code">{{ c.code }}</span>
                 <span class="inv-expires">bis {{ formatInvDate(c.expires_at) }}</span>
                 <span class="inv-badge">{{ c.used_by ? 'verwendet' : 'offen' }}</span>
               </div>
             </div>
-            <button class="sd-add-rule-btn" :disabled="invGenerating" @click="generateInvCode">
+            <button class="sd-add-rule-btn" :disabled="invitationCodeGenerating" @click="generateInvCode">
               <i class="fas fa-plus" /> Code erstellen
             </button>
           </div>
@@ -538,6 +600,22 @@
         <div ref="mapEl" id="sm-map" />
       </div>
     </div>
+
+  <!-- Elevation scrubber (segment editor only) -->
+  <div v-if="view === 'segment-editor'" class="sm-scrubber-panel">
+    <div class="sm-scrubber-hint">
+      <i class="fas fa-grip-lines-vertical" />
+      Ziehe den <strong>Start-</strong> und <strong>Endmarker</strong> im Höhenprofil, um den Abschnitt zu definieren
+    </div>
+    <canvas
+      ref="scrubberCanvas"
+      class="sm-scrubber-canvas"
+      @pointerdown="scrubberPointerDown"
+      @pointermove="scrubberPointerMove"
+      @pointerup="scrubberPointerUp"
+      @pointerleave="scrubberPointerLeave"
+    />
+  </div>
   </div>
 
   <!-- Help modal -->
@@ -552,26 +630,22 @@
           <div class="sm-help-step">
             <div class="sm-help-step-num">1</div>
             <div class="sm-help-step-content">
-              <h3>Trails hochladen</h3>
-              <p>Lade zuerst alle Trails des Spots als GPX-Dateien hoch. Klicke auf <strong>+ Trail</strong> und ziehe die Dateien in die Upload-Zone. Trails und Touren können dabei auch gemischt in einem Schritt importiert werden.</p>
-              <div class="sm-help-tip">
-                <i class="fas fa-lightbulb" />
-                <span>Hat ein Trail unterschiedliche Schwierigkeitsgrade? Teile die GPX-Datei in mehrere Abschnitte auf — jeder bekommt seine eigene Schwierigkeit (grün / blau / rot / schwarz).</span>
-              </div>
+              <h3>Tour hochladen</h3>
+              <p>Klicke auf <strong>+ Tour</strong> und lade die GPX-Aufnahme der gesamten Runde hoch. Im nächsten Schritt kannst du einzelne Trails interaktiv ausschneiden — jeder Abschnitt bekommt Name und Schwierigkeit. Am Ende optional als Tour speichern.</p>
             </div>
           </div>
           <div class="sm-help-step">
             <div class="sm-help-step-num">2</div>
             <div class="sm-help-step-content">
-              <h3>Touren hochladen</h3>
-              <p>Sind alle Trails angelegt, können die Touren importiert werden. Klicke auf <strong>+ Tour</strong>. Eine Tour beschreibt eine vollständige Runde und kann mehrere Trails umfassen.</p>
+              <h3>Trails einzeln hochladen</h3>
+              <p>Alternativ kannst du einzelne Trail-GPX-Dateien direkt im Bereich <strong>Trails</strong> hochladen — z. B. wenn du schon fertig geschnittene Dateien hast.</p>
             </div>
           </div>
           <div class="sm-help-step">
             <div class="sm-help-step-num">3</div>
             <div class="sm-help-step-content">
               <h3>Trails einer Tour zuordnen</h3>
-              <p>Beim Importieren einer Tour kannst du festlegen, welche Trails sie enthält. Automatisch erkannte Trails sind mit <span class="sm-badge-auto">auto</span> markiert — die Zuordnung sollte immer überprüft werden.</p>
+              <p>Beim Speichern einer Tour werden enthaltene Trails automatisch erkannt und mit <span class="sm-badge-auto">auto</span> markiert — die Zuordnung sollte immer überprüft werden.</p>
             </div>
           </div>
           <div class="sm-help-step">
@@ -628,24 +702,23 @@
 <script setup lang="ts">
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../src/spot_manager/Api'
 import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../src/spot_manager/Api'
-import { processGpx, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
+import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
+import type { MapViewLike } from '../../src/spot_manager/MapView'
 import type { ImbaColor } from '../../src/types/MtbTypes'
 import { listInvitationCodes, createInvitationCode } from '../../src/communication/invitations'
 import type { InvCode } from '../../src/communication/invitations'
+import { useSegmentEditor } from './useSegmentEditor'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor'
 
 interface PendingImport {
   key: string
   filename: string
-  kind: 'trail' | 'tour'
   processed: ProcessedGpx
   name: string
   difficulty: ImbaColor
   direction: string
-  trailNames: string[]
-  autoDetectedTrailNames: string[]
 }
 
 const authStore = useAuthStore()
@@ -720,9 +793,9 @@ async function executeEmbedDelete() {
 }
 
 // ── Invitation codes ─────────────────────────────────────────────────────────
-const invCodes = ref<InvCode[]>([])
-const invGenerating = ref(false)
-const invNewCode = ref<string | null>(null)
+const invitationCodes = ref<InvCode[]>([])
+const invitationCodeGenerating = ref(false)
+const newInvitationCode = ref<string | null>(null)
 
 function formatInvDate(iso: string) {
   return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
@@ -730,42 +803,41 @@ function formatInvDate(iso: string) {
 
 async function loadInvCodes() {
   try {
-    invCodes.value = await listInvitationCodes(spotId.value, await authStore.getToken())
+    invitationCodes.value = await listInvitationCodes(spotId.value, await authStore.getToken())
   } catch {
-    invCodes.value = []
+    invitationCodes.value = []
   }
 }
 
 async function generateInvCode() {
-  invGenerating.value = true
-  invNewCode.value = null
+  invitationCodeGenerating.value = true
+  newInvitationCode.value = null
   try {
     const [createdBy, token] = await Promise.all([authStore.getUserId(), authStore.getToken()])
-    invNewCode.value = await createInvitationCode(spotId.value, createdBy, token)
+    newInvitationCode.value = await createInvitationCode(spotId.value, createdBy, token)
     await loadInvCodes()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
   } finally {
-    invGenerating.value = false
+    invitationCodeGenerating.value = false
   }
 }
 
 // ── Edit form state ───────────────────────────────────────────────────────────
 const editingTrail = ref<GpxTrailRow | null>(null)
 const editingTour = ref<GpxTourRow | null>(null)
-const efName = ref('')
-const efDiff = ref<ImbaColor>('blue')
-const efDir = ref('one-way-down')
-const efDuration = ref(0)
-const efTrailNames = ref<string[]>([])
-const efTrailDesc = ref('')
+const editFormName = ref('')
+const editFormDifficulty = ref<ImbaColor>('blue')
+const editFormDirection = ref('one-way-down')
+const editFormDuration = ref(0)
+const editFormTrailNames = ref<string[]>([])
+const editFormTrailDescription = ref('')
 const editGpxInfo = ref('')
 const editNewGpx = ref<ProcessedGpx | null>(null)
 
 // ── Import state ──────────────────────────────────────────────────────────────
 const pending = ref<PendingImport[]>([])
 const isDragOver = ref(false)
-const importDefaultKind = ref<'trail' | 'tour'>('trail')
 
 // ── Delete confirm state ──────────────────────────────────────────────────────
 const deleteTarget = ref<{ id: string; name: string; kind: 'trail' | 'tour' } | null>(null)
@@ -773,43 +845,49 @@ const deleteTarget = ref<{ id: string; name: string; kind: 'trail' | 'tour' } | 
 // ── Map ───────────────────────────────────────────────────────────────────────
 const mapEl = ref<HTMLElement | null>(null)
 
-interface MapViewLike {
-  clear(): void
-  addTrailPolyline(t: GpxTrailRow): void
-  addTourPolyline(t: GpxTourRow): void
-  addPendingPolyline(key: string, gpxPoints: [number, number, number][], color?: string): void
-  updatePendingColor(key: string, color: string): void
-  removeLayer(id: string): void
-  highlight(id: string): void
-  resetHighlights(): void
-  fitTo(id: string): void
-  fitAll(): void
-  setClickHandler(fn: (id: string) => void): void
-}
-
 const mapView = shallowRef<MapViewLike | null>(null)
 
+// ── Segment editor ────────────────────────────────────────────────────────────
+const segmentEditor = useSegmentEditor({
+  mapView,
+  spotId,
+  trails,
+  tours,
+  getToken: () => authStore.getToken(),
+  onSegmentFileLoaded: () => { view.value = 'segment-editor' },
+  onSegmentsSaved:     () => { view.value = 'list' },
+})
+const {
+  segmentName, segmentDifficulty, segmentDirection,
+  pendingSegments, saveAsTour, tourName, tourDirection,
+  uploadDragOver, scrubberCanvas, busy: segmentBusy,
+  onFileDrop: onSegmentFileDrop,
+  onFileInput: onSegmentFileInput,
+  scrubberPointerDown, scrubberPointerMove, scrubberPointerUp, scrubberPointerLeave,
+  addSegment, removeSegment, applySegments,
+} = segmentEditor
+
 // ── Details editor state ──────────────────────────────────────────────────────
-const sdStatus = ref<SpotStatus>('open')
-const sdUseUntil = ref(false)
-const sdStatusUntil = ref('')
-const sdHint = ref('')
-const sdAffectedIds = ref<string[]>([])
-const sdAccessType = ref<AccessType>('free')
-const sdDonationUrl = ref('')
-const sdRules = ref<string[]>([])
-const sdDescription = ref('')
-const sdHasSeasonal = ref(false)
-const sdSeasonalFrom = ref('')
-const sdSeasonalTo = ref('')
-const sdRainPolicy = ref<RainPolicy>('none')
-const sdRainHours = ref(24)
-const sdHasWindow = ref(false)
-const sdRainFrom = ref('')
-const sdRainTo = ref('')
-const sdNightPolicy = ref<NightPolicy>('none')
-const sdBeforeDusk = ref(60)
-const sdAfterDawn = ref(60)
+const detailsStatus = ref<SpotStatus>('open')
+const detailsUseStatusUntil = ref(false)
+const detailsStatusUntil = ref('')
+const detailsStatusHint = ref('')
+const detailsAffectedTrailIds = ref<string[]>([])
+const detailsAccessType = ref<AccessType>('free')
+const detailsDonationUrl = ref('')
+const detailsRules = ref<string[]>([])
+const detailsDescription = ref('')
+const detailsHasSeasonal = ref(false)
+const detailsSeasonalFrom = ref('')
+const detailsSeasonalTo = ref('')
+const detailsRainPolicy = ref<RainPolicy>('none')
+const detailsRainHours = ref(24)
+const detailsHasRainWindow = ref(false)
+const detailsRainWindowFrom = ref('')
+const detailsRainWindowTo = ref('')
+const detailsNightPolicy = ref<NightPolicy>('none')
+const detailsMinutesBeforeDusk = ref(60)
+const detailsMinutesAfterDawn = ref(60)
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -891,7 +969,10 @@ async function openSpot(id: string, name: string) {
 }
 
 function goBack() {
-  if (view.value === 'embed-edit') {
+  if (view.value === 'segment-editor' || view.value === 'segment-upload') {
+    cancelSegmentEditor()
+    view.value = 'list'
+  } else if (view.value === 'embed-edit') {
     openEmbedList()
   } else if (view.value === 'embed-list') {
     view.value = 'selector'
@@ -907,10 +988,10 @@ function goBack() {
 function openEditTrail(id: string) {
   const t = trails.value.find(x => x.id === id)!
   editingTrail.value = t
-  efName.value = t.name
-  efDiff.value = t.difficulty as ImbaColor
-  efDir.value = t.direction
-  efTrailDesc.value = t.trail_description ?? ''
+  editFormName.value = t.name
+  editFormDifficulty.value = t.difficulty as ImbaColor
+  editFormDirection.value = t.direction
+  editFormTrailDescription.value = t.trail_description ?? ''
   editGpxInfo.value = ''
   editNewGpx.value = null
   mapView.value?.highlight(id)
@@ -921,10 +1002,10 @@ function openEditTrail(id: string) {
 function openEditTour(id: string) {
   const t = tours.value.find(x => x.id === id)!
   editingTour.value = t
-  efName.value = t.name
-  efDir.value = t.direction
-  efDuration.value = t.duration_minutes
-  efTrailNames.value = [...(t.trail_names ?? [])]
+  editFormName.value = t.name
+  editFormDirection.value = t.direction
+  editFormDuration.value = t.duration_minutes
+  editFormTrailNames.value = [...(t.trail_names ?? [])]
   editGpxInfo.value = ''
   editNewGpx.value = null
   mapView.value?.highlight(id)
@@ -954,7 +1035,7 @@ async function onEditGpx(e: Event) {
 
 async function saveTrailEdit() {
   const t = editingTrail.value!
-  const name = efName.value.trim()
+  const name = editFormName.value.trim()
   if (!name) { alert('Name darf nicht leer sein.'); return }
   busy.value = true
   try {
@@ -967,7 +1048,7 @@ async function saveTrailEdit() {
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
-    const updated = await upsertTrail({ id: t.id, spot_id: t.spot_id, name, difficulty: efDiff.value, direction: efDir.value, trail_description: efTrailDesc.value.trim() || '', gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
+    const updated = await upsertTrail({ id: t.id, spot_id: t.spot_id, name, difficulty: editFormDifficulty.value, direction: editFormDirection.value, trail_description: editFormTrailDescription.value.trim() || '', gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
     trails.value = trails.value.map(tr => tr.id === t.id ? updated : tr)
     mapView.value?.removeLayer('edit-preview')
     mapView.value?.addTrailPolyline(updated)
@@ -981,7 +1062,7 @@ async function saveTrailEdit() {
 
 async function saveTourEdit() {
   const t = editingTour.value!
-  const name = efName.value.trim()
+  const name = editFormName.value.trim()
   if (!name) { alert('Name darf nicht leer sein.'); return }
   busy.value = true
   try {
@@ -994,7 +1075,7 @@ async function saveTourEdit() {
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
-    const updated = await upsertTour({ id: t.id, spot_id: t.spot_id, name, direction: efDir.value, duration_minutes: efDuration.value, trail_names: efTrailNames.value, gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
+    const updated = await upsertTour({ id: t.id, spot_id: t.spot_id, name, direction: editFormDirection.value, duration_minutes: editFormDuration.value, trail_names: editFormTrailNames.value, gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
     tours.value = tours.value.map(to => to.id === t.id ? updated : to)
     mapView.value?.removeLayer('edit-preview')
     mapView.value?.addTourPolyline(updated)
@@ -1049,8 +1130,7 @@ async function dropTour(dropIdx: number) {
 }
 
 // ── Import ─────────────────────────────────────────────────────────────────────
-function openImport(kind: 'trail' | 'tour') {
-  importDefaultKind.value = kind
+function openImport() {
   pending.value = []
   view.value = 'import'
 }
@@ -1080,33 +1160,15 @@ async function handleFiles(files: File[]) {
     if (!processed) continue
 
     const key = `pending-${crypto.randomUUID()}`
-    let kind = importDefaultKind.value
-    if (file.name.toLowerCase().includes('tour') || file.name.toLowerCase().includes('runde')) kind = 'tour'
-
-    let autoDetectedTrailNames: string[] = []
-    if (kind === 'tour' && trails.value.length > 0) {
-      autoDetectedTrailNames = matchTrailsInTour(processed.rawPoints, trails.value.map(t => ({ name: t.name, rawPoints: [] })))
-    }
-
     pending.value.push({
-      key, filename: file.name, kind, processed,
+      key, filename: file.name, processed,
       name: processed.suggestedName || file.name.replace(/\.gpx$/i, ''),
       difficulty: 'blue',
-      direction: kind === 'trail' ? 'one-way-down' : 'cw',
-      trailNames: [...autoDetectedTrailNames],
-      autoDetectedTrailNames,
+      direction: 'one-way-down',
     })
-    const color = kind === 'tour' ? '#333' : DIFF_COLOR['blue']
-    mapView.value?.addPendingPolyline(key, processed.gpxPoints, color)
+    mapView.value?.addPendingPolyline(key, processed.gpxPoints, DIFF_COLOR['blue'])
   }
   if (pending.value.length > 0) mapView.value?.fitAll()
-}
-
-function setKind(i: number, kind: 'trail' | 'tour') {
-  pending.value[i].kind = kind
-  pending.value[i].direction = kind === 'trail' ? 'one-way-down' : 'cw'
-  const color = kind === 'tour' ? '#333' : DIFF_COLOR[pending.value[i].difficulty]
-  mapView.value?.updatePendingColor(pending.value[i].key, color)
 }
 
 function updatePendingColor(i: number) {
@@ -1127,25 +1189,14 @@ async function applyImports() {
   for (const p of pending.value) {
     try {
       const name = p.name.trim() || p.filename.replace(/\.gpx$/i, '')
-      const gpx_url = await uploadGpx(spotId.value, `${p.kind}s` as 'trails' | 'tours', `${name}.gpx`, p.processed.gpxContent, jwt)
-      if (p.kind === 'trail') {
-        const newTrail = await upsertTrail({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
-          distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-          elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
-          sort_order: trails.value.length }, jwt)
-        trails.value.push(newTrail)
-        mapView.value?.removeLayer(p.key)
-        mapView.value?.addTrailPolyline(newTrail)
-      } else {
-        const newTour = await upsertTour({ spot_id: spotId.value, name, direction: p.direction,
-          duration_minutes: p.processed.duration_minutes ?? 0, trail_names: p.trailNames,
-          distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-          elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
-          sort_order: tours.value.length }, jwt)
-        tours.value.push(newTour)
-        mapView.value?.removeLayer(p.key)
-        mapView.value?.addTourPolyline(newTour)
-      }
+      const gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, p.processed.gpxContent, jwt)
+      const newTrail = await upsertTrail({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
+        distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
+        elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
+        sort_order: trails.value.length }, jwt)
+      trails.value.push(newTrail)
+      mapView.value?.removeLayer(p.key)
+      mapView.value?.addTrailPolyline(newTrail)
     } catch (e: any) {
       errors.push(`${p.name}: ${e.message}`)
     }
@@ -1190,30 +1241,50 @@ async function executeDelete() {
   }
 }
 
+// ── Segment editor ────────────────────────────────────────────────────────────
+
+function openSegmentUpload() {
+  segmentEditor.startUpload()
+  view.value = 'segment-upload'
+}
+
+function cancelSegmentEditor() {
+  segmentEditor.cancel()
+}
+
+watch(view, async (newView, prevView) => {
+  await nextTick()
+  if (newView === 'segment-editor') {
+    segmentEditor.onEnterEditorView()
+  } else if (prevView === 'segment-editor') {
+    segmentEditor.onLeaveEditorView()
+  }
+})
+
 // ── Details editor ────────────────────────────────────────────────────────────
 function openDetailsEditor() {
   const d = spotDetails.value
-  sdStatus.value = d?.status ?? 'open'
-  sdUseUntil.value = !!d?.status_until
-  sdStatusUntil.value = d?.status_until ?? ''
-  sdHint.value = d?.status_hint ?? ''
-  sdAffectedIds.value = [...(d?.affected_trail_ids ?? [])]
-  sdAccessType.value = d?.access_type ?? 'free'
-  sdDonationUrl.value = d?.donation_url ?? ''
-  sdRules.value = [...(d?.rules ?? [])]
-  sdDescription.value = d?.trail_description ?? ''
-  sdHasSeasonal.value = !!(d?.seasonal_from || d?.seasonal_to)
-  sdSeasonalFrom.value = mmddToDdmm(d?.seasonal_from)
-  sdSeasonalTo.value = mmddToDdmm(d?.seasonal_to)
-  sdRainPolicy.value = d?.rain_policy ?? 'none'
-  sdRainHours.value = d?.rain_closed_hours ?? 24
-  sdHasWindow.value = !!(d?.rain_window_from || d?.rain_window_to)
-  sdRainFrom.value = mmddToDdmm(d?.rain_window_from)
-  sdRainTo.value = mmddToDdmm(d?.rain_window_to)
-  sdNightPolicy.value = d?.night_policy ?? 'none'
-  sdBeforeDusk.value = d?.night_before_dusk_min ?? 60
-  sdAfterDawn.value = d?.night_after_dawn_min ?? 60
-  invNewCode.value = null
+  detailsStatus.value = d?.status ?? 'open'
+  detailsUseStatusUntil.value = !!d?.status_until
+  detailsStatusUntil.value = d?.status_until ?? ''
+  detailsStatusHint.value = d?.status_hint ?? ''
+  detailsAffectedTrailIds.value = [...(d?.affected_trail_ids ?? [])]
+  detailsAccessType.value = d?.access_type ?? 'free'
+  detailsDonationUrl.value = d?.donation_url ?? ''
+  detailsRules.value = [...(d?.rules ?? [])]
+  detailsDescription.value = d?.trail_description ?? ''
+  detailsHasSeasonal.value = !!(d?.seasonal_from || d?.seasonal_to)
+  detailsSeasonalFrom.value = mmddToDdmm(d?.seasonal_from)
+  detailsSeasonalTo.value = mmddToDdmm(d?.seasonal_to)
+  detailsRainPolicy.value = d?.rain_policy ?? 'none'
+  detailsRainHours.value = d?.rain_closed_hours ?? 24
+  detailsHasRainWindow.value = !!(d?.rain_window_from || d?.rain_window_to)
+  detailsRainWindowFrom.value = mmddToDdmm(d?.rain_window_from)
+  detailsRainWindowTo.value = mmddToDdmm(d?.rain_window_to)
+  detailsNightPolicy.value = d?.night_policy ?? 'none'
+  detailsMinutesBeforeDusk.value = d?.night_before_dusk_min ?? 60
+  detailsMinutesAfterDawn.value = d?.night_after_dawn_min ?? 60
+  newInvitationCode.value = null
   loadInvCodes()
   view.value = 'details'
 }
@@ -1223,23 +1294,23 @@ async function saveDetails() {
   try {
     const row: SpotDetailsRow = {
       trail_id: spotId.value,
-      status: sdStatus.value,
-      status_until: sdStatus.value !== 'open' && sdUseUntil.value ? sdStatusUntil.value || undefined : undefined,
-      status_hint: sdHint.value.trim(),
-      affected_trail_ids: sdStatus.value === 'limited' ? sdAffectedIds.value : [],
-      access_type: sdAccessType.value,
-      donation_url: sdAccessType.value === 'free' ? sdDonationUrl.value.trim() || undefined : undefined,
-      rules: sdRules.value.map(r => r.trim()).filter(Boolean),
-      trail_description: sdDescription.value.trim(),
-      seasonal_from: sdHasSeasonal.value ? ddmmToMmdd(sdSeasonalFrom.value) : undefined,
-      seasonal_to: sdHasSeasonal.value ? ddmmToMmdd(sdSeasonalTo.value) : undefined,
-      rain_policy: sdRainPolicy.value,
-      rain_closed_hours: sdRainPolicy.value === 'after' ? sdRainHours.value : undefined,
-      rain_window_from: sdRainPolicy.value === 'after' && sdHasWindow.value ? ddmmToMmdd(sdRainFrom.value) : undefined,
-      rain_window_to: sdRainPolicy.value === 'after' && sdHasWindow.value ? ddmmToMmdd(sdRainTo.value) : undefined,
-      night_policy: sdNightPolicy.value,
-      night_before_dusk_min: sdNightPolicy.value === 'offset' ? sdBeforeDusk.value : undefined,
-      night_after_dawn_min: sdNightPolicy.value === 'offset' ? sdAfterDawn.value : undefined,
+      status: detailsStatus.value,
+      status_until: detailsStatus.value !== 'open' && detailsUseStatusUntil.value ? detailsStatusUntil.value || undefined : undefined,
+      status_hint: detailsStatusHint.value.trim(),
+      affected_trail_ids: detailsStatus.value === 'limited' ? detailsAffectedTrailIds.value : [],
+      access_type: detailsAccessType.value,
+      donation_url: detailsAccessType.value === 'free' ? detailsDonationUrl.value.trim() || undefined : undefined,
+      rules: detailsRules.value.map(r => r.trim()).filter(Boolean),
+      trail_description: detailsDescription.value.trim(),
+      seasonal_from: detailsHasSeasonal.value ? ddmmToMmdd(detailsSeasonalFrom.value) : undefined,
+      seasonal_to: detailsHasSeasonal.value ? ddmmToMmdd(detailsSeasonalTo.value) : undefined,
+      rain_policy: detailsRainPolicy.value,
+      rain_closed_hours: detailsRainPolicy.value === 'after' ? detailsRainHours.value : undefined,
+      rain_window_from: detailsRainPolicy.value === 'after' && detailsHasRainWindow.value ? ddmmToMmdd(detailsRainWindowFrom.value) : undefined,
+      rain_window_to: detailsRainPolicy.value === 'after' && detailsHasRainWindow.value ? ddmmToMmdd(detailsRainWindowTo.value) : undefined,
+      night_policy: detailsNightPolicy.value,
+      night_before_dusk_min: detailsNightPolicy.value === 'offset' ? detailsMinutesBeforeDusk.value : undefined,
+      night_after_dawn_min: detailsNightPolicy.value === 'offset' ? detailsMinutesAfterDawn.value : undefined,
     }
     const jwt = await authStore.getToken()
     spotDetails.value = await upsertSpotDetails(row, jwt)
@@ -1534,6 +1605,9 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   background: #f7f8fa; border-left: 3px solid #c0d8f0;
   margin: 0 0 8px; padding: 6px 10px; border-radius: 0 5px 5px 0;
 }
+.sm-hint-inline {
+  font-size: 11px; color: #999; font-weight: 400;
+}
 
 /* ── Details editor ───────────────────────────────────────────────── */
 .sd-editor { display: flex; flex-direction: column; gap: 0; padding: 14px 14px 100px; }
@@ -1686,6 +1760,64 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   background: #e0f0e0; color: #2d6a1f;
 }
 .inv-row--used .inv-badge { background: #eee; color: #999; }
+
+/* ── Segment editor ──────────────────────────────────────────────── */
+.sm-header-actions { display: flex; gap: 6px; align-items: center; }
+.sm-btn-split { background: #f0f6ff; color: #0077cc; border: 1px solid #b8d8f8; }
+.sm-btn-split:hover { background: #daeeff; border-color: #0077cc; }
+
+.sm-seg-editor {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 14px 14px 80px; overflow-y: auto;
+}
+.sm-seg-form { display: flex; flex-direction: column; gap: 10px; }
+.sm-seg-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #555; }
+.sm-seg-form input[type="text"],
+.sm-seg-form select {
+  border: 1px solid #d0d0d0; border-radius: 6px; padding: 8px 10px;
+  font-size: 13px; color: #333; background: #fafafa; font-family: inherit;
+}
+.sm-seg-form input:focus, .sm-seg-form select:focus { outline: none; border-color: #0077cc; background: #fff; }
+.sm-seg-add-btn { align-self: flex-end; }
+
+.sm-seg-pending { display: flex; flex-direction: column; gap: 4px; }
+.sm-seg-pending-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #888; padding-bottom: 4px; border-bottom: 1px solid #eee; }
+.sm-seg-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border: 1px solid #ececec; border-radius: 7px; background: #fafafa; }
+.sm-seg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sm-seg-info { flex: 1; min-width: 0; }
+.sm-seg-info strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sm-seg-info span { font-size: 11px; color: #888; }
+
+.sm-seg-tour-section { padding: 10px 0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
+.sm-seg-tour-fields { display: flex; flex-direction: column; gap: 8px; padding-left: 4px; }
+.sm-seg-tour-fields label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #555; }
+.sm-seg-tour-fields input[type="text"],
+.sm-seg-tour-fields select {
+  border: 1px solid #d0d0d0; border-radius: 6px; padding: 8px 10px;
+  font-size: 13px; color: #333; background: #fafafa; font-family: inherit;
+}
+
+.sm-seg-actions {
+  position: sticky; bottom: 0; background: #fff; border-top: 1px solid #eee;
+  padding: 10px 0 2px; display: flex; gap: 10px; justify-content: flex-end; margin-top: 4px;
+}
+
+/* ── Scrubber panel ───────────────────────────────────────────────── */
+.sm-scrubber-panel {
+  height: 192px; flex-shrink: 0;
+  background: linear-gradient(180deg, #1c2030 0%, #141824 100%);
+  border-top: 2px solid #2e7d32; position: relative; box-shadow: 0 -4px 16px rgba(0,0,0,0.35);
+  display: flex; flex-direction: column;
+}
+.sm-scrubber-hint {
+  font-size: 11px; color: rgba(180,200,220,0.75); text-align: center;
+  padding: 5px 12px 2px; flex-shrink: 0; letter-spacing: 0.01em;
+}
+.sm-scrubber-hint i { margin-right: 4px; opacity: 0.6; }
+.sm-scrubber-canvas {
+  flex: 1; min-height: 0; width: 100%; display: block; cursor: ew-resize; touch-action: none;
+  -webkit-user-select: none; user-select: none;
+}
 
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 700px) {

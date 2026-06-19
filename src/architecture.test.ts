@@ -140,6 +140,30 @@ describe('Communication layer has no UI concerns', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Segment editor — state stays inside SpotManagerApp.vue
+// ─────────────────────────────────────────────────────────────────────────────
+describe('Segment editor (architectural isolation)', () => {
+  test('SpotManagerApp.vue does not import from src/map/ directly', () => {
+    const src = read('components/spotmanager/SpotManagerApp.vue')
+    expect(src, 'SpotManagerApp.vue must not import from src/map/ directly')
+      .not.toMatch(/from\s+['"][^'"]*src\/map\//)
+  })
+
+  test('GpxProcessor exports processSegment', () => {
+    const src = read('src/spot_manager/GpxProcessor.ts')
+    expect(src).toContain('export function processSegment')
+  })
+
+  test('MapView exports showSourceTrack, updateLiveSlice, clearLiveSlice, clearSourceTrack', () => {
+    const src = read('src/spot_manager/MapView.ts')
+    expect(src).toContain('showSourceTrack(')
+    expect(src).toContain('updateLiveSlice(')
+    expect(src).toContain('clearLiveSlice(')
+    expect(src).toContain('clearSourceTrack(')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Trail tooltip utility — pure, no browser/store/composable deps
 // ─────────────────────────────────────────────────────────────────────────────
 describe('trailTooltip utility (pure layer)', () => {

@@ -1,8 +1,29 @@
 import L from 'leaflet';
 import { GpxTrailRow, GpxTourRow } from './Api';
 import { DIFF_COLOR } from './GpxProcessor';
+import type { GpxPoint } from './GpxProcessor';
 import { elevationSVG, bindElevationHover } from '../map/spot_panel/elevationSvg';
 import { ElevationPoint } from '../types/MtbTypes';
+
+export interface MapViewLike {
+  clear(): void;
+  addTrailPolyline(t: GpxTrailRow): void;
+  addTourPolyline(t: GpxTourRow): void;
+  addPendingPolyline(key: string, gpxPoints: [number, number, number][], color?: string): void;
+  updatePendingColor(key: string, color: string): void;
+  removeLayer(id: string): void;
+  highlight(id: string): void;
+  resetHighlights(): void;
+  fitTo(id: string): void;
+  fitAll(): void;
+  setClickHandler(fn: (id: string) => void): void;
+  invalidate(): void;
+  showSourceTrack(points: GpxPoint[]): void;
+  clearSourceTrack(): void;
+  updateLiveSlice(points: GpxPoint[], color: string): void;
+  clearLiveSlice(): void;
+  addSegmentPolyline(key: string, points: GpxPoint[], color: string): void;
+}
 
 const PENDING_COLOR = '#999';
 
@@ -11,6 +32,8 @@ export class MapView {
   private layers = new Map<string, L.Polyline>();
   private hoverMarker: L.CircleMarker | null = null;
   private onPolylineClick?: (id: string) => void;
+  private sourceTrack: L.Polyline | null = null;
+  private liveSlice: L.Polyline | null = null;
 
   constructor(container: HTMLElement) {
     this.map = L.map(container, { zoomControl: true });
@@ -105,10 +128,45 @@ export class MapView {
     if (this.hoverMarker) { this.map.removeLayer(this.hoverMarker); this.hoverMarker = null; }
   }
 
+  showSourceTrack(points: GpxPoint[]) {
+    if (this.sourceTrack) { this.map.removeLayer(this.sourceTrack); }
+    const latlngs = points.map(p => [p.lat, p.lng] as [number, number]);
+    this.sourceTrack = L.polyline(latlngs, { color: '#888', weight: 3, opacity: 0.6, interactive: false }).addTo(this.map);
+    this.map.fitBounds(this.sourceTrack.getBounds(), { padding: [40, 40], maxZoom: 15 });
+  }
+
+  clearSourceTrack() {
+    if (this.sourceTrack) { this.map.removeLayer(this.sourceTrack); this.sourceTrack = null; }
+  }
+
+  updateLiveSlice(points: GpxPoint[], color: string) {
+    const latlngs = points.map(p => [p.lat, p.lng] as [number, number]);
+    if (!this.liveSlice) {
+      this.liveSlice = L.polyline(latlngs, { color, weight: 4, opacity: 0.9, interactive: false }).addTo(this.map);
+    } else {
+      this.liveSlice.setLatLngs(latlngs);
+      this.liveSlice.setStyle({ color });
+    }
+    this.liveSlice.bringToFront();
+  }
+
+  clearLiveSlice() {
+    if (this.liveSlice) { this.map.removeLayer(this.liveSlice); this.liveSlice = null; }
+  }
+
+  addSegmentPolyline(key: string, points: GpxPoint[], color: string) {
+    this.removeLayer(key);
+    const latlngs = points.map(p => [p.lat, p.lng] as [number, number]);
+    const pl = L.polyline(latlngs, { color, weight: 3.5, opacity: 0.9 }).addTo(this.map);
+    this.layers.set(key, pl);
+  }
+
   clear() {
     this.layers.forEach(pl => this.map.removeLayer(pl));
     this.layers.clear();
     this.removeHoverMarker();
+    this.clearSourceTrack();
+    this.clearLiveSlice();
   }
 
   invalidate() {

@@ -175,6 +175,56 @@ export function matchTrailsInTour(
   }).map(m => m.name);
 }
 
+function buildGpxXml(points: GpxPoint[]): string {
+  const trkpts = points.map(p => {
+    const time = p.time ? `\n        <time>${p.time.toISOString()}</time>` : '';
+    return `      <trkpt lat="${p.lat}" lon="${p.lng}"><ele>${p.alt}</ele>${time}</trkpt>`;
+  }).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="TrailRadar">
+  <trk>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+}
+
+export interface SegmentResult {
+  rawPoints: GpxPoint[];
+  gpxPoints: [number, number, number][];
+  elevationProfile: ElevationPoint[];
+  distance_km: number;
+  elevation_gain: number;
+  elevation_loss: number;
+  duration_minutes: number | null;
+  rawCount: number;
+  thinnedCount: number;
+  gpxContent: string;
+}
+
+export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number): SegmentResult | null {
+  const slice = rawPoints.slice(startIdx, endIdx + 1);
+  if (slice.length === 0) return null;
+  const smoothed = smoothElevation(slice);
+  const thinned  = rdp(smoothed, EPSILON_M);
+  const stats    = computeStats(thinned);
+  const gpxPoints = thinned.map(p => [
+    Math.round(p.lat * 1e6) / 1e6,
+    Math.round(p.lng * 1e6) / 1e6,
+    p.alt,
+  ] as [number, number, number]);
+  return {
+    rawPoints:        slice,
+    gpxPoints,
+    elevationProfile: toElevationProfile(gpxPoints),
+    ...stats,
+    rawCount:     slice.length,
+    thinnedCount: thinned.length,
+    gpxContent:   buildGpxXml(thinned),
+  };
+}
+
 export function processGpx(content: string): ProcessedGpx | null {
   const { name, points } = parseGpx(content);
   if (points.length === 0) return null;
