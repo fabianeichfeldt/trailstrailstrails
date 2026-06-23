@@ -95,9 +95,10 @@ describe('usePwaInstall', () => {
     unmount()
   })
 
-  it('dismissed >14 days ago — show becomes true after 8s', async () => {
+  it('dismissed >14 days ago — show becomes true after 8s when prompt is available', async () => {
     const fifteenDaysAgo = Date.now() - 15 * 24 * 60 * 60 * 1000
     mockLocalStorage(fifteenDaysAgo)
+    setDeferredInstallPrompt({ prompt: vi.fn().mockResolvedValue(undefined), userChoice: Promise.resolve({ outcome: 'accepted' }) } as any)
     const usePwaInstall = await getPwaInstall()
     const { result, unmount } = withSetup(() => usePwaInstall())
 
@@ -107,22 +108,24 @@ describe('usePwaInstall', () => {
     unmount()
   })
 
-  it('fresh Android visit — beforeinstallprompt stashed; show true after 8s', async () => {
+  it('fresh Android visit — prompt stashed by plugin; show true after 8s', async () => {
+    setDeferredInstallPrompt({ prompt: vi.fn().mockResolvedValue(undefined), userChoice: Promise.resolve({ outcome: 'accepted' }) } as any)
     const usePwaInstall = await getPwaInstall()
     const { result, unmount } = withSetup(() => usePwaInstall())
-
-    // Simulate the beforeinstallprompt event
-    const fakePrompt = vi.fn().mockResolvedValue(undefined)
-    const fakeEvent = Object.assign(new Event('beforeinstallprompt'), {
-      prompt: fakePrompt,
-      userChoice: Promise.resolve({ outcome: 'accepted' }),
-      preventDefault: vi.fn(),
-    })
-    window.dispatchEvent(fakeEvent)
 
     expect(result.show.value).toBe(false)
     vi.advanceTimersByTime(8_000)
     expect(result.show.value).toBe(true)
+    unmount()
+  })
+
+  it('no install prompt and not iOS — banner suppressed (PWA already installed)', async () => {
+    // deferredInstallPrompt stays null (set in beforeEach); non-iOS UA from beforeEach
+    const usePwaInstall = await getPwaInstall()
+    const { result, unmount } = withSetup(() => usePwaInstall())
+
+    vi.advanceTimersByTime(10_000)
+    expect(result.show.value).toBe(false)
     unmount()
   })
 
@@ -151,6 +154,7 @@ describe('usePwaInstall', () => {
     const store = mockLocalStorage()
     const usePwaInstall = await getPwaInstall()
     const { result, unmount } = withSetup(() => usePwaInstall())
+    setDeferredInstallPrompt({ prompt: vi.fn().mockResolvedValue(undefined), userChoice: Promise.resolve({ outcome: 'accepted' }) } as any)
 
     vi.advanceTimersByTime(8_000)
     expect(result.show.value).toBe(true)

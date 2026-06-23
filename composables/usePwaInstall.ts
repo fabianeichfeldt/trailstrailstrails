@@ -22,8 +22,16 @@ export function usePwaInstall() {
   // 3. iOS detection
   isIos.value = /iphone|ipad|ipod/i.test(navigator.userAgent)
 
-  // 4. Dwell timer — show banner after 8 seconds
-  const timerId = setTimeout(() => { show.value = true }, 8000)
+  // 4. Dwell timer — show banner after 8 seconds.
+  // Non-iOS: only show when the browser confirmed installability via beforeinstallprompt.
+  //          Chrome does NOT fire this event when the PWA is already installed,
+  //          so checking deferredInstallPrompt is the correct "not yet installed" guard.
+  // iOS:     always show — Safari never fires beforeinstallprompt; instructions are always relevant.
+  const timerId = setTimeout(() => {
+    if (isIos.value || deferredInstallPrompt !== null) {
+      show.value = true
+    }
+  }, 8000)
   onUnmounted(() => clearTimeout(timerId))
 
   // 5. install() — triggers the native prompt captured by the plugin at app start
