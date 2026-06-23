@@ -35,6 +35,14 @@ export default defineNuxtConfig({
       meta: [
         { name: 'theme-color', content: '#1b4332' },
       ],
+      script: [
+        {
+          // Capture beforeinstallprompt before any framework JS runs.
+          // The Nuxt plugin reads window.__pwaPrompt once the app initialises.
+          innerHTML: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;});`,
+          type: 'text/javascript',
+        },
+      ],
     },
   },
 
