@@ -11,3 +11,6 @@ test-results/
 # Nuxt
 .nuxt/
 .output/
+
+# Brainstorm mockups
+.superpowers/

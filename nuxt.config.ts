@@ -125,13 +125,9 @@ export default defineNuxtConfig({
         },
       ],
     },
-    client: {
-      installPrompt: true,
-    },
     devOptions: {
       enabled: false,
     },
-    selfDestroying: true,
   },
 
   supabase: {

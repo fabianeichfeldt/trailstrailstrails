@@ -1,6 +1,9 @@
 <template>
   <div class="map-layout">
     <slot />
+    <ClientOnly>
+      <PwaBanner />
+    </ClientOnly>
   </div>
 </template>
 
