@@ -103,10 +103,13 @@ export default defineNuxtConfig({
       start_url: '/',
       lang: 'de',
       categories: ['sports', 'navigation', 'lifestyle'],
+      screenshots: [
+        { src: '/assets/hero-desktop.webp', sizes: '1920x1440', type: 'image/webp', form_factor: 'wide', label: 'Trailradar Kartenansicht' },
+      ],
       icons: [
         { src: '/assets/icon-192.png', sizes: '192x192', type: 'image/png' },
-        { src: '/assets/icon-512.png', sizes: '512x512', type: 'image/png' },
-        { src: '/assets/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        { src: '/assets/icon-512.png', sizes: '1024x1024', type: 'image/png' },
+        { src: '/assets/icon-512.png', sizes: '1024x1024', type: 'image/png', purpose: 'maskable' },
       ],
     },
     workbox: {
