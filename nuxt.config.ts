@@ -29,6 +29,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       link: [
+        { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'icon', type: 'image/png', href: '/assets/icon-192.png' },
         { rel: 'apple-touch-icon', href: '/assets/apple-touch-icon.png' },
       ],
