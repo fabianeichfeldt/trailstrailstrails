@@ -17,7 +17,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'map' })
 
-useSeoMeta({ title: 'Spot Manager – Trailradar' })
+useSeoMeta({ title: 'Spot Manager' })
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()

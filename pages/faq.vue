@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'FAQ – MTB-Trails finden & Vorbereitung deiner Tour | Trailradar',
+  title: 'FAQ – MTB-Trails finden & Vorbereitung deiner Tour',
   description: 'Häufige Fragen zu offiziell gebauten MTB-Trails sowie Tipps zur Vorbereitung deiner Mountainbike-Tour.',
   ogTitle: 'FAQ – MTB-Trails & Vorbereitung deiner Tour | Trailradar',
   ogDescription: 'Alles über offiziell gebaute MTB-Trails und die wichtigste Ausrüstung für deine nächste Tour.',

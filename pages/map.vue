@@ -47,7 +47,7 @@
 definePageMeta({ layout: 'map' })
 
 useSeoMeta({
-  title: 'Karte – Trailradar',
+  title: 'Karte',
   description: 'Interaktive Karte aller offiziellen Mountainbike-Trails, Bikeparks und Pumptracks in Deutschland.',
   ogUrl: 'https://trailradar.org/map',
   ogSiteName: 'Trailradar.org',

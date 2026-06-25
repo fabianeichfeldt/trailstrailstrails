@@ -304,6 +304,7 @@ useSeoMeta({
   ogImage: 'https://trailradar.org/assets/spotchecks/fuerth.webp',
 })
 useHead({
+  titleTemplate: '%s',
   link: [{ rel: 'canonical', href: 'https://trailradar.org/' }],
 })
 </script>

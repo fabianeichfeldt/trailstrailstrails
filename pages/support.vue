@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Support Trailradar – Aus der Community, für die Community',
+  title: 'Support – Aus der Community, für die Community',
   description: 'Unterstütze Trailradar – durch neue Trail-Einträge, Feedback, Teilen oder eine kleine Spende.',
   ogUrl: 'https://trailradar.org/support',
   ogSiteName: 'Trailradar.org',

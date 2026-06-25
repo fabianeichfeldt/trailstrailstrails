@@ -29,13 +29,18 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'de' },
+      titleTemplate: '%s | Trailradar',
       link: [
         { rel: 'manifest', href: '/manifest.webmanifest' },
         { rel: 'icon', type: 'image/png', href: '/assets/icon-192.png' },
         { rel: 'apple-touch-icon', href: '/assets/apple-touch-icon.png' },
       ],
       meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'theme-color', content: '#1b4332' },
+        { property: 'og:image', content: 'https://trailradar.org/assets/hero-desktop.webp' },
+        { property: 'og:type', content: 'website' },
       ],
       script: [
         {

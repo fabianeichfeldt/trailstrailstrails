@@ -67,7 +67,7 @@
 definePageMeta({ layout: false })
 
 useSeoMeta({
-  title: 'Neues Passwort – Trailradar',
+  title: 'Neues Passwort',
   description: 'Neues Passwort erstellen für trailradar.org',
 })
 useHead({

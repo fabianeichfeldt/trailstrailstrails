@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Trailgespräche – TrailRadar',
+  title: 'Trailgespräche',
   description: 'Meinungen, Vergleiche und Einblicke aus der MTB-Community in Deutschland.',
   ogUrl: 'https://trailradar.org/articles',
   ogSiteName: 'Trailradar.org',

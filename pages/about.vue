@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Über Trailradar – Aus der Community, für die Community',
+  title: 'Über uns – Aus der Community, für die Community',
   description: 'Warum Trailradar existiert: persönliche MTB-Geschichte, Community-Gedanke und legale Trails sichtbar machen.',
   ogUrl: 'https://trailradar.org/about',
   ogSiteName: 'Trailradar.org',

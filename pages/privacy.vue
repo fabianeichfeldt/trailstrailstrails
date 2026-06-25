@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Datenschutz & Impressum | Trailradar',
+  title: 'Datenschutz & Impressum',
   ogTitle: 'Datenschutz & Impressum | Trailradar',
   ogType: 'article',
   ogUrl: 'https://trailradar.org/privacy',

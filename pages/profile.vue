@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Mein Profil | Trailradar',
+  title: 'Mein Profil',
   robots: 'noindex',
 })
 

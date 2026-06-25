@@ -69,7 +69,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Kooperationen mit Trailradar – Sichtbarkeit in der MTB-Community',
+  title: 'Kooperationen – Sichtbarkeit in der MTB-Community',
   description: 'Kooperation mit Trailradar: Erreiche Mountainbiker direkt auf der Karte.',
   ogUrl: 'https://trailradar.org/business',
   ogSiteName: 'Trailradar.org',

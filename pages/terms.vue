@@ -73,7 +73,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Nutzungsbedingungen | Trailradar',
+  title: 'Nutzungsbedingungen',
   ogUrl: 'https://trailradar.org/terms',
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',

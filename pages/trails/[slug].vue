@@ -200,15 +200,17 @@ const accessLabel = computed(() => {
 })
 
 const pageTitle = isRegion
-  ? `Offizielle MTB Trails ${region!.pronom} | Trailradar`
+  ? `Offizielle MTB Trails ${region!.pronom}`
   : trail.value
-    ? `${trail.value.name} – Trailradar`
-    : 'Trail – Trailradar'
+    ? trail.value.name
+    : 'Trail'
 
 const pageDescription = isRegion
   ? `Finde offizielle Mountainbike Trails ${region!.pronom}. Community-basiert und aktuell.`
   : trail.value?.trail_description
     || (trail.value ? `${trail.value.name} – offizieller MTB-Trail auf Trailradar.` : '')
+
+const ogImage = trail.value?.photos?.[0]?.url ?? 'https://trailradar.org/assets/hero-desktop.webp'
 
 useSeoMeta({
   title: pageTitle,
@@ -216,25 +218,29 @@ useSeoMeta({
   ogUrl: `https://trailradar.org/trails/${slug}/`,
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
+  ogType: 'website',
+  ogImage: isRegion ? 'https://trailradar.org/assets/hero-desktop.webp' : ogImage,
 })
 
 useHead({
   link: [{ rel: 'canonical', href: `https://trailradar.org/trails/${slug}/` }],
-  script: trail.value
+  script: trail.value && !isRegion
     ? [
         {
           type: 'application/ld+json',
           innerHTML: JSON.stringify({
             '@context': 'https://schema.org',
-            '@type': 'Place',
+            '@type': 'SportsActivityLocation',
             name: trail.value.name,
             description: pageDescription,
+            sport: 'Mountainbiking',
             geo: {
               '@type': 'GeoCoordinates',
               latitude: trail.value.latitude,
               longitude: trail.value.longitude,
             },
             url: `https://trailradar.org/trails/${slug}/`,
+            ...(trail.value.photos?.[0]?.url ? { image: trail.value.photos[0].url } : {}),
           }),
         },
       ]

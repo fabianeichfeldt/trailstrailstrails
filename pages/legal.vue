@@ -89,7 +89,7 @@
 
 <script setup lang="ts">
 useSeoMeta({
-  title: 'Offiziell gebaute MTB Trails – das meint diese Karte | Trailradar',
+  title: 'Offiziell gebaute MTB Trails – das meint diese Karte',
   description: 'Trailradar zeigt nicht jeden befahrbaren Trail – sondern nur offiziell gebaute und abgestimmte MTB-Strecken.',
   ogTitle: 'Was ist ein offiziell gebauter MTB-Trail?',
   ogDescription: 'Wir zeigen MTB Trails die offiziell geplant, genehmigt oder betrieben werden.',
