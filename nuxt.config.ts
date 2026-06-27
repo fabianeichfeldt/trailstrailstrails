@@ -133,12 +133,71 @@ export default defineNuxtConfig({
           },
         },
         {
-          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
+          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/trails.*/i,
           handler: 'NetworkFirst',
           options: {
-            cacheName: 'supabase-api',
+            cacheName: 'supabase-rest-trails',
             networkTimeoutSeconds: 3,
-            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 },
+            expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/parks.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-rest-parks',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/dirt_parks.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-rest-dirtparks',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/spot_gpx_.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-rest-gpx',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/functions\/v1\/.+-details.*/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'supabase-functions',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https?:\/\/[^/]+\/api\/trail(s|\/.*)?$/i,
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'nuxt-api',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/trail-photos\/.*/i,
+          handler: 'CacheFirst',
+          options: {
+            cacheName: 'trail-photos',
+            expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 7 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },
