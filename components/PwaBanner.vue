@@ -12,15 +12,15 @@
       </div>
 
       <div class="pwa-body">
-        <p class="pwa-title">🚵 Trailradar als App installieren — kostenlos</p>
-        <p class="pwa-text">Alle Trails immer dabei. Direkt vom Homescreen starten — schneller als im Browser.</p>
+        <p class="pwa-title">🚵 Karte immer griffbereit am Trailhead</p>
+        <p class="pwa-text">Ein Tipp vom Homescreen - kein Browser, kein Tippen, direkt die Karte.</p>
 
         <!-- Android/Chrome layout -->
         <template v-if="!isIos">
           <div class="pwa-pills">
-            <span class="pwa-pill">🏠 Homescreen</span>
-            <span class="pwa-pill">⚡ Blitzschnell</span>
-            <span class="pwa-pill">🆓 Kostenlos</span>
+            <span class="pwa-pill">📡 Kein Netz nötig</span>
+            <span class="pwa-pill">⚡ Sofort offen</span>
+            <span class="pwa-pill">🗺️ Vollbild-Karte</span>
           </div>
           <button class="pwa-cta" @click="install">Jetzt installieren</button>
           <button class="pwa-dismiss" @click="handleDismiss">Nicht jetzt</button>
