@@ -122,7 +122,18 @@ export default defineNuxtConfig({
       cleanupOutdatedCaches: true,
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
+      globIgnores: ['trails/????????-????-????-????-????????????/index.html'],
       runtimeCaching: [
+        {
+          // Individual trail pages: cache on first visit, not on SW install.
+          urlPattern: /\/trails\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/|$)/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'trail-pages',
+            expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
         {
           urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
           handler: 'CacheFirst',
