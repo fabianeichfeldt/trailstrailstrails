@@ -70,6 +70,11 @@ These facts are not derivable from reading the TypeScript code — get them wron
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
+### Git commits
+- **Never commit to `main` directly.** All commits must go to a working branch (worktree, feature branch, etc.).
+- Committing to a working branch at logical checkpoints is encouraged — it lets you review progress and keeps the work recoverable.
+- The user merges working branches into `main` themselves.
+
 ---
 
 ## Architecture
