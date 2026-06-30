@@ -1,4 +1,4 @@
-import '/src/css/lightbox.css';
+import '../css/lightbox.css';
 
 interface LightboxPhoto {
   src: string;

@@ -1,16 +1,16 @@
 import { ref, nextTick, watch, onUnmounted, type Ref, type ShallowRef } from 'vue';
-import { processGpx, processSegment, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor';
-import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor';
-import { uploadGpx, upsertTrail, upsertTour } from '../../src/spot_manager/Api';
-import type { GpxTrailRow, GpxTourRow } from '../../src/spot_manager/Api';
-import type { MapViewLike } from '../../src/spot_manager/MapView';
+import { processGpx, processSegment, DIFF_COLOR } from '../../spot_manager/GpxProcessor';
+import type { ProcessedGpx } from '../../spot_manager/GpxProcessor';
+import { uploadGpx, upsertTrail, upsertTour } from '../../spot_manager/Api';
+import type { GpxTrailRow, GpxTourRow } from '../../spot_manager/Api';
+import type { MapViewLike } from '../../spot_manager/MapView';
 import {
   drawScrubberCanvas,
   computeSmoothedAlts,
   handleXPosition,
   indexAtCanvasX,
-} from '../../src/spot_manager/ScrubberCanvas';
-import type { ImbaColor } from '../../src/types/MtbTypes';
+} from '../../spot_manager/ScrubberCanvas';
+import type { ImbaColor } from '../../types/MtbTypes';
 
 export interface PendingSegment {
   key: string;

@@ -1,8 +1,8 @@
 import {formatDate} from "../../utils/formatDate";
 
-import "/src/map/detail_popup/details_popup.css";
-import "/src/css/photo_caroussel.css";
-import "/src/map/detail_popup/yt.css";
+import "./details_popup.css";
+import "../../css/photo_caroussel.css";
+import "./yt.css";
 
 import {isDirtPark, Trail} from "../../types/Trail";
 import {TrailDetails} from "../../types/TrailDetails";

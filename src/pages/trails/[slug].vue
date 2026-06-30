@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { regions } from '~/build/region'
+import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'

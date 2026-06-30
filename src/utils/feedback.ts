@@ -1,5 +1,5 @@
 import { submitFeedback } from "../communication/feedback";
-import "/src/css/feedback_button.css";
+import "../css/feedback_button.css";
 
 export async function upVote(trailId: string, el: HTMLElement) {
     await setFeedback(trailId, true, el);

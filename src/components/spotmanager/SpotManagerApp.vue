@@ -700,14 +700,14 @@
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../src/spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../src/spot_manager/Api'
-import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../src/spot_manager/GpxProcessor'
-import type { ProcessedGpx } from '../../src/spot_manager/GpxProcessor'
-import type { MapViewLike } from '../../src/spot_manager/MapView'
-import type { ImbaColor } from '../../src/types/MtbTypes'
-import { listInvitationCodes, createInvitationCode } from '../../src/communication/invitations'
-import type { InvCode } from '../../src/communication/invitations'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../spot_manager/Api'
+import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../spot_manager/GpxProcessor'
+import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
+import type { MapViewLike } from '../../spot_manager/MapView'
+import type { ImbaColor } from '../../types/MtbTypes'
+import { listInvitationCodes, createInvitationCode } from '../../communication/invitations'
+import type { InvCode } from '../../communication/invitations'
 import { useSegmentEditor } from './useSegmentEditor'
 
 type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor'
@@ -924,7 +924,7 @@ const detailsBannerSub = computed(() => {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
-  const { MapView } = await import('../../src/spot_manager/MapView')
+  const { MapView } = await import('../../spot_manager/MapView')
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
   try {

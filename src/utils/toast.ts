@@ -1,4 +1,4 @@
-import "/src/css/toast.css";
+import "../css/toast.css";
 
 export function showToast(message: string, type = "success", duration = 3000) {
     const container = document.getElementById("toast-container");
