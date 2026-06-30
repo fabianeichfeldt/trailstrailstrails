@@ -14,12 +14,12 @@
 
 <script setup lang="ts">
 import type { EmbedTrail } from '~/server/routes/_embed/[token].get'
-import { markerIconOptions } from '~/src/map/markerIcon'
+import { markerIconOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
-} from '~/src/map/trailTooltip'
+} from '~/map/trailTooltip'
 
 definePageMeta({ layout: 'embed' })
 

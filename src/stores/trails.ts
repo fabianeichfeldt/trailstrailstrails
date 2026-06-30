@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { SingleTrail, BikePark, DirtPark, Trail } from '~/src/types/Trail'
+import type { SingleTrail, BikePark, DirtPark, Trail } from '~/types/Trail'
 
 export const useTrailsStore = defineStore('trails', () => {
   const client = useSupabaseClient() as SupabaseClient

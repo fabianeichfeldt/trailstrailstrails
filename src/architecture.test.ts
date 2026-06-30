@@ -31,7 +31,7 @@ describe('No hardcoded Supabase project URL', () => {
   const EXEMPT = new Set(['src/communication/http.ts', 'src/anon.ts'])
 
   test('only http.ts and anon.ts may reference the Supabase project ID', () => {
-    const dirs = ['src', 'stores', 'composables', 'server']
+    const dirs = ['src']
     const violations: string[] = []
     for (const dir of dirs) {
       for (const file of collectTs(dir)) {
@@ -54,7 +54,7 @@ describe('No hardcoded Supabase project URL', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Auth store (Single Responsibility)', () => {
   test('contains no image-processing or photo-upload logic', () => {
-    const src = read('stores/auth.ts')
+    const src = read('src/stores/auth.ts')
     expect(src, 'canvas API in auth store').not.toContain('canvas')
     expect(src, 'trail_photos table in auth store').not.toContain('trail_photos')
     expect(src, 'transformImage in auth store').not.toContain('transformImage')
@@ -79,7 +79,7 @@ describe('Trail type dispatch (Open/Closed)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Filter logic (DRY / single source of truth)', () => {
   test('useTrailMap delegates to filtersStore.apply() rather than reimplementing filters', () => {
-    const src = read('composables/useTrailMap.ts')
+    const src = read('src/composables/useTrailMap.ts')
     expect(src, 'filtersStore.apply() must be called').toContain('filtersStore.apply(')
     expect(src, 'inline type-switch filter must not exist')
       .not.toMatch(/showTrails\s*\?\s*trails/)
@@ -91,28 +91,28 @@ describe('Filter logic (DRY / single source of truth)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Embed page (self-contained)', () => {
   test('embed page does not import from stores/', () => {
-    const src = read('pages/embed/[token].vue')
+    const src = read('src/pages/embed/[token].vue')
     expect(src, 'embed page must not import stores directly').not.toMatch(/from\s+['"]([~@]\/)?stores\//)
   })
 
   test('embed page does not use useTrailMap (no store/filter machinery needed)', () => {
-    const src = read('pages/embed/[token].vue')
+    const src = read('src/pages/embed/[token].vue')
     expect(src, 'embed page must not pull in useTrailMap').not.toContain('useTrailMap')
   })
 
   test('embed page uses shared markerIconOptions instead of inline icon creation', () => {
-    const src = read('pages/embed/[token].vue')
+    const src = read('src/pages/embed/[token].vue')
     expect(src, 'embed page must import markerIconOptions').toContain('markerIconOptions')
   })
 
   test('useTrailMap uses shared markerIconOptions instead of inline icon creation', () => {
-    const src = read('composables/useTrailMap.ts')
+    const src = read('src/composables/useTrailMap.ts')
     expect(src, 'useTrailMap must import markerIconOptions').toContain('markerIconOptions')
     expect(src, 'useTrailMap must not inline the marker HTML').not.toContain('marker-wrapper')
   })
 
   test('server host validation utility has no browser dependencies', () => {
-    const src = read('server/utils/embedHostValidation.ts')
+    const src = read('src/server/utils/embedHostValidation.ts')
     expect(src, 'must not import from stores').not.toMatch(/from\s+['"]([~@]\/)?stores\//)
     expect(src, 'must not import from composables').not.toMatch(/from\s+['"]([~@]\/)?composables\//)
   })
@@ -144,7 +144,7 @@ describe('Communication layer has no UI concerns', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Segment editor (architectural isolation)', () => {
   test('SpotManagerApp.vue does not import from src/map/ directly', () => {
-    const src = read('components/spotmanager/SpotManagerApp.vue')
+    const src = read('src/components/spotmanager/SpotManagerApp.vue')
     expect(src, 'SpotManagerApp.vue must not import from src/map/ directly')
       .not.toMatch(/from\s+['"][^'"]*src\/map\//)
   })

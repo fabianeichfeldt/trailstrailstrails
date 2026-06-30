@@ -6,14 +6,14 @@ module.exports = {
       comment: 'The data/HTTP layer must not depend on Pinia stores.',
       severity: 'error',
       from: { path: '^src/communication/' },
-      to:   { path: '^stores/' },
+      to:   { path: '^src/stores/' },
     },
     {
       name: 'communication-no-composables',
       comment: 'The data/HTTP layer must not depend on Vue composables.',
       severity: 'error',
       from: { path: '^src/communication/' },
-      to:   { path: '^composables/' },
+      to:   { path: '^src/composables/' },
     },
     {
       name: 'communication-no-map-ui',
@@ -26,7 +26,7 @@ module.exports = {
       name: 'stores-no-map-ui',
       comment: 'Pinia stores must not depend on map UI code.',
       severity: 'error',
-      from: { path: '^stores/' },
+      from: { path: '^src/stores/' },
       to:   { path: '^src/map/' },
     },
     {
@@ -34,7 +34,7 @@ module.exports = {
       comment: 'Map UI must receive auth/state via injection, not by importing stores directly.',
       severity: 'error',
       from: { path: '^src/map/' },
-      to:   { path: '^stores/' },
+      to:   { path: '^src/stores/' },
     },
     {
       name: 'no-circular',

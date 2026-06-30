@@ -15,6 +15,9 @@ if (existsSync(envFile)) {
 }
 
 export default defineNuxtConfig({
+  srcDir: 'src',
+  serverDir: './src/server',
+
   devtools: { enabled: true },
 
   experimental: {

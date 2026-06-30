@@ -1,4 +1,4 @@
-import { Trail } from "./types/Trail";
+import { Trail } from "../types/Trail";
 
 export function askNearbyConflict(existingTrail: Trail, onContinue: OnContinue, onCancel: OnCancel) {
     const modal = document.getElementById("nearby-modal");

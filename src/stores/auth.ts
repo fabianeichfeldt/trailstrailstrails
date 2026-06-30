@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { uploadTrailPhoto as uploadTrailPhotoImpl } from '~/src/communication/photos'
+import { uploadTrailPhoto as uploadTrailPhotoImpl } from '~/communication/photos'
 
 export const useAuthStore = defineStore('auth', () => {
   const client = useSupabaseClient() as SupabaseClient

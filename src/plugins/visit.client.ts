@@ -1,4 +1,4 @@
-import { trackVisit } from '~/src/communication/visit'
+import { trackVisit } from '~/communication/visit'
 
 export default defineNuxtPlugin(() => {
   trackVisit(window.location.pathname, document.referrer)

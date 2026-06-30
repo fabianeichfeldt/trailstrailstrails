@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EmbedTokenRow } from '~/src/spot_manager/Api'
+import type { EmbedTokenRow } from '~/spot_manager/Api'
 
 const props = defineProps<{
   tokens: EmbedTokenRow[]

@@ -92,14 +92,14 @@
 </template>
 
 <script setup lang="ts">
-import type { EmbedTokenRow, TrailPickerRow } from '~/src/spot_manager/Api'
+import type { EmbedTokenRow, TrailPickerRow } from '~/spot_manager/Api'
 import {
   createEmbedToken,
   updateEmbedToken,
   getEmbedTokenTrails,
   setEmbedTokenTrails,
   getAllTrailsForPicker,
-} from '~/src/spot_manager/Api'
+} from '~/spot_manager/Api'
 
 const TYPE_LABEL: Record<string, string> = {
   trail:    'Trails',

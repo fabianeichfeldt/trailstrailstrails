@@ -2,7 +2,7 @@ import {User} from "./user";
 import {DomEvent} from "leaflet";
 import stopPropagation = DomEvent.stopPropagation;
 import type {IAuthService} from "./auth_service";
-import {showToast} from "../toast";
+import {showToast} from "../utils/toast";
 import {getMyRole} from "../spot_manager/Api";
 
 type UserChangedHandler = (u: User) => Promise<void>;

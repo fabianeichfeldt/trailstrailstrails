@@ -1,4 +1,4 @@
-import { submitFeedback } from "./communication/feedback";
+import { submitFeedback } from "../communication/feedback";
 import "/src/css/feedback_button.css";
 
 export async function upVote(trailId: string, el: HTMLElement) {

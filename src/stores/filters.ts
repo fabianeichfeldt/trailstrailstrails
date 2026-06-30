@@ -1,4 +1,4 @@
-import type { Trail } from '~/src/types/Trail'
+import type { Trail } from '~/types/Trail'
 
 export const useFiltersStore = defineStore('filters', () => {
   const showTrails = ref(true)
@@ -13,7 +13,7 @@ export const useFiltersStore = defineStore('filters', () => {
       if (t.type === 'trail') return showTrails.value
       if (t.type === 'bikepark') return showBikeparks.value
       if (t.type === 'dirtpark') {
-        const d = t as import('~/src/types/Trail').DirtPark
+        const d = t as import('~/types/Trail').DirtPark
         if (d.pumptrack) return showPumptracks.value
         return showDirtparks.value
       }

@@ -121,8 +121,8 @@
 </template>
 
 <script setup lang="ts">
-import { submitSpot } from '~/src/communication/add_spot'
-import type { anyTrailType } from '~/src/types/Trail'
+import { submitSpot } from '~/communication/add_spot'
+import type { anyTrailType } from '~/types/Trail'
 
 const authStore = useAuthStore()
 

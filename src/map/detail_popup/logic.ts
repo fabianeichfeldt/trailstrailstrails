@@ -1,5 +1,5 @@
-import {downVote, upVote} from "../../feedback";
-import {showToast} from "../../toast";
+import {downVote, upVote} from "../../utils/feedback";
+import {showToast} from "../../utils/toast";
 import type {IAuthService} from "../../auth/auth_service";
 import type {Auth} from "../../auth/auth";
 

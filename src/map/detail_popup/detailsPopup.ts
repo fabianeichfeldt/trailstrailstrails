@@ -1,4 +1,4 @@
-import {formatDate} from "../../formatDate";
+import {formatDate} from "../../utils/formatDate";
 
 import "/src/map/detail_popup/details_popup.css";
 import "/src/css/photo_caroussel.css";

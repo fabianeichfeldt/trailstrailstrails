@@ -1,13 +1,13 @@
 import type { Ref } from 'vue'
-import type { Trail } from '~/src/types/Trail'
-import { markerIconOptions } from '~/src/map/markerIcon'
+import type { Trail } from '~/types/Trail'
+import { markerIconOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
-} from '~/src/map/trailTooltip'
-import { GpxRenderGuard } from '~/src/map/gpxRenderGuard'
-import { fetchMultipleSpotGpx } from '~/src/communication/trails'
+} from '~/map/trailTooltip'
+import { GpxRenderGuard } from '~/map/gpxRenderGuard'
+import { fetchMultipleSpotGpx } from '~/communication/trails'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -115,7 +115,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
 
     // SpotPanel
-    const { SpotPanel } = await import('~/src/map/spot_panel/spotPanel')
+    const { SpotPanel } = await import('~/map/spot_panel/spotPanel')
     const spotPanel = new SpotPanel(mymap, authAdapter as any, () => {
       mapStore.panelOpen = false
     })
@@ -379,7 +379,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
 
     // Initial location
-    const { getApproxLocation } = await import('~/src/communication/location')
+    const { getApproxLocation } = await import('~/communication/location')
     const loc = await getApproxLocation()
     if (loc.lat !== 0 || loc.lng !== 0) {
       mymap.setView([loc.lat, loc.lng], 9)
@@ -479,7 +479,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         if (spotPanel.isOpen) spotPanel.close()
         return
       }
-      const { giveTrailNearBy } = await import('~/src/near_by_trails')
+      const { giveTrailNearBy } = await import('~/utils/near_by_trails')
       const nearby = giveTrailNearBy(e.latlng.lat, e.latlng.lng, trailsStore.all as any)
 
       const proceed = await new Promise<boolean>(resolve => {
