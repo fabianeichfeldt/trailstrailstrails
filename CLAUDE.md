@@ -77,6 +77,18 @@ These facts are not derivable from reading the TypeScript code — get them wron
 
 ---
 
+## `srcDir: 'src'` — path traps
+
+- `~/` = `src/`, `@@/` = project root. Use `@@/build/region`, never `~/build/...`.
+- Public dir is `src/public/`, not `public/` — Nuxt resolves it relative to `srcDir`. Files at root `public/` will 404.
+- Image tags for public assets: `:src="'/assets/foo.webp'"` not `src="/assets/foo.webp"` — Vite transforms static `src=` into a module import from `src/`, which misses `src/public/`.
+- Never write `../../src/something` from inside `src/` — resolves to `src/src/` (double segment).
+- CSS imports in TS modules: relative paths only (`../css/foo.css`), never `/src/css/foo.css`.
+
+Full rationale: `docs/folder-structure-plan.md`.
+
+---
+
 ## Architecture
 
 ### Dependency layers (bottom → top; lower layers must not import higher)
@@ -86,9 +98,9 @@ src/anon.ts
   └── src/communication/http.ts        (shared HTTP client, env-based URL)
         └── src/communication/*.ts     (data/API functions)
               └── src/map/             (map UI, receives deps via injection)
-              └── stores/              (Pinia state — imports communication/, never map/)
-                    └── composables/   (Vue composables — orchestrates stores + map)
-                          └── components/ / pages/
+              └── src/stores/          (Pinia state — imports communication/, never map/)
+                    └── src/composables/   (Vue composables — orchestrates stores + map)
+                          └── src/components/ / src/pages/
 ```
 
 **Enforced by:** `src/architecture.test.ts` (vitest) + `.dependency-cruiser.cjs`
@@ -164,8 +176,8 @@ else { ... }
 | `src/spot_manager/Api.ts` | Admin/trailcrew API — **gold standard for HTTP layer design** |
 | `src/spot_manager/GpxProcessor.ts` | GPX parsing, RDP thinning, Fréchet matching — pure functions |
 | `src/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
-| `stores/auth.ts` | Auth state + auth operations only |
-| `stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
-| `composables/useTrailMap.ts` | Map init, markers, geolocation, FAB — client-only |
+| `src/stores/auth.ts` | Auth state + auth operations only |
+| `src/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
+| `src/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB — client-only |
 | `src/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |
