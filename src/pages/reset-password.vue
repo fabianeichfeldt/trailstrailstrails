@@ -2,7 +2,7 @@
   <div class="rp-page">
     <section class="rp-hero">
       <NuxtLink to="/" class="rp-logo">
-        <img src="/assets/logo.webp" alt="Trailradar Logo" />
+        <img :src="'/assets/logo.webp'" alt="Trailradar Logo" />
       </NuxtLink>
       <div class="rp-hero-content">
         <h1>Passwort zurücksetzen.</h1>
@@ -12,7 +12,7 @@
     <main class="rp-container">
       <div class="rp-card">
         <div class="rp-header">
-          <img src="/assets/logo.webp" alt="Trailradar Logo" class="rp-logo-img" />
+          <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="rp-logo-img" />
           <h2>Neues Passwort erstellen</h2>
         </div>
 

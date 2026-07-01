@@ -35,11 +35,11 @@
             </ul>
           </div>
         </div>
-        <img src="/assets/trailhead.webp" alt="MTB Community" />
+        <img :src="'/assets/trailhead.webp'" alt="MTB Community" />
       </section>
 
       <section class="section split">
-        <img src="/assets/mtb_school.webp" alt="MTB Trails Deutschland" />
+        <img :src="'/assets/mtb_school.webp'" alt="MTB Trails Deutschland" />
         <div>
           <h2>Kooperationen für MTB-spezifische Anbieter</h2>
           <p>Du betreibst eine Fahrtechnikschule, ein Bike-Hotel, eine MTB-Verleihstation oder ein

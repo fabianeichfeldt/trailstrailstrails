@@ -1,7 +1,7 @@
 <template>
   <section class="hero">
     <NuxtLink to="/" class="logo-link">
-      <img src="/assets/logo.webp" alt="Trailradar Logo" class="logo" />
+      <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="logo" />
     </NuxtLink>
     <div class="hero-content">
       <slot />

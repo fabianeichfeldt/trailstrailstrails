@@ -27,7 +27,7 @@
             bestehende Informationen.</p>
           <p>Jede neue Strecke macht Trailradar wertvoller für die gesamte MTB-Community.</p>
         </div>
-        <img src="/assets/trailbau.webp" alt="Trailbau Community" />
+        <img :src="'/assets/trailbau.webp'" alt="Trailbau Community" />
       </section>
 
       <section class="section">
@@ -43,7 +43,7 @@
       </section>
 
       <section class="section split">
-        <img src="/assets/sticker.webp" alt="Trailradar Sticker" />
+        <img :src="'/assets/sticker.webp'" alt="Trailradar Sticker" />
         <div>
           <h2>4. Sticker für die Community</h2>
           <p>Mittlerweile gibt es Trailradar-Aufkleber. Für dein Bike, dein Auto oder die Werkstattwand.</p>

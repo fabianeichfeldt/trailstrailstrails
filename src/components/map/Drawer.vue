@@ -9,7 +9,7 @@
   <div data-testid="drawer" class="drawer" :class="{ open: mapStore.drawerOpen }">
     <div class="drawer-header">
       <NuxtLink to="/" class="drawer-brand" @click="mapStore.drawerOpen = false">
-        <img src="/assets/logo.webp" alt="Trailradar" class="drawer-logo" />
+        <img :src="'/assets/logo.webp'" alt="Trailradar" class="drawer-logo" />
         <span class="drawer-brand-name">Trailradar</span>
       </NuxtLink>
       <button data-testid="drawer-close" class="drawer-close" @click="mapStore.drawerOpen = false" aria-label="Menü schließen">✕</button>

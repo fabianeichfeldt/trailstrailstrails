@@ -5,7 +5,7 @@
 
         <!-- Header -->
         <div class="auth-header">
-          <img src="/assets/logo.webp" alt="Trailradar Logo" class="auth-logo" />
+          <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="auth-logo" />
           <h2>{{ mode === 'signin' ? 'Anmelden' : 'Konto erstellen' }}</h2>
           <p class="auth-sub">
             {{ mode === 'signin'

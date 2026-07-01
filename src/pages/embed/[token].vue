@@ -3,7 +3,7 @@
     <div ref="mapEl" class="embed-map" />
 
     <div v-if="error" class="embed-error">
-      <img src="/assets/logo.webp" class="embed-error-logo" alt="Trailradar" />
+      <img :src="'/assets/logo.webp'" class="embed-error-logo" alt="Trailradar" />
       <p class="embed-error-msg">{{ errorMessage }}</p>
       <a href="https://trailradar.org" target="_blank" rel="noopener" class="embed-error-link">
         trailradar.org

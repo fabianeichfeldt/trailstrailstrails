@@ -9,7 +9,7 @@
       <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <section class="split">
-        <img src="/assets/aletsch.webp" alt="MTB Stoneman Glaciera - Aletsch Gletscher" />
+        <img :src="'/assets/aletsch.webp'" alt="MTB Stoneman Glaciera - Aletsch Gletscher" />
         <div>
           <p class="lead">Ich bin Fabian, lebe in Bayreuth und fahre Mountainbike aus Leidenschaft –
             schon seit meiner Kindheit.</p>
@@ -29,7 +29,7 @@
           <p>Heute fahre ich deutlich weniger als „früher". Aber die Leidenschaft ist geblieben.
             Vielleicht sogar bewusster als zuvor.</p>
         </div>
-        <img src="/assets/singen_marathon.webp" alt="MTB Rennen / Singen" />
+        <img :src="'/assets/singen_marathon.webp'" alt="MTB Rennen / Singen" />
       </section>
 
       <section>
@@ -42,7 +42,7 @@
       </section>
 
       <section class="split">
-        <img src="/assets/trailbau.webp" alt="Trailbau Ehrenamt" />
+        <img :src="'/assets/trailbau.webp'" alt="Trailbau Ehrenamt" />
         <div>
           <h2>Trailradar – nicht von irgendwem, sondern aus der Community</h2>
           <p>Seitdem ist viel passiert. In ganz Deutschland entstehen immer mehr offiziell angelegte

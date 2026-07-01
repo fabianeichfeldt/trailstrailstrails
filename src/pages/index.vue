@@ -5,7 +5,7 @@
     <section class="hero">
       <div class="hero-overlay" />
       <div class="hero-content">
-        <img src="/assets/logo.webp" alt="Trailradar Logo" class="hero-logo" />
+        <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="hero-logo" />
         <div class="hero-text">
           <h1>Alle offiziellen MTB Trails. Legal. Community-getrieben. Auf der Karte.</h1>
           <p class="hero-sub">Bock auf coole MTB-Trails? Hier findest du alle offiziell gebauten Trails auf einen Blick.</p>
@@ -265,7 +265,7 @@
       <div class="foerderung-section inner">
         <span class="foerderung-label">Trailradar wird gefördert durch</span>
         <a href="https://www.alpenverein.de/" target="_blank" rel="noopener">
-          <img src="/assets/dav_logo.webp" alt="DAV Deutscher Alpen Verein" class="dav-logo" />
+          <img :src="'/assets/dav_logo.webp'" alt="DAV Deutscher Alpen Verein" class="dav-logo" />
         </a>
       </div>
     </section>

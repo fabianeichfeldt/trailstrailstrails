@@ -3,7 +3,7 @@
     <!-- Top bar -->
     <div class="sm-topbar">
       <NuxtLink to="/" class="sm-topbar-home" title="Zurück zur Karte">
-        <img src="/assets/logo.webp" class="sm-topbar-logo-img" alt="Trailradar" />
+        <img :src="'/assets/logo.webp'" class="sm-topbar-logo-img" alt="Trailradar" />
       </NuxtLink>
       <div class="sm-topbar-divider" />
       <button v-if="view !== 'selector'" class="sm-back-btn" @click="goBack">
@@ -702,7 +702,7 @@
 <script setup lang="ts">
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../spot_manager/Api'
 import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../spot_manager/Api'
-import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from '../../spot_manager/GpxProcessor'
+import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
 import type { ImbaColor } from '../../types/MtbTypes'

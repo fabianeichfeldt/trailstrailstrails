@@ -2,7 +2,7 @@
   <header class="app-header">
     <div class="header-inner">
       <NuxtLink to="/" class="header-brand">
-        <img src="/assets/logo.webp" alt="Trailradar" class="header-logo" />
+        <img :src="'/assets/logo.webp'" alt="Trailradar" class="header-logo" />
         <span class="header-name">Trailradar</span>
       </NuxtLink>
 
