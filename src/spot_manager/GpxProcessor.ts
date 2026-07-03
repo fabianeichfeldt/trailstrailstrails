@@ -21,7 +21,7 @@ export interface ProcessedGpx {
   gpxContent: string;
 }
 
-const EPSILON_M = 2;
+const EPSILON_M = 0.5;
 
 function parseGpx(content: string): { name: string; points: GpxPoint[] } {
   const nameMatch = content.match(/<name>([^<]*)<\/name>/);
