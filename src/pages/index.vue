@@ -95,6 +95,14 @@
             <span class="qn-sub">Häufige Fragen</span>
           </NuxtLink>
 
+          <NuxtLink to="/legal" class="qn-card">
+            <div class="qn-icon">
+              <IconShieldCheck />
+            </div>
+            <span class="qn-label">Offiziell vs. Legal</span>
+            <span class="qn-sub">Was ist der Unterschied</span>
+          </NuxtLink>
+
           <NuxtLink to="/about" class="qn-card">
             <div class="qn-icon">
               <IconUser />
