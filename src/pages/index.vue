@@ -283,11 +283,9 @@ import IconUser from '~/assets/icons/user.svg'
 import IconHeart from '~/assets/icons/heart.svg'
 import IconBriefcase from '~/assets/icons/briefcase.svg'
 import IconShield from '~/assets/icons/shield.svg'
+import { getRecentActivity } from '~/communication/activity'
 
-const { data: activity } = await useAsyncData('activity', () =>
-  $fetch<{ type: 'spot' | 'photo' | 'gpx'; trailId: string; name: string; created_at: string }[]>('/api/activity'),
-  { default: () => [] },
-)
+const { data: activity } = await useAsyncData('activity', () => getRecentActivity(), { default: () => [] })
 
 function formatDate(iso: string) {
   if (!iso) return ''

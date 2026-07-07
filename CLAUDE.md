@@ -52,6 +52,12 @@ These facts are not derivable from reading the TypeScript code — get them wron
 
 ---
 
+## No live Nitro server in production
+
+SSG deploy = no server at runtime. A `src/server/api/*.ts` route only works in prod if the prerender crawler bakes it into `.output/public/api/...` at build time — otherwise `$fetch()` 404s silently (often masked by `default: () => []`). Don't add server/api routes expecting live execution; fetch Supabase REST directly from the client instead (`REST`/`anonHeaders()` in `http.ts`, pattern: `getLatestPhotos` in `trails.ts`).
+
+---
+
 ## Mandatory rules
 
 ### Tests must stay green
