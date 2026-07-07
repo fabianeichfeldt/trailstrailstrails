@@ -1,5 +1,5 @@
 import { test as baseTest } from '@playwright/test';
-import { expect, setupAllMocks, MOCK_SESSION, MOCK_USER } from './fixtures';
+import { expect, setupAllMocks, MOCK_SESSION, MOCK_USER, MOCK_GOOGLE_SESSION, MOCK_GOOGLE_USER } from './fixtures';
 
 /**
  * Sign in via the AuthModal that is embedded on the /profile page.
@@ -77,6 +77,46 @@ baseTest('saving a new nickname calls updateUser with the correct name', async (
 
   await expect.poll(() => updateBody, { timeout: 5000 }).not.toBeNull();
   expect(updateBody?.data?.name).toBe('NewRider');
+
+  assertNoLeaks();
+});
+
+// ── Contributions ──────────────────────────────────────────────────────────────
+//
+// Regression guard: the contributions query must filter on user.id, not user.sub.
+// For a Google OAuth user these differ (sub is the Google numeric subject, id is
+// the Supabase UUID the DB rows are keyed on). If the code used user.sub the
+// eq('creator_id', ...) filter would send "undefined" and the DB would 400,
+// leaving the contributions list empty.
+
+baseTest('profile page loads contributions for Google OAuth user using user.id not user.sub', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/profile');
+  await page.waitForLoadState('networkidle');
+
+  // Mock trails keyed on the Supabase UUID (user.id), not user.sub.
+  await page.route('**/rest/v1/trails**', (route) => {
+    const url = new URL(route.request().url());
+    if (url.searchParams.get('creator_id') === `eq.${MOCK_GOOGLE_USER.id}`) {
+      route.fulfill({ json: [{ id: 'g1', name: 'Google Creator Trail', created_at: '2024-01-01' }] });
+    } else {
+      route.fulfill({ json: [] });
+    }
+  });
+
+  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_GOOGLE_SESSION }));
+  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_GOOGLE_USER }));
+
+  await page.locator('.not-logged-in button').click();
+  await page.locator('.auth-card input[autocomplete="email"]').fill('google@example.com');
+  await page.locator('.auth-card input[autocomplete="current-password"]').fill('password123');
+  await page.locator('.auth-card button[type="submit"]').click();
+  await expect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.profile-layout')).toBeVisible({ timeout: 6000 });
+
+  // The trail must appear — it is stored under user.id, so if user.sub were
+  // used instead the request would 400 and the list would stay empty.
+  await expect(page.locator('.contribution-list .contribution-title').first()).toHaveText('Google Creator Trail', { timeout: 6000 });
 
   assertNoLeaks();
 });

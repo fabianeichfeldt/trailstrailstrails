@@ -217,7 +217,8 @@ function formatDate(dateStr: string) {
 
 async function loadContributions() {
   if (!user.value) return
-  const uid = user.value.sub
+  const uid = await authStore.getUserId()
+  if (!uid) return
 
   const [trailsRes, parksRes, dirtRes, favRes, photosRes] = await Promise.all([
     client.from('trails').select('id, name, created_at').eq('creator_id', uid),
