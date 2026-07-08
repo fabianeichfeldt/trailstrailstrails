@@ -15,6 +15,7 @@
           <li><a href="#official">🔹 Was macht einen Trail offiziell?</a></li>
           <li><a href="#missing">🔹 Warum fehlen manche Bikeparks/Trails?</a></li>
           <li><a href="#submit">🔹 Kann ich selbst Trails melden?</a></li>
+          <li><a href="#trailcrew">🔹 Ich bin Trailbauer/-betreiber – kann ich meine Einträge selbst verwalten?</a></li>
           <li><a href="#packing-tour">🔹 Was sollte ich auf eine MTB-Tour mitnehmen?</a></li>
           <li><a href="#packing-park">🔹 Was sollte ich beim Bikeparkbesuch mitnehmen?</a></li>
         </ul>
@@ -43,6 +44,17 @@
         <p>Ja! Trage den Trail direkt in die Karte ein oder melde dich via Instagram
           (<a href="https://www.instagram.com/trailradar.germany/" target="_blank" rel="noopener">@trailradar.germany</a>)
           oder per Mail an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
+      </div>
+
+      <div class="faq-item" id="trailcrew">
+        <h3>Ich bin Trailbauer/-betreiber – kann ich meine Einträge selbst verwalten?</h3>
+        <p>Ja! Trailradar bietet Trailbauern und -betreibern die Möglichkeit, ihre Einträge selbst zu verwalten.
+          Melde dich einfach via Instagram
+          (<a href="https://www.instagram.com/trailradar.germany/" target="_blank" rel="noopener">@trailradar.germany</a>)
+          oder per Mail an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>. Sobald wir
+          verifiziert haben, dass du der Ansprechpartner für den jeweiligen Trail-Spot bist, erhältst du einen
+          Einladungscode. Trägst du diesen Code in deinem Trailradar-Profil ein, erhältst du Zugang zum
+          Trailradar Spotmanager mit vollem Zugriff auf die dir zugewiesenen Spot(s).</p>
       </div>
 
       <div class="faq-item" id="packing-tour">
@@ -93,6 +105,7 @@ useHead({
         { '@type': 'Question', name: 'Was macht einen Trail offiziell?', acceptedAnswer: { '@type': 'Answer', text: 'Ein offizieller Trail wurde behördlich geplant, genehmigt und gebaut und wird von einer zuständigen Organisation gepflegt.' } },
         { '@type': 'Question', name: 'Warum fehlen manche Bikeparks oder Trails?', acceptedAnswer: { '@type': 'Answer', text: 'Trailradar ist ein Community-Projekt. Neue Spots werden laufend ergänzt.' } },
         { '@type': 'Question', name: 'Kann ich selbst Trails melden?', acceptedAnswer: { '@type': 'Answer', text: 'Ja. Trails können auf der Karte eingetragen oder über Instagram bzw. E-Mail gemeldet werden.' } },
+        { '@type': 'Question', name: 'Ich bin Trailbauer/-pfleger – kann ich meine Einträge selbst verwalten?', acceptedAnswer: { '@type': 'Answer', text: 'Ja. Nach Verifizierung als Ansprechpartner des Trail-Spots erhältst du einen Einladungscode für den Trailradar Spotmanager mit Zugriff auf deine zugewiesenen Spots.' } },
       ],
     }),
   }],
