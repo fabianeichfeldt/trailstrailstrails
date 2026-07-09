@@ -58,6 +58,12 @@ export function bindPopupEvents(popup: HTMLElement, auth: Auth, onPhotoUploaded:
       await auth.openSignInModal();
     })
 
+  const reportBtn = popup.querySelector(".report-error-link");
+  if (reportBtn)
+    reportBtn.addEventListener("click", async () => {
+      await auth.openReportModal(trailId, trailName ?? "");
+    })
+
 }
 
 function startUpload(auth: IAuthService, trailId: string, onPhotoUploaded: () => void) {

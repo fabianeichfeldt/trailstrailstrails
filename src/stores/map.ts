@@ -10,6 +10,12 @@ export const useMapStore = defineStore('map', () => {
   const authModalOpen = ref(false)
   const drawerOpen = ref(false)
 
+  // Report-an-error modal — triggered from the vanilla-JS map layer via
+  // the injected Auth adapter's openReportModal(), same mechanism as authModalOpen
+  const reportModalOpen = ref(false)
+  const reportModalTrailId = ref<string | null>(null)
+  const reportModalTrailName = ref<string | null>(null)
+
   function openTrail(id: string) {
     activeTrailId.value = id
     panelOpen.value = true
@@ -26,6 +32,9 @@ export const useMapStore = defineStore('map', () => {
     userLocation,
     authModalOpen,
     drawerOpen,
+    reportModalOpen,
+    reportModalTrailId,
+    reportModalTrailName,
     openTrail,
     closePanel,
   }

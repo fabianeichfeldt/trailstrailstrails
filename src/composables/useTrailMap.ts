@@ -112,6 +112,11 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         async uploadTrailPhoto(file: File, trailId: string) { return authStore.uploadTrailPhoto(file, trailId) },
       },
       async openSignInModal() { mapStore.authModalOpen = true },
+      async openReportModal(trailId: string, trailName: string) {
+        mapStore.reportModalOpen = true
+        mapStore.reportModalTrailId = trailId
+        mapStore.reportModalTrailName = trailName
+      },
     }
 
     // SpotPanel

@@ -171,6 +171,7 @@ export function renderTrailDetails(trail: Trail, details: TrailDetails, auth: Au
                 </button>
               </div>
             </div>
+            <button class="report-error-link" communication-action="report">Stimmt etwas nicht? Melden.</button>
             <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
         `;
 }

@@ -201,6 +201,14 @@ export class Auth {
     this.signInModal?.classList.remove("hidden");
   }
 
+  // No legacy DOM modal backs this (the report modal is Vue/mapStore-driven,
+  // see the authAdapter implementation in useTrailMap.ts). Kept here so the
+  // `Auth` type stays the single contract that both the legacy class and the
+  // Nuxt authAdapter satisfy.
+  public async openReportModal(trailId: string, trailName: string) {
+    console.warn('openReportModal is not implemented in the legacy Auth class; use the Nuxt authAdapter.', trailId, trailName);
+  }
+
   public async openSignUpModal() {
     this.signUpModal = document.querySelector('#sign-up-modal');
     this.signUpModal?.classList.remove("hidden");
