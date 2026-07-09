@@ -40,6 +40,7 @@
     </ClientOnly>
 
     <AuthModal />
+    <ReportErrorModal />
   </div>
 </template>
 
