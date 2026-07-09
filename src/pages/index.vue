@@ -71,6 +71,13 @@
         <h2>Community-getrieben</h2>
         <p>Die Community trägt neue Spots ein und meldet Änderungen – so bleibt die Karte immer aktuell.</p>
       </div>
+      <div class="feature-card">
+        <div class="feature-icon">
+          <IconCode />
+        </div>
+        <h2>Integrierbare Karte</h2>
+        <p>Bindet die Trailradar-Karte mit wenigen Zeilen JavaScript in eure eigene Website ein – mit euren eigenen Trails, individuell zusammengestellt.</p>
+      </div>
       </div>
     </section>
 
@@ -283,6 +290,7 @@
 
 <script setup lang="ts">
 import IconMap from '~/assets/icons/map.svg'
+import IconCode from '~/assets/icons/code.svg'
 import IconShieldCheck from '~/assets/icons/shield-check.svg'
 import IconUsers from '~/assets/icons/users.svg'
 import IconMessageSquare from '~/assets/icons/message-square.svg'
