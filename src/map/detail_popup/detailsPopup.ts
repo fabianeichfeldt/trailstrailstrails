@@ -112,10 +112,10 @@ function renderSpotStatusBanner(details: TrailDetails): string {
         <div class="ssb-labels">
           <strong>${sm.label}</strong>
           ${hint ? `<span class="ssb-hint">${hint}</span>` : ''}
-          ${rainHint}
         </div>
       </div>
-      ${accessBadge}
+      ${accessBadge ? `<div class="ssb-row">${accessBadge}</div>` : ''}
+      ${rainHint ? `<div class="ssb-row">${rainHint}</div>` : ''}
     </div>`;
 }
 
