@@ -1,12 +1,21 @@
 .popup-feedback {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    gap: 0.3rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.4rem;
     font-size: 0.75em;
     color: #555;
     margin-bottom: 0.3em;
     opacity: 0.9;
+  }
+
+  .feedback-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    flex-wrap: wrap;
+    margin-left: auto;
   }
 
 .popup-feedback-date {
@@ -54,22 +63,31 @@
   }
 
   .report-error-link {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    justify-content: flex-end;
-    width: 100%;
-    text-align: right;
-    background: none;
-    border: none;
-    padding: 0.6em 0;
-    margin-bottom: 0.2em;
-    font-size: 0.72em;
-    color: #888;
+    gap: 0.35em;
+    background: #fff5f5;
+    border: 1px solid #f3aeae;
+    border-radius: 6px;
+    color: #c53030;
+    font-size: 0.75em;
+    font-weight: 600;
+    padding: 0.35em 0.6em;
+    min-height: 34px;
+    white-space: nowrap;
     cursor: pointer;
-    min-height: 44px;
+    transition: all 0.15s ease-in-out;
+  }
+
+  .report-error-link i {
+    font-size: 0.9em;
   }
 
   .report-error-link:hover {
-    text-decoration: underline;
-    color: #555;
+    background: #fed7d7;
+    border-color: #e53e3e;
+  }
+
+  .report-error-link:active {
+    transform: scale(0.95);
   }

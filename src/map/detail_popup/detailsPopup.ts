@@ -162,16 +162,20 @@ export function renderTrailDetails(trail: Trail, details: TrailDetails, auth: Au
           </div>` : ``}
             <div class="popup-feedback" data-trail-id="${trail.id}" data-trail-name="${trail.name}">
               <span class="feedback-label">Sind diese Infos hilfreich?</span>
-              <div class="feedback-buttons">
-                <button class="thumb-btn up" title="Ja, hilfreich" communication-action="upvote">
-                  <i class="fa-solid fa-thumbs-up"></i>
-                </button>
-                <button class="thumb-btn down" title="Nein" communication-action="downvote">
-                  <i class="fa-solid fa-thumbs-down"></i>
+              <div class="feedback-actions">
+                <div class="feedback-buttons">
+                  <button class="thumb-btn up" title="Ja, hilfreich" communication-action="upvote">
+                    <i class="fa-solid fa-thumbs-up"></i>
+                  </button>
+                  <button class="thumb-btn down" title="Nein" communication-action="downvote">
+                    <i class="fa-solid fa-thumbs-down"></i>
+                  </button>
+                </div>
+                <button class="report-error-link" communication-action="report" title="Fehler melden">
+                  <i class="fa-solid fa-flag"></i> Fehler melden
                 </button>
               </div>
             </div>
-            <button class="report-error-link" communication-action="report">Stimmt etwas nicht? Melden.</button>
             <p class="popup-feedback-date">Zuletzt aktualisiert: ${formatDate(details.last_update)} - generiert mit KI</p>
         `;
 }
