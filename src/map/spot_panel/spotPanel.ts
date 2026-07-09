@@ -1,6 +1,5 @@
 import L from 'leaflet';
 import '@fortawesome/fontawesome-free/css/all.css';
-import './spot_panel.css';
 import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';

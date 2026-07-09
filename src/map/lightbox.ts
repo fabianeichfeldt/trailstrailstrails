@@ -1,5 +1,3 @@
-import '../css/lightbox.css';
-
 interface LightboxPhoto {
   src: string;
   uploader: string;

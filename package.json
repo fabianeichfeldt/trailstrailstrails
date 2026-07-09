@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "lint:arch": "depcruise --config .dependency-cruiser.cjs src stores composables"
+    "lint:arch": "depcruise --config .dependency-cruiser.cjs src"
   },
   "repository": {
     "type": "git",
