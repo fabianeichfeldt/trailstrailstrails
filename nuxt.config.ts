@@ -126,6 +126,15 @@ export default defineNuxtConfig({
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
       globIgnores: ['trails/????????-????-????-????-????????????/index.html'],
+      // @vite-pwa/nuxt defaults navigateFallback to '/', which registers a
+      // NavigationRoute *before* the runtimeCaching rules below and wins the
+      // routing race for any URL that isn't an exact string match in the
+      // precache manifest — silently serving the cached homepage instead.
+      // This site is fully SSG (every real route has real generated HTML),
+      // so there's no app-shell to fall back to; disable it and let
+      // precache + the runtimeCaching rules below (or a normal network
+      // request) handle every route on its own terms.
+      navigateFallback: null,
       runtimeCaching: [
         {
           // Individual trail pages: cache on first visit, not on SW install.
@@ -289,6 +298,25 @@ export default defineNuxtConfig({
         console.log(`  ✓ Added ${all.length} trail routes for prerender (${trails.length} trails, ${parks.length} parks, ${dirtParks.length} dirtparks)`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)
+      }
+
+      // /embed/[token].vue is a real page, not just the /_embed/[token] API
+      // (that part is served by the Cloudflare Worker at runtime). Nitro's
+      // crawler only follows <a href>, never <iframe src>, so the embed
+      // page itself is never discovered — every embed token 404s in
+      // production unless explicitly prerendered here.
+      try {
+        const h = { apikey: key, Authorization: `Bearer ${key}` }
+        const tokensRes = await fetch(`${url}/rest/v1/embed_tokens?select=token&is_active=eq.true`, { headers: h })
+        const tokens = await tokensRes.json() as { token: string }[]
+        nitroConfig.prerender ||= {}
+        nitroConfig.prerender.routes ||= []
+        for (const t of tokens) {
+          (nitroConfig.prerender.routes as string[]).push(`/embed/${t.token}`)
+        }
+        console.log(`  ✓ Added ${tokens.length} embed token routes for prerender`)
+      } catch (e) {
+        console.warn('  ⚠ Could not fetch embed token routes for prerender:', e)
       }
     },
   },
