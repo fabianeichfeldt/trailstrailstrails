@@ -1,8 +1,8 @@
-/* Trailradar embed snippet — https://trailradar.app/embed.js
+/* Trailradar embed snippet — https://trailradar.org/embed.js
  *
  * Usage:
  *   <div id="trailradar-embed"></div>
- *   <script src="https://trailradar.app/embed.js"></script>
+ *   <script src="https://trailradar.org/embed.js"></script>
  *   <script>
  *     TrailRadar.mount({
  *       token:  'your-token',
@@ -10,7 +10,7 @@
  *       center: [47.8, 13.0],         // [lat, lng]
  *       zoom:   12,
  *       height: '500px',              // default: '500px'
- *       baseUrl: 'https://trailradar.app',  // override for self-hosted / local dev
+ *       baseUrl: 'https://trailradar.org',  // override for self-hosted / local dev
  *     });
  *   </script>
  */
@@ -32,7 +32,7 @@
       return;
     }
 
-    var base = (opts.baseUrl || 'https://trailradar.app').replace(/\/$/, '');
+    var base = (opts.baseUrl || 'https://trailradar.org').replace(/\/$/, '');
     var params = new URLSearchParams();
     if (opts.center && opts.center.length === 2) {
       params.set('lat',  opts.center[0]);

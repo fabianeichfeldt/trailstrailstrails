@@ -141,6 +141,14 @@
             <span class="qn-label">Datenschutz</span>
             <span class="qn-sub">& Impressum</span>
           </NuxtLink>
+
+          <NuxtLink to="/how-to-embed" class="qn-card">
+            <div class="qn-icon">
+              <IconCode />
+            </div>
+            <span class="qn-label">Karte einbetten</span>
+            <span class="qn-sub">Für Website-Betreiber</span>
+          </NuxtLink>
         </div>
       </div>
     </section>
