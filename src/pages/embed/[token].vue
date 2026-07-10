@@ -20,6 +20,7 @@ import {
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
 } from '~/map/trailTooltip'
+import { parseEmbedQuery } from '~/utils/embedQuery'
 
 definePageMeta({ layout: 'embed' })
 
@@ -28,11 +29,16 @@ const mapEl  = ref<HTMLElement | null>(null)
 const error  = ref(false)
 const errorMessage = ref('Dieser Embed ist für diese Domain nicht autorisiert.')
 
-const token      = route.params.token as string
-const lat        = parseFloat(route.query.lat        as string) || 47.8
-const lng        = parseFloat(route.query.lng        as string) || 13.0
-const zoom       = parseInt(route.query.zoom         as string) || 10
-const parentHost = (route.query.parentHost as string) || ''
+// /embed/[token] is prerendered with the bare path only, no query string.
+// For a request that includes a query string, Nuxt's hydration briefly
+// uses that query-less baked payload before correcting to the real URL
+// (its "deferred route" mechanism for prerendered dynamic routes). Reading
+// route.query here — even once at setup — can capture that intermediate,
+// query-less state and silently fall back to the defaults below. This
+// page is client-only anyway, so read straight from the real browser URL
+// instead, which is correct from the very first tick.
+const token = route.params.token as string
+const { lat, lng, zoom, parentHost } = parseEmbedQuery(import.meta.client ? window.location.search : '')
 
 onMounted(async () => {
   let trails: EmbedTrail[] = []
