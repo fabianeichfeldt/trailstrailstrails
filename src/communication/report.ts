@@ -2,7 +2,6 @@ import { FUNCTIONS, anonHeaders } from './http'
 
 export async function submitReport(
   trailId: string,
-  trailName: string,
   message: string,
   userId?: string,
 ): Promise<void> {

@@ -115,7 +115,7 @@ describe('ReportErrorModal', () => {
     await click('report-error-submit')
     await flushPromises()
 
-    expect(submitReport).toHaveBeenCalledWith('trail-1', 'Flowtrail Süd', 'Trail ist seit Wochen gesperrt', undefined)
+    expect(submitReport).toHaveBeenCalledWith('trail-1', 'Trail ist seit Wochen gesperrt', undefined)
     expect(showToast).toHaveBeenCalledWith('Danke, wir schauen uns das an! 🙏', 'success')
     expect(mapStore.reportModalOpen).toBe(false)
 
@@ -136,7 +136,7 @@ describe('ReportErrorModal', () => {
     await click('report-error-submit')
     await flushPromises()
 
-    expect(submitReport).toHaveBeenCalledWith('trail-1', 'Flowtrail Süd', 'Trail gesperrt', 'user-42')
+    expect(submitReport).toHaveBeenCalledWith('trail-1', 'Trail gesperrt', 'user-42')
   })
 
   it('on failure: shows an inline error, keeps the modal open, and preserves the message', async () => {

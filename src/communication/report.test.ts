@@ -25,7 +25,7 @@ describe('submitReport — HTTP mechanics', () => {
   it('POSTs to the report edge function URL', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
-    await submitReport('trail-1', 'Flowtrail Süd', 'Der Trail ist gesperrt.')
+    await submitReport('trail-1', 'Der Trail ist gesperrt.')
     expect(fetch.mock.calls[0][0]).toBe(`${BASE_URL}/functions/v1/report`)
     expect(fetch.mock.calls[0][1].method).toBe('POST')
   })
@@ -33,7 +33,7 @@ describe('submitReport — HTTP mechanics', () => {
   it('sends anonHeaders (Content-Type + apikey + Authorization with anon key)', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
-    await submitReport('trail-1', 'Flowtrail Süd', 'Der Trail ist gesperrt.')
+    await submitReport('trail-1', 'Der Trail ist gesperrt.')
     const headers = fetch.mock.calls[0][1].headers
     expect(headers['Content-Type']).toBe('application/json')
     expect(headers['Authorization']).toMatch(/^Bearer /)
@@ -42,18 +42,18 @@ describe('submitReport — HTTP mechanics', () => {
 
   it('resolves to undefined on a successful response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok()))
-    await expect(submitReport('trail-1', 'Flowtrail Süd', 'Hinweis')).resolves.toBeUndefined()
+    await expect(submitReport('trail-1', 'Hinweis')).resolves.toBeUndefined()
   })
 
   it('throws with status + body text on a server error', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'server exploded')))
-    await expect(submitReport('trail-1', 'Flowtrail Süd', 'Hinweis'))
+    await expect(submitReport('trail-1', 'Hinweis'))
       .rejects.toThrow('500')
   })
 
   it('throws on a 4xx response too', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(422, 'validation error')))
-    await expect(submitReport('trail-1', 'Flowtrail Süd', 'Hinweis'))
+    await expect(submitReport('trail-1',  'Hinweis'))
       .rejects.toThrow('422')
   })
 })
@@ -62,17 +62,16 @@ describe('submitReport — request body', () => {
   it('includes trail_id, trail_name, message', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
-    await submitReport('trail-1', 'Flowtrail Süd', 'Der Trail ist gesperrt.')
+    await submitReport('trail-1', 'Der Trail ist gesperrt.')
     const body = JSON.parse(fetch.mock.calls[0][1].body)
     expect(body.trail_id).toBe('trail-1')
-    expect(body.trail_name).toBe('Flowtrail Süd')
     expect(body.message).toBe('Der Trail ist gesperrt.')
   })
 
   it('includes user_id when the reporter is logged in', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
-    await submitReport('trail-1', 'Flowtrail Süd', 'Hinweis', 'user-uuid-123')
+    await submitReport('trail-1', 'Hinweis', 'user-uuid-123')
     const body = JSON.parse(fetch.mock.calls[0][1].body)
     expect(body.user_id).toBe('user-uuid-123')
   })
@@ -80,7 +79,7 @@ describe('submitReport — request body', () => {
   it('omits the user_id key entirely when the reporter is anonymous', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
-    await submitReport('trail-1', 'Flowtrail Süd', 'Hinweis')
+    await submitReport('trail-1', 'Hinweis')
     const body = JSON.parse(fetch.mock.calls[0][1].body)
     expect('user_id' in body).toBe(false)
   })

@@ -125,6 +125,7 @@ export const useAuthStore = defineStore('auth', () => {
     dbRole,
     isAdmin,
     isTrailcrew,
+    userId,
     signIn,
     signOut,
     signUp,

@@ -85,9 +85,8 @@ async function submit() {
   try {
     await submitReport(
       mapStore.reportModalTrailId,
-      mapStore.reportModalTrailName ?? '',
       message.value.trim(),
-      authStore.isLoggedIn ? await authStore.getUserId() : undefined,
+      authStore.isLoggedIn ? authStore.userId : undefined,
     )
     showToast('Danke, wir schauen uns das an! 🙏', 'success')
     message.value = ''
