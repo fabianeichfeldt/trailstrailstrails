@@ -7,8 +7,13 @@
       @click.self="close"
     >
       <div class="report-error-modal" data-testid="report-error-modal" role="dialog" aria-modal="true">
-        <h3 class="report-error-title">Fehler melden</h3>
+        <h3 class="report-error-title">Etwas stimmt nicht?</h3>
         <p class="report-error-sub">{{ mapStore.reportModalTrailName }}</p>
+        <p class="report-error-intro">
+          Wir geben uns größte Mühe, alle Infos aktuell und korrekt zu halten - aber manchmal schleicht sich ein
+          Fehler ein. Beschreibe möglichst genau, was an der Beschreibung oder den Trails nicht stimmt, und falls
+          bekannt, gerne auch gleich die Korrektur.
+        </p>
 
         <label class="report-error-label">
           Was stimmt nicht?
@@ -130,6 +135,13 @@ async function submit() {
   margin: 0 0 0.9rem;
   font-size: 0.82rem;
   color: #6b7280;
+}
+
+.report-error-intro {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #4b5563;
 }
 
 .report-error-label {
