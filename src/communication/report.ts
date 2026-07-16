@@ -11,7 +11,6 @@ export async function submitReport(
     headers: anonHeaders(),
     body: JSON.stringify({
       trail_id: trailId,
-      trail_name: trailName,
       message,
       ...(userId ? { user_id: userId } : {}),
     }),
