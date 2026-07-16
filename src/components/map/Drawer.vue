@@ -50,6 +50,14 @@
     <NuxtLink to="/" class="home-link" @click="mapStore.drawerOpen = false">
       ← Zur Startseite
     </NuxtLink>
+
+    <!-- Instagram -->
+    <div class="drawer-social">
+      <a class="drawer-instagram" href="https://www.instagram.com/trailradar.germany"
+         target="_blank" rel="noopener noreferrer" aria-label="Trailradar auf Instagram">
+        <i class="fab fa-instagram"></i>
+      </a>
+    </div>
   </div>
 </template>
 
@@ -175,6 +183,24 @@ const filters = [
   color: #666;
 }
 .drawer-close:hover { background: #f5f5f5; color: #333; }
+
+.drawer-social {
+  display: flex;
+  justify-content: center;
+  padding: 0.4em 0 0.8em;
+}
+.drawer-instagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: #e1306c;
+  font-size: 1em;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.drawer-instagram:hover { opacity: 1; }
 
 .filter-box {
   background: rgba(255,255,255,0.9);

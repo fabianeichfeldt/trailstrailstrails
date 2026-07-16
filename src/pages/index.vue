@@ -232,7 +232,7 @@
       <h2>Was bedeutet "offiziell"?</h2>
       <p>
         Ein Trail gilt bei Trailradar als offiziell, wenn er behördlich genehmigt oder durch eine Gemeinde,
-        einen Verein oder einen Natursportverband offiziell ausgewiesen wurde. Wildcats oder inoffizielle Trails
+        einen Verein oder einen Natursportverband offiziell ausgewiesen wurde. Inoffizielle Trails
         werden nicht gelistet – das schützt sowohl Fahrer als auch die Natur.
       </p>
       <hr>

@@ -1,10 +1,17 @@
 <template>
   <header class="app-header">
     <div class="header-inner">
-      <NuxtLink to="/" class="header-brand">
-        <img :src="'/assets/logo.webp'" alt="Trailradar" class="header-logo" />
-        <span class="header-name">Trailradar</span>
-      </NuxtLink>
+      <div class="header-left">
+        <NuxtLink to="/" class="header-brand">
+          <img :src="'/assets/logo.webp'" alt="Trailradar" class="header-logo" />
+          <span class="header-name">Trailradar</span>
+        </NuxtLink>
+
+        <a class="header-instagram" href="https://www.instagram.com/trailradar.germany"
+           target="_blank" rel="noopener noreferrer" aria-label="Trailradar auf Instagram">
+          <i class="fab fa-instagram"></i>
+        </a>
+      </div>
 
       <div class="header-right">
         <NuxtLink to="/map" class="header-map-link">Zur Karte →</NuxtLink>
@@ -83,6 +90,12 @@ onMounted(() => {
   gap: 1rem;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .header-brand {
   display: flex;
   align-items: center;
@@ -114,6 +127,19 @@ onMounted(() => {
   transition: background 0.15s;
 }
 .header-map-link:hover { background: rgba(88,194,125,0.1); text-decoration: none; }
+
+.header-instagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: #e1306c;
+  font-size: 0.8rem;
+  opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.header-instagram:hover { opacity: 1; }
 
 .btn-login {
   background: #2b6cb0;
