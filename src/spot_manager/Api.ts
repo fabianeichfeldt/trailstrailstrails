@@ -345,6 +345,46 @@ export async function setEmbedTokenTrails(
   if (!ins.ok) throw new Error(`Insert embed trail links failed: ${await ins.text()}`);
 }
 
+// ─── Parking lots ──────────────────────────────────────────────────────────────
+
+export interface ParkingRow {
+  id: string;
+  spot_id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  weight_limit_hint?: string | null;
+  opening_hours_hint?: string | null;
+  cost_hint?: string | null;
+  charging_hint?: string | null;
+}
+
+export async function getSpotParking(spotId: string): Promise<ParkingRow[]> {
+  const res = await fetch(`${REST}/parking?select=*&spot_id=eq.${spotId}&order=name`, {
+    headers: anonHeaders(),
+  });
+  return json<ParkingRow[]>(res);
+}
+
+export async function upsertParking(row: Partial<ParkingRow> & { spot_id: string }, jwt: string): Promise<ParkingRow> {
+  const isNew = !row.id;
+  const url   = isNew ? `${REST}/parking` : `${REST}/parking?id=eq.${row.id}`;
+  const res = await fetch(url, {
+    method:  isNew ? 'POST' : 'PATCH',
+    headers: headers(jwt, { Prefer: 'return=representation' }),
+    body:    JSON.stringify(row),
+  });
+  const data = await json<ParkingRow | ParkingRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function deleteParking(id: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/parking?id=eq.${id}`, {
+    method: 'DELETE', headers: headers(jwt),
+  });
+  if (!res.ok) throw new Error(`Delete failed: ${await res.text()}`);
+}
+
 /** Fetches a flat list of all trails (all types) for the token trail picker. */
 export async function getAllTrailsForPicker(jwt: string): Promise<TrailPickerRow[]> {
   const fields = 'id,name';

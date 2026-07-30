@@ -15,10 +15,14 @@ import {
   deleteEmbedToken,
   setEmbedTokenTrails,
   getAllTrailsForPicker,
+  getSpotParking,
+  upsertParking,
+  deleteParking,
   type GpxTrailRow,
   type GpxTourRow,
   type SpotDetailsRow,
   type EmbedTokenRow,
+  type ParkingRow,
 } from './Api';
 
 // BASE URL defined in vitest.config.ts via `define`
@@ -441,5 +445,87 @@ describe('getAllTrailsForPicker', () => {
       { id: 'p1', name: 'Park B', type: 'bikepark' },
       { id: 'd1', name: 'Dirt C', type: 'dirtpark' },
     ]);
+  });
+});
+
+// ── Parking lots ────────────────────────────────────────────────────────────
+
+describe('getSpotParking', () => {
+  const LOT: ParkingRow = {
+    id: 'pk1', spot_id: 's1', name: 'Main Lot', lat: 47.8, lng: 13.0,
+    weight_limit_hint: null, opening_hours_hint: null, cost_hint: null, charging_hint: null,
+  };
+
+  it('fetches parking rows filtered by spot_id', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([LOT]));
+    vi.stubGlobal('fetch', fetch);
+    const result = await getSpotParking('s1');
+    expect(result).toEqual([LOT]);
+    expect(fetch.mock.calls[0][0]).toContain('/parking?select=*&spot_id=eq.s1');
+  });
+
+  it('returns an empty array when the spot has no lots', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
+    expect(await getSpotParking('s1')).toEqual([]);
+  });
+});
+
+describe('upsertParking', () => {
+  const LOT: ParkingRow = {
+    id: 'pk1', spot_id: 's1', name: 'Main Lot', lat: 47.8, lng: 13.0,
+  };
+
+  it('uses POST for a new record (no id field)', async () => {
+    const { id: _id, ...newLot } = LOT;
+    const fetch = vi.fn().mockReturnValue(ok([{ ...newLot, id: 'new-id' }]));
+    vi.stubGlobal('fetch', fetch);
+    await upsertParking({ ...newLot, spot_id: 's1' }, JWT);
+    expect(fetch.mock.calls[0][1].method).toBe('POST');
+    expect(fetch.mock.calls[0][0]).not.toContain('id=eq.');
+  });
+
+  it('uses PATCH for an existing record (has id)', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([LOT]));
+    vi.stubGlobal('fetch', fetch);
+    await upsertParking(LOT, JWT);
+    expect(fetch.mock.calls[0][1].method).toBe('PATCH');
+    expect(fetch.mock.calls[0][0]).toContain('id=eq.pk1');
+  });
+
+  it('unwraps an array response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([LOT])));
+    expect(await upsertParking(LOT, JWT)).toEqual(LOT);
+  });
+
+  it('accepts a single-object response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(LOT)));
+    expect(await upsertParking(LOT, JWT)).toEqual(LOT);
+  });
+
+  it('sends Prefer: return=representation header', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([LOT]));
+    vi.stubGlobal('fetch', fetch);
+    await upsertParking(LOT, JWT);
+    expect(fetch.mock.calls[0][1].headers['Prefer']).toContain('return=representation');
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'bad request')));
+    await expect(upsertParking(LOT, JWT)).rejects.toThrow('400');
+  });
+});
+
+describe('deleteParking', () => {
+  it('sends DELETE to the correct endpoint', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await deleteParking('pk1', JWT);
+    expect(fetch.mock.calls[0][0]).toContain('parking?id=eq.pk1');
+    expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'forbidden')));
+    await expect(deleteParking('pk1', JWT)).rejects.toThrow('Delete failed');
   });
 });
