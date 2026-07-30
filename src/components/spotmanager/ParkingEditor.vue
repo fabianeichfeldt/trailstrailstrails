@@ -15,7 +15,11 @@
 
       <div class="parking-field-label">
         Standort
-        <LocationPicker v-model="location" />
+        <div class="parking-location-hint" :class="{ 'is-unset': !location }">
+          <span class="parking-location-badge" v-html="badgeHtml" />
+          <span v-if="location">{{ location.lat.toFixed(6) }}, {{ location.lng.toFixed(6) }}</span>
+          <span v-else>Auf die Karte rechts klicken, um den Standort zu setzen</span>
+        </div>
       </div>
 
       <label class="parking-field-label">
@@ -52,13 +56,18 @@
 <script setup lang="ts">
 import type { ParkingRow } from '~/spot_manager/Api'
 import { upsertParking } from '~/spot_manager/Api'
-import LocationPicker from '~/spot_manager/LocationPicker.vue'
-import type { LatLng } from '~/spot_manager/locationPickerUtils'
+import type { MapViewLike } from '~/spot_manager/MapView'
+import type { LatLng } from '~/spot_manager/coords'
+import { parkingIconOptions } from '~/map/markerIcon'
 
 const props = defineProps<{
   lot: ParkingRow | null   // null = create mode
   spotId: string
   jwt: string
+  // Note: the parent's template auto-unwraps its `mapView` shallowRef when
+  // binding `:map-view="mapView"`, so this prop receives the plain
+  // MapViewLike instance, not a ref.
+  mapView: MapViewLike | null
 }>()
 
 const emit = defineEmits<{
@@ -80,10 +89,20 @@ const location = ref<LatLng | null>(
   props.lot ? { lat: props.lot.lat, lng: props.lot.lng } : null,
 )
 
+const badgeHtml = parkingIconOptions().html
+
 const busy = ref(false)
 const saveError = ref<string | null>(null)
 
 const canSave = computed(() => form.name.trim().length > 0 && location.value !== null)
+
+// Reuses the persistent big map (src/spot_manager/MapView.ts) as the
+// coordinate picker instead of embedding a second Leaflet instance.
+props.mapView?.enablePointPicker(location.value, (pos) => { location.value = pos })
+
+onUnmounted(() => {
+  props.mapView?.disablePointPicker()
+})
 
 async function save() {
   if (!location.value) {
@@ -145,6 +164,33 @@ async function save() {
   text-transform: none;
   letter-spacing: 0;
   color: #aaa;
+}
+
+.parking-location-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f0f6ff;
+  font-size: 13px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #111;
+  font-family: monospace;
+}
+.parking-location-hint.is-unset {
+  background: #fafafa;
+  color: #999;
+  font-family: inherit;
+}
+.parking-location-badge {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .parking-hint-textarea {

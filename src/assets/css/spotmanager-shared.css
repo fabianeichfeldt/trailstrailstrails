@@ -1,0 +1,97 @@
+/* Shared SpotManager form/list primitives.
+ *
+ * These must be global (not scoped inside SpotManagerApp.vue) because Vue's
+ * `scoped` CSS only reaches a child component's root element, not elements
+ * nested inside its own template — ParkingList/ParkingEditor/EmbedTokenList/
+ * EmbedTokenEditor all reuse these classes and would otherwise render with
+ * zero styling (bare browser-default buttons/inputs).
+ */
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.sm-btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #0077cc; color: #fff; border: none;
+  padding: 9px 18px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,119,204,.3);
+  transition: background .15s, box-shadow .15s, transform .05s;
+}
+.sm-btn-primary:hover:not(:disabled) { background: #005fa3; box-shadow: 0 4px 12px rgba(0,119,204,.35); }
+.sm-btn-primary:active:not(:disabled) { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,119,204,.3); }
+.sm-btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.sm-btn-delete-confirm { background: #c62828; box-shadow: 0 1px 3px rgba(198,40,40,.3); }
+.sm-btn-delete-confirm:hover:not(:disabled) { background: #a31e1e; box-shadow: 0 4px 12px rgba(198,40,40,.35); }
+
+.sm-btn-secondary {
+  background: #fff; color: #555; border: 1px solid #d0d0d0;
+  padding: 9px 16px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.sm-btn-secondary:hover { background: #f5f5f5; border-color: #aaa; }
+.sm-btn-secondary:active { transform: translateY(1px); }
+
+.sm-btn-add {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #0077cc; color: #fff; border: none;
+  padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,119,204,.3);
+  transition: background .15s, box-shadow .15s, transform .05s;
+}
+.sm-btn-add:hover { background: #005fa3; box-shadow: 0 3px 10px rgba(0,119,204,.35); }
+.sm-btn-add:active { transform: translateY(1px); box-shadow: 0 1px 3px rgba(0,119,204,.3); }
+
+.sm-btn-icon {
+  background: none; border: 1px solid transparent; color: #666; cursor: pointer;
+  font-size: 12px; padding: 4px 7px; border-radius: 5px; transition: all .15s;
+}
+.sm-btn-icon:hover { background: #eee; color: #333; }
+.sm-btn-icon:active { transform: translateY(1px); }
+.sm-btn-danger { color: #c62828; }
+.sm-btn-danger:hover { background: #fdecea; border-color: #f0a0a0; color: #c62828; }
+
+.sm-btn-back {
+  background: none; border: none; color: #555; cursor: pointer;
+  font-size: 16px; padding: 4px 8px 4px 0; transition: color .15s;
+}
+.sm-btn-back:hover { color: #000; }
+
+.sm-btn-primary:focus-visible,
+.sm-btn-secondary:focus-visible,
+.sm-btn-add:focus-visible,
+.sm-btn-icon:focus-visible,
+.sm-btn-back:focus-visible {
+  outline: 2px solid #0077cc; outline-offset: 2px;
+}
+
+/* ── Form chrome ──────────────────────────────────────────────────────── */
+.sm-form-header { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+.sm-form-header h3 { margin: 0; font-size: 14px; }
+.sm-form-actions { display: flex; gap: 10px; padding-top: 4px; }
+.sm-error { color: #c62828; }
+.sm-center-msg { text-align: center; padding: 40px 20px; color: #666; font-size: 14px; }
+.sm-empty { font-size: 12px; color: #aaa; padding: 6px 0; margin: 0; }
+
+.sm-check-label { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; padding: 3px 0; }
+.sm-check-label input { accent-color: #0077cc; width: 15px; height: 15px; }
+
+.sm-section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-bottom: 8px; border-bottom: 1px solid #eee; margin-bottom: 8px;
+}
+.sm-section-header h3 { margin: 0; font-size: 13px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .4px; }
+.sm-count { background: #e0e0e0; color: #666; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 5px; }
+
+/* ── Inputs ───────────────────────────────────────────────────────────── */
+.sd-input {
+  border: 1px solid #d0d0d0; border-radius: 7px; padding: 9px 12px;
+  font-size: 13px; color: #333; background: #fafafa; width: 100%;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.sd-input:focus { outline: none; border-color: #0077cc; background: #fff; box-shadow: 0 0 0 3px rgba(0,119,204,.12); }
+
+.sd-textarea {
+  border: 1px solid #d0d0d0; border-radius: 7px; padding: 10px 12px;
+  font-size: 13px; color: #333; background: #fafafa; resize: vertical;
+  min-height: 120px; width: 100%; font-family: inherit; line-height: 1.5;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+}
+.sd-textarea:focus { outline: none; border-color: #0077cc; background: #fff; box-shadow: 0 0 0 3px rgba(0,119,204,.12); }

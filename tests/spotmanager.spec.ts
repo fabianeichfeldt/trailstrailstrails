@@ -229,10 +229,10 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
 // ── Parking lots ─────────────────────────────────────────────────────────────
 //
 // Happy path: a trailcrew member opens their assigned spot, adds a parking
-// lot (name + a click on the LocationPicker mini-map to set coordinates),
-// saves it, and it shows up back in the parking list. This exercises the
-// full ParkingList -> ParkingEditor -> LocationPicker -> upsertParking round
-// trip added for the "parking lots per spot" feature.
+// lot (name + a click on the shared big map to set coordinates via
+// MapView's point picker), saves it, and it shows up back in the parking
+// list. This exercises the full ParkingList -> ParkingEditor -> MapView ->
+// upsertParking round trip added for the "parking lots per spot" feature.
 
 baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and listed', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
@@ -280,9 +280,16 @@ baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and list
 
   await page.locator('.parking-editor input[type="text"]').fill('Hauptparkplatz');
 
-  // Click on the LocationPicker mini-map to place the pin
-  await expect(page.locator('.lp-map')).toBeVisible({ timeout: 4000 });
-  await page.locator('.lp-map').click({ position: { x: 100, y: 100 } });
+  // Click on the shared big map (right pane) to place the pin.
+  // Use a bounding-box-relative offset (not a fixed pixel coordinate) so
+  // this doesn't miss the map on narrower viewports — mirrors clickMap()
+  // in add-spot.spec.ts.
+  const mapEl = page.locator('#sm-map');
+  await expect(mapEl).toBeVisible({ timeout: 4000 });
+  const box = await mapEl.boundingBox();
+  if (!box) throw new Error('Map container not found');
+  await mapEl.click({ position: { x: box.width * 0.5, y: box.height * 0.3 } });
+  await expect(page.locator('.parking-location-hint:not(.is-unset)')).toBeVisible({ timeout: 4000 });
 
   await page.locator('.parking-editor .sm-btn-primary').click();
 

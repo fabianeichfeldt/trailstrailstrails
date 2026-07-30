@@ -85,6 +85,7 @@
           :lot="parkingEditTarget"
           :spot-id="spotId"
           :jwt="parkingJwt"
+          :map-view="mapView"
           @cancel="openParkingList"
           @saved="openParkingList"
         />
@@ -1562,16 +1563,10 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-embed-btn:hover { border-color: #1b4332; background: #f0fdf4; box-shadow: 0 2px 6px rgba(27,67,50,.12); }
 
 /* ── List view ────────────────────────────────────────────────────── */
+/* .sm-section-header/.sm-count/.sm-empty live in spotmanager-shared.css */
 .sm-list-view { padding: 0 0 80px; }
 .sm-section { padding: 12px 12px 0; }
-.sm-section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-bottom: 8px; border-bottom: 1px solid #eee; margin-bottom: 8px;
-}
-.sm-section-header h3 { margin: 0; font-size: 13px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-.sm-count { background: #e0e0e0; color: #666; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 5px; }
 .sm-items { display: flex; flex-direction: column; gap: 6px; }
-.sm-empty { font-size: 12px; color: #aaa; padding: 6px 0; margin: 0; }
 
 .sm-item {
   display: flex; align-items: center; gap: 10px; padding: 9px 10px;
@@ -1595,43 +1590,13 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-item-drag-over { border-color: #0077cc; background: #e8f4fd; box-shadow: 0 0 0 1px #0077cc; }
 
 /* ── Buttons ──────────────────────────────────────────────────────── */
-.sm-btn-icon {
-  background: none; border: 1px solid transparent; color: #666; cursor: pointer;
-  font-size: 12px; padding: 4px 7px; border-radius: 5px; transition: all .15s;
-}
-.sm-btn-icon:hover { background: #eee; color: #333; }
-.sm-btn-danger { color: #c62828; }
-.sm-btn-danger:hover { background: #fdecea; border-color: #f0a0a0; color: #c62828; }
-.sm-btn-add {
-  display: flex; align-items: center; gap: 5px;
-  background: #0077cc; color: #fff; border: none;
-  padding: 5px 11px; border-radius: 6px; font-size: 12px; cursor: pointer;
-}
-.sm-btn-add:hover { background: #005fa3; }
-.sm-btn-primary {
-  background: #0077cc; color: #fff; border: none;
-  padding: 9px 18px; border-radius: 7px; font-size: 13px; cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
-}
-.sm-btn-primary:hover:not(:disabled) { background: #005fa3; }
-.sm-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-.sm-btn-delete-confirm { background: #c62828; }
-.sm-btn-delete-confirm:hover:not(:disabled) { background: #a31e1e; }
-.sm-btn-secondary {
-  background: #fff; color: #555; border: 1px solid #d0d0d0;
-  padding: 9px 16px; border-radius: 7px; font-size: 13px; cursor: pointer;
-}
-.sm-btn-secondary:hover { background: #f5f5f5; border-color: #aaa; }
-.sm-btn-back {
-  background: none; border: none; color: #555; cursor: pointer;
-  font-size: 16px; padding: 4px 8px 4px 0;
-}
-.sm-btn-back:hover { color: #000; }
+/* .sm-btn-primary/.sm-btn-secondary/.sm-btn-add/.sm-btn-icon/.sm-btn-danger/
+   .sm-btn-back and their shared form chrome live in
+   src/assets/css/spotmanager-shared.css (global, not scoped) — see that
+   file's header comment for why. */
 
 /* ── Edit form ────────────────────────────────────────────────────── */
 .sm-edit-form { padding: 14px 14px 80px; display: flex; flex-direction: column; gap: 12px; }
-.sm-form-header { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
-.sm-form-header h3 { margin: 0; font-size: 14px; }
 .sm-edit-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #555; }
 .sm-edit-form input[type="text"],
 .sm-edit-form input[type="number"],
@@ -1649,10 +1614,8 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 }
 .sm-trail-checks { display: flex; flex-direction: column; gap: 6px; }
 .sm-label { font-size: 12px; font-weight: 600; color: #555; }
-.sm-check-label { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; padding: 3px 0; }
-.sm-check-label input { accent-color: #0077cc; width: 15px; height: 15px; }
+/* .sm-check-label/.sm-form-actions live in spotmanager-shared.css */
 .sm-badge-auto { font-size: 10px; background: #e3f2fd; color: #1565c0; border-radius: 4px; padding: 1px 5px; font-weight: 700; }
-.sm-form-actions { display: flex; gap: 10px; padding-top: 4px; }
 
 /* ── Import view ──────────────────────────────────────────────────── */
 .sm-import-view { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
@@ -1769,11 +1732,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sd-access-label { font-size: 12px; font-weight: 700; color: #444; }
 .sd-access-card.active .sd-access-label { color: var(--access-color); }
 .sd-access-desc { font-size: 10px; color: #999; line-height: 1.3; }
-.sd-input {
-  border: 1px solid #d0d0d0; border-radius: 7px; padding: 9px 12px;
-  font-size: 13px; color: #333; background: #fafafa; width: 100%;
-}
-.sd-input:focus { outline: none; border-color: #0077cc; background: #fff; }
+/* .sd-input/.sd-textarea live in spotmanager-shared.css */
 .sd-char-hint { font-size: 11px; color: #bbb; text-align: right; margin-top: -4px; }
 .sd-toggle-row { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; font-size: 13px; color: #333; line-height: 1.4; }
 .sd-toggle-row input[type="checkbox"] { margin-top: 2px; accent-color: #0077cc; width: 15px; height: 15px; flex-shrink: 0; }
@@ -1803,12 +1762,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   padding: 9px 14px; cursor: pointer; width: 100%; justify-content: center;
 }
 .sd-add-rule-btn:hover { background: #daeeff; border-color: #0077cc; }
-.sd-textarea {
-  border: 1px solid #d0d0d0; border-radius: 7px; padding: 10px 12px;
-  font-size: 13px; color: #333; background: #fafafa; resize: vertical;
-  min-height: 120px; width: 100%; font-family: inherit; line-height: 1.5;
-}
-.sd-textarea:focus { outline: none; border-color: #0077cc; background: #fff; }
 .sd-save-row {
   position: sticky; bottom: 0; background: #fff; border-top: 1px solid #eee;
   padding: 12px 0 4px; display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;
@@ -1848,8 +1801,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 /* ── Misc ─────────────────────────────────────────────────────────── */
 .sm-spinner { width: 32px; height: 32px; margin: 40px auto; border: 3px solid #e0e0e0; border-top-color: #0077cc; border-radius: 50%; animation: sm-spin .7s linear infinite; }
 @keyframes sm-spin { to { transform: rotate(360deg); } }
-.sm-center-msg { text-align: center; padding: 40px 20px; color: #666; font-size: 14px; }
-.sm-error { color: #c62828; }
+/* .sm-center-msg/.sm-error live in spotmanager-shared.css */
 .sm-muted { font-size: 12px; color: #aaa; }
 
 /* ── Invitation codes ─────────────────────────────────────────────── */

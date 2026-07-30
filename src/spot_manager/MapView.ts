@@ -3,6 +3,8 @@ import { GpxTrailRow, GpxTourRow } from './Api';
 import { DIFF_COLOR } from './GpxProcessor';
 import type { GpxPoint } from './GpxProcessor';
 import { elevationSVG, bindElevationHover } from '../map/spot_panel/elevationSvg';
+import { parkingIconOptions } from '../map/markerIcon';
+import { roundCoord, type LatLng } from './coords';
 import { ElevationPoint } from '../types/MtbTypes';
 
 export interface MapViewLike {
@@ -23,6 +25,8 @@ export interface MapViewLike {
   updateLiveSlice(points: GpxPoint[], color: string): void;
   clearLiveSlice(): void;
   addSegmentPolyline(key: string, points: GpxPoint[], color: string): void;
+  enablePointPicker(initial: LatLng | null, onPick: (pos: LatLng) => void): void;
+  disablePointPicker(): void;
 }
 
 const PENDING_COLOR = '#999';
@@ -34,6 +38,13 @@ export class MapView {
   private onPolylineClick?: (id: string) => void;
   private sourceTrack: L.Polyline | null = null;
   private liveSlice: L.Polyline | null = null;
+  private pointPickerMarker: L.Marker | null = null;
+  private pointPickerCallback: ((pos: LatLng) => void) | null = null;
+  private pointPickerClickHandler = (e: L.LeafletMouseEvent) => {
+    const pos = { lat: roundCoord(e.latlng.lat), lng: roundCoord(e.latlng.lng) };
+    this.placePointPickerMarker(pos);
+    this.pointPickerCallback?.(pos);
+  };
 
   constructor(container: HTMLElement) {
     this.map = L.map(container, { zoomControl: true });
@@ -161,12 +172,47 @@ export class MapView {
     this.layers.set(key, pl);
   }
 
+  /** Click-to-place (and drag-to-adjust) a single marker, for the parking-lot editor. */
+  enablePointPicker(initial: LatLng | null, onPick: (pos: LatLng) => void) {
+    this.disablePointPicker();
+    this.pointPickerCallback = onPick;
+    if (initial) {
+      this.placePointPickerMarker(initial);
+      this.map.setView([initial.lat, initial.lng], Math.max(this.map.getZoom(), 14));
+    }
+    this.map.on('click', this.pointPickerClickHandler);
+  }
+
+  disablePointPicker() {
+    this.map.off('click', this.pointPickerClickHandler);
+    if (this.pointPickerMarker) { this.map.removeLayer(this.pointPickerMarker); this.pointPickerMarker = null; }
+    this.pointPickerCallback = null;
+  }
+
+  private placePointPickerMarker(pos: LatLng) {
+    if (!this.pointPickerMarker) {
+      this.pointPickerMarker = L.marker([pos.lat, pos.lng], {
+        icon: L.divIcon(parkingIconOptions()),
+        draggable: true,
+      }).addTo(this.map);
+      this.pointPickerMarker.on('dragend', () => {
+        const ll = this.pointPickerMarker!.getLatLng();
+        const pos2 = { lat: roundCoord(ll.lat), lng: roundCoord(ll.lng) };
+        this.pointPickerMarker!.setLatLng([pos2.lat, pos2.lng]);
+        this.pointPickerCallback?.(pos2);
+      });
+    } else {
+      this.pointPickerMarker.setLatLng([pos.lat, pos.lng]);
+    }
+  }
+
   clear() {
     this.layers.forEach(pl => this.map.removeLayer(pl));
     this.layers.clear();
     this.removeHoverMarker();
     this.clearSourceTrack();
     this.clearLiveSlice();
+    this.disablePointPicker();
   }
 
   invalidate() {
