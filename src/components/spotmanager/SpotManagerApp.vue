@@ -12,7 +12,7 @@
       <button v-if="view === 'list'" class="sm-help-btn" title="Hilfe" @click="helpOpen = true">
         <i class="fas fa-question-circle" />
       </button>
-      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : view === 'segment-upload' ? 'Tour hochladen' : view === 'segment-editor' ? 'Segmente definieren' : spotName }}</span>
+      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : view === 'segment-upload' ? 'Tour hochladen' : view === 'segment-editor' ? 'Segmente definieren' : view === 'parking-list' ? 'Parkplätze' : view === 'parking-edit' ? (parkingEditTarget ? 'Parkplatz bearbeiten' : 'Parkplatz erstellen') : spotName }}</span>
       <span class="sm-role-badge">{{ role }}</span>
       <UserAvatar />
     </div>
@@ -68,6 +68,27 @@
           @saved="openEmbedList"
         />
 
+        <!-- Parking lot list (per spot) -->
+        <ParkingList
+          v-else-if="view === 'parking-list'"
+          :lots="parkingLots"
+          :loading="parkingLoading"
+          :error="parkingError"
+          @create="openParkingEditor(null)"
+          @edit="openParkingEditor"
+          @delete="confirmParkingDelete"
+        />
+
+        <!-- Parking lot editor (per spot) -->
+        <ParkingEditor
+          v-else-if="view === 'parking-edit'"
+          :lot="parkingEditTarget"
+          :spot-id="spotId"
+          :jwt="parkingJwt"
+          @cancel="openParkingList"
+          @saved="openParkingList"
+        />
+
         <!-- Spot list -->
         <div v-else-if="view === 'list'" class="sm-list-view">
           <button class="sm-details-banner" @click="openDetailsEditor">
@@ -78,6 +99,19 @@
               <div>
                 <span class="sm-details-banner-title">Spot-Details</span>
                 <span class="sm-details-banner-sub">{{ detailsBannerSub }}</span>
+              </div>
+            </div>
+            <i class="fas fa-chevron-right sm-details-arrow" />
+          </button>
+
+          <button class="sm-details-banner" @click="openParkingList">
+            <div class="sm-details-banner-left">
+              <span class="sm-details-status-dot status-parking">
+                <i class="fas fa-square-parking" />
+              </span>
+              <div>
+                <span class="sm-details-banner-title">Parkplätze</span>
+                <span class="sm-details-banner-sub">{{ parkingBannerSub }}</span>
               </div>
             </div>
             <i class="fas fa-chevron-right sm-details-arrow" />
@@ -696,12 +730,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete confirmation (parking lot) -->
+    <div v-if="parkingDeleteTarget" class="sm-modal-overlay" @click.self="parkingDeleteTarget = null">
+      <div class="sm-modal sm-confirm-modal">
+        <div class="sm-modal-header">
+          <h2><i class="fas fa-trash" /> Parkplatz löschen</h2>
+          <button class="sm-modal-close" @click="parkingDeleteTarget = null"><i class="fas fa-times" /></button>
+        </div>
+        <div class="sm-modal-body">
+          <p style="margin:0">„{{ parkingDeleteTarget.name }}" wirklich löschen?</p>
+        </div>
+        <div class="sm-confirm-actions">
+          <button class="sm-btn-secondary" @click="parkingDeleteTarget = null">Abbrechen</button>
+          <button class="sm-btn-primary sm-btn-delete-confirm" :disabled="busy" @click="executeParkingDelete">
+            <i class="fas fa-trash" /> Löschen
+          </button>
+        </div>
+      </div>
+    </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
@@ -710,7 +763,7 @@ import { listInvitationCodes, createInvitationCode } from '../../communication/i
 import type { InvCode } from '../../communication/invitations'
 import { useSegmentEditor } from './useSegmentEditor'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
 
 interface PendingImport {
   key: string
@@ -747,6 +800,58 @@ const embedLoading     = ref(false)
 const embedError       = ref<string | null>(null)
 const embedJwt         = ref('')
 const embedDeleteTarget = ref<EmbedTokenRow | null>(null)
+
+// ── Parking lots ──────────────────────────────────────────────────────────────
+const parkingLots        = ref<ParkingRow[]>([])
+const parkingEditTarget  = ref<ParkingRow | null>(null)
+const parkingLoading     = ref(false)
+const parkingError       = ref<string | null>(null)
+const parkingJwt         = ref('')
+const parkingDeleteTarget = ref<ParkingRow | null>(null)
+
+const parkingBannerSub = computed(() => {
+  const n = parkingLots.value.length
+  if (n === 0) return 'Keine Parkplätze hinterlegt'
+  return n === 1 ? '1 Parkplatz' : `${n} Parkplätze`
+})
+
+async function openParkingList() {
+  view.value = 'parking-list'
+  parkingLoading.value = true
+  parkingError.value   = null
+  try {
+    parkingJwt.value = await authStore.getToken()
+    parkingLots.value = await getSpotParking(spotId.value)
+  } catch (e: any) {
+    parkingError.value = `Fehler: ${e.message}`
+  } finally {
+    parkingLoading.value = false
+  }
+}
+
+function openParkingEditor(lot: ParkingRow | null) {
+  parkingEditTarget.value = lot
+  view.value = 'parking-edit'
+}
+
+function confirmParkingDelete(lot: ParkingRow) {
+  parkingDeleteTarget.value = lot
+}
+
+async function executeParkingDelete() {
+  if (!parkingDeleteTarget.value) return
+  busy.value = true
+  try {
+    const jwt = await authStore.getToken()
+    await deleteParking(parkingDeleteTarget.value.id, jwt)
+    parkingDeleteTarget.value = null
+    await openParkingList()
+  } catch (e: any) {
+    alert(`Fehler: ${e.message}`)
+  } finally {
+    busy.value = false
+  }
+}
 
 async function openEmbedList() {
   view.value    = 'embed-list'
@@ -948,14 +1053,18 @@ async function openSpot(id: string, name: string) {
   loading.value = true
 
   try {
-    const [t, to, d] = await Promise.all([
+    const [t, to, d, pk] = await Promise.all([
       getSpotTrails(id),
       getSpotTours(id),
       getSpotDetails(id),
+      getSpotParking(id),
     ])
     trails.value = t
     tours.value = to
     spotDetails.value = d
+    // Preloaded so the "Parkplätze" banner can show a count immediately;
+    // openParkingList() re-fetches for freshness when the user drills in.
+    parkingLots.value = pk
     trails.value.forEach(tr => mapView.value?.addTrailPolyline(tr))
     tours.value.forEach(to => mapView.value?.addTourPolyline(to))
     mapView.value?.setClickHandler(itemId => {
@@ -976,6 +1085,10 @@ function goBack() {
     openEmbedList()
   } else if (view.value === 'embed-list') {
     view.value = 'selector'
+  } else if (view.value === 'parking-edit') {
+    openParkingList()
+  } else if (view.value === 'parking-list') {
+    view.value = 'list'
   } else if (view.value === 'list') {
     mapView.value?.clear()
     view.value = 'selector'
@@ -1595,6 +1708,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .status-limited { background: #fff3e0; color: #e65100; }
 .status-closed  { background: #fdecea; color: #c62828; }
 .status-unknown { background: #f0f0f0; color: #777; }
+.status-parking { background: #e3edfa; color: #0d5db8; }
 .sm-details-banner-title { display: block; font-size: 12px; font-weight: 700; color: #333; line-height: 1.2; }
 .sm-details-banner-sub { display: block; font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
 .sm-details-arrow { color: #bbb; font-size: 12px; flex-shrink: 0; }

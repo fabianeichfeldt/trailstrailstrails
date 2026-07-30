@@ -225,3 +225,70 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
 
   assertNoLeaks();
 });
+
+// ── Parking lots ─────────────────────────────────────────────────────────────
+//
+// Happy path: a trailcrew member opens their assigned spot, adds a parking
+// lot (name + a click on the LocationPicker mini-map to set coordinates),
+// saves it, and it shows up back in the parking list. This exercises the
+// full ParkingList -> ParkingEditor -> LocationPicker -> upsertParking round
+// trip added for the "parking lots per spot" feature.
+
+baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and listed', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  // trailcrew has exactly one assigned spot
+  await page.route('**/rest/v1/trailcrew_spots**', (route) =>
+    route.fulfill({ json: [{ spot_id: 'spot-1', trails: { id: 'spot-1', name: 'Flowtrail Tegernsee' } }] }),
+  );
+  await page.route('**/rest/v1/spot_gpx_trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/trail_details**',   (route) => route.fulfill({ json: [] }));
+
+  // Stateful parking mock: GET returns whatever has been created so far,
+  // POST persists the new row and returns it (Prefer: return=representation).
+  let lots: any[] = [];
+  await page.route('**/rest/v1/parking**', async (route) => {
+    const req = route.request();
+    if (req.method() === 'POST') {
+      const body = JSON.parse(req.postData() ?? '{}');
+      const created = { id: 'lot-1', ...body };
+      lots = [created];
+      await route.fulfill({ json: [created] });
+    } else {
+      await route.fulfill({ json: lots });
+    }
+  });
+
+  await signInOnSpotmanagerPage(page, 'trailcrew');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  // Open the spot
+  await page.locator('.sm-spot-btn:not(.sm-embed-btn)').first().click();
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toBeVisible({ timeout: 6000 });
+
+  // Navigate to the "Parkplätze" banner (per-spot parking list)
+  await page.locator('.sm-details-banner').filter({ hasText: 'Parkplätze' }).click();
+  await expect(page.locator('.parking-list')).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-empty')).toContainText('Noch keine Parkplätze');
+
+  // Create a new lot
+  await page.locator('.parking-list .sm-btn-add').click();
+  await expect(page.locator('.parking-editor')).toBeVisible({ timeout: 4000 });
+
+  await page.locator('.parking-editor input[type="text"]').fill('Hauptparkplatz');
+
+  // Click on the LocationPicker mini-map to place the pin
+  await expect(page.locator('.lp-map')).toBeVisible({ timeout: 4000 });
+  await page.locator('.lp-map').click({ position: { x: 100, y: 100 } });
+
+  await page.locator('.parking-editor .sm-btn-primary').click();
+
+  // Back on the parking list, the new lot appears
+  await expect(page.locator('.parking-row')).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('.parking-row')).toContainText('Hauptparkplatz');
+
+  assertNoLeaks();
+});
