@@ -91,6 +91,7 @@ export default defineNuxtConfig({
     '~/assets/css/base.css',
     '~/assets/css/marker.css',
     '~/assets/css/spot_panel.css',
+    '~/assets/css/spotmanager-shared.css',
     '~/assets/css/lightbox.css',
     '~/assets/css/trail-tooltip.css',
     'leaflet/dist/leaflet.css',

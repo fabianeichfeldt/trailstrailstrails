@@ -283,3 +283,44 @@ export async function fetchMultipleSpotGpx(
   for (const t of rawTours)  result.get(t.spot_id)?.tours.push({ name: t.name, gpx_points: t.gpx_points })
   return result
 }
+
+// ── Parking lots ──────────────────────────────────────────────────────────────
+
+export interface SpotParkingLot {
+  id: string
+  name: string
+  lat: number
+  lng: number
+  weight_limit_hint?: string
+  opening_hours_hint?: string
+  cost_hint?: string
+  charging_hint?: string
+}
+
+/** Batch-fetch parking lots for many spots in one round trip (used by the main map). */
+export async function fetchMultipleSpotParking(
+  spotIds: string[],
+): Promise<Map<string, SpotParkingLot[]>> {
+  if (!spotIds.length) return new Map()
+
+  const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
+  const res = await fetch(
+    `${REST}/parking?select=id,spot_id,name,lat,lng,weight_limit_hint,opening_hours_hint,cost_hint,charging_hint&spot_id=in.(${idList})`,
+    { headers: anonHeaders() },
+  )
+  if (!res.ok) throw new Error(`parking fetch failed: ${res.status}`)
+
+  type RawParking = SpotParkingLot & { spot_id: string }
+  const raw: RawParking[] = await res.json()
+
+  const result = new Map<string, SpotParkingLot[]>()
+  for (const id of spotIds) result.set(id, [])
+  for (const p of raw) {
+    result.get(p.spot_id)?.push({
+      id: p.id, name: p.name, lat: p.lat, lng: p.lng,
+      weight_limit_hint: p.weight_limit_hint, opening_hours_hint: p.opening_hours_hint,
+      cost_hint: p.cost_hint, charging_hint: p.charging_hint,
+    })
+  }
+  return result
+}

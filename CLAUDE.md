@@ -77,7 +77,7 @@ SSG deploy = no server at runtime. A `src/server/api/*.ts` route only works in p
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
 ### Git commits
-- **Never commit to `main` directly.** All commits must go to a working branch (worktree, feature branch, etc.).
+- **Never commit to `main` directly.** All commits must go to a working branch (feature branch, etc., highly prefer feature branch. if on main, ask for creating a feature branch).
 - Committing to a working branch at logical checkpoints is encouraged — it lets you review progress and keeps the work recoverable.
 - The user merges working branches into `main` themselves.
 

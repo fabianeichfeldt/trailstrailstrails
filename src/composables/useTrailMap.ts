@@ -1,13 +1,13 @@
 import type { Ref } from 'vue'
 import type { Trail } from '~/types/Trail'
-import { markerIconOptions } from '~/map/markerIcon'
+import { markerIconOptions, parkingIconOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
 } from '~/map/trailTooltip'
 import { GpxRenderGuard } from '~/map/gpxRenderGuard'
-import { fetchMultipleSpotGpx } from '~/communication/trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -63,11 +63,16 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Elevation tooltip — repositioned on GPX polyline hover
     const tooltipEl = createTooltipEl(mymap.getContainer())
     const gpxCache  = new Map<string, { trails: any[]; tours: any[] }>()
+    // Parking lots per spot — same cache/staleness pattern as gpxCache, fetched
+    // and rendered alongside the GPX overview (same zoom-triggered path).
+    const parkingCache = new Map<string, SpotParkingLot[]>()
 
     // ── View mode ────────────────────────────────────────────────────────────
     const GPX_ZOOM_THRESHOLD = 11
     const renderGuard = new GpxRenderGuard()
     let gpxLayers: any[] = []
+    // Plain marker layers for parking lots — not clustered, mirrors gpxLayers
+    let parkingLayers: any[] = []
     // Visible line layers grouped by spot ID for hover highlighting
     let gpxSpotLines = new Map<string, Array<{ line: L.Polyline; opts: any }>>()
 
@@ -169,6 +174,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       for (const l of gpxLayers) mymap.removeLayer(l)
       gpxLayers = []
       gpxSpotLines = new Map()
+      // Clear previous parking markers
+      for (const l of parkingLayers) mymap.removeLayer(l)
+      parkingLayers = []
       tooltipEl.style.display = 'none'
 
       // No bounds filter — spot marker coords can be far from the actual trail
@@ -177,12 +185,15 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       const filtered = filtersStore.apply(all)
       if (!filtered.length) return
 
-      // Batch-fetch GPX for any uncached spots
+      // Batch-fetch GPX + parking lots for any uncached spots
       const uncached = filtered.filter(t => !gpxCache.has(t.id)).map(t => t.id)
-      if (uncached.length) {
-        const fetched = await fetchMultipleSpotGpx(uncached)
-        fetched.forEach((gpx, id) => gpxCache.set(id, gpx))
-      }
+      const uncachedParking = filtered.filter(t => !parkingCache.has(t.id)).map(t => t.id)
+      const [fetched, fetchedParking] = await Promise.all([
+        uncached.length ? fetchMultipleSpotGpx(uncached) : Promise.resolve(new Map()),
+        uncachedParking.length ? fetchMultipleSpotParking(uncachedParking) : Promise.resolve(new Map()),
+      ])
+      fetched.forEach((gpx: any, id: string) => gpxCache.set(id, gpx))
+      fetchedParking.forEach((lots: SpotParkingLot[], id: string) => parkingCache.set(id, lots))
       if (renderGuard.isStale(gen)) return  // superseded by newer render or mode switched to markers
 
       const containerW = () => mymap.getContainer().clientWidth
@@ -356,6 +367,22 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
           addGpxLine(latlngs, { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 }, t.name, t.difficulty, t.gpx_points, trail, t.trail_description ?? '')
         }
       }
+
+      // Parking markers — plain layers added directly to the map (not
+      // clustered), shown alongside the GPX overview for every spot type.
+      for (const trail of filtered) {
+        const lots = parkingCache.get(trail.id) ?? []
+        for (const lot of lots) {
+          const marker = L.marker([lot.lat, lot.lng], {
+            icon: L.divIcon(parkingIconOptions()),
+          }).addTo(mymap)
+          marker.on('click', () => {
+            mapStore.panelOpen = true
+            spotPanel.openParkingLot(trail as any, lot)
+          })
+          parkingLayers.push(marker)
+        }
+      }
     }
 
     function switchView() {
@@ -368,6 +395,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         for (const l of gpxLayers) mymap.removeLayer(l)
         gpxLayers = []
         gpxSpotLines = new Map()
+        // Remove parking markers — they only show alongside the GPX overview
+        for (const l of parkingLayers) mymap.removeLayer(l)
+        parkingLayers = []
         tooltipEl.style.display = 'none'
         renderMarkers()
       }

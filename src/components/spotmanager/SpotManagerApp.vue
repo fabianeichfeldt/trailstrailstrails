@@ -12,7 +12,13 @@
       <button v-if="view === 'list'" class="sm-help-btn" title="Hilfe" @click="helpOpen = true">
         <i class="fas fa-question-circle" />
       </button>
-      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : view === 'segment-upload' ? 'Tour hochladen' : view === 'segment-editor' ? 'Segmente definieren' : spotName }}</span>
+      <nav class="sm-breadcrumbs" aria-label="Breadcrumb">
+        <template v-for="(crumb, i) in breadcrumbs" :key="i">
+          <button v-if="crumb.onClick" type="button" class="sm-crumb sm-crumb-link" @click="crumb.onClick">{{ crumb.label }}</button>
+          <span v-else class="sm-crumb sm-crumb-current">{{ crumb.label }}</span>
+          <i v-if="i < breadcrumbs.length - 1" class="fas fa-chevron-right sm-crumb-sep" />
+        </template>
+      </nav>
       <span class="sm-role-badge">{{ role }}</span>
       <UserAvatar />
     </div>
@@ -68,6 +74,28 @@
           @saved="openEmbedList"
         />
 
+        <!-- Parking lot list (per spot) -->
+        <ParkingList
+          v-else-if="view === 'parking-list'"
+          :lots="parkingLots"
+          :loading="parkingLoading"
+          :error="parkingError"
+          @create="openParkingEditor(null)"
+          @edit="openParkingEditor"
+          @delete="confirmParkingDelete"
+        />
+
+        <!-- Parking lot editor (per spot) -->
+        <ParkingEditor
+          v-else-if="view === 'parking-edit'"
+          :lot="parkingEditTarget"
+          :spot-id="spotId"
+          :jwt="parkingJwt"
+          :map-view="mapView"
+          @cancel="openParkingList"
+          @saved="openParkingList"
+        />
+
         <!-- Spot list -->
         <div v-else-if="view === 'list'" class="sm-list-view">
           <button class="sm-details-banner" @click="openDetailsEditor">
@@ -78,6 +106,19 @@
               <div>
                 <span class="sm-details-banner-title">Spot-Details</span>
                 <span class="sm-details-banner-sub">{{ detailsBannerSub }}</span>
+              </div>
+            </div>
+            <i class="fas fa-chevron-right sm-details-arrow" />
+          </button>
+
+          <button class="sm-details-banner" @click="openParkingList">
+            <div class="sm-details-banner-left">
+              <span class="sm-details-status-dot status-parking">
+                <i class="fas fa-square-parking" />
+              </span>
+              <div>
+                <span class="sm-details-banner-title">Parkplätze</span>
+                <span class="sm-details-banner-sub">{{ parkingBannerSub }}</span>
               </div>
             </div>
             <i class="fas fa-chevron-right sm-details-arrow" />
@@ -696,12 +737,31 @@
         </div>
       </div>
     </div>
+
+    <!-- Delete confirmation (parking lot) -->
+    <div v-if="parkingDeleteTarget" class="sm-modal-overlay" @click.self="parkingDeleteTarget = null">
+      <div class="sm-modal sm-confirm-modal">
+        <div class="sm-modal-header">
+          <h2><i class="fas fa-trash" /> Parkplatz löschen</h2>
+          <button class="sm-modal-close" @click="parkingDeleteTarget = null"><i class="fas fa-times" /></button>
+        </div>
+        <div class="sm-modal-body">
+          <p style="margin:0">„{{ parkingDeleteTarget.name }}" wirklich löschen?</p>
+        </div>
+        <div class="sm-confirm-actions">
+          <button class="sm-btn-secondary" @click="parkingDeleteTarget = null">Abbrechen</button>
+          <button class="sm-btn-primary sm-btn-delete-confirm" :disabled="busy" @click="executeParkingDelete">
+            <i class="fas fa-trash" /> Löschen
+          </button>
+        </div>
+      </div>
+    </div>
   </Teleport>
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx } from '../../spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
@@ -710,7 +770,7 @@ import { listInvitationCodes, createInvitationCode } from '../../communication/i
 import type { InvCode } from '../../communication/invitations'
 import { useSegmentEditor } from './useSegmentEditor'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
 
 interface PendingImport {
   key: string
@@ -747,6 +807,58 @@ const embedLoading     = ref(false)
 const embedError       = ref<string | null>(null)
 const embedJwt         = ref('')
 const embedDeleteTarget = ref<EmbedTokenRow | null>(null)
+
+// ── Parking lots ──────────────────────────────────────────────────────────────
+const parkingLots        = ref<ParkingRow[]>([])
+const parkingEditTarget  = ref<ParkingRow | null>(null)
+const parkingLoading     = ref(false)
+const parkingError       = ref<string | null>(null)
+const parkingJwt         = ref('')
+const parkingDeleteTarget = ref<ParkingRow | null>(null)
+
+const parkingBannerSub = computed(() => {
+  const n = parkingLots.value.length
+  if (n === 0) return 'Keine Parkplätze hinterlegt'
+  return n === 1 ? '1 Parkplatz' : `${n} Parkplätze`
+})
+
+async function openParkingList() {
+  view.value = 'parking-list'
+  parkingLoading.value = true
+  parkingError.value   = null
+  try {
+    parkingJwt.value = await authStore.getToken()
+    parkingLots.value = await getSpotParking(spotId.value)
+  } catch (e: any) {
+    parkingError.value = `Fehler: ${e.message}`
+  } finally {
+    parkingLoading.value = false
+  }
+}
+
+function openParkingEditor(lot: ParkingRow | null) {
+  parkingEditTarget.value = lot
+  view.value = 'parking-edit'
+}
+
+function confirmParkingDelete(lot: ParkingRow) {
+  parkingDeleteTarget.value = lot
+}
+
+async function executeParkingDelete() {
+  if (!parkingDeleteTarget.value) return
+  busy.value = true
+  try {
+    const jwt = await authStore.getToken()
+    await deleteParking(parkingDeleteTarget.value.id, jwt)
+    parkingDeleteTarget.value = null
+    await openParkingList()
+  } catch (e: any) {
+    alert(`Fehler: ${e.message}`)
+  } finally {
+    busy.value = false
+  }
+}
 
 async function openEmbedList() {
   view.value    = 'embed-list'
@@ -948,14 +1060,18 @@ async function openSpot(id: string, name: string) {
   loading.value = true
 
   try {
-    const [t, to, d] = await Promise.all([
+    const [t, to, d, pk] = await Promise.all([
       getSpotTrails(id),
       getSpotTours(id),
       getSpotDetails(id),
+      getSpotParking(id),
     ])
     trails.value = t
     tours.value = to
     spotDetails.value = d
+    // Preloaded so the "Parkplätze" banner can show a count immediately;
+    // openParkingList() re-fetches for freshness when the user drills in.
+    parkingLots.value = pk
     trails.value.forEach(tr => mapView.value?.addTrailPolyline(tr))
     tours.value.forEach(to => mapView.value?.addTourPolyline(to))
     mapView.value?.setClickHandler(itemId => {
@@ -968,7 +1084,10 @@ async function openSpot(id: string, name: string) {
   loading.value = false
 }
 
-function goBack() {
+// One level up from the current view. Shared by the topbar back arrow
+// (goBack, single step) and the breadcrumb trail (goToView, repeats this
+// until the target level is reached).
+function stepBack() {
   if (view.value === 'segment-editor' || view.value === 'segment-upload') {
     cancelSegmentEditor()
     view.value = 'list'
@@ -976,6 +1095,12 @@ function goBack() {
     openEmbedList()
   } else if (view.value === 'embed-list') {
     view.value = 'selector'
+  } else if (view.value === 'parking-edit') {
+    openParkingList()
+  } else if (view.value === 'parking-list') {
+    view.value = 'list'
+  } else if (view.value === 'import') {
+    cancelImport()
   } else if (view.value === 'list') {
     mapView.value?.clear()
     view.value = 'selector'
@@ -983,6 +1108,56 @@ function goBack() {
     cancelEdit()
   }
 }
+
+function goBack() {
+  stepBack()
+}
+
+// Jumps straight to an ancestor level (breadcrumb click) by replaying
+// stepBack() — this reuses the exact same per-view cleanup (map layers,
+// pending imports, editor state) as the single-step back arrow instead of
+// duplicating it. Breadcrumb targets are always genuine ancestors of the
+// current view, so this always converges; the guard is just cheap insurance.
+function goToView(target: View) {
+  let guard = 0
+  while (view.value !== target && guard < 10) {
+    stepBack()
+    guard++
+  }
+}
+
+interface Crumb {
+  label: string
+  onClick?: () => void
+}
+
+const breadcrumbs = computed<Crumb[]>(() => {
+  if (view.value === 'selector') return [{ label: 'Spot Manager' }]
+
+  const crumbs: Crumb[] = [{ label: 'Spot Manager', onClick: () => goToView('selector') }]
+
+  if (view.value === 'embed-list') {
+    crumbs.push({ label: 'Embed-Tokens' })
+  } else if (view.value === 'embed-edit') {
+    crumbs.push({ label: 'Embed-Tokens', onClick: () => goToView('embed-list') })
+    crumbs.push({ label: embedEditTarget.value ? 'Token bearbeiten' : 'Token erstellen' })
+  } else {
+    crumbs.push({ label: spotName.value, onClick: view.value === 'list' ? undefined : () => goToView('list') })
+    if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
+    else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
+    else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
+    else if (view.value === 'details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
+    else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
+    else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
+    else if (view.value === 'parking-edit') {
+      crumbs.push({ label: 'Parkplätze', onClick: () => goToView('parking-list') })
+      crumbs.push({ label: parkingEditTarget.value ? 'Parkplatz bearbeiten' : 'Parkplatz erstellen' })
+    }
+  }
+
+  return crumbs
+})
 
 // ── Edit trail / tour ──────────────────────────────────────────────────────────
 function openEditTrail(id: string) {
@@ -1371,7 +1546,22 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-topbar-home:hover { background: rgba(255,255,255,.13); }
 .sm-topbar-logo-img { height: 34px; width: auto; display: block; border-radius: 4px; }
 .sm-topbar-divider { width: 1px; height: 24px; background: rgba(255,255,255,.15); flex-shrink: 0; }
-.sm-topbar-title { flex: 1; font-size: 15px; font-weight: 600; }
+.sm-breadcrumbs {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.sm-breadcrumbs::-webkit-scrollbar { display: none; }
+.sm-crumb {
+  font-size: 15px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+}
+.sm-crumb-link {
+  background: none; border: none; color: rgba(255,255,255,.65); cursor: pointer;
+  padding: 4px 2px; font-family: inherit; transition: color .15s;
+}
+.sm-crumb-link:hover { color: #fff; text-decoration: underline; }
+.sm-crumb-current { color: #fff; }
+.sm-crumb-sep { font-size: 10px; color: rgba(255,255,255,.35); flex-shrink: 0; }
 .sm-role-badge {
   font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
   padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,.15); color: #ddd;
@@ -1449,16 +1639,10 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-embed-btn:hover { border-color: #1b4332; background: #f0fdf4; box-shadow: 0 2px 6px rgba(27,67,50,.12); }
 
 /* ── List view ────────────────────────────────────────────────────── */
+/* .sm-section-header/.sm-count/.sm-empty live in spotmanager-shared.css */
 .sm-list-view { padding: 0 0 80px; }
 .sm-section { padding: 12px 12px 0; }
-.sm-section-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding-bottom: 8px; border-bottom: 1px solid #eee; margin-bottom: 8px;
-}
-.sm-section-header h3 { margin: 0; font-size: 13px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-.sm-count { background: #e0e0e0; color: #666; border-radius: 10px; padding: 1px 7px; font-size: 11px; margin-left: 5px; }
 .sm-items { display: flex; flex-direction: column; gap: 6px; }
-.sm-empty { font-size: 12px; color: #aaa; padding: 6px 0; margin: 0; }
 
 .sm-item {
   display: flex; align-items: center; gap: 10px; padding: 9px 10px;
@@ -1482,43 +1666,13 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-item-drag-over { border-color: #0077cc; background: #e8f4fd; box-shadow: 0 0 0 1px #0077cc; }
 
 /* ── Buttons ──────────────────────────────────────────────────────── */
-.sm-btn-icon {
-  background: none; border: 1px solid transparent; color: #666; cursor: pointer;
-  font-size: 12px; padding: 4px 7px; border-radius: 5px; transition: all .15s;
-}
-.sm-btn-icon:hover { background: #eee; color: #333; }
-.sm-btn-danger { color: #c62828; }
-.sm-btn-danger:hover { background: #fdecea; border-color: #f0a0a0; color: #c62828; }
-.sm-btn-add {
-  display: flex; align-items: center; gap: 5px;
-  background: #0077cc; color: #fff; border: none;
-  padding: 5px 11px; border-radius: 6px; font-size: 12px; cursor: pointer;
-}
-.sm-btn-add:hover { background: #005fa3; }
-.sm-btn-primary {
-  background: #0077cc; color: #fff; border: none;
-  padding: 9px 18px; border-radius: 7px; font-size: 13px; cursor: pointer;
-  display: flex; align-items: center; gap: 6px;
-}
-.sm-btn-primary:hover:not(:disabled) { background: #005fa3; }
-.sm-btn-primary:disabled { opacity: .5; cursor: not-allowed; }
-.sm-btn-delete-confirm { background: #c62828; }
-.sm-btn-delete-confirm:hover:not(:disabled) { background: #a31e1e; }
-.sm-btn-secondary {
-  background: #fff; color: #555; border: 1px solid #d0d0d0;
-  padding: 9px 16px; border-radius: 7px; font-size: 13px; cursor: pointer;
-}
-.sm-btn-secondary:hover { background: #f5f5f5; border-color: #aaa; }
-.sm-btn-back {
-  background: none; border: none; color: #555; cursor: pointer;
-  font-size: 16px; padding: 4px 8px 4px 0;
-}
-.sm-btn-back:hover { color: #000; }
+/* .sm-btn-primary/.sm-btn-secondary/.sm-btn-add/.sm-btn-icon/.sm-btn-danger/
+   .sm-btn-back and their shared form chrome live in
+   src/assets/css/spotmanager-shared.css (global, not scoped) — see that
+   file's header comment for why. */
 
 /* ── Edit form ────────────────────────────────────────────────────── */
 .sm-edit-form { padding: 14px 14px 80px; display: flex; flex-direction: column; gap: 12px; }
-.sm-form-header { display: flex; align-items: center; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
-.sm-form-header h3 { margin: 0; font-size: 14px; }
 .sm-edit-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #555; }
 .sm-edit-form input[type="text"],
 .sm-edit-form input[type="number"],
@@ -1536,10 +1690,8 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 }
 .sm-trail-checks { display: flex; flex-direction: column; gap: 6px; }
 .sm-label { font-size: 12px; font-weight: 600; color: #555; }
-.sm-check-label { display: flex; align-items: center; gap: 7px; font-size: 13px; cursor: pointer; padding: 3px 0; }
-.sm-check-label input { accent-color: #0077cc; width: 15px; height: 15px; }
+/* .sm-check-label/.sm-form-actions live in spotmanager-shared.css */
 .sm-badge-auto { font-size: 10px; background: #e3f2fd; color: #1565c0; border-radius: 4px; padding: 1px 5px; font-weight: 700; }
-.sm-form-actions { display: flex; gap: 10px; padding-top: 4px; }
 
 /* ── Import view ──────────────────────────────────────────────────── */
 .sm-import-view { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
@@ -1595,6 +1747,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .status-limited { background: #fff3e0; color: #e65100; }
 .status-closed  { background: #fdecea; color: #c62828; }
 .status-unknown { background: #f0f0f0; color: #777; }
+.status-parking { background: #e3edfa; color: #0d5db8; }
 .sm-details-banner-title { display: block; font-size: 12px; font-weight: 700; color: #333; line-height: 1.2; }
 .sm-details-banner-sub { display: block; font-size: 11px; color: #777; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
 .sm-details-arrow { color: #bbb; font-size: 12px; flex-shrink: 0; }
@@ -1655,11 +1808,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sd-access-label { font-size: 12px; font-weight: 700; color: #444; }
 .sd-access-card.active .sd-access-label { color: var(--access-color); }
 .sd-access-desc { font-size: 10px; color: #999; line-height: 1.3; }
-.sd-input {
-  border: 1px solid #d0d0d0; border-radius: 7px; padding: 9px 12px;
-  font-size: 13px; color: #333; background: #fafafa; width: 100%;
-}
-.sd-input:focus { outline: none; border-color: #0077cc; background: #fff; }
+/* .sd-input/.sd-textarea live in spotmanager-shared.css */
 .sd-char-hint { font-size: 11px; color: #bbb; text-align: right; margin-top: -4px; }
 .sd-toggle-row { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; font-size: 13px; color: #333; line-height: 1.4; }
 .sd-toggle-row input[type="checkbox"] { margin-top: 2px; accent-color: #0077cc; width: 15px; height: 15px; flex-shrink: 0; }
@@ -1689,12 +1838,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   padding: 9px 14px; cursor: pointer; width: 100%; justify-content: center;
 }
 .sd-add-rule-btn:hover { background: #daeeff; border-color: #0077cc; }
-.sd-textarea {
-  border: 1px solid #d0d0d0; border-radius: 7px; padding: 10px 12px;
-  font-size: 13px; color: #333; background: #fafafa; resize: vertical;
-  min-height: 120px; width: 100%; font-family: inherit; line-height: 1.5;
-}
-.sd-textarea:focus { outline: none; border-color: #0077cc; background: #fff; }
 .sd-save-row {
   position: sticky; bottom: 0; background: #fff; border-top: 1px solid #eee;
   padding: 12px 0 4px; display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;
@@ -1734,8 +1877,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 /* ── Misc ─────────────────────────────────────────────────────────── */
 .sm-spinner { width: 32px; height: 32px; margin: 40px auto; border: 3px solid #e0e0e0; border-top-color: #0077cc; border-radius: 50%; animation: sm-spin .7s linear infinite; }
 @keyframes sm-spin { to { transform: rotate(360deg); } }
-.sm-center-msg { text-align: center; padding: 40px 20px; color: #666; font-size: 14px; }
-.sm-error { color: #c62828; }
+/* .sm-center-msg/.sm-error live in spotmanager-shared.css */
 .sm-muted { font-size: 12px; color: #aaa; }
 
 /* ── Invitation codes ─────────────────────────────────────────────── */
@@ -1824,5 +1966,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   .sm-sidebar { width: 100%; position: absolute; z-index: 500; max-height: 55vh; bottom: 0; top: auto; left: 0; right: 0; box-shadow: 0 -4px 16px rgba(0,0,0,.15); overflow-y: auto; }
   .sm-body { position: relative; flex: 1; }
   #sm-map { position: absolute; inset: 0; }
+  .sm-crumb { max-width: 120px; font-size: 13px; }
 }
 </style>

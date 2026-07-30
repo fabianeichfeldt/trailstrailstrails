@@ -225,3 +225,131 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
 
   assertNoLeaks();
 });
+
+// ── Parking lots ─────────────────────────────────────────────────────────────
+//
+// Happy path: a trailcrew member opens their assigned spot, adds a parking
+// lot (name + a click on the shared big map to set coordinates via
+// MapView's point picker), saves it, and it shows up back in the parking
+// list. This exercises the full ParkingList -> ParkingEditor -> MapView ->
+// upsertParking round trip added for the "parking lots per spot" feature.
+
+baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and listed', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  // trailcrew has exactly one assigned spot
+  await page.route('**/rest/v1/trailcrew_spots**', (route) =>
+    route.fulfill({ json: [{ spot_id: 'spot-1', trails: { id: 'spot-1', name: 'Flowtrail Tegernsee' } }] }),
+  );
+  await page.route('**/rest/v1/spot_gpx_trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/trail_details**',   (route) => route.fulfill({ json: [] }));
+
+  // Stateful parking mock: GET returns whatever has been created so far,
+  // POST persists the new row and returns it (Prefer: return=representation).
+  let lots: any[] = [];
+  await page.route('**/rest/v1/parking**', async (route) => {
+    const req = route.request();
+    if (req.method() === 'POST') {
+      const body = JSON.parse(req.postData() ?? '{}');
+      const created = { id: 'lot-1', ...body };
+      lots = [created];
+      await route.fulfill({ json: [created] });
+    } else {
+      await route.fulfill({ json: lots });
+    }
+  });
+
+  await signInOnSpotmanagerPage(page, 'trailcrew');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  // Open the spot
+  await page.locator('.sm-spot-btn:not(.sm-embed-btn)').first().click();
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toBeVisible({ timeout: 6000 });
+
+  // Navigate to the "Parkplätze" banner (per-spot parking list)
+  await page.locator('.sm-details-banner').filter({ hasText: 'Parkplätze' }).click();
+  await expect(page.locator('.parking-list')).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-empty')).toContainText('Noch keine Parkplätze');
+
+  // Create a new lot
+  await page.locator('.parking-list .sm-btn-add').click();
+  await expect(page.locator('.parking-editor')).toBeVisible({ timeout: 4000 });
+
+  await page.locator('.parking-editor input[type="text"]').fill('Hauptparkplatz');
+
+  // Click on the shared big map (right pane) to place the pin.
+  // Use a bounding-box-relative offset (not a fixed pixel coordinate) so
+  // this doesn't miss the map on narrower viewports — mirrors clickMap()
+  // in add-spot.spec.ts.
+  const mapEl = page.locator('#sm-map');
+  await expect(mapEl).toBeVisible({ timeout: 4000 });
+  const box = await mapEl.boundingBox();
+  if (!box) throw new Error('Map container not found');
+  await mapEl.click({ position: { x: box.width * 0.5, y: box.height * 0.3 } });
+  await expect(page.locator('.parking-location-hint:not(.is-unset)')).toBeVisible({ timeout: 4000 });
+
+  await page.locator('.parking-editor .sm-btn-primary').click();
+
+  // Back on the parking list, the new lot appears
+  await expect(page.locator('.parking-row')).toHaveCount(1, { timeout: 6000 });
+  await expect(page.locator('.parking-row')).toContainText('Hauptparkplatz');
+
+  assertNoLeaks();
+});
+
+// ── Breadcrumbs ──────────────────────────────────────────────────────────────
+//
+// The topbar shows a "Spot Manager > {spot} > Parkplätze > ..." trail instead
+// of a single title, and each ancestor crumb is clickable to jump straight to
+// that level (not just one step back at a time).
+
+baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to an ancestor level', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await page.route('**/rest/v1/trailcrew_spots**', (route) =>
+    route.fulfill({ json: [{ spot_id: 'spot-1', trails: { id: 'spot-1', name: 'Flowtrail Tegernsee' } }] }),
+  );
+  await page.route('**/rest/v1/spot_gpx_trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/trail_details**',   (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/parking**',         (route) => route.fulfill({ json: [] }));
+
+  await signInOnSpotmanagerPage(page, 'trailcrew');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  // Root: just "Spot Manager", not clickable (it's the current level).
+  await expect(page.locator('.sm-breadcrumbs')).toHaveText('Spot Manager');
+  await expect(page.locator('.sm-crumb-link')).toHaveCount(0);
+
+  // One level in: "Spot Manager > Flowtrail Tegernsee".
+  await page.locator('.sm-spot-btn:not(.sm-embed-btn)').first().click();
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-crumb-current')).toHaveText('Flowtrail Tegernsee');
+  await expect(page.locator('.sm-crumb-link')).toHaveText(['Spot Manager']);
+
+  // Two levels: "Spot Manager > Flowtrail Tegernsee > Parkplätze".
+  await page.locator('.sm-details-banner').filter({ hasText: 'Parkplätze' }).click();
+  await expect(page.locator('.parking-list')).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-crumb-current')).toHaveText('Parkplätze');
+  await expect(page.locator('.sm-crumb-link')).toHaveText(['Spot Manager', 'Flowtrail Tegernsee']);
+
+  // Three levels: "... > Parkplätze > Parkplatz erstellen".
+  await page.locator('.parking-list .sm-btn-add').click();
+  await expect(page.locator('.parking-editor')).toBeVisible({ timeout: 4000 });
+  await expect(page.locator('.sm-crumb-current')).toHaveText('Parkplatz erstellen');
+  await expect(page.locator('.sm-crumb-link')).toHaveText(['Spot Manager', 'Flowtrail Tegernsee', 'Parkplätze']);
+
+  // Jumping via the spot-name crumb skips the intermediate "Parkplätze"
+  // level entirely and lands directly back on the trail/tour list.
+  await page.locator('.sm-crumb-link', { hasText: 'Flowtrail Tegernsee' }).click();
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.parking-editor')).toHaveCount(0);
+  await expect(page.locator('.parking-list')).toHaveCount(0);
+
+  assertNoLeaks();
+});
