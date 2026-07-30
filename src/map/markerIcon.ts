@@ -20,3 +20,19 @@ export function markerIconOptions(type: string, approved: boolean): MarkerIconOp
     className:   '',
   }
 }
+
+/**
+ * Circular "P" badge for parking lots — deliberately not the teardrop
+ * .map-pin shape used for spots, so it reads as a secondary/auxiliary
+ * marker. Shared by the main map, the SpotManager parking list, and the
+ * parking editor's location picker so the icon is identical everywhere.
+ */
+export function parkingIconOptions(): MarkerIconOptions {
+  return {
+    html:        `<div class="parking-pin">P</div>`,
+    iconSize:    [22, 22],
+    iconAnchor:  [11, 11],
+    popupAnchor: [0, -14],
+    className:   '',
+  }
+}

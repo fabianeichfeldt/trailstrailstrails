@@ -25,3 +25,23 @@
 .map-pin-unverified { background: #9ca3af; }
 .map-pin-bikepark   { background: #10b981; }
 .map-pin-dirtpark   { background: #b91794; }
+
+/* Parking lot marker — circular badge (not the teardrop .map-pin shape),
+   German road-sign parking blue with a white "P". Deliberately reads as
+   a secondary/auxiliary marker distinct from spot pins. */
+.parking-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #0d5db8;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}

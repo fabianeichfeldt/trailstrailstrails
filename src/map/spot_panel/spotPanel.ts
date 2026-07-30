@@ -3,7 +3,7 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
-import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail } from '../../communication/trails';
+import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, fetchMultipleSpotParking, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
 import { TrailDetails } from '../../types/TrailDetails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
@@ -11,7 +11,7 @@ import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
 import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML } from './spotPanelHtml';
+import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML } from './spotPanelHtml';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 
@@ -29,6 +29,9 @@ export class SpotPanel {
   private infoLoaded = false;
   private onClose: () => void;
   private auth: Auth;
+  private parkingLots: SpotParkingLot[] = [];
+  private highlightedParkingLotId: string | null = null;
+  private parkingTabForceVisible = false;
 
   constructor(private readonly map: L.Map, auth: Auth, onClose: () => void) {
     this.auth = auth;
@@ -40,9 +43,26 @@ export class SpotPanel {
   // ── Public API ─────────────────────────────────────────────────────────────
 
   public open(item: Trail) {
+    this.openInternal(item, 'info');
+  }
+
+  /**
+   * Opens the panel for the spot owning `parkingLot`, jumping straight to the
+   * Parking tab with that lot highlighted — instead of defaulting to Info
+   * like a normal spot-marker click.
+   */
+  public openParkingLot(item: Trail, parkingLot: SpotParkingLot) {
+    this.highlightedParkingLotId = parkingLot.id;
+    this.openInternal(item, 'parking');
+  }
+
+  private openInternal(item: Trail, initialTab: 'info' | 'tours' | 'trails' | 'parking') {
     this.currentItem = item;
     this.infoLoaded = false;
     this.activeId = null;
+    this.parkingLots = [];
+    this.parkingTabForceVisible = initialTab === 'parking';
+    if (initialTab !== 'parking') this.highlightedParkingLotId = null;
     this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
     const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
     if (item.url) {
@@ -59,12 +79,14 @@ export class SpotPanel {
     likeBtn.classList.add('hidden');
     this.closeElevation();
     this.panel.classList.add('open');
+    this.renderParking();
     this.updateTabsVisibility();
-    this.activateTab('info');
+    this.activateTab(initialTab);
 
     if (item.type === 'trail') {
       this.loadSpotData(item.id);
     }
+    this.loadParking(item.id);
   }
 
   private async loadSpotData(spotId: string) {
@@ -79,6 +101,27 @@ export class SpotPanel {
     drawTrailPolylines(this.data, this.overlayLayer, this.polylineMap);
   }
 
+  private async loadParking(spotId: string) {
+    try {
+      const byId = await fetchMultipleSpotParking([spotId]);
+      // Bail out if the panel moved on to a different spot (or closed)
+      // while the fetch was in flight.
+      if (this.currentItem?.id !== spotId) return;
+      this.parkingLots = byId.get(spotId) ?? [];
+    } catch (err) {
+      console.warn('Failed to fetch spot parking data:', err);
+      return;
+    }
+    this.renderParking();
+    this.updateTabsVisibility();
+  }
+
+  private renderParking() {
+    const container = this.panel.querySelector('#spot-parking-tab');
+    if (!container) return;
+    container.innerHTML = parkingHTML(this.parkingLots, this.highlightedParkingLotId ?? undefined);
+  }
+
   public close() {
     this.panel.classList.remove('open');
     this.overlayLayer.clearLayers();
@@ -88,6 +131,9 @@ export class SpotPanel {
     this.data = null;
     this.currentItem = null;
     this.infoLoaded = false;
+    this.parkingLots = [];
+    this.highlightedParkingLotId = null;
+    this.parkingTabForceVisible = false;
     this.closeElevation();
     this.onClose();
   }
@@ -124,6 +170,7 @@ export class SpotPanel {
         <button class="spot-tab active" data-tab="info">Spot-Info</button>
         <button class="spot-tab" data-tab="tours">Touren</button>
         <button class="spot-tab" data-tab="trails">Trails</button>
+        <button class="spot-tab" data-tab="parking">Parkplätze</button>
       </div>
       <div class="spot-panel-body">
         <div class="spot-tab-content" id="spot-info-tab">
@@ -131,6 +178,7 @@ export class SpotPanel {
         </div>
         <div class="spot-tab-content hidden" id="spot-tours-tab"></div>
         <div class="spot-tab-content hidden" id="spot-trails-tab"></div>
+        <div class="spot-tab-content hidden" id="spot-parking-tab"></div>
       </div>
       <div class="spot-elevation-panel hidden">
         <div class="spot-elevation-header">
@@ -162,7 +210,7 @@ export class SpotPanel {
       .addEventListener('click', () => this.handleShare());
     this.panel.querySelectorAll('.spot-tab').forEach(btn =>
       btn.addEventListener('click', e => {
-        const tab = (e.currentTarget as HTMLElement).dataset.tab as 'tours' | 'trails' | 'info';
+        const tab = (e.currentTarget as HTMLElement).dataset.tab as 'tours' | 'trails' | 'info' | 'parking';
         this.activateTab(tab);
       })
     );
@@ -172,7 +220,7 @@ export class SpotPanel {
 
   // ── Tabs & rendering ───────────────────────────────────────────────────────
 
-  private activateTab(tab: 'tours' | 'trails' | 'info') {
+  private activateTab(tab: 'tours' | 'trails' | 'info' | 'parking') {
     this.panel.querySelectorAll('.spot-tab').forEach(b => b.classList.remove('active'));
     this.panel.querySelector(`[data-tab="${tab}"]`)!.classList.add('active');
     this.panel.querySelectorAll('.spot-tab-content').forEach(c => c.classList.add('hidden'));
@@ -182,17 +230,17 @@ export class SpotPanel {
   }
 
   private updateTabsVisibility() {
+    // Tours/Trails stay trail-only. Parking is available for any spot type
+    // (trail/bikepark/dirtpark), but hidden until we know the spot has at
+    // least one lot — unless we're jumping straight there via openParkingLot.
     const isTrail = this.currentItem && this.currentItem.type === 'trail';
     const toursTab = this.panel.querySelector('[data-tab="tours"]') as HTMLElement;
     const trailsTab = this.panel.querySelector('[data-tab="trails"]') as HTMLElement;
+    const parkingTab = this.panel.querySelector('[data-tab="parking"]') as HTMLElement;
 
-    if (isTrail) {
-      toursTab.style.display = 'block';
-      trailsTab.style.display = 'block';
-    } else {
-      toursTab.style.display = 'none';
-      trailsTab.style.display = 'none';
-    }
+    toursTab.style.display = isTrail ? 'block' : 'none';
+    trailsTab.style.display = isTrail ? 'block' : 'none';
+    parkingTab.style.display = (this.parkingTabForceVisible || this.parkingLots.length > 0) ? 'block' : 'none';
   }
 
   private async loadInfo() {
@@ -285,12 +333,15 @@ export class SpotPanel {
   }
 
   private bindItemClicks() {
-    this.panel.querySelectorAll('.spot-item').forEach(el => {
+    // Parking rows share the .spot-item class for consistent styling but are
+    // not selectable the way tours/trails are (no elevation profile) — they
+    // are excluded here and rendered/highlighted separately by renderParking().
+    this.panel.querySelectorAll('.spot-item:not(.parking-item)').forEach(el => {
       el.addEventListener('click', () => {
         const id   = (el as HTMLElement).dataset.id!;
         const kind = (el as HTMLElement).dataset.kind as 'tour' | 'trail';
         this.selectItem(id, kind);
-        this.panel.querySelectorAll('.spot-item').forEach(i => i.classList.remove('active'));
+        this.panel.querySelectorAll('.spot-item:not(.parking-item)').forEach(i => i.classList.remove('active'));
         el.classList.add('active');
       });
     });
