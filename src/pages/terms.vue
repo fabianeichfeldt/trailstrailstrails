@@ -41,12 +41,23 @@
       </ul>
 
       <h2>6. Verbot automatisierter Zugriffe (Scraping)</h2>
-      <p>Automatisierte Zugriffe auf die Plattform sind ohne ausdrückliche Genehmigung nicht erlaubt. Untersagt sind:</p>
+      <p>Automatisierte Zugriffe auf die Plattform sind ohne unsere ausdrückliche vorherige schriftliche Genehmigung
+        nicht erlaubt. Untersagt sind insbesondere:</p>
       <ul>
-        <li>systematisches Auslesen von Inhalten,</li>
-        <li>Umgehung technischer Schutzmaßnahmen,</li>
-        <li>massenhafte Abfrage von Daten.</li>
+        <li>der Einsatz von Bots, Crawlern, Spidern oder vergleichbaren automatisierten Tools zum systematischen
+          Auslesen von Inhalten (Scraping),</li>
+        <li>Data Mining, Harvesting oder sonstiges automatisiertes Extrahieren von Trail-, GPX-, Spot- oder
+          Nutzerdaten,</li>
+        <li>das Zusammenstellen, Vervielfältigen oder Weiterverbreiten wesentlicher Teile unserer Datenbank zum
+          Aufbau eigener oder konkurrierender Datenbanken oder Dienste,</li>
+        <li>die Umgehung technischer Schutzmaßnahmen (z. B. Rate-Limits, Zugriffsbeschränkungen),</li>
+        <li>massenhafte oder automatisierte Abfrage von Daten außerhalb der normalen, von einem Menschen
+          gesteuerten Nutzung der Plattform.</li>
       </ul>
+      <p>Die auf Trailradar zusammengestellten Trail- und Spot-Daten stellen eine Datenbank im Sinne von § 87a UrhG
+        dar. Die Entnahme oder Weiterverwendung wesentlicher Teile dieser Datenbank ist ohne unsere Zustimmung
+        untersagt. Verstöße können zivil- und strafrechtlich verfolgt sowie durch technische Maßnahmen
+        (z. B. IP-Sperren) unterbunden werden.</p>
 
       <h2>7. Moderation und Entfernung von Inhalten</h2>
       <p>Wir behalten uns vor, Inhalte zu prüfen, zu ändern oder zu entfernen, wenn diese gegen gesetzliche
