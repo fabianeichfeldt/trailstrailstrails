@@ -12,7 +12,13 @@
       <button v-if="view === 'list'" class="sm-help-btn" title="Hilfe" @click="helpOpen = true">
         <i class="fas fa-question-circle" />
       </button>
-      <span class="sm-topbar-title">{{ view === 'selector' ? 'Spot Manager' : view === 'embed-list' ? 'Embed-Tokens' : view === 'embed-edit' ? (embedEditTarget ? 'Token bearbeiten' : 'Token erstellen') : view === 'segment-upload' ? 'Tour hochladen' : view === 'segment-editor' ? 'Segmente definieren' : view === 'parking-list' ? 'Parkplätze' : view === 'parking-edit' ? (parkingEditTarget ? 'Parkplatz bearbeiten' : 'Parkplatz erstellen') : spotName }}</span>
+      <nav class="sm-breadcrumbs" aria-label="Breadcrumb">
+        <template v-for="(crumb, i) in breadcrumbs" :key="i">
+          <button v-if="crumb.onClick" type="button" class="sm-crumb sm-crumb-link" @click="crumb.onClick">{{ crumb.label }}</button>
+          <span v-else class="sm-crumb sm-crumb-current">{{ crumb.label }}</span>
+          <i v-if="i < breadcrumbs.length - 1" class="fas fa-chevron-right sm-crumb-sep" />
+        </template>
+      </nav>
       <span class="sm-role-badge">{{ role }}</span>
       <UserAvatar />
     </div>
@@ -1078,7 +1084,10 @@ async function openSpot(id: string, name: string) {
   loading.value = false
 }
 
-function goBack() {
+// One level up from the current view. Shared by the topbar back arrow
+// (goBack, single step) and the breadcrumb trail (goToView, repeats this
+// until the target level is reached).
+function stepBack() {
   if (view.value === 'segment-editor' || view.value === 'segment-upload') {
     cancelSegmentEditor()
     view.value = 'list'
@@ -1090,6 +1099,8 @@ function goBack() {
     openParkingList()
   } else if (view.value === 'parking-list') {
     view.value = 'list'
+  } else if (view.value === 'import') {
+    cancelImport()
   } else if (view.value === 'list') {
     mapView.value?.clear()
     view.value = 'selector'
@@ -1097,6 +1108,56 @@ function goBack() {
     cancelEdit()
   }
 }
+
+function goBack() {
+  stepBack()
+}
+
+// Jumps straight to an ancestor level (breadcrumb click) by replaying
+// stepBack() — this reuses the exact same per-view cleanup (map layers,
+// pending imports, editor state) as the single-step back arrow instead of
+// duplicating it. Breadcrumb targets are always genuine ancestors of the
+// current view, so this always converges; the guard is just cheap insurance.
+function goToView(target: View) {
+  let guard = 0
+  while (view.value !== target && guard < 10) {
+    stepBack()
+    guard++
+  }
+}
+
+interface Crumb {
+  label: string
+  onClick?: () => void
+}
+
+const breadcrumbs = computed<Crumb[]>(() => {
+  if (view.value === 'selector') return [{ label: 'Spot Manager' }]
+
+  const crumbs: Crumb[] = [{ label: 'Spot Manager', onClick: () => goToView('selector') }]
+
+  if (view.value === 'embed-list') {
+    crumbs.push({ label: 'Embed-Tokens' })
+  } else if (view.value === 'embed-edit') {
+    crumbs.push({ label: 'Embed-Tokens', onClick: () => goToView('embed-list') })
+    crumbs.push({ label: embedEditTarget.value ? 'Token bearbeiten' : 'Token erstellen' })
+  } else {
+    crumbs.push({ label: spotName.value, onClick: view.value === 'list' ? undefined : () => goToView('list') })
+    if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
+    else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
+    else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
+    else if (view.value === 'details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
+    else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
+    else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
+    else if (view.value === 'parking-edit') {
+      crumbs.push({ label: 'Parkplätze', onClick: () => goToView('parking-list') })
+      crumbs.push({ label: parkingEditTarget.value ? 'Parkplatz bearbeiten' : 'Parkplatz erstellen' })
+    }
+  }
+
+  return crumbs
+})
 
 // ── Edit trail / tour ──────────────────────────────────────────────────────────
 function openEditTrail(id: string) {
@@ -1485,7 +1546,22 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-topbar-home:hover { background: rgba(255,255,255,.13); }
 .sm-topbar-logo-img { height: 34px; width: auto; display: block; border-radius: 4px; }
 .sm-topbar-divider { width: 1px; height: 24px; background: rgba(255,255,255,.15); flex-shrink: 0; }
-.sm-topbar-title { flex: 1; font-size: 15px; font-weight: 600; }
+.sm-breadcrumbs {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.sm-breadcrumbs::-webkit-scrollbar { display: none; }
+.sm-crumb {
+  font-size: 15px; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+  max-width: 220px; overflow: hidden; text-overflow: ellipsis;
+}
+.sm-crumb-link {
+  background: none; border: none; color: rgba(255,255,255,.65); cursor: pointer;
+  padding: 4px 2px; font-family: inherit; transition: color .15s;
+}
+.sm-crumb-link:hover { color: #fff; text-decoration: underline; }
+.sm-crumb-current { color: #fff; }
+.sm-crumb-sep { font-size: 10px; color: rgba(255,255,255,.35); flex-shrink: 0; }
 .sm-role-badge {
   font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
   padding: 2px 8px; border-radius: 10px; background: rgba(255,255,255,.15); color: #ddd;
@@ -1890,5 +1966,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   .sm-sidebar { width: 100%; position: absolute; z-index: 500; max-height: 55vh; bottom: 0; top: auto; left: 0; right: 0; box-shadow: 0 -4px 16px rgba(0,0,0,.15); overflow-y: auto; }
   .sm-body { position: relative; flex: 1; }
   #sm-map { position: absolute; inset: 0; }
+  .sm-crumb { max-width: 120px; font-size: 13px; }
 }
 </style>
