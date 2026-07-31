@@ -22,8 +22,12 @@ export interface TrailStatusInput {
 
 export interface TrailStatusResult {
   state: TrailStatusState
-  /** Explanation text to show in the popup/sheet. Null when state is 'open' (no badge rendered). */
-  explanation: string | null
+  /** Short headline for the popup/sheet, e.g. "Aktuell gesperrt". Null when state is 'open'. */
+  title: string | null
+  /** "seit DD.MM.YYYY [bis DD.MM.YYYY]" / "ab DD.MM.YYYY [bis DD.MM.YYYY]" — null when there's no schedule (hint-only, or open). */
+  dateLine: string | null
+  /** Trimmed free-text hint, or null when none was set. Rendered as its own line by the caller — never pre-joined into a single string, so the UI can style title/date/hint/attribution independently. */
+  hint: string | null
 }
 
 function isNonEmpty(s?: string | null): s is string {
@@ -39,16 +43,21 @@ function formatDate(d: Date): string {
   return `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}.${d.getFullYear()}`
 }
 
-function autoClosingSoonMessage(from: Date, to: Date | null): string {
+/** "seit DD.MM.YYYY[ bis DD.MM.YYYY]" or "ab DD.MM.YYYY[ bis DD.MM.YYYY]". */
+function dateLine(preposition: string, from: Date, to: Date | null): string {
   return to
-    ? `Geplante Sperrung ab ${formatDate(from)} bis ${formatDate(to)}.`
-    : `Geplante Sperrung ab ${formatDate(from)}.`
+    ? `${preposition} ${formatDate(from)} bis ${formatDate(to)}`
+    : `${preposition} ${formatDate(from)}`
 }
 
-const GENERIC_CLOSED_MESSAGE = 'Dieser Trail ist derzeit gesperrt.'
+const OPEN: TrailStatusResult = { state: 'open', title: null, dateLine: null, hint: null }
 
 /**
- * Derives the live trail-closure status of a spot_gpx_trails row.
+ * Derives the live trail-closure status of a spot_gpx_trails row. Always
+ * surfaces since-when (and until-when, if known) a closure applies — the
+ * date line is never dropped just because a hint was also set. The caller
+ * (see src/map/trailStatusSheet.ts) is responsible for also attributing the
+ * information to the spot's trailcrew when rendering.
  *
  * `now` is injected (never read from Date.now() internally) so this stays a
  * pure, deterministically-testable function. See the design spec's
@@ -58,30 +67,28 @@ const GENERIC_CLOSED_MESSAGE = 'Dieser Trail ist derzeit gesperrt.'
  *   closed_from set AND now < closed_from                                              → closing soon
  *   closed_from IS NULL AND hint set (non-empty)                                       → hint (same badge as closing soon)
  *   otherwise (including an expired schedule)                                          → open
- *
- * `hint`, when set, is always used verbatim as the explanation in any
- * non-open state — it wins over the auto-generated date message.
  */
 export function deriveTrailStatus(input: TrailStatusInput, now: Date): TrailStatusResult {
   const hasHint = isNonEmpty(input.hint)
+  const hint    = hasHint ? input.hint!.trim() : null
 
   if (input.closed_from) {
     const from = new Date(input.closed_from)
     const to   = input.closed_to ? new Date(input.closed_to) : null
 
     if (now >= from && (!to || now <= to)) {
-      return { state: 'closed', explanation: hasHint ? input.hint!.trim() : GENERIC_CLOSED_MESSAGE }
+      return { state: 'closed', title: 'Aktuell gesperrt', dateLine: dateLine('seit', from, to), hint }
     }
     if (now < from) {
-      return { state: 'closing_soon', explanation: hasHint ? input.hint!.trim() : autoClosingSoonMessage(from, to) }
+      return { state: 'closing_soon', title: 'Bald gesperrt', dateLine: dateLine('ab', from, to), hint }
     }
     // Schedule has fully expired (now > closed_to) — back to open, regardless of hint.
-    return { state: 'open', explanation: null }
+    return OPEN
   }
 
   if (hasHint) {
-    return { state: 'closing_soon', explanation: input.hint!.trim() }
+    return { state: 'closing_soon', title: 'Hinweis', dateLine: null, hint }
   }
 
-  return { state: 'open', explanation: null }
+  return OPEN
 }

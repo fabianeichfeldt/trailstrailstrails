@@ -9,9 +9,9 @@ import {
 import { GpxRenderGuard } from '~/map/gpxRenderGuard'
 import { GPX_ZOOM_THRESHOLD } from '~/map/gpxZoomThreshold'
 import { fetchMultipleSpotGpx, fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
-import { deriveTrailStatus } from '~/types/TrailStatus'
+import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
 import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
-import { createTrailStatusSheet } from '~/map/trailStatusSheet'
+import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -346,7 +346,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       // difficulty-color line rendering in addGpxLine() above is untouched.
       function addStatusBadge(
         latlngs: [number, number][],
-        status: { state: 'closing_soon' | 'closed'; explanation: string | null },
+        status: TrailStatusResult & { state: 'closing_soon' | 'closed' },
+        spotName: string,
       ) {
         if (!latlngs.length) return
         const mid = latlngs[Math.floor(latlngs.length / 2)]
@@ -356,14 +357,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
           zIndexOffset: 1000,
         }).addTo(mymap)
 
-        const explanation = status.explanation ?? ''
-
         marker.on('click', (e: any) => {
           L.DomEvent.stop(e)
           if (isDesktopViewport()) {
-            marker.bindPopup(`<div class="trail-status-popup">${explanation}</div>`).openPopup()
+            marker.bindPopup(buildTrailStatusContent(status, spotName)).openPopup()
           } else {
-            statusSheet.open(explanation)
+            statusSheet.open(status, spotName)
           }
         })
 
@@ -405,7 +404,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             new Date(),
           )
           if (status.state !== 'open') {
-            addStatusBadge(latlngs, { state: status.state, explanation: status.explanation })
+            addStatusBadge(latlngs, status as TrailStatusResult & { state: 'closing_soon' | 'closed' }, trail.name)
           }
         }
       }

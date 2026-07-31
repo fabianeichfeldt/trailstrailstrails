@@ -1,6 +1,8 @@
 import { ImbaColor, MtbTour, MtbTrail, TrailDirection } from '../../types/MtbTypes';
 import { IMBA } from './elevationSvg';
 import type { SpotParkingLot } from '../../communication/trails';
+import { deriveTrailStatus } from '../../types/TrailStatus';
+import { buildTrailStatusContent } from '../trailStatusSheet';
 
 export const DIR_LABEL: Record<TrailDirection, string> = {
   'cw':           '↻ Uhrzeigersinn',
@@ -65,15 +67,52 @@ export function parkingHTML(lots: SpotParkingLot[], highlightId?: string): strin
     </div>`).join('');
 }
 
+/**
+ * Trails-tab list row: instead of a second icon competing with the IMBA
+ * difficulty dot, a closed/hinted trail gets a tinted row background (same
+ * accent color language as the map badge / popup card, see
+ * src/types/TrailStatus.ts) plus a small "Gesperrt"/"Hinweis" text tag next
+ * to the trail name.
+ */
+function trailStatusRowClass(state: 'open' | 'closing_soon' | 'closed'): string {
+  if (state === 'closed') return ' trail-status-row-closed';
+  if (state === 'closing_soon') return ' trail-status-row-hint';
+  return '';
+}
+
+function trailStatusTagHtml(state: 'open' | 'closing_soon' | 'closed'): string {
+  if (state === 'closed') return '<span class="trail-status-tag trail-status-tag-closed">Gesperrt</span>';
+  if (state === 'closing_soon') return '<span class="trail-status-tag trail-status-tag-hint">Hinweis</span>';
+  return '';
+}
+
+/**
+ * Status card for the elevation view: shown when a selected item is a trail
+ * (not a tour — tours have no closed_from/closed_to/hint of their own) whose
+ * derived status isn't plain "open". Reuses buildTrailStatusContent so the
+ * elevation view, the map popup, and the map sheet all render identically.
+ * Returns null when nothing should be shown, so the caller can skip
+ * appending anything.
+ */
+export function trailStatusCardFor(item: MtbTrail | MtbTour, spotName: string): HTMLElement | null {
+  if (!('difficulty' in item)) return null;
+  const status = deriveTrailStatus({ closed_from: item.closed_from, closed_to: item.closed_to, hint: item.hint }, new Date());
+  if (status.state === 'open') return null;
+  return buildTrailStatusContent(status, spotName);
+}
+
 export function trailsHTML(trails: MtbTrail[]): string {
   if (!trails.length) return '<p class="spot-empty">Keine Trails für diesen Spot.</p>';
-  return trails.map(t => `
-    <div class="spot-item" data-id="${t.id}" data-kind="trail">
+  return trails.map(t => {
+    const status = deriveTrailStatus({ closed_from: t.closed_from, closed_to: t.closed_to, hint: t.hint }, new Date());
+    return `
+    <div class="spot-item${trailStatusRowClass(status.state)}" data-id="${t.id}" data-kind="trail">
       <div class="spot-item-left">
         <span class="imba-dot" style="background:${IMBA[t.difficulty].hex}" title="${IMBA[t.difficulty].label}"></span>
         <div class="spot-item-info">
           <div class="spot-item-name">
             <strong>${t.name}</strong>
+            ${trailStatusTagHtml(status.state)}
             ${t.gpx_url ? `<a class="spot-item-dl" href="${t.gpx_url}" download="${t.name}.gpx" aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>` : ''}
           </div>
           <span class="spot-item-sub">${IMBA[t.difficulty].label}</span>
@@ -87,5 +126,6 @@ export function trailsHTML(trails: MtbTrail[]): string {
         </div>
         <span class="spot-item-arrow">›</span>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }

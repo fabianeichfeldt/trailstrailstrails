@@ -174,6 +174,39 @@
 .spot-item:hover  { background: #f7f9fc; }
 .spot-item.active { background: #e8f0fe; }
 
+/* Trail status tint — same accent colors as the map badge/popup (see
+   src/types/TrailStatus.ts), applied to the whole row instead of a second
+   icon competing with the IMBA difficulty dot. */
+.spot-item.trail-status-row-closed {
+  background: linear-gradient(90deg, rgba(211, 47, 47, 0.10), rgba(211, 47, 47, 0) 75%);
+  border-left: 3px solid #b91c1c;
+  padding-left: 11px;
+}
+.spot-item.trail-status-row-hint {
+  background: linear-gradient(90deg, rgba(247, 195, 49, 0.16), rgba(247, 195, 49, 0) 75%);
+  border-left: 3px solid #d99a00;
+  padding-left: 11px;
+}
+.spot-item.trail-status-row-closed:hover {
+  background: linear-gradient(90deg, rgba(211, 47, 47, 0.17), rgba(211, 47, 47, 0) 75%);
+}
+.spot-item.trail-status-row-hint:hover {
+  background: linear-gradient(90deg, rgba(247, 195, 49, 0.24), rgba(247, 195, 49, 0) 75%);
+}
+
+.trail-status-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.trail-status-tag-closed { color: #fff; background: #b91c1c; }
+.trail-status-tag-hint   { color: #6b4400; background: #f7c331; }
+
 .spot-item-left {
   display: flex;
   align-items: center;
@@ -396,6 +429,10 @@
   flex-wrap: wrap;
 }
 .spot-elevation-stats span { white-space: nowrap; }
+
+/* Holds the .trail-status-info card (see marker.css) when the selected
+   trail is closed/hinted — empty and invisible otherwise. */
+.spot-elevation-status:not(:empty) { margin-top: 10px; }
 
 /* ── Spot status + access banner ─────────────────────────── */
 .spot-status-banner {

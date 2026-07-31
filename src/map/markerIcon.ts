@@ -44,6 +44,10 @@ export function parkingIconOptions(): MarkerIconOptions {
  * when its derived status (see src/types/TrailStatus.ts) is 'closing_soon'
  * or 'closed'. Additive only — never used for the 'open' state, and never
  * touches the track's difficulty-color line rendering.
+ *
+ * iconSize (36x36) is a padded tap target, larger than the visible dot
+ * (20x20, styled via .trail-status-badge) — className centers the dot inside
+ * via flex so the touch target stays generous without the badge looking big.
  */
 export function trailStatusBadgeOptions(state: Exclude<TrailStatusState, 'open'>): MarkerIconOptions {
   const variant = state === 'closed' ? 'closed' : 'closing'
@@ -51,9 +55,9 @@ export function trailStatusBadgeOptions(state: Exclude<TrailStatusState, 'open'>
 
   return {
     html:        `<div class="trail-status-badge trail-status-badge-${variant}">${glyph}</div>`,
-    iconSize:    [34, 34],
-    iconAnchor:  [17, 17],
-    popupAnchor: [0, -19],
-    className:   '',
+    iconSize:    [36, 36],
+    iconAnchor:  [18, 18],
+    popupAnchor: [0, -20],
+    className:   'trail-status-hit',
   }
 }

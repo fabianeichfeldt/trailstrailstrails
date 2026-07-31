@@ -196,6 +196,9 @@ export async function getSpotGpxData(spotId: string): Promise<SpotMtbData | null
       gpxPoints:       rt.gpx_points,
       elevationProfile: toElevationProfile(rt.gpx_points),
       gpx_url:         rt.gpx_url,
+      closed_from:     rt.closed_from,
+      closed_to:       rt.closed_to,
+      hint:            rt.hint,
     }))
 
     const tours: MtbTour[] = rawTours.map((rt, i) => ({

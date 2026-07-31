@@ -11,7 +11,7 @@ import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
 import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML } from './spotPanelHtml';
+import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML, trailStatusCardFor } from './spotPanelHtml';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 
@@ -190,6 +190,7 @@ export class SpotPanel {
         </div>
         <div class="spot-elevation-chart"></div>
         <div class="spot-elevation-stats"></div>
+        <div class="spot-elevation-status"></div>
       </div>
     `;
 
@@ -434,6 +435,14 @@ export class SpotPanel {
       `<span>↑ ${item.elevation_gain} m</span>` +
       `<span>↓ ${item.elevation_loss} m</span>` +
       `<span>${DIR_LABEL[item.direction]}</span>`;
+
+    // Trail status card — see trailStatusCardFor() in spotPanelHtml.ts.
+    const statusEl = panel.querySelector('.spot-elevation-status') as HTMLElement;
+    statusEl.innerHTML = '';
+    if (this.currentItem) {
+      const card = trailStatusCardFor(item, this.currentItem.name);
+      if (card) statusEl.appendChild(card);
+    }
 
     // GPX download link
     const dlLink = panel.querySelector('.spot-elevation-download') as HTMLAnchorElement;
