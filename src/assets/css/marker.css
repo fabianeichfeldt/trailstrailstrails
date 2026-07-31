@@ -45,3 +45,148 @@
   border: 2px solid #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
+
+/* ── Trail status badge ───────────────────────────────────────────────────
+   Glossy ~20px sphere shown at a GPX track's midpoint when its derived
+   status is "closing soon" (yellow, gently pulsing glow) or "closed" (red,
+   static). Purely additive — the track's difficulty-color line is untouched.
+   .trail-status-hit is the padded 36x36 tap-target wrapper Leaflet sizes via
+   iconSize — it centers the smaller visual dot inside so the badge stays
+   compact while the touch target stays comfortable.
+   See src/types/TrailStatus.ts + src/composables/useTrailMap.ts. */
+.trail-status-hit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.trail-status-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 9px;
+  font-family: Arial, sans-serif;
+  line-height: 1;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.4),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+.trail-status-badge-closing {
+  background: radial-gradient(circle at 32% 26%, #fff2b8, #f7c331 45%, #c98700 100%);
+  animation: trail-status-pulse 2.2s ease-in-out infinite;
+}
+
+.trail-status-badge-closed {
+  background: radial-gradient(circle at 32% 26%, #ff9d92, #d32f2f 50%, #7f0000 100%);
+}
+
+@keyframes trail-status-pulse {
+  0%, 100% {
+    box-shadow:
+      0 2px 4px rgba(247, 195, 49, 0.45),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  }
+  50% {
+    box-shadow:
+      0 2px 12px rgba(247, 195, 49, 0.95),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* ── Status info card ─────────────────────────────────────────────────────
+   Shared content block for the badge's explanation, used identically inside
+   the desktop popup and the mobile sheet (see src/map/trailStatusSheet.ts).
+   A colored left accent + tinted background ties it back to the badge's
+   color; title/date/hint/attribution form a clear reading hierarchy instead
+   of one flat sentence. */
+.trail-status-info {
+  min-width: 200px;
+  max-width: 260px;
+  padding: 10px 14px 10px 16px;
+  border-left: 3px solid transparent;
+  border-radius: 4px 8px 8px 4px;
+}
+
+.trail-status-info-closing {
+  border-left-color: #d99a00;
+  background: linear-gradient(135deg, rgba(247, 195, 49, 0.14), rgba(247, 195, 49, 0) 55%);
+}
+
+.trail-status-info-closed {
+  border-left-color: #b91c1c;
+  background: linear-gradient(135deg, rgba(211, 47, 47, 0.12), rgba(211, 47, 47, 0) 55%);
+}
+
+.trail-status-info-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.trail-status-info-closing .trail-status-info-title { color: #8a5c00; }
+.trail-status-info-closed  .trail-status-info-title { color: #a31515; }
+
+.trail-status-info-date {
+  margin-top: 2px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.trail-status-info-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #333;
+}
+
+.trail-status-info-attribution {
+  margin-top: 8px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 11px;
+  font-style: italic;
+  color: #8a8f98;
+}
+
+/* ── Mobile bottom sheet (badge tap explanation) ──────────────────────────
+   Smallest viable sheet, visually consistent with .spot-panel's slide-up
+   pattern (rounded top corners, drag-handle bar) without pulling in the
+   full SpotPanel, which is a different, much larger concern. */
+.trail-status-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2000;
+  background: #fff;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -4px 28px rgba(0, 0, 0, 0.22);
+  transform: translateY(102%);
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px 18px 20px;
+  pointer-events: none;
+}
+
+.trail-status-sheet.open {
+  transform: translateY(0);
+  pointer-events: all;
+}
+
+.trail-status-sheet-handle {
+  width: 40px;
+  height: 6px;
+  background: #d0d5dd;
+  border-radius: 3px;
+  margin: 0 auto 12px;
+}
+
+@media (min-width: 768px) {
+  .trail-status-sheet { display: none; }
+}
