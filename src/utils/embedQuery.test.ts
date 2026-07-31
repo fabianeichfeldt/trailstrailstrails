@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { parseEmbedQuery } from './embedQuery'
+import { parseEmbedQuery, getRequestedSearch } from './embedQuery'
 
 describe('parseEmbedQuery', () => {
   test('parses lat/lng/zoom/parentHost from a populated query string', () => {
@@ -26,5 +26,41 @@ describe('parseEmbedQuery', () => {
     const result = parseEmbedQuery('?lat=52.5&lng=13.4&zoom=10&parentHost=example.com')
     expect(result.lat).not.toBe(47.8)
     expect(result.lng).not.toBe(13.0)
+  })
+})
+
+// Regression: for /embed/[token] (a prerendered dynamic route), Nuxt's
+// client-side router rewrites window.location to its own canonical route
+// URL — bare path, no trailing slash, no query string — once it takes
+// over, and that rewrite stands for the page's lifetime (verified against
+// a real `nuxt generate` static build served from a plain HTTP server: the
+// actual browser request carried the correct query string, but
+// window.location.search read from inside onMounted was already empty).
+// window.location can't be trusted at all for this route; the fix reads
+// performance.getEntriesByType('navigation')[0].name instead, which
+// records the real requested URL and is never touched by that rewrite.
+function fakeWindow(opts: { navigationUrl?: string; locationHref: string }): Window {
+  return {
+    performance: {
+      getEntriesByType: (type: string) =>
+        type === 'navigation' && opts.navigationUrl ? [{ name: opts.navigationUrl }] : [],
+    },
+    location: new URL(opts.locationHref),
+  } as unknown as Window
+}
+
+describe('getRequestedSearch', () => {
+  test('reads the query string from the navigation entry, not from window.location', () => {
+    const win = fakeWindow({
+      navigationUrl: 'https://trailradar.org/embed/tok/?lat=50.1111&lng=11.4606&zoom=11',
+      // Simulates Nuxt's router rewrite: location no longer has the query at all.
+      locationHref: 'https://trailradar.org/embed/tok',
+    })
+    expect(getRequestedSearch(win)).toBe('?lat=50.1111&lng=11.4606&zoom=11')
+  })
+
+  test('falls back to window.location.href when no navigation entry is available', () => {
+    const win = fakeWindow({ locationHref: 'https://trailradar.org/embed/tok?lat=1&lng=2' })
+    expect(getRequestedSearch(win)).toBe('?lat=1&lng=2')
   })
 })

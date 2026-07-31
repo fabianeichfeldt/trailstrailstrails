@@ -72,6 +72,46 @@ embedTest('embed page shows error overlay for inactive token', async ({ page }) 
   await expect(page.locator('.embed-error-msg')).toContainText('deaktiviert');
 });
 
+// Regression test for "the embedded map shows the wrong location" — the
+// existing tests above only check that *a* map renders (no error overlay),
+// never that it's centered where it was actually asked to be. If lat/lng
+// ever silently fall back to embedQuery.ts's DEFAULT_LAT/DEFAULT_LNG (the
+// exact bug this page was fixed for once already — see the comment in
+// src/pages/embed/[token].vue), every embed would render a real, valid-
+// looking map, just centered near Salzburg instead of the requested spot —
+// something none of the other assertions here would ever catch. This test
+// reads the actual OSM tile requests the map makes and decodes them back to
+// lat/lng, so it verifies what's really on screen, not just the URL we
+// asked for.
+embedTest('embed page renders map tiles centered on the requested coordinates, not the embed-query default', async ({ page }) => {
+  await page.route('**/_embed/**', route =>
+    route.fulfill({ json: EMBED_TRAILS }),
+  );
+
+  const tileUrls: string[] = [];
+  page.on('request', (req) => {
+    if (req.url().includes('tile.openstreetmap.org')) tileUrls.push(req.url());
+  });
+
+  // t1's real coordinates (47.71, 11.76) are ~85km from embedQuery.ts's
+  // DEFAULT_LAT/DEFAULT_LNG (47.8, 13.0) — easily distinguishable.
+  await page.goto('/embed/test-token?lat=47.71&lng=11.76&zoom=11');
+  await page.waitForLoadState('networkidle');
+
+  expect(tileUrls.length).toBeGreaterThan(0);
+  const match = tileUrls[0].match(/\/(\d+)\/(\d+)\/(\d+)\.png/);
+  expect(match).not.toBeNull();
+  const [, zStr, xStr, yStr] = match!;
+  const n = 2 ** Number(zStr);
+  const lng = Number(xStr) / n * 360 - 180;
+  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * Number(yStr) / n))) * 180 / Math.PI;
+
+  expect(lat).toBeGreaterThan(47.4);
+  expect(lat).toBeLessThan(48.0);
+  expect(lng).toBeGreaterThan(11.4);
+  expect(lng).toBeLessThan(12.1);
+});
+
 embedTest('embed map drag and scroll-wheel zoom are disabled', async ({ page }) => {
   await page.route('**/_embed/**', route =>
     route.fulfill({ json: EMBED_TRAILS }),

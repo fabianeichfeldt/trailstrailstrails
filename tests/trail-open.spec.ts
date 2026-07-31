@@ -42,6 +42,80 @@ baseTest('/trails/[id] shows the trail name and map link', async ({ page }) => {
   assertNoLeaks();
 });
 
+// Regression test for "the embedded map on a trail page shows the wrong
+// location" (reported: /trails/[uuid] pages showing a map centered near
+// Salzburg — the DEFAULT_LAT/DEFAULT_LNG fallback in src/utils/embedQuery.ts
+// — instead of the trail's actual coordinates). Nothing previously asserted
+// on the <iframe class="trail-map"> element at all: the only existing test
+// above only checks the h1 and the "open in map" link, both of which are
+// derived from the slug/name and would stay green even if the iframe's
+// src carried completely wrong (or default) coordinates. This test follows
+// the full first-party chain that was actually broken in production:
+// trail.latitude/longitude (src/pages/trails/[slug].vue) -> the embedSrc
+// computed -> the rendered <iframe src>.
+baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, not the embed-query default', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  const src = await page.locator('iframe.trail-map').getAttribute('src');
+  expect(src).toBeTruthy();
+
+  // t1's fixture coordinates (tests/fixtures.ts) — well clear of Salzburg
+  // (lat 47.8, lng 13.0) so a fallback-to-default regression is unmistakable.
+  expect(src).toContain('lat=47.71');
+  expect(src).toContain('lng=11.76');
+  expect(src).not.toContain('lat=47.8&');
+  expect(src).not.toContain('lng=13');
+
+  assertNoLeaks();
+});
+
+// This page (src/pages/trails/[slug].vue) also renders region overview
+// pages through the exact same component and iframe-building logic
+// (regionEmbedSrc) — same guard, different data source (a static region
+// table instead of a fetched trail), covering the two branches that feed
+// the same "wrong map" failure mode.
+baseTest('/trails/[region] embeds a map centered on that region, not the embed-query default', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/allgaeu');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('h1')).toHaveText('Trails im Allgäu');
+  const src = await page.locator('iframe.region-map').getAttribute('src');
+  expect(src).toBeTruthy();
+  // build/region.ts: allgaeu = { lat: 47.60, lng: 10.30 }
+  expect(src).toContain('lat=47.6');
+  expect(src).toContain('lng=10.3');
+
+  assertNoLeaks();
+});
+
+// Guards against stale data surviving a client-side (no full reload)
+// navigation between two pages matched by the same [slug].vue component —
+// e.g. via the "Weitere Regionen" links. If trail/region data were ever
+// keyed off something that doesn't update on navigation, the embedded map
+// (and the rest of the page) would get stuck showing the FIRST page visited
+// in a browsing session, no matter which URL is now in the address bar.
+baseTest('/trails/[slug] refreshes the embedded map location on client-side navigation between pages', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/allgaeu');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('h1')).toHaveText('Trails im Allgäu');
+  await expect(page.locator('iframe.region-map')).toHaveAttribute('src', /lat=47\.6&lng=10\.3(&|$)/);
+
+  // Client-side navigation to another region page matched by the SAME
+  // [slug].vue component — no full page reload happens here.
+  await page.locator('a[href="/trails/berlin"]').click();
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('h1')).toHaveText('Trails in Berlin');
+  await expect(page.locator('iframe.region-map')).toHaveAttribute('src', /lat=52\.5&lng=13\.4(&|$)/);
+
+  assertNoLeaks();
+});
+
 // ── Via search ─────────────────────────────────────────────────────────────────
 
 test('clicking a search result opens the spot panel for that trail', async ({ page }) => {

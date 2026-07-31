@@ -18,3 +18,28 @@ export function parseEmbedQuery(search: string): EmbedQueryParams {
     parentHost: query.get('parentHost') ?? '',
   }
 }
+
+/**
+ * Regression: for the prerendered /embed/[token] dynamic route, Nuxt's
+ * client-side router rewrites window.location to its own canonical route
+ * URL (bare path, no trailing slash, no query string) once it takes over —
+ * this isn't a brief hydration-timing race that settles back, it's a
+ * standing rewrite for the lifetime of the page. Reading
+ * window.location.search at any point, including inside onMounted, can
+ * observe that query-less rewritten URL instead of the query string the
+ * page was actually requested with — every embed then falls back to
+ * DEFAULT_LAT/DEFAULT_LNG regardless of what the iframe's src asked for.
+ *
+ * performance.getEntriesByType('navigation')[0] records the browser's
+ * actual navigation as it happened and is never touched by subsequent
+ * History API writes, so its .name reliably reflects the real request.
+ */
+export function getRequestedSearch(win: Window = window): string {
+  const [nav] = win.performance.getEntriesByType('navigation') as PerformanceNavigationTiming[]
+  const url = nav?.name || win.location.href
+  try {
+    return new URL(url).search
+  } catch {
+    return win.location.search
+  }
+}
