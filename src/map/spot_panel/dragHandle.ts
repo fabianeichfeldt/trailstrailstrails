@@ -1,3 +1,9 @@
+// Shared mobile/desktop breakpoint check — the app's one mechanism for
+// distinguishing viewport modes. Reused by the trail-status badge
+// (src/composables/useTrailMap.ts) so desktop popup vs. mobile bottom-sheet
+// branching stays consistent with the panel's own mobile/desktop switch.
+export const isDesktopViewport = () => window.innerWidth >= 768;
+
 export function initDragHandle(panel: HTMLElement): void {
   const handle = panel.querySelector('.spot-panel-handle') as HTMLElement;
   let isResizing = false;
@@ -5,7 +11,7 @@ export function initDragHandle(panel: HTMLElement): void {
   let startSize = 0;
   let isHorizontal = false;
 
-  const isDesktopMode = () => window.innerWidth >= 768;
+  const isDesktopMode = isDesktopViewport;
 
   const updateHandlePosition = () => {
     if (isDesktopMode()) {

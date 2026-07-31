@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 import type { Trail } from '~/types/Trail'
-import { markerIconOptions, parkingIconOptions } from '~/map/markerIcon'
+import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
@@ -9,6 +9,9 @@ import {
 import { GpxRenderGuard } from '~/map/gpxRenderGuard'
 import { GPX_ZOOM_THRESHOLD } from '~/map/gpxZoomThreshold'
 import { fetchMultipleSpotGpx, fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
+import { deriveTrailStatus } from '~/types/TrailStatus'
+import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
+import { createTrailStatusSheet } from '~/map/trailStatusSheet'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -64,6 +67,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Elevation tooltip — repositioned on GPX polyline hover
     const tooltipEl = createTooltipEl(mymap.getContainer())
     const gpxCache  = new Map<string, { trails: any[]; tours: any[] }>()
+    // Trail status badge — mobile explanation sheet, singleton reused across taps
+    const statusSheet = createTrailStatusSheet()
     // Parking lots per spot — same cache/staleness pattern as gpxCache, fetched
     // and rendered alongside the GPX overview (same zoom-triggered path).
     const parkingCache = new Map<string, SpotParkingLot[]>()
@@ -336,6 +341,35 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         gpxLayers.push(line, hit)
       }
 
+      // ── Trail status badge — additive marker at the track's midpoint,
+      // shown only for 'closing_soon' / 'closed' (never for 'open'). The
+      // difficulty-color line rendering in addGpxLine() above is untouched.
+      function addStatusBadge(
+        latlngs: [number, number][],
+        status: { state: 'closing_soon' | 'closed'; explanation: string | null },
+      ) {
+        if (!latlngs.length) return
+        const mid = latlngs[Math.floor(latlngs.length / 2)]
+
+        const marker = L.marker(mid, {
+          icon: L.divIcon(trailStatusBadgeOptions(status.state)),
+          zIndexOffset: 1000,
+        }).addTo(mymap)
+
+        const explanation = status.explanation ?? ''
+
+        marker.on('click', (e: any) => {
+          L.DomEvent.stop(e)
+          if (isDesktopViewport()) {
+            marker.bindPopup(`<div class="trail-status-popup">${explanation}</div>`).openPopup()
+          } else {
+            statusSheet.open(explanation)
+          }
+        })
+
+        gpxLayers.push(marker)
+      }
+
       // Fallback layer for spots that have no GPX data — their marker stays
       // visible in GPX view so the spot is never invisible to the user.
       const fallbackLayer = L.layerGroup().addTo(mymap)
@@ -365,6 +399,14 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         for (const t of gpx.trails) {
           const latlngs = t.gpx_points.map(([la, ln]: [number, number, number]) => [la, ln] as [number, number])
           addGpxLine(latlngs, { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 }, t.name, t.difficulty, t.gpx_points, trail, t.trail_description ?? '')
+
+          const status = deriveTrailStatus(
+            { closed_from: t.closed_from, closed_to: t.closed_to, hint: t.hint },
+            new Date(),
+          )
+          if (status.state !== 'open') {
+            addStatusBadge(latlngs, { state: status.state, explanation: status.explanation })
+          }
         }
       }
 
@@ -399,6 +441,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         for (const l of parkingLayers) mymap.removeLayer(l)
         parkingLayers = []
         tooltipEl.style.display = 'none'
+        statusSheet.close()
         renderMarkers()
       }
     }
@@ -512,6 +555,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     mymap.on('click', async (e: any) => {
       if (!addMode) {
         if (spotPanel.isOpen) spotPanel.close()
+        if (statusSheet.isOpen) statusSheet.close()
         return
       }
       const { giveTrailNearBy } = await import('~/utils/near_by_trails')

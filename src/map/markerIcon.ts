@@ -1,3 +1,5 @@
+import type { TrailStatusState } from '../types/TrailStatus'
+
 export interface MarkerIconOptions {
   html: string
   iconSize: [number, number]
@@ -33,6 +35,25 @@ export function parkingIconOptions(): MarkerIconOptions {
     iconSize:    [22, 22],
     iconAnchor:  [11, 11],
     popupAnchor: [0, -14],
+    className:   '',
+  }
+}
+
+/**
+ * Glossy status badge for a GPX trail track, shown at the track's midpoint
+ * when its derived status (see src/types/TrailStatus.ts) is 'closing_soon'
+ * or 'closed'. Additive only — never used for the 'open' state, and never
+ * touches the track's difficulty-color line rendering.
+ */
+export function trailStatusBadgeOptions(state: Exclude<TrailStatusState, 'open'>): MarkerIconOptions {
+  const variant = state === 'closed' ? 'closed' : 'closing'
+  const glyph   = state === 'closed' ? '✕' : 'i'
+
+  return {
+    html:        `<div class="trail-status-badge trail-status-badge-${variant}">${glyph}</div>`,
+    iconSize:    [34, 34],
+    iconAnchor:  [17, 17],
+    popupAnchor: [0, -19],
     className:   '',
   }
 }

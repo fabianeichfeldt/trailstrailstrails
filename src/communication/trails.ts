@@ -148,6 +148,10 @@ interface RawGpxTrail {
   elevation_loss: number
   gpx_points: [number, number, number][]
   gpx_url?: string
+  // Trail status visualization — see src/types/TrailStatus.ts.
+  closed_from?: string | null
+  closed_to?: string | null
+  hint?: string | null
 }
 
 interface RawGpxTour {
@@ -245,6 +249,11 @@ export interface SpotGpxTrail {
   difficulty: string
   gpx_points: [number, number, number][]
   trail_description?: string
+  // Trail status visualization — see src/types/TrailStatus.ts. Fed straight
+  // into deriveTrailStatus() by the map's GPX badge rendering.
+  closed_from?: string | null
+  closed_to?: string | null
+  hint?: string | null
 }
 
 export interface SpotGpxTour {
@@ -260,7 +269,7 @@ export async function fetchMultipleSpotGpx(
 
   const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
   const [tRes, rRes] = await Promise.all([
-    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description`, {
+    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description,closed_from,closed_to,hint`, {
       headers: anonHeaders(),
     }),
     fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points`, {
@@ -279,7 +288,15 @@ export async function fetchMultipleSpotGpx(
 
   const result = new Map<string, { trails: SpotGpxTrail[]; tours: SpotGpxTour[] }>()
   for (const id of spotIds) result.set(id, { trails: [], tours: [] })
-  for (const t of rawTrails) result.get(t.spot_id)?.trails.push({ name: t.name, difficulty: t.difficulty, gpx_points: t.gpx_points, trail_description: t.trail_description })
+  for (const t of rawTrails) result.get(t.spot_id)?.trails.push({
+    name: t.name,
+    difficulty: t.difficulty,
+    gpx_points: t.gpx_points,
+    trail_description: t.trail_description,
+    closed_from: t.closed_from,
+    closed_to: t.closed_to,
+    hint: t.hint,
+  })
   for (const t of rawTours)  result.get(t.spot_id)?.tours.push({ name: t.name, gpx_points: t.gpx_points })
   return result
 }
