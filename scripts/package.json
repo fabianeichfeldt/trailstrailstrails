@@ -10,6 +10,8 @@
     "add-dirtpark-details": "node --env-file=.env add-dirtpark-details.js",
     "add-bikepark-details": "node --env-file=.env add-bikepark-details.js",
     "add-parks": "node --env-file=.env add-parks.js",
+    "far-parking": "node --env-file=.env find-far-parking.js",
+    "far-parking-delete": "node --env-file=.env find-far-parking.js --delete",
     "preprocess-gpx": "node preprocess-gpx.js",
     "push-gpx": "node --env-file=.env push-gpx.js",
     "push-gpx-dry": "DRY_RUN=1 node push-gpx.js",
