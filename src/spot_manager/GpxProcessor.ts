@@ -175,14 +175,39 @@ export function matchTrailsInTour(
   }).map(m => m.name);
 }
 
-function buildGpxXml(points: GpxPoint[]): string {
+function escapeXml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;').replace(/'/g, '&apos;')
+}
+
+function buildGpxHeader(name: string): string {
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="https://trailradar.org" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>${escapeXml(name)}</name>
+    <author>
+      <link href="https://trailradar.org">
+        <text>Trailradar</text>
+        <type>text/html</type>
+      </link>
+    </author>
+  </metadata>
+`
+}
+
+export function rewriteGpxHeader(content: string, name: string): string {
+  const trkIdx = content.search(/<trk[\s>]/)
+  if (trkIdx === -1) return content // no track found — leave untouched, don't corrupt the file
+  const body = content.slice(trkIdx)
+  return buildGpxHeader(name) + body + (body.trimEnd().endsWith('</gpx>') ? '' : '\n</gpx>')
+}
+
+function buildGpxXml(points: GpxPoint[], name: string): string {
   const trkpts = points.map(p => {
     const time = p.time ? `\n        <time>${p.time.toISOString()}</time>` : '';
     return `      <trkpt lat="${p.lat}" lon="${p.lng}"><ele>${p.alt}</ele>${time}</trkpt>`;
   }).join('\n');
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<gpx version="1.1" creator="TrailRadar">
-  <trk>
+  return `${buildGpxHeader(name)}  <trk>
     <trkseg>
 ${trkpts}
     </trkseg>
@@ -203,7 +228,7 @@ export interface SegmentResult {
   gpxContent: string;
 }
 
-export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number): SegmentResult | null {
+export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number, name = ''): SegmentResult | null {
   const slice = rawPoints.slice(startIdx, endIdx + 1);
   if (slice.length === 0) return null;
   const smoothed = smoothElevation(slice);
@@ -221,7 +246,7 @@ export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: 
     ...stats,
     rawCount:     slice.length,
     thinnedCount: thinned.length,
-    gpxContent:   buildGpxXml(thinned),
+    gpxContent:   buildGpxXml(thinned, name),
   };
 }
 

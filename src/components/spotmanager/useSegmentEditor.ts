@@ -1,5 +1,5 @@
 import { ref, nextTick, watch, onUnmounted, type Ref, type ShallowRef } from 'vue';
-import { processGpx, processSegment, DIFF_COLOR } from '../../spot_manager/GpxProcessor';
+import { processGpx, processSegment, rewriteGpxHeader, DIFF_COLOR } from '../../spot_manager/GpxProcessor';
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor';
 import { uploadGpx, upsertTrail, upsertTour } from '../../spot_manager/Api';
 import type { GpxTrailRow, GpxTourRow } from '../../spot_manager/Api';
@@ -284,7 +284,7 @@ export function useSegmentEditor(opts: Options) {
 
     for (const seg of pendingSegments.value) {
       try {
-        const result = processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx);
+        const result = processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx, seg.name);
         if (!result) continue;
         const gpxUrl = await uploadGpx(spotId.value, 'trails', `${seg.name}.gpx`, result.gpxContent, jwt);
         const newTrail = await upsertTrail({
@@ -308,7 +308,7 @@ export function useSegmentEditor(opts: Options) {
         const resolvedTourName = tourName.value.trim() || segmentSource.value.suggestedName || 'Tour';
         const gpxUrl = await uploadGpx(
           spotId.value, 'tours', `${resolvedTourName}.gpx`,
-          segmentSource.value.gpxContent, jwt,
+          rewriteGpxHeader(segmentSource.value.gpxContent, resolvedTourName), jwt,
         );
         const newTour = await upsertTour({
           spot_id: spotId.value, name: resolvedTourName, direction: tourDirection.value,

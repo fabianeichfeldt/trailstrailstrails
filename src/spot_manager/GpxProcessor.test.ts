@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { processGpx, processSegment, toElevationProfile, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from './GpxProcessor';
+import { processGpx, processSegment, rewriteGpxHeader, toElevationProfile, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from './GpxProcessor';
 import type { GpxPoint } from './GpxProcessor';
 
 // L-shaped path: climbs north then descends east. The corner is far off the
@@ -248,6 +248,103 @@ describe('processSegment', () => {
     // by verifying the names array construction logic
     const derivedNames = segNames.map(n => n);
     expect(derivedNames).toEqual(segNames);
+  });
+});
+
+// ── rewriteGpxHeader ────────────────────────────────────────────────────────────
+
+describe('rewriteGpxHeader', () => {
+  // Real-world Komoot export fixture (trimmed), including sponsor text in both
+  // <metadata><name> and <trk><name> — see
+  // scripts/data/091de017-bce6-4912-8d39-887b8a5f6160_Heidenberg/trails/*.gpx
+  const KOMOOT_GPX = `<?xml version='1.0' encoding='UTF-8'?>
+<gpx version="1.1" creator="https://www.komoot.de" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Heidenbergtrails - Milky Way - grün/blau - IGH - sponsored by VELOVITA</name>
+    <author>
+      <link href="https://www.komoot.de">
+        <text>komoot</text>
+        <type>text/html</type>
+      </link>
+    </author>
+  </metadata>
+  <trk>
+    <name>Heidenbergtrails - Milky Way - grün/blau - IGH - sponsored by VELOVITA</name>
+    <trkseg>
+      <trkpt lat="49.281292" lon="11.010996"><ele>460.089428</ele><time>2023-10-11T21:58:04.310Z</time></trkpt>
+      <trkpt lat="49.281371" lon="11.011240"><ele>460.089428</ele><time>2023-10-11T21:58:08.190Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>`;
+
+  const BARE_GPX = `<?xml version="1.0"?>
+<gpx>
+  <trk>
+    <name>Bare Trail</name>
+    <trkseg>
+      <trkpt lat="48.0" lon="11.5"><ele>500</ele></trkpt>
+      <trkpt lat="48.001" lon="11.501"><ele>510</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>`;
+
+  it('replaces a Komoot-style header and preserves the <trk>...</trk> body byte-for-byte', () => {
+    const trkIdx = KOMOOT_GPX.search(/<trk[\s>]/);
+    const originalTrkBody = KOMOOT_GPX.slice(trkIdx);
+
+    const result = rewriteGpxHeader(KOMOOT_GPX, 'Milky Way');
+
+    expect(result).not.toContain('komoot');
+    // Sponsor text inside <trk><name> is preserved untouched — only the preamble is rewritten.
+    expect(result).toContain('VELOVITA');
+    expect(result).toContain('creator="https://trailradar.org"');
+    expect(result).toContain('<name>Milky Way</name>');
+    // The track body (including the sponsor-laden inner <trk><name>) is preserved byte-for-byte.
+    expect(result).toContain(originalTrkBody);
+    expect(result).toContain('<trk>\n    <name>Heidenbergtrails - Milky Way - grün/blau - IGH - sponsored by VELOVITA</name>');
+  });
+
+  it('inserts the canonical header on a bare-bones file with no <metadata> block', () => {
+    const result = rewriteGpxHeader(BARE_GPX, 'Bare Trail');
+    expect(result).toContain('<metadata>');
+    expect(result).toContain('creator="https://trailradar.org"');
+    expect(result).toContain('<name>Bare Trail</name>');
+    expect(result).toContain('<trk>\n    <name>Bare Trail</name>');
+
+    const reparsed = processGpx(result);
+    expect(reparsed).not.toBeNull();
+    expect(reparsed!.rawCount).toBe(2);
+  });
+
+  it('returns content unchanged when no <trk tag is present', () => {
+    const noTrack = '<?xml version="1.0"?>\n<gpx></gpx>';
+    expect(rewriteGpxHeader(noTrack, 'Whatever')).toBe(noTrack);
+  });
+
+  it('escapes XML-special characters in the name', () => {
+    const result = rewriteGpxHeader(BARE_GPX, `Foo & Bar <"quoted">`);
+    expect(result).toContain('<name>Foo &amp; Bar &lt;&quot;quoted&quot;&gt;</name>');
+    expect(result).not.toContain('<name>Foo & Bar');
+  });
+});
+
+// ── buildGpxXml (via processSegment) ────────────────────────────────────────────
+
+describe('buildGpxXml header (via processSegment gpxContent)', () => {
+  it('emits the canonical TrailRadar header/metadata block', () => {
+    const source = processGpx(MINIMAL_GPX)!;
+    const result = processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'Cut Segment')!;
+    expect(result.gpxContent).toContain('creator="https://trailradar.org"');
+    expect(result.gpxContent).toContain('<metadata>');
+    expect(result.gpxContent).toContain('<name>Cut Segment</name>');
+    expect(result.gpxContent).toContain('<author>');
+    expect(result.gpxContent).toContain('https://trailradar.org');
+  });
+
+  it('escapes XML-special characters in the segment name', () => {
+    const source = processGpx(MINIMAL_GPX)!;
+    const result = processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'A & B')!;
+    expect(result.gpxContent).toContain('<name>A &amp; B</name>');
   });
 });
 
