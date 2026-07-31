@@ -2,6 +2,15 @@
 
 Date: 2026-07-30
 
+> **Update 2026-07-31:** the four separate hint columns (`weight_limit_hint`,
+> `opening_hours_hint`, `cost_hint`, `charging_hint`) described below were
+> replaced with a single `info text[]` column — a free-text array with
+> suggested chip labels (opening hours, weight/height limit, costs,
+> charging) in the editor UI, but no per-category storage. See migration
+> `supabase/migrations/20260731090000_simplify_parking_info.sql`. The rest
+> of this document (data model shape aside) still reflects the current
+> design.
+
 ## Summary
 
 Each spot (trail, bikepark, or dirtpark) can have zero or more parking lots. A parking lot is a point (lat/lng) with a required name and four optional plain-text hint fields (weight limit, opening hours, cost, charging infrastructure). Trailcrew (for their assigned spots) and admins manage parking lots in SpotManager; they render on the main map with a dedicated icon and are browsable from the existing spot detail panel.

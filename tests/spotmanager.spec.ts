@@ -278,7 +278,7 @@ baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and list
   await page.locator('.parking-list .sm-btn-add').click();
   await expect(page.locator('.parking-editor')).toBeVisible({ timeout: 4000 });
 
-  await page.locator('.parking-editor input[type="text"]').fill('Hauptparkplatz');
+  await page.locator('.parking-editor .parking-name-input').fill('Hauptparkplatz');
 
   // Click on the shared big map (right pane) to place the pin.
   // Use a bounding-box-relative offset (not a fixed pixel coordinate) so

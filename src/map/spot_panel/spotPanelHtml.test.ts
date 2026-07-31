@@ -9,33 +9,28 @@ describe('parkingHTML', () => {
     expect(html).toContain('Keine Parkplätze')
   })
 
-  it('renders the lot name plus all populated hint fields', () => {
+  it('renders the lot name plus all info entries', () => {
     const lot: SpotParkingLot = {
       id: 'p1', name: 'Main Lot', lat: 47.8, lng: 13.0,
-      weight_limit_hint: '3.5t', opening_hours_hint: '24/7',
-      cost_hint: 'Kostenlos', charging_hint: 'Keine',
+      info: ['Gewichtsbeschränkung: 3.5t', 'Öffnungszeiten: 24/7', 'Kosten: Kostenlos'],
     }
     const html = parkingHTML([lot])
     expect(html).toContain('Main Lot')
-    expect(html).toContain('3.5t')
-    expect(html).toContain('24/7')
-    expect(html).toContain('Kostenlos')
-    expect(html).toContain('Keine')
+    expect(html).toContain('Gewichtsbeschränkung: 3.5t')
+    expect(html).toContain('Öffnungszeiten: 24/7')
+    expect(html).toContain('Kosten: Kostenlos')
   })
 
-  it('omits hint lines cleanly for null/empty fields, never rendering the literal "null"', () => {
-    const lot: SpotParkingLot = {
-      id: 'p2', name: 'North Entrance', lat: 47.8, lng: 13.0,
-      weight_limit_hint: undefined, opening_hours_hint: '', cost_hint: undefined, charging_hint: undefined,
-    }
-    const html = parkingHTML([lot])
+  it('renders no info lines when the info array is empty or missing, never rendering "null"/"undefined"', () => {
+    const lots: SpotParkingLot[] = [
+      { id: 'p2', name: 'North Entrance', lat: 47.8, lng: 13.0, info: [] },
+      { id: 'p3', name: 'South Entrance', lat: 47.9, lng: 13.1 },
+    ]
+    const html = parkingHTML(lots)
     expect(html).toContain('North Entrance')
+    expect(html).toContain('South Entrance')
     expect(html).not.toContain('null')
     expect(html).not.toContain('undefined')
-    expect(html).not.toContain('Gewichtsbeschränkung')
-    expect(html).not.toContain('Öffnungszeiten')
-    expect(html).not.toContain('Kosten')
-    expect(html).not.toContain('Lademöglichkeit')
   })
 
   it('marks the highlighted lot as active and leaves others untouched', () => {

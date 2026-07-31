@@ -291,10 +291,7 @@ export interface SpotParkingLot {
   name: string
   lat: number
   lng: number
-  weight_limit_hint?: string
-  opening_hours_hint?: string
-  cost_hint?: string
-  charging_hint?: string
+  info?: string[]
 }
 
 /** Batch-fetch parking lots for many spots in one round trip (used by the main map). */
@@ -305,7 +302,7 @@ export async function fetchMultipleSpotParking(
 
   const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
   const res = await fetch(
-    `${REST}/parking?select=id,spot_id,name,lat,lng,weight_limit_hint,opening_hours_hint,cost_hint,charging_hint&spot_id=in.(${idList})`,
+    `${REST}/parking?select=id,spot_id,name,lat,lng,info&spot_id=in.(${idList})`,
     { headers: anonHeaders() },
   )
   if (!res.ok) throw new Error(`parking fetch failed: ${res.status}`)
@@ -317,9 +314,7 @@ export async function fetchMultipleSpotParking(
   for (const id of spotIds) result.set(id, [])
   for (const p of raw) {
     result.get(p.spot_id)?.push({
-      id: p.id, name: p.name, lat: p.lat, lng: p.lng,
-      weight_limit_hint: p.weight_limit_hint, opening_hours_hint: p.opening_hours_hint,
-      cost_hint: p.cost_hint, charging_hint: p.charging_hint,
+      id: p.id, name: p.name, lat: p.lat, lng: p.lng, info: p.info ?? [],
     })
   }
   return result

@@ -34,9 +34,9 @@ describe('fetchMultipleSpotParking', () => {
 
   it('groups multiple lots by spot_id, including spots with zero lots', async () => {
     const rows = [
-      { id: 'p1', spot_id: 's1', name: 'Lot A', lat: 47.8, lng: 13.0, weight_limit_hint: null, opening_hours_hint: null, cost_hint: null, charging_hint: null },
-      { id: 'p2', spot_id: 's1', name: 'Lot B', lat: 47.9, lng: 13.1, weight_limit_hint: null, opening_hours_hint: null, cost_hint: null, charging_hint: null },
-      { id: 'p3', spot_id: 's2', name: 'Lot C', lat: 48.0, lng: 13.2, weight_limit_hint: null, opening_hours_hint: null, cost_hint: null, charging_hint: null },
+      { id: 'p1', spot_id: 's1', name: 'Lot A', lat: 47.8, lng: 13.0, info: [] },
+      { id: 'p2', spot_id: 's1', name: 'Lot B', lat: 47.9, lng: 13.1, info: ['Kosten: kostenlos'] },
+      { id: 'p3', spot_id: 's2', name: 'Lot C', lat: 48.0, lng: 13.2, info: null },
     ]
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(rows)))
     const result = await fetchMultipleSpotParking(['s1', 's2', 's3'])

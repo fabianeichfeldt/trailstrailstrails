@@ -452,8 +452,7 @@ describe('getAllTrailsForPicker', () => {
 
 describe('getSpotParking', () => {
   const LOT: ParkingRow = {
-    id: 'pk1', spot_id: 's1', name: 'Main Lot', lat: 47.8, lng: 13.0,
-    weight_limit_hint: null, opening_hours_hint: null, cost_hint: null, charging_hint: null,
+    id: 'pk1', spot_id: 's1', name: 'Main Lot', lat: 47.8, lng: 13.0, info: null,
   };
 
   it('fetches parking rows filtered by spot_id', async () => {

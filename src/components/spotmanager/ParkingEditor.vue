@@ -10,7 +10,7 @@
     <div class="parking-editor-body">
       <label class="parking-field-label">
         Name
-        <input v-model="form.name" type="text" class="sd-input" placeholder="z.B. Hauptparkplatz" maxlength="80" />
+        <input v-model="form.name" type="text" class="sd-input parking-name-input" placeholder="z.B. Hauptparkplatz" maxlength="80" />
       </label>
 
       <div class="parking-field-label">
@@ -22,25 +22,29 @@
         </div>
       </div>
 
-      <label class="parking-field-label">
-        Gewichtsbeschränkung <span class="parking-optional">(optional)</span>
-        <textarea v-model="form.weight_limit_hint" class="sd-textarea parking-hint-textarea" rows="2" placeholder="z.B. 3,5t – keine Wohnmobile" />
-      </label>
-
-      <label class="parking-field-label">
-        Öffnungszeiten <span class="parking-optional">(optional)</span>
-        <textarea v-model="form.opening_hours_hint" class="sd-textarea parking-hint-textarea" rows="2" placeholder="z.B. durchgehend geöffnet" />
-      </label>
-
-      <label class="parking-field-label">
-        Kosten <span class="parking-optional">(optional)</span>
-        <textarea v-model="form.cost_hint" class="sd-textarea parking-hint-textarea" rows="2" placeholder="z.B. kostenlos / 5€ Tagesticket" />
-      </label>
-
-      <label class="parking-field-label">
-        Lademöglichkeit <span class="parking-optional">(optional)</span>
-        <textarea v-model="form.charging_hint" class="sd-textarea parking-hint-textarea" rows="2" placeholder="z.B. 2 Ladesäulen auf dem Gelände" />
-      </label>
+      <div class="parking-field-label">
+        Infos <span class="parking-optional">(optional)</span>
+        <div v-if="form.info.length" class="parking-info-list">
+          <div v-for="(entry, i) in form.info" :key="i" class="parking-info-row">
+            <input v-model="form.info[i]" type="text" class="sd-input parking-info-input" maxlength="120" placeholder="z.B. Öffnungszeiten: durchgehend geöffnet" />
+            <button type="button" class="parking-info-remove" aria-label="Eintrag entfernen" @click="form.info.splice(i, 1)">
+              <i class="fas fa-times" />
+            </button>
+          </div>
+        </div>
+        <div class="parking-info-suggestions">
+          <button
+            v-for="s in availableSuggestions" :key="s"
+            type="button" class="parking-suggestion-chip"
+            @click="addSuggestion(s)"
+          >
+            + {{ s }}
+          </button>
+          <button type="button" class="parking-suggestion-chip parking-suggestion-custom" @click="form.info.push('')">
+            + Eigener Eintrag
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="sm-form-actions parking-editor-footer">
@@ -77,13 +81,25 @@ const emit = defineEmits<{
 
 const isNew = computed(() => !props.lot)
 
+// Suggested categories offered as chips — clicking one adds a pre-filled
+// entry to the free-text info array. Purely a UI nudge, not a stored shape:
+// the "info" column is just text[], nothing parses these labels back out.
+const INFO_SUGGESTIONS = ['Öffnungszeiten', 'Gewichtsbeschränkung', 'Höhenbeschränkung', 'Kosten', 'Lademöglichkeit']
+
 const form = reactive({
-  name:               props.lot?.name ?? '',
-  weight_limit_hint:  props.lot?.weight_limit_hint  ?? '',
-  opening_hours_hint: props.lot?.opening_hours_hint ?? '',
-  cost_hint:          props.lot?.cost_hint          ?? '',
-  charging_hint:      props.lot?.charging_hint      ?? '',
+  name: props.lot?.name ?? '',
+  info: [...(props.lot?.info ?? [])] as string[],
 })
+
+// Hide suggestions whose label has already been added, so repeat clicks
+// don't pile up duplicate "Kosten: " entries.
+const availableSuggestions = computed(() =>
+  INFO_SUGGESTIONS.filter(s => !form.info.some(entry => entry.startsWith(`${s}:`))),
+)
+
+function addSuggestion(label: string) {
+  form.info.push(`${label}: `)
+}
 
 const location = ref<LatLng | null>(
   props.lot ? { lat: props.lot.lat, lng: props.lot.lng } : null,
@@ -118,10 +134,7 @@ async function save() {
       name: form.name.trim(),
       lat: location.value.lat,
       lng: location.value.lng,
-      weight_limit_hint:  form.weight_limit_hint.trim()  || null,
-      opening_hours_hint: form.opening_hours_hint.trim() || null,
-      cost_hint:          form.cost_hint.trim()          || null,
-      charging_hint:      form.charging_hint.trim()      || null,
+      info: form.info.map(entry => entry.trim()).filter(Boolean),
     }, props.jwt)
     emit('saved')
   } catch (e: any) {
@@ -193,13 +206,59 @@ async function save() {
   justify-content: center;
 }
 
-.parking-hint-textarea {
-  resize: vertical;
+.parking-info-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.parking-info-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.parking-info-input {
+  flex: 1;
   font-family: inherit;
   font-size: 13px;
   text-transform: none;
   letter-spacing: 0;
 }
+
+.parking-info-remove {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #999;
+  cursor: pointer;
+}
+.parking-info-remove:hover { color: #d33; border-color: #d33; }
+
+.parking-info-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.parking-suggestion-chip {
+  font-size: 12px;
+  font-weight: normal;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 6px 10px;
+  border: 1px dashed #c9d6e5;
+  border-radius: 999px;
+  background: #f7fafd;
+  color: #0d5db8;
+  cursor: pointer;
+}
+.parking-suggestion-chip:hover { background: #eaf2fb; }
+.parking-suggestion-custom { color: #555; }
 
 .parking-editor-footer {
   border-top: 1px solid #e5e7eb;

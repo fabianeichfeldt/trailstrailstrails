@@ -46,18 +46,9 @@ export function toursHTML(tours: MtbTour[]): string {
     </div>`).join('');
 }
 
-const PARKING_HINT_LABELS: Record<keyof Pick<SpotParkingLot, 'weight_limit_hint' | 'opening_hours_hint' | 'cost_hint' | 'charging_hint'>, string> = {
-  weight_limit_hint:  '⚖️ Gewichtsbeschränkung',
-  opening_hours_hint: '🕐 Öffnungszeiten',
-  cost_hint:          '💶 Kosten',
-  charging_hint:      '🔌 Lademöglichkeit',
-};
-
-function parkingHintLines(lot: SpotParkingLot): string {
-  return (Object.keys(PARKING_HINT_LABELS) as Array<keyof typeof PARKING_HINT_LABELS>)
-    .filter(key => lot[key] != null && lot[key] !== '')
-    .map(key => `<div class="parking-hint"><strong>${PARKING_HINT_LABELS[key]}:</strong> ${lot[key]}</div>`)
-    .join('');
+function parkingInfoLines(info?: string[]): string {
+  if (!info || !info.length) return '';
+  return info.map(line => `<div class="parking-hint">${line}</div>`).join('');
 }
 
 export function parkingHTML(lots: SpotParkingLot[], highlightId?: string): string {
@@ -68,7 +59,7 @@ export function parkingHTML(lots: SpotParkingLot[], highlightId?: string): strin
         <div class="parking-badge">P</div>
         <div class="spot-item-info">
           <div class="spot-item-name"><strong>${lot.name}</strong></div>
-          <div class="parking-hints">${parkingHintLines(lot)}</div>
+          <div class="parking-hints">${parkingInfoLines(lot.info)}</div>
         </div>
       </div>
     </div>`).join('');

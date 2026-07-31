@@ -353,10 +353,7 @@ export interface ParkingRow {
   name: string;
   lat: number;
   lng: number;
-  weight_limit_hint?: string | null;
-  opening_hours_hint?: string | null;
-  cost_hint?: string | null;
-  charging_hint?: string | null;
+  info?: string[] | null;
 }
 
 export async function getSpotParking(spotId: string): Promise<ParkingRow[]> {
