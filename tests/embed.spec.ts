@@ -2,8 +2,21 @@ import { test as base, expect } from '@playwright/test';
 import { applySafetyNet, setupApiMocks } from './fixtures';
 
 const EMBED_TRAILS = [
-  { id: 't1', name: 'Flowtrail Tegernsee', type: 'trail', latitude: 47.71, longitude: 11.76, approved: true },
+  {
+    id: 't1', name: 'Flowtrail Tegernsee', type: 'trail', latitude: 47.71, longitude: 11.76, approved: true,
+    gpx_trails: [], gpx_tours: [], parking: [],
+  },
 ];
+
+const EMBED_TRAIL_WITH_GPX = {
+  id: 't1', name: 'Flowtrail Tegernsee', type: 'trail', latitude: 47.71, longitude: 11.76, approved: true,
+  gpx_trails: [{
+    name: 'Hauptlinie', difficulty: 'blue',
+    gpx_points: [[47.71, 11.76, 600], [47.711, 11.761, 610], [47.712, 11.762, 615]],
+  }],
+  gpx_tours: [],
+  parking: [{ id: 'p1', name: 'Talstation Parkplatz', lat: 47.709, lng: 11.758 }],
+};
 
 const embedTest = base.extend<{ page: base.PlaywrightTestArgs['page'] }>({
   page: async ({ page }, use) => {
@@ -139,4 +152,41 @@ embedTest('embed map drag and scroll-wheel zoom are disabled', async ({ page }) 
   await page.mouse.wheel(0, -500);
   await page.waitForTimeout(300);
   expect(await getPaneTransform()).toBe(before);
+});
+
+embedTest('embed page shows the GPX track and drops the spot marker when zoom is high enough', async ({ page }) => {
+  await page.route('**/_embed/**', route =>
+    route.fulfill({ json: [EMBED_TRAIL_WITH_GPX] }),
+  );
+
+  // zoom=12 is above GPX_ZOOM_THRESHOLD (11), and the trail has GPX data.
+  await page.goto('/embed/test-token?lat=47.71&lng=11.76&zoom=12');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('.leaflet-overlay-pane path').first()).toBeVisible();
+  await expect(page.locator('.map-pin')).toHaveCount(0);
+});
+
+embedTest('embed page shows only the spot marker (no GPX) when zoom is below the threshold', async ({ page }) => {
+  await page.route('**/_embed/**', route =>
+    route.fulfill({ json: [EMBED_TRAIL_WITH_GPX] }),
+  );
+
+  // zoom=8 is below GPX_ZOOM_THRESHOLD (11) even though the trail has GPX data.
+  await page.goto('/embed/test-token?lat=47.71&lng=11.76&zoom=8');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('.map-pin')).toHaveCount(1);
+  await expect(page.locator('.leaflet-overlay-pane path')).toHaveCount(0);
+});
+
+embedTest('embed page always renders parking markers, regardless of zoom or GPX state', async ({ page }) => {
+  await page.route('**/_embed/**', route =>
+    route.fulfill({ json: [EMBED_TRAIL_WITH_GPX] }),
+  );
+
+  await page.goto('/embed/test-token?lat=47.71&lng=11.76&zoom=8');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('.parking-pin')).toHaveCount(1);
 });

@@ -14,13 +14,14 @@
 
 <script setup lang="ts">
 import type { EmbedTrail } from '~/server/routes/_embed/[token].get'
-import { markerIconOptions } from '~/map/markerIcon'
+import { markerIconOptions, parkingIconOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
   positionTooltip, createTooltipEl,
 } from '~/map/trailTooltip'
 import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
+import { shouldShowGpx } from '~/map/gpxZoomThreshold'
 
 definePageMeta({ layout: 'embed' })
 
@@ -145,33 +146,45 @@ onMounted(async () => {
     const appUrl = `https://trailradar.org/trails/${trail.id}`
     const popup  = `<strong>${trail.name}</strong><br><a href="${appUrl}" target="_blank" rel="noopener">In Trailradar öffnen ↗</a>`
     const hasGpx = trail.gpx_trails.length > 0 || trail.gpx_tours.length > 0
+    // Embed zoom is fixed at load (no interactive zoom), so this is a
+    // one-time decision, not a live zoomend switch like the main map.
+    const showGpx = shouldShowGpx(hasGpx, zoom)
 
-    // Tours added first — their SVG elements sit below trails.
-    // Trails added second — their hit areas are on top when stacked.
-    for (const t of trail.gpx_tours) {
-      const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
-      addPolylineWithTooltip(
-        latlngs,
-        { color: '#555', weight: 3, opacity: 0.6, dashArray: '8, 6' },
-        t.name, null, t.gpx_points, appUrl,
-      )
+    if (showGpx) {
+      // Tours added first — their SVG elements sit below trails.
+      // Trails added second — their hit areas are on top when stacked.
+      for (const t of trail.gpx_tours) {
+        const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
+        addPolylineWithTooltip(
+          latlngs,
+          { color: '#555', weight: 3, opacity: 0.6, dashArray: '8, 6' },
+          t.name, null, t.gpx_points, appUrl,
+        )
+      }
+
+      for (const t of trail.gpx_trails) {
+        const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
+        addPolylineWithTooltip(
+          latlngs,
+          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 },
+          t.name, t.difficulty, t.gpx_points, appUrl,
+        )
+      }
+    } else {
+      // No GPX shown at this zoom — the marker is the only indicator and
+      // acts as the clickable "open in app" entry point.
+      const icon = L.divIcon(markerIconOptions(trail.type, trail.approved ?? false))
+      L.marker([trail.latitude, trail.longitude], { icon, opacity: 1 })
+        .addTo(map)
+        .bindPopup(popup)
     }
 
-    for (const t of trail.gpx_trails) {
-      const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
-      addPolylineWithTooltip(
-        latlngs,
-        { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 },
-        t.name, t.difficulty, t.gpx_points, appUrl,
-      )
+    for (const lot of trail.parking) {
+      const icon = L.divIcon(parkingIconOptions())
+      L.marker([lot.lat, lot.lng], { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${lot.name}</strong>`)
     }
-
-    // Spot marker — always shown (acts as the clickable "open in app" entry point)
-    // When GPX is present this anchors the spot; when absent it's the only indicator.
-    const icon = L.divIcon(markerIconOptions(trail.type, trail.approved ?? false))
-    L.marker([trail.latitude, trail.longitude], { icon, opacity: hasGpx ? 0.7 : 1 })
-      .addTo(map)
-      .bindPopup(popup)
   }
 })
 </script>

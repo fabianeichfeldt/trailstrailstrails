@@ -7,6 +7,7 @@ import {
   positionTooltip, createTooltipEl,
 } from '~/map/trailTooltip'
 import { GpxRenderGuard } from '~/map/gpxRenderGuard'
+import { GPX_ZOOM_THRESHOLD } from '~/map/gpxZoomThreshold'
 import { fetchMultipleSpotGpx, fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
@@ -68,7 +69,6 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     const parkingCache = new Map<string, SpotParkingLot[]>()
 
     // ── View mode ────────────────────────────────────────────────────────────
-    const GPX_ZOOM_THRESHOLD = 11
     const renderGuard = new GpxRenderGuard()
     let gpxLayers: any[] = []
     // Plain marker layers for parking lots — not clustered, mirrors gpxLayers

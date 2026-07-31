@@ -11,6 +11,13 @@ export interface EmbedGpxTour {
   gpx_points: [number, number, number][]
 }
 
+export interface EmbedParkingLot {
+  id: string
+  name: string
+  lat: number
+  lng: number
+}
+
 export interface EmbedTrail {
   id: string
   name: string
@@ -20,6 +27,7 @@ export interface EmbedTrail {
   approved?: boolean
   gpx_trails: EmbedGpxTrail[]
   gpx_tours: EmbedGpxTour[]
+  parking: EmbedParkingLot[]
 }
 
 const TABLE: Record<string, string> = {
@@ -72,10 +80,11 @@ export default defineEventHandler(async (event) => {
   let spotResults: any[][]
   let gpxTrailsRes: Response
   let gpxToursRes: Response
+  let parkingRes: Response
 
   if (tokenRow.is_wildcard) {
     const SPOT_FIELDS = 'id,name,latitude,longitude,approved'
-    ;[spotResults, [gpxTrailsRes, gpxToursRes]] = await Promise.all([
+    ;[spotResults, [gpxTrailsRes, gpxToursRes, parkingRes]] = await Promise.all([
       Promise.all([
         fetch(`${url}/rest/v1/trails?select=${SPOT_FIELDS}&limit=1000`, { headers })
           .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'trail' }))) : []),
@@ -87,6 +96,7 @@ export default defineEventHandler(async (event) => {
       Promise.all([
         fetch(`${url}/rest/v1/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points&limit=5000`, { headers }),
         fetch(`${url}/rest/v1/spot_gpx_tours?select=spot_id,name,gpx_points&limit=5000`, { headers }),
+        fetch(`${url}/rest/v1/parking?select=id,spot_id,name,lat,lng&limit=2000`, { headers }),
       ]),
     ])
   } else {
@@ -113,7 +123,7 @@ export default defineEventHandler(async (event) => {
     }
     const idList = tokenTrails.map(t => encodeURIComponent(t.trail_id)).join(',')
 
-    ;[spotResults, [gpxTrailsRes, gpxToursRes]] = await Promise.all([
+    ;[spotResults, [gpxTrailsRes, gpxToursRes, parkingRes]] = await Promise.all([
       Promise.all(
         Array.from(byType.entries()).map(async ([type, ids]) => {
           const table = TABLE[type]
@@ -131,6 +141,7 @@ export default defineEventHandler(async (event) => {
       Promise.all([
         fetch(`${url}/rest/v1/spot_gpx_trails?spot_id=in.(${idList})&select=spot_id,name,difficulty,gpx_points&limit=5000`, { headers }),
         fetch(`${url}/rest/v1/spot_gpx_tours?spot_id=in.(${idList})&select=spot_id,name,gpx_points&limit=5000`, { headers }),
+        fetch(`${url}/rest/v1/parking?spot_id=in.(${idList})&select=id,spot_id,name,lat,lng&limit=2000`, { headers }),
       ]),
     ])
   }
@@ -143,10 +154,14 @@ export default defineEventHandler(async (event) => {
   const gpxTours = gpxToursRes.ok
     ? (await gpxToursRes.json() as Array<{ spot_id: string; name: string; gpx_points: [number, number, number][] }>)
     : []
+  const parkingRows = parkingRes.ok
+    ? (await parkingRes.json() as Array<{ id: string; spot_id: string; name: string; lat: number; lng: number }>)
+    : []
 
-  // Index GPX data by spot_id for O(1) lookup
+  // Index GPX/parking data by spot_id for O(1) lookup
   const gpxTrailsBySpot = new Map<string, EmbedGpxTrail[]>()
   const gpxToursBySpot  = new Map<string, EmbedGpxTour[]>()
+  const parkingBySpot   = new Map<string, EmbedParkingLot[]>()
   for (const t of gpxTrails) {
     if (!gpxTrailsBySpot.has(t.spot_id)) gpxTrailsBySpot.set(t.spot_id, [])
     gpxTrailsBySpot.get(t.spot_id)!.push({ name: t.name, difficulty: t.difficulty, gpx_points: t.gpx_points })
@@ -154,6 +169,10 @@ export default defineEventHandler(async (event) => {
   for (const t of gpxTours) {
     if (!gpxToursBySpot.has(t.spot_id)) gpxToursBySpot.set(t.spot_id, [])
     gpxToursBySpot.get(t.spot_id)!.push({ name: t.name, gpx_points: t.gpx_points })
+  }
+  for (const p of parkingRows) {
+    if (!parkingBySpot.has(p.spot_id)) parkingBySpot.set(p.spot_id, [])
+    parkingBySpot.get(p.spot_id)!.push({ id: p.id, name: p.name, lat: p.lat, lng: p.lng })
   }
 
   const results: EmbedTrail[] = spots.map(spot => ({
@@ -165,6 +184,7 @@ export default defineEventHandler(async (event) => {
     approved:   spot.approved,
     gpx_trails: gpxTrailsBySpot.get(spot.id) ?? [],
     gpx_tours:  gpxToursBySpot.get(spot.id)  ?? [],
+    parking:    parkingBySpot.get(spot.id)   ?? [],
   }))
 
   setResponseHeader(event, 'Access-Control-Allow-Origin', originHeader ?? '*')
