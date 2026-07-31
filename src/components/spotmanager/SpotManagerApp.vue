@@ -762,7 +762,7 @@
 <script setup lang="ts">
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
 import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
-import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx } from '../../spot_manager/GpxProcessor'
+import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
 import type { ImbaColor } from '../../types/MtbTypes'
@@ -1219,7 +1219,7 @@ async function saveTrailEdit() {
     let gpxPoints = t.gpx_points
     let stats = { distance_km: t.distance_km, elevation_gain: t.elevation_gain, elevation_loss: t.elevation_loss }
     if (editNewGpx.value) {
-      gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, editNewGpx.value.gpxContent, jwt)
+      gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, rewriteGpxHeader(editNewGpx.value.gpxContent, name), jwt)
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
@@ -1246,7 +1246,7 @@ async function saveTourEdit() {
     let gpxPoints = t.gpx_points
     let stats = { distance_km: t.distance_km, elevation_gain: t.elevation_gain, elevation_loss: t.elevation_loss }
     if (editNewGpx.value) {
-      gpx_url = await uploadGpx(spotId.value, 'tours', `${name}.gpx`, editNewGpx.value.gpxContent, jwt)
+      gpx_url = await uploadGpx(spotId.value, 'tours', `${name}.gpx`, rewriteGpxHeader(editNewGpx.value.gpxContent, name), jwt)
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
@@ -1364,7 +1364,7 @@ async function applyImports() {
   for (const p of pending.value) {
     try {
       const name = p.name.trim() || p.filename.replace(/\.gpx$/i, '')
-      const gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, p.processed.gpxContent, jwt)
+      const gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, rewriteGpxHeader(p.processed.gpxContent, name), jwt)
       const newTrail = await upsertTrail({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
         distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
         elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,

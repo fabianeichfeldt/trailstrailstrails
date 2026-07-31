@@ -23,6 +23,8 @@
 const fs   = require('fs');
 const path = require('path');
 
+const { rewriteGpxHeader } = require('./gpx-header');
+
 const DATA_DIR = process.argv[2] || path.join(__dirname, 'data');
 const OUT_FILE = path.join(DATA_DIR, 'processed.json');
 
@@ -235,9 +237,11 @@ function processFile(filePath, meta = {}) {
     (stats.duration_minutes ? `  ${stats.duration_minutes} min` : '')
   );
 
+  const name = meta.name ?? (gpxName || path.basename(filePath, '.gpx'));
+
   return {
     filename:         path.basename(filePath),
-    name:             meta.name ?? (gpxName || path.basename(filePath, '.gpx')),
+    name,
     difficulty:       meta.difficulty ?? null,
     direction:        meta.direction  ?? null,
     trail_names:      meta.trail_names ?? null,   // tours only
@@ -245,7 +249,7 @@ function processFile(filePath, meta = {}) {
     raw_points:       rawPoints.length,
     thinned_points:   thinned.length,
     gpx_points,
-    gpx_content:      content,  // original GPX XML for download
+    gpx_content:      rewriteGpxHeader(content, name),  // canonical TrailRadar header for download
     raw_points_for_matching: rawPoints,  // full resolution for spatial matching
   };
 }
