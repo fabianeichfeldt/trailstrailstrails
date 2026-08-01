@@ -149,6 +149,14 @@
             <span class="qn-label">Karte einbetten</span>
             <span class="qn-sub">Für Website-Betreiber</span>
           </NuxtLink>
+
+          <NuxtLink to="/trailmanagement" class="qn-card">
+            <div class="qn-icon">
+              <IconShieldCheck />
+            </div>
+            <span class="qn-label">Trailmanagement</span>
+            <span class="qn-sub">Für Trailcrews</span>
+          </NuxtLink>
         </div>
       </div>
     </section>
