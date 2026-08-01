@@ -49,3 +49,14 @@ Accessed **directly from the browser** (no backend proxy). The Supabase project 
 **Fix**: Cloudflare Worker rule that rewrites `/embed/*` requests to serve `/index.html` from GitHub Pages. The Nuxt SPA shell loads, Vue Router routes client-side to `/embed/[token]`, the component fetches `/_embed/<token>` (handled by the CF Worker), and the map renders.
 
 Alternatively: add a `nitro:close` hook that copies `.output/public/index.html` → `.output/public/404.html`. GitHub Pages serves `404.html` as the fallback for any unmatched path, which lets the SPA handle `/embed/*` client-side. Downside: actual 404s also load the app shell.
+
+### CF Worker source lives in this repo, but deploys manually
+
+`cloudflare/embed-worker.js` is a checked-in mirror of the `/_embed/*` Worker
+running on Cloudflare. It is **not** deployed by CI — see `cloudflare/README.md`
+for the manual deploy steps. It must be hand-kept in sync with
+`src/server/routes/_embed/[token].get.ts` (the Nitro route, which only ever
+runs live during `nuxt dev` — it's never part of the `nuxt generate` output).
+Letting the two drift is exactly what caused a production-only
+`e.parking is not iterable` crash on 2026-07-31: the Nitro route gained a
+`parking` field, the deployed Worker didn't, and nobody redeployed it.
