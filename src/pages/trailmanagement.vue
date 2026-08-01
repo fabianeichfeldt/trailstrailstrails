@@ -43,6 +43,26 @@
       </section>
 
       <section class="section">
+        <h2>GPX-Import für bessere Sichtbarkeit auf Trailradar</h2>
+        <p>Ihr habt die Trails eh schon aufgezeichnet – beim Bauen, beim Fahren, bei der
+          Streckenabnahme. Ladet die GPX-Datei einfach im Spotmanager hoch, den Rest übernimmt
+          Trailradar.</p>
+        <div class="highlight-box">
+          <ul>
+            <li><strong>Automatische Bereinigung</strong> – GPS-Rauschen und unnötige Punkte werden
+              entfernt, ohne dass die Streckenform verloren geht.</li>
+            <li><strong>Höhenprofil inklusive</strong> – wird direkt aus den Track-Daten berechnet und
+              auf der Trailseite angezeigt.</li>
+            <li><strong>Touren können in Abschnitte zerlegt werden</strong> – nehmt ihr eine ganze Tour über mehrere
+              Trails auf einmal auf, könnt ihr einzelne Abschnitte definieren und entscheidet welcher Abschnitt zu welchem
+              Trail gehört.</li>
+          </ul>
+        </div>
+        <p>Kein manuelles Nachzeichnen auf einer Karte – die Strecke stimmt exakt mit dem überein, was
+          ihr tatsächlich gebaut habt und gefahren seid.</p>
+      </section>
+
+      <section class="section">
         <h2>Auch auf eurer eigenen Website</h2>
         <p>Der Status ist nicht nur auf Trailradar sichtbar. Über das Kartenwidget oder eine Ampel zeigt ihr eure Trails
           samt Live-Status direkt auf eurer eigenen Website – mit wenigen
