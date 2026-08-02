@@ -71,6 +71,15 @@
       </section>
 
       <section class="section">
+        <h2>Offen für Schnittstellen</h2>
+        <p>Nutzt ihr bereits ein eigenes System zur Streckenpflege oder eine andere Plattform, auf der
+          eure Trails gepflegt werden? Trailradar ist offen für Schnittstellen – ob Datenimport,
+          -export oder eine Anbindung an eure bestehende Software. Meldet euch, wenn ihr eine
+          Schnittstelle braucht, dann schauen wir gemeinsam, was möglich ist.</p>
+        <a href="mailto:webmaster@trailradar.org" class="inline-link">Schnittstelle anfragen →</a>
+      </section>
+
+      <section class="section">
         <h2>Wer kann Trails verwalten?</h2>
         <p>Der Spotmanager ist ausschließlich für Trailcrews und Admins zugänglich – Trailbauer mit
           realer Verantwortung für den jeweiligen Trail. Trailcrew-Zugänge werden von uns manuell
