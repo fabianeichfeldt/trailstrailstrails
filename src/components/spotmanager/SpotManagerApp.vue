@@ -398,6 +398,7 @@
               :closed-from="editFormClosedFrom"
               :closed-to="editFormClosedTo"
               :hint="editFormHint"
+              :spot-name="spotName"
               @update:closed-from="editFormClosedFrom = $event"
               @update:closed-to="editFormClosedTo = $event"
               @update:hint="editFormHint = $event"

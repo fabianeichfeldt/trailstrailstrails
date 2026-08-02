@@ -1,5 +1,12 @@
 <template>
   <div class="trail-status-fields">
+    <div class="trail-status-section-header">
+      <span class="trail-status-section-title">Sperrzeitraum</span>
+      <p class="trail-status-section-desc">
+        Sobald du hier ein Von-Datum einträgst, gilt der Trail für Fahrer als gesperrt.
+      </p>
+    </div>
+
     <label class="trail-status-field-label">
       Von
       <div class="trail-status-inline-field">
@@ -30,16 +37,37 @@
         placeholder="z.B. Nach Regen rutschig" />
     </label>
     <div class="trail-status-char-hint">{{ hintText.length }}/300</div>
+
+    <div class="trail-status-preview">
+      <span class="trail-status-section-title">Vorschau</span>
+      <p class="trail-status-section-desc">So erscheint der Hinweis auf der Karte und im Spot-Panel:</p>
+
+      <div
+        v-if="previewStatus.state !== 'open'"
+        class="trail-status-info"
+        :class="`trail-status-info-${previewStatus.state === 'closed' ? 'closed' : 'closing'}`"
+      >
+        <div class="trail-status-info-title">{{ previewStatus.title }}</div>
+        <div v-if="previewStatus.dateLine" class="trail-status-info-date">{{ previewStatus.dateLine }}</div>
+        <p v-if="previewStatus.hint" class="trail-status-info-hint">{{ previewStatus.hint }}</p>
+        <div class="trail-status-info-attribution">Hinweis von Trailcrew {{ spotName }}</div>
+      </div>
+      <p v-else class="trail-status-preview-open">
+        Aktuell offen — auf der Karte wird kein Hinweis angezeigt.
+      </p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { isoToDatetimeLocal, datetimeLocalToIso, nowAsDatetimeLocal, tomorrowEndOfDayAsDatetimeLocal } from '../../spot_manager/trailStatusForm'
+import { deriveTrailStatus } from '../../types/TrailStatus'
 
 const props = defineProps<{
   closedFrom: string | null  // ISO 8601, or null when not closed
   closedTo:   string | null  // ISO 8601, or null when open-ended/unset
   hint:       string | null
+  spotName:   string
 }>()
 
 const emit = defineEmits<{
@@ -55,6 +83,14 @@ const emit = defineEmits<{
 const von = ref(isoToDatetimeLocal(props.closedFrom))
 const bis = ref(isoToDatetimeLocal(props.closedTo))
 const hintText = ref(props.hint ?? '')
+
+// Live preview of the exact badge/card riders will see (map popup, mobile
+// sheet, spot panel) — reuses the same deriveTrailStatus() the map itself
+// calls, so it can never show something inconsistent with the real result.
+const previewStatus = computed(() => deriveTrailStatus(
+  { closed_from: datetimeLocalToIso(von.value), closed_to: datetimeLocalToIso(bis.value), hint: hintText.value.trim() || null },
+  new Date(),
+))
 
 watch(von, (value) => {
   if (!value) bis.value = ''
@@ -140,6 +176,33 @@ function clearClosure() {
   color: #bbb;
   text-align: right;
   margin-top: -8px;
+}
+
+.trail-status-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #333;
+}
+
+.trail-status-section-desc {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #888;
+}
+
+.trail-status-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
+}
+
+.trail-status-preview-open {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #999;
+  font-style: italic;
 }
 
 @media (max-width: 600px) {

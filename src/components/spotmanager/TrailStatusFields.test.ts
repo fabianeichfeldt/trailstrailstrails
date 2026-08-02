@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import TrailStatusFields from './TrailStatusFields.vue'
 
-function mountFields(props: { closedFrom: string | null; closedTo: string | null; hint: string | null }) {
-  return mount(TrailStatusFields, { props })
+function mountFields(props: { closedFrom: string | null; closedTo: string | null; hint: string | null; spotName?: string }) {
+  return mount(TrailStatusFields, { props: { spotName: 'Testspot', ...props } })
 }
 
 function vonInput(wrapper: ReturnType<typeof mountFields>) {
@@ -107,5 +107,44 @@ describe('TrailStatusFields', () => {
     expect((vonInput(wrapper).element as HTMLInputElement).value).not.toBe('')
     expect((bisInput(wrapper).element as HTMLInputElement).value).not.toBe('')
     expect(wrapper.get('textarea').element.value).toBe('Bauarbeiten')
+  })
+
+  it('explains upfront that setting Von closes the trail', () => {
+    const wrapper = mountFields({ closedFrom: null, closedTo: null, hint: null })
+    expect(wrapper.get('.trail-status-section-title').text()).toBe('Sperrzeitraum')
+    expect(wrapper.text()).toContain('gilt der Trail für Fahrer als gesperrt')
+  })
+
+  it('preview shows the open placeholder when nothing is set', () => {
+    const wrapper = mountFields({ closedFrom: null, closedTo: null, hint: null })
+    expect(wrapper.find('.trail-status-preview-open').exists()).toBe(true)
+    expect(wrapper.find('.trail-status-info').exists()).toBe(false)
+  })
+
+  it('preview shows the closed card, matching the map/spot-panel styling, once Von is in the past', () => {
+    const wrapper = mountFields({ closedFrom: '2020-01-01T09:00:00.000Z', closedTo: null, hint: null })
+    const card = wrapper.get('.trail-status-info')
+    expect(card.classes()).toContain('trail-status-info-closed')
+    expect(card.get('.trail-status-info-title').text()).toBe('Aktuell gesperrt')
+    expect(card.get('.trail-status-info-date').text()).toMatch(/^seit /)
+    expect(card.get('.trail-status-info-attribution').text()).toBe('Hinweis von Trailcrew Testspot')
+  })
+
+  it('preview shows the "closing soon" card once Von is in the future', () => {
+    const wrapper = mountFields({ closedFrom: '2099-01-01T09:00:00.000Z', closedTo: null, hint: null })
+    const card = wrapper.get('.trail-status-info')
+    expect(card.classes()).toContain('trail-status-info-closing')
+    expect(card.get('.trail-status-info-title').text()).toBe('Bald gesperrt')
+  })
+
+  it('preview shows the "Hinweis" card when only a hint is set, live as the user types', async () => {
+    const wrapper = mountFields({ closedFrom: null, closedTo: null, hint: null })
+    expect(wrapper.find('.trail-status-info').exists()).toBe(false)
+
+    await wrapper.get('textarea').setValue('Nach Regen rutschig')
+    const card = wrapper.get('.trail-status-info')
+    expect(card.classes()).toContain('trail-status-info-closing')
+    expect(card.get('.trail-status-info-title').text()).toBe('Hinweis')
+    expect(card.get('.trail-status-info-hint').text()).toBe('Nach Regen rutschig')
   })
 })
