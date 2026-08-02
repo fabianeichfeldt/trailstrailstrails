@@ -200,6 +200,11 @@
                   <strong>{{ t.name }}</strong>
                   <span class="sm-item-sub">{{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
                 </div>
+                <span
+                  class="sm-trail-status-badge"
+                  :class="`sm-trail-status-badge--${trailBadge(t).state}`"
+                  :style="`background:${trailBadge(t).color}`"
+                >{{ trailBadge(t).label }}</span>
                 <div class="sm-item-actions" @dragstart.stop.prevent>
                   <button class="sm-btn-icon" title="Bearbeiten" @click.stop="openEditTrail(t.id)">
                     <i class="fas fa-pen" />
@@ -386,6 +391,21 @@
             <input type="file" accept=".gpx" @change="onEditGpx" />
           </label>
           <div v-if="editGpxInfo" class="sm-gpx-info">{{ editGpxInfo }}</div>
+
+          <div class="sm-edit-status-section">
+            <span class="sm-label">Status</span>
+            <TrailStatusFields
+              :closed-from="editFormClosedFrom"
+              :closed-to="editFormClosedTo"
+              :hint="editFormHint"
+              :spot-name="spotName"
+              @update:closed-from="editFormClosedFrom = $event"
+              @update:closed-to="editFormClosedTo = $event"
+              @update:hint="editFormHint = $event"
+            />
+            <p v-if="editFormStatusError" class="sm-error">{{ editFormStatusError }}</p>
+          </div>
+
           <div class="sm-form-actions">
             <button class="sm-btn-secondary" @click="cancelEdit">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveTrailEdit">
@@ -765,6 +785,7 @@ import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder,
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
+import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
 import { listInvitationCodes, createInvitationCode } from '../../communication/invitations'
 import type { InvCode } from '../../communication/invitations'
@@ -944,6 +965,10 @@ const editFormDirection = ref('one-way-down')
 const editFormDuration = ref(0)
 const editFormTrailNames = ref<string[]>([])
 const editFormTrailDescription = ref('')
+const editFormClosedFrom = ref<string | null>(null)
+const editFormClosedTo = ref<string | null>(null)
+const editFormHint = ref<string | null>(null)
+const editFormStatusError = ref<string | null>(null)
 const editGpxInfo = ref('')
 const editNewGpx = ref<ProcessedGpx | null>(null)
 
@@ -1014,6 +1039,13 @@ const ACCESS_OPTIONS = [
   { value: 'paid' as AccessType,       icon: 'fa-money-bill-wave', label: 'Kostenpflichtig', desc: 'Gebühr vor Ort',                       color: '#e65100' },
   { value: 'membership' as AccessType, icon: 'fa-id-card',         label: 'Mitgliedschaft',  desc: 'Vereinsmitgliedschaft erforderlich',    color: '#6a1b9a' },
 ]
+
+// ── Trail list status badge ──────────────────────────────────────────────────
+// Thin wrapper around the shared deriveTrailStatus() (via trailBadgeMeta) so
+// the badge shown here can never disagree with what riders see on the map.
+function trailBadge(t: GpxTrailRow) {
+  return trailBadgeMeta({ closed_from: t.closed_from, closed_to: t.closed_to, hint: t.hint }, new Date())
+}
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const currentStatusMeta = computed(() => {
@@ -1167,6 +1199,10 @@ function openEditTrail(id: string) {
   editFormDifficulty.value = t.difficulty as ImbaColor
   editFormDirection.value = t.direction
   editFormTrailDescription.value = t.trail_description ?? ''
+  editFormClosedFrom.value = t.closed_from ?? null
+  editFormClosedTo.value = t.closed_to ?? null
+  editFormHint.value = t.hint ?? null
+  editFormStatusError.value = null
   editGpxInfo.value = ''
   editNewGpx.value = null
   mapView.value?.highlight(id)
@@ -1191,6 +1227,7 @@ function openEditTour(id: string) {
 function cancelEdit() {
   editingTrail.value = null
   editingTour.value = null
+  editFormStatusError.value = null
   mapView.value?.removeLayer('edit-preview')
   view.value = 'list'
 }
@@ -1212,6 +1249,8 @@ async function saveTrailEdit() {
   const t = editingTrail.value!
   const name = editFormName.value.trim()
   if (!name) { alert('Name darf nicht leer sein.'); return }
+  editFormStatusError.value = validateClosureWindow(editFormClosedFrom.value, editFormClosedTo.value)
+  if (editFormStatusError.value) return
   busy.value = true
   try {
     const jwt = await authStore.getToken()
@@ -1223,7 +1262,12 @@ async function saveTrailEdit() {
       gpxPoints = editNewGpx.value.gpxPoints
       stats = { distance_km: editNewGpx.value.distance_km, elevation_gain: editNewGpx.value.elevation_gain, elevation_loss: editNewGpx.value.elevation_loss }
     }
-    const updated = await upsertTrail({ id: t.id, spot_id: t.spot_id, name, difficulty: editFormDifficulty.value, direction: editFormDirection.value, trail_description: editFormTrailDescription.value.trim() || '', gpx_points: gpxPoints, gpx_url, ...stats }, jwt)
+    const updated = await upsertTrail({
+      id: t.id, spot_id: t.spot_id, name, difficulty: editFormDifficulty.value, direction: editFormDirection.value,
+      trail_description: editFormTrailDescription.value.trim() || '',
+      closed_from: editFormClosedFrom.value, closed_to: editFormClosedTo.value, hint: editFormHint.value,
+      gpx_points: gpxPoints, gpx_url, ...stats,
+    }, jwt)
     trails.value = trails.value.map(tr => tr.id === t.id ? updated : tr)
     mapView.value?.removeLayer('edit-preview')
     mapView.value?.addTrailPolyline(updated)
@@ -1655,6 +1699,12 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-item-info { flex: 1; min-width: 0; }
 .sm-item-info strong { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sm-item-sub { font-size: 11px; color: #888; }
+.sm-trail-status-badge {
+  flex-shrink: 0;
+  font-size: 10px; font-weight: 700; color: #fff;
+  border-radius: 10px; padding: 2px 8px; line-height: 1.4;
+  white-space: nowrap;
+}
 .sm-item-actions { display: flex; gap: 4px; align-items: center; }
 .sm-drag-handle {
   color: #ccc; cursor: grab; font-size: 13px; padding: 0 3px; flex-shrink: 0; line-height: 1;
@@ -1692,6 +1742,10 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-label { font-size: 12px; font-weight: 600; color: #555; }
 /* .sm-check-label/.sm-form-actions live in spotmanager-shared.css */
 .sm-badge-auto { font-size: 10px; background: #e3f2fd; color: #1565c0; border-radius: 4px; padding: 1px 5px; font-weight: 700; }
+.sm-edit-status-section {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-top: 10px; border-top: 1px solid #eee;
+}
 
 /* ── Import view ──────────────────────────────────────────────────── */
 .sm-import-view { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
