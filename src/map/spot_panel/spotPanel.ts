@@ -5,6 +5,9 @@ import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
 import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, fetchMultipleSpotParking, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
+import { copyToClipboard } from '../../utils/clipboard';
+import { showToast } from '../../utils/toast';
+import { shareTrail } from './spotPanelShare';
 import { TrailDetails } from '../../types/TrailDetails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
@@ -315,15 +318,13 @@ export class SpotPanel {
 
   private async handleShare() {
     if (!this.currentItem) return;
-    try {
-      await navigator.share({
-        title: `Offizieller MTB Trail '${this.currentItem.name}' auf Trailradar`,
-        url: `https://trailradar.org/trails/${this.currentItem.id}`
-      });
-      await share(this.currentItem.id);
-    } catch {
-      // user cancelled or browser doesn't support share API
-    }
+    await shareTrail(this.currentItem, {
+      hasNativeShare: typeof navigator.share === 'function',
+      nativeShare: data => navigator.share(data),
+      copyToClipboard,
+      showToast,
+      reportShare: share,
+    });
   }
 
   private renderLists() {
