@@ -95,6 +95,33 @@
   gap: 2px;
   margin-left: auto;
   flex-shrink: 0;
+  position: relative;
+}
+
+.spot-share-toast {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 6px;
+  background: #2b6cb0;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  z-index: 20;
+}
+.spot-share-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+.spot-share-toast.error {
+  background: #e53e3e;
 }
 
 .spot-action-btn {

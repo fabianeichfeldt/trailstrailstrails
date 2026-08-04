@@ -6,7 +6,6 @@ import { Auth } from '../../auth/auth';
 import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, fetchMultipleSpotParking, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
 import { copyToClipboard } from '../../utils/clipboard';
-import { showToast } from '../../utils/toast';
 import { shareTrail } from './spotPanelShare';
 import { TrailDetails } from '../../types/TrailDetails';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
@@ -322,9 +321,26 @@ export class SpotPanel {
       hasNativeShare: typeof navigator.share === 'function',
       nativeShare: data => navigator.share(data),
       copyToClipboard,
-      showToast,
+      showToast: (message, type) => this.showShareToast(message, type),
       reportShare: share,
     });
+  }
+
+  // Anchored under the share button rather than the app-wide bottom-center
+  // toast — this only fires for the clipboard fallback (Firefox desktop,
+  // where navigator.share doesn't exist), right next to the button the
+  // user just pressed, so it's easy to notice.
+  private showShareToast(message: string, type = 'success') {
+    const actions = this.panel.querySelector('.spot-panel-actions') as HTMLElement;
+    let toast = actions.querySelector('.spot-share-toast') as HTMLElement | null;
+    if (!toast) {
+      toast = document.createElement('div');
+      actions.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.className = `spot-share-toast ${type}`;
+    requestAnimationFrame(() => toast!.classList.add('show'));
+    window.setTimeout(() => toast!.classList.remove('show'), 2200);
   }
 
   private renderLists() {
