@@ -142,6 +142,9 @@ export function renderTrailDetails(trail: Trail, details: TrailDetails, auth: Au
   return `
         ${statusBanner}
         ${photosHTML}
+        <div class="popup-section popup-comments" id="spot-comments-section" data-trail-id="${trail.id}">
+          <div class="comments-loading">💬 Kommentare werden geladen…</div>
+        </div>
         ${videoHTML}
         ${spotcheckHTML}
         ${dirtparkInfo}

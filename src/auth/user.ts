@@ -6,6 +6,8 @@ export class User {
   nickname: string = "";
   id: string = "";
   accessToken: string = "";
+  isAdmin?: boolean;
+  isTrailcrew?: boolean;
 
   public constructor(id: string, email: string, nickName: string, accessToken: string, avatarUrl?: string) {
     this.email = email;

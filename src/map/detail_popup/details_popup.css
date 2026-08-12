@@ -208,3 +208,172 @@
   cursor: pointer;
   transition: background .15s ease;
 }
+
+/* ── Comments ──────────────────────────────────────────────────────────── */
+
+.comments-loading {
+  font-size: 12px;
+  color: #888;
+  padding: 6px 2px;
+}
+
+.popup-comments {
+  margin: 10px 0;
+}
+
+.comments-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 6px 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.comments-toggle-icon {
+  font-size: 10px;
+  color: #888;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.comment-row {
+  padding: 8px 10px;
+  background: #f7f7f8;
+  border-radius: 8px;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.comment-author {
+  font-weight: 600;
+  font-size: 12px;
+  color: #222;
+}
+
+.comment-date {
+  font-size: 10px;
+  color: #888;
+}
+
+.comment-text {
+  font-size: 12px;
+  color: #333;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  margin: 0;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.comment-reply-btn,
+.comment-delete-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  cursor: pointer;
+  color: #2b6cb0;
+  /* Touch-friendly hit target beyond the visible text (mobile-first). */
+  min-height: 24px;
+}
+
+.comment-delete-btn {
+  color: #c53030;
+}
+
+.comments-load-more {
+  display: block;
+  margin: 4px auto 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  color: #444;
+}
+
+.comments-write-box {
+  margin-top: 8px;
+}
+
+.comments-input {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 50px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.comments-write-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.comments-char-count {
+  font-size: 10px;
+  color: #999;
+}
+
+.comments-post-btn {
+  padding: 0.4em 1em;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #2b6cb0, #3182ce);
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+}
+
+.comments-post-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  box-shadow: none;
+}
+
+.comments-error {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #c53030;
+}
+
+.comments-error.hidden {
+  display: none;
+}
+
+.comments-login-prompt {
+  margin-top: 4px;
+}
+
+.comments-login-link {
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #2b6cb0;
+}
