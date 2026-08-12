@@ -8,14 +8,22 @@ import { share } from '../../communication/share';
 import { copyToClipboard } from '../../utils/clipboard';
 import { shareTrail } from './spotPanelShare';
 import { TrailDetails } from '../../types/TrailDetails';
+import { Comment } from '../../types/Comment';
 import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
+import { confirmDialog } from '../confirmDialog';
 import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML, trailStatusCardFor } from './spotPanelHtml';
+import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML, trailStatusCardFor, commentsHTML } from './spotPanelHtml';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
+import { getComments, getOlderComments, postComment, deleteComment, COMMENTS_PAGE_SIZE } from '../../communication/comments';
+import { showToast } from '../../utils/toast';
+
+// Comment counts at or below this stay expanded by default — few enough to
+// just show, not so many they need to be tucked behind a toggle.
+const AUTO_EXPAND_MAX_COMMENTS = 3;
 
 // ── SpotPanel ────────────────────────────────────────────────────────────────
 
@@ -34,6 +42,12 @@ export class SpotPanel {
   private parkingLots: SpotParkingLot[] = [];
   private highlightedParkingLotId: string | null = null;
   private parkingTabForceVisible = false;
+  private comments: Comment[] = [];
+  private commentsExpanded = false;
+  private commentsHasMore = false;
+  private commentsLoaded = false;
+  private commentsCurrentUserId = '';
+  private commentsCanModerate = false;
 
   constructor(private readonly map: L.Map, auth: Auth, onClose: () => void) {
     this.auth = auth;
@@ -64,6 +78,10 @@ export class SpotPanel {
     this.activeId = null;
     this.parkingLots = [];
     this.parkingTabForceVisible = initialTab === 'parking';
+    this.comments = [];
+    this.commentsExpanded = false;
+    this.commentsHasMore = false;
+    this.commentsLoaded = false;
     if (initialTab !== 'parking') this.highlightedParkingLotId = null;
     this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
     const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
@@ -124,6 +142,175 @@ export class SpotPanel {
     container.innerHTML = parkingHTML(this.parkingLots, this.highlightedParkingLotId ?? undefined);
   }
 
+  // ── Comments ─────────────────────────────────────────────────────────────
+  // Comments aren't part of TrailDetails (unlike photos, which the trail-details
+  // edge function embeds server-side) — they're fetched separately, same
+  // pattern as loadParking()/renderParking() above.
+
+  /** Called every time the popup's info-tab HTML is (re)rendered — after an
+   * upload refresh, `#spot-comments-section` is a fresh DOM node needing its
+   * own delegated listener; the comments data itself doesn't need refetching. */
+  private setupComments(spotId: string) {
+    this.bindCommentEvents();
+    if (this.commentsLoaded) {
+      this.renderCommentsSection();
+    } else {
+      this.loadComments(spotId);
+    }
+  }
+
+  private async loadComments(spotId: string) {
+    try {
+      const [comments, user] = await Promise.all([
+        getComments(spotId),
+        this.auth.authService.getUser(),
+      ]);
+      if (this.currentItem?.id !== spotId) return;
+      this.comments = comments;
+      this.commentsHasMore = comments.length === COMMENTS_PAGE_SIZE;
+      // A handful of comments are worth showing right away rather than
+      // hiding behind an extra click; once there are enough to feel like a
+      // "section" rather than a couple of remarks, default to collapsed.
+      this.commentsExpanded = this.commentsExpanded || comments.length <= AUTO_EXPAND_MAX_COMMENTS;
+      this.commentsCurrentUserId = user.id;
+      this.commentsCanModerate = !!(user.isAdmin || user.isTrailcrew);
+      this.commentsLoaded = true;
+      this.renderCommentsSection();
+    } catch (err) {
+      console.warn('Failed to fetch spot comments:', err);
+    }
+  }
+
+  private async loadMoreComments() {
+    if (!this.currentItem || !this.comments.length) return;
+    const spotId = this.currentItem.id;
+    const oldest = this.comments[this.comments.length - 1].created_at;
+    try {
+      const older = await getOlderComments(spotId, oldest);
+      if (this.currentItem?.id !== spotId) return;
+      this.comments = [...this.comments, ...older];
+      this.commentsHasMore = older.length === COMMENTS_PAGE_SIZE;
+      this.renderCommentsSection();
+    } catch (err) {
+      console.warn('Failed to fetch older comments:', err);
+    }
+  }
+
+  private renderCommentsSection() {
+    const container = this.panel.querySelector('#spot-comments-section') as HTMLElement | null;
+    if (!container) return;
+    container.innerHTML = commentsHTML(this.comments, {
+      expanded: this.commentsExpanded,
+      hasMore: this.commentsHasMore,
+      loggedIn: this.auth.authService.loggedIn,
+      currentUserId: this.commentsCurrentUserId,
+      canModerate: this.commentsCanModerate,
+    });
+  }
+
+  private updateCommentCharCount(container: HTMLElement) {
+    const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
+    const counter = container.querySelector('.comments-char-count') as HTMLElement | null;
+    const postBtn = container.querySelector('.comments-post-btn') as HTMLButtonElement | null;
+    if (!textarea || !counter || !postBtn) return;
+    const len = textarea.value.length;
+    counter.textContent = `${len} / 500`;
+    postBtn.disabled = len === 0 || len > 500;
+  }
+
+  private async handlePostComment(container: HTMLElement) {
+    if (!this.currentItem) return;
+    const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
+    const errorEl = container.querySelector('.comments-error') as HTMLElement | null;
+    const postBtn = container.querySelector('.comments-post-btn') as HTMLButtonElement | null;
+    const text = textarea?.value.trim() ?? '';
+    if (!text) return;
+    errorEl?.classList.add('hidden');
+    if (postBtn) postBtn.disabled = true;
+    try {
+      const comment = await postComment(this.currentItem.id, text, this.auth.authService);
+      this.comments = [comment, ...this.comments];
+      this.renderCommentsSection();
+    } catch (err) {
+      console.error('Failed to post comment:', err);
+      if (errorEl) {
+        errorEl.textContent = err instanceof Error ? err.message : 'Kommentar konnte nicht gesendet werden.';
+        errorEl.classList.remove('hidden');
+      }
+      if (postBtn) postBtn.disabled = false;
+    }
+  }
+
+  private async handleDeleteComment(id: number) {
+    const confirmed = await confirmDialog('Kommentar wirklich löschen?');
+    if (!confirmed) return;
+    try {
+      await deleteComment(id, this.auth.authService);
+      this.comments = this.comments.filter(c => c.id !== id);
+      this.renderCommentsSection();
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+      showToast('Löschen fehlgeschlagen 😢');
+    }
+  }
+
+  private bindCommentEvents() {
+    const container = this.panel.querySelector('#spot-comments-section') as HTMLElement | null;
+    if (!container) return;
+
+    container.addEventListener('click', async (e) => {
+      const target = e.target as HTMLElement;
+      const actionEl = target.closest('[data-action]') as HTMLElement | null;
+      if (!actionEl) return;
+      // Handlers below re-render this section's innerHTML, detaching the
+      // original click target mid-bubble. Once detached, Chromium still
+      // continues dispatch along the pre-computed ancestor path — but
+      // L.DomEvent.disableClickPropagation(this.panel) (buildDOM()) stops it
+      // there, one hop too late: Leaflet's own map 'click' handler treats
+      // any click that reaches it as "clicked outside the panel" and closes
+      // it (composables/useTrailMap.ts). Stop it here instead, before any
+      // DOM mutation happens.
+      e.stopPropagation();
+
+      switch (actionEl.dataset.action) {
+        case 'toggle-comments':
+          this.commentsExpanded = !this.commentsExpanded;
+          this.renderCommentsSection();
+          break;
+        case 'load-more-comments':
+          await this.loadMoreComments();
+          break;
+        case 'reply-comment': {
+          const author = actionEl.dataset.author ?? '';
+          const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
+          if (textarea) {
+            textarea.value = `@${author} ${textarea.value}`.trimStart();
+            textarea.focus();
+            this.updateCommentCharCount(container);
+          }
+          break;
+        }
+        case 'delete-comment': {
+          const id = Number(actionEl.dataset.commentId);
+          if (!Number.isNaN(id)) await this.handleDeleteComment(id);
+          break;
+        }
+        case 'post-comment':
+          await this.handlePostComment(container);
+          break;
+        case 'login-comments':
+          await this.auth.openSignInModal();
+          break;
+      }
+    });
+
+    container.addEventListener('input', (e) => {
+      if ((e.target as HTMLElement).classList.contains('comments-input')) {
+        this.updateCommentCharCount(container);
+      }
+    });
+  }
+
   public close() {
     this.panel.classList.remove('open');
     this.overlayLayer.clearLayers();
@@ -136,6 +323,10 @@ export class SpotPanel {
     this.parkingLots = [];
     this.highlightedParkingLotId = null;
     this.parkingTabForceVisible = false;
+    this.comments = [];
+    this.commentsExpanded = false;
+    this.commentsHasMore = false;
+    this.commentsLoaded = false;
     this.closeElevation();
     this.onClose();
   }
@@ -271,10 +462,12 @@ export class SpotPanel {
         startPhotoCarousel(content);
         bindPhotoLightbox(content);
         setupYT2Click(content);
+        this.setupComments(item.id);
       });
       startPhotoCarousel(content);
       bindPhotoLightbox(content);
       setupYT2Click(content);
+      this.setupComments(item.id);
       this.infoLoaded = true;
     } catch (e) {
       console.error('Failed to fetch trail details:', e);

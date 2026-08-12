@@ -106,6 +106,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             accessToken: await authStore.getToken(),
             avatarUrl: authStore.avatarUrl,
             avatarHTML: '',
+            isAdmin: authStore.isAdmin,
+            isTrailcrew: authStore.isTrailcrew,
           }
         },
         async signIn(email: string, password: string) {

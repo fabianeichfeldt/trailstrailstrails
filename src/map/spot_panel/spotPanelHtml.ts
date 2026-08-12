@@ -3,6 +3,9 @@ import { IMBA } from './elevationSvg';
 import type { SpotParkingLot } from '../../communication/trails';
 import { deriveTrailStatus } from '../../types/TrailStatus';
 import { buildTrailStatusContent } from '../trailStatusSheet';
+import { Comment } from '../../types/Comment';
+import { formatDate } from '../../utils/formatDate';
+import { escapeHtml } from '../../utils/escapeHtml';
 
 export const DIR_LABEL: Record<TrailDirection, string> = {
   'cw':           '↻ Uhrzeigersinn',
@@ -128,4 +131,74 @@ export function trailsHTML(trails: MtbTrail[]): string {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── Comments ────────────────────────────────────────────────────────────────
+
+function commentCountLabel(count: number, hasMore: boolean): string {
+  const suffix = hasMore ? '+' : '';
+  const noun = count === 1 && !hasMore ? 'Kommentar' : 'Kommentare';
+  return `${count}${suffix} ${noun}`;
+}
+
+function commentRowHTML(c: Comment, currentUserId: string, canModerate: boolean): string {
+  const canDelete = c.user_id === currentUserId || canModerate;
+  const name = escapeHtml(c.profiles?.display_name || 'Anonym');
+  return `
+    <div class="comment-row" data-comment-id="${c.id}">
+      <div class="comment-meta">
+        <span class="comment-author">${name}</span>
+        <span class="comment-date">${formatDate(c.created_at)}</span>
+      </div>
+      <p class="comment-text">${escapeHtml(c.comment_text)}</p>
+      <div class="comment-actions">
+        <button class="comment-reply-btn" data-action="reply-comment" data-author="${name}">Antworten</button>
+        ${canDelete ? `<button class="comment-delete-btn" data-action="delete-comment" data-comment-id="${c.id}" aria-label="Kommentar löschen"><i class="fa-solid fa-trash"></i></button>` : ''}
+      </div>
+    </div>`;
+}
+
+export interface CommentsHtmlOptions {
+  expanded: boolean;
+  hasMore: boolean;
+  loggedIn: boolean;
+  currentUserId: string;
+  canModerate: boolean;
+}
+
+export function commentsHTML(comments: Comment[], opts: CommentsHtmlOptions): string {
+  const { expanded, hasMore, loggedIn, currentUserId, canModerate } = opts;
+
+  const header = `
+    <div class="comments-header" data-action="toggle-comments">
+      <span class="comments-count">💬 ${commentCountLabel(comments.length, hasMore)}</span>
+      <span class="comments-toggle-icon">${expanded ? '▲' : '▼'}</span>
+    </div>`;
+
+  if (!expanded) return header;
+
+  const list = comments.length
+    ? `<div class="comments-list">${comments.map(c => commentRowHTML(c, currentUserId, canModerate)).join('')}</div>`
+    : '<p class="spot-empty">Noch keine Kommentare. Sei der Erste!</p>';
+
+  const loadMore = hasMore
+    ? `<button class="comments-load-more" data-action="load-more-comments">Ältere Kommentare laden</button>`
+    : '';
+
+  const writeBox = loggedIn
+    ? `
+      <div class="comments-write-box">
+        <textarea class="comments-input" maxlength="500" placeholder="Kommentar schreiben…"></textarea>
+        <div class="comments-write-footer">
+          <span class="comments-char-count">0 / 500</span>
+          <button class="comments-post-btn" data-action="post-comment" disabled>Senden</button>
+        </div>
+        <div class="comments-error hidden"></div>
+      </div>`
+    : `
+      <div class="comments-login-prompt">
+        <span class="comments-login-link" data-action="login-comments">Einloggen zum Kommentieren</span>
+      </div>`;
+
+  return `${header}${list}${loadMore}${writeBox}`;
 }
