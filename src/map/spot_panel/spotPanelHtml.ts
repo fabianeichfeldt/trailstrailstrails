@@ -1,6 +1,5 @@
 import { ImbaColor, MtbTour, MtbTrail, TrailDirection } from '../../types/MtbTypes';
 import { IMBA } from './elevationSvg';
-import type { SpotParkingLot } from '../../communication/trails';
 import { deriveTrailStatus } from '../../types/TrailStatus';
 import { buildTrailStatusContent } from '../trailStatusSheet';
 import { Comment } from '../../types/Comment';
@@ -47,25 +46,6 @@ export function toursHTML(tours: MtbTour[]): string {
           <span>↑${t.elevation_gain}m &nbsp;↓${t.elevation_loss}m</span>
         </div>
         <span class="spot-item-arrow">›</span>
-      </div>
-    </div>`).join('');
-}
-
-function parkingInfoLines(info?: string[]): string {
-  if (!info || !info.length) return '';
-  return info.map(line => `<div class="parking-hint">${line}</div>`).join('');
-}
-
-export function parkingHTML(lots: SpotParkingLot[], highlightId?: string): string {
-  if (!lots.length) return '<p class="spot-empty">Keine Parkplätze für diesen Spot.</p>';
-  return lots.map(lot => `
-    <div class="spot-item parking-item${lot.id === highlightId ? ' active' : ''}" data-id="${lot.id}" data-kind="parking">
-      <div class="spot-item-left">
-        <div class="parking-badge">P</div>
-        <div class="spot-item-info">
-          <div class="spot-item-name"><strong>${lot.name}</strong></div>
-          <div class="parking-hints">${parkingInfoLines(lot.info)}</div>
-        </div>
       </div>
     </div>`).join('');
 }

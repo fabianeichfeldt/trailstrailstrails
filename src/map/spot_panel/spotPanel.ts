@@ -1,9 +1,10 @@
 import L from 'leaflet';
+import { createApp, h, reactive, type App } from 'vue';
 import '@fortawesome/fontawesome-free/css/all.css';
 import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
-import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, fetchMultipleSpotParking, type SpotParkingLot } from '../../communication/trails';
+import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
 import { copyToClipboard } from '../../utils/clipboard';
 import { shareTrail } from './spotPanelShare';
@@ -15,11 +16,29 @@ import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
 import { confirmDialog } from '../confirmDialog';
 import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML, parkingHTML, trailStatusCardFor, commentsHTML } from './spotPanelHtml';
+import { DIR_LABEL, toursHTML, trailsHTML, trailStatusCardFor, commentsHTML } from './spotPanelHtml';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 import { getComments, getOlderComments, postComment, deleteComment, COMMENTS_PAGE_SIZE } from '../../communication/comments';
 import { showToast } from '../../utils/toast';
+import SpotPanelParkingTab from '../../components/map/SpotPanelParkingTab.vue';
+
+/**
+ * Minimal duck-typed shape of the Parking slice of `useSpotPanelStore`
+ * (src/stores/spotPanel.ts), declared locally instead of importing the real
+ * store type. src/map/ must never import from src/stores/ (see
+ * `map-no-stores` in .dependency-cruiser.cjs) — the real Pinia store
+ * instance is created in the composable layer (useTrailMap.ts) and handed
+ * in here via constructor injection, same pattern already used for `Auth`.
+ */
+export interface SpotPanelParkingState {
+  currentItem: Trail | null;
+  isOpen: boolean;
+  parkingLots: SpotParkingLot[];
+  highlightedParkingLotId: string | null;
+  parkingTabForceVisible: boolean;
+  loadParking(spotId: string): Promise<void>;
+}
 
 // Comment counts at or below this stay expanded by default — few enough to
 // just show, not so many they need to be tucked behind a toggle.
@@ -39,9 +58,6 @@ export class SpotPanel {
   private infoLoaded = false;
   private onClose: () => void;
   private auth: Auth;
-  private parkingLots: SpotParkingLot[] = [];
-  private highlightedParkingLotId: string | null = null;
-  private parkingTabForceVisible = false;
   private comments: Comment[] = [];
   private commentsExpanded = false;
   private commentsHasMore = false;
@@ -49,7 +65,21 @@ export class SpotPanel {
   private commentsCurrentUserId = '';
   private commentsCanModerate = false;
 
-  constructor(private readonly map: L.Map, auth: Auth, onClose: () => void) {
+  // Parking tab — Vue island (see SpotPanelParkingTab.vue). State itself
+  // lives in the injected store; this class only owns the Vue app instance
+  // and the reactive props object it's driven by.
+  private parkingApp: App | null = null;
+  private parkingProps = reactive<{ lots: SpotParkingLot[]; highlightId: string | undefined }>({
+    lots: [],
+    highlightId: undefined,
+  });
+
+  constructor(
+    private readonly map: L.Map,
+    auth: Auth,
+    onClose: () => void,
+    private readonly parkingStore: SpotPanelParkingState,
+  ) {
     this.auth = auth;
     this.onClose = onClose;
     this.overlayLayer = L.layerGroup().addTo(map);
@@ -68,21 +98,23 @@ export class SpotPanel {
    * like a normal spot-marker click.
    */
   public openParkingLot(item: Trail, parkingLot: SpotParkingLot) {
-    this.highlightedParkingLotId = parkingLot.id;
+    this.parkingStore.highlightedParkingLotId = parkingLot.id;
     this.openInternal(item, 'parking');
   }
 
   private openInternal(item: Trail, initialTab: 'info' | 'tours' | 'trails' | 'parking') {
     this.currentItem = item;
+    this.parkingStore.currentItem = item;
+    this.parkingStore.isOpen = true;
     this.infoLoaded = false;
     this.activeId = null;
-    this.parkingLots = [];
-    this.parkingTabForceVisible = initialTab === 'parking';
+    this.parkingStore.parkingLots = [];
+    this.parkingStore.parkingTabForceVisible = initialTab === 'parking';
     this.comments = [];
     this.commentsExpanded = false;
     this.commentsHasMore = false;
     this.commentsLoaded = false;
-    if (initialTab !== 'parking') this.highlightedParkingLotId = null;
+    if (initialTab !== 'parking') this.parkingStore.highlightedParkingLotId = null;
     this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
     const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
     if (item.url) {
@@ -122,24 +154,33 @@ export class SpotPanel {
   }
 
   private async loadParking(spotId: string) {
-    try {
-      const byId = await fetchMultipleSpotParking([spotId]);
-      // Bail out if the panel moved on to a different spot (or closed)
-      // while the fetch was in flight.
-      if (this.currentItem?.id !== spotId) return;
-      this.parkingLots = byId.get(spotId) ?? [];
-    } catch (err) {
-      console.warn('Failed to fetch spot parking data:', err);
-      return;
-    }
+    // Delegates the fetch + "bail out if the panel moved to a different
+    // spot while the fetch was in flight" guard to the store — same
+    // behavior as the old inline implementation, just relocated.
+    await this.parkingStore.loadParking(spotId);
+    // The store may have bailed out internally (stale response for an old
+    // spot); guard again here so this class doesn't render over data that's
+    // already correct for a newer spot.
+    if (this.currentItem?.id !== spotId) return;
     this.renderParking();
     this.updateTabsVisibility();
   }
 
+  /**
+   * Mounts the Parking tab's Vue island on first use, then just mutates its
+   * reactive props on every subsequent call — never remounts. See
+   * SpotPanelParkingTab.vue and the migration spec's "island mechanism".
+   */
   private renderParking() {
-    const container = this.panel.querySelector('#spot-parking-tab');
+    Object.assign(this.parkingProps, {
+      lots: this.parkingStore.parkingLots,
+      highlightId: this.parkingStore.highlightedParkingLotId ?? undefined,
+    });
+    if (this.parkingApp) return;
+    const container = this.panel.querySelector('#spot-parking-tab') as HTMLElement | null;
     if (!container) return;
-    container.innerHTML = parkingHTML(this.parkingLots, this.highlightedParkingLotId ?? undefined);
+    this.parkingApp = createApp(() => h(SpotPanelParkingTab, this.parkingProps));
+    this.parkingApp.mount(container);
   }
 
   // ── Comments ─────────────────────────────────────────────────────────────
@@ -319,14 +360,21 @@ export class SpotPanel {
     this.activeId = null;
     this.data = null;
     this.currentItem = null;
+    this.parkingStore.currentItem = null;
+    this.parkingStore.isOpen = false;
     this.infoLoaded = false;
-    this.parkingLots = [];
-    this.highlightedParkingLotId = null;
-    this.parkingTabForceVisible = false;
+    this.parkingStore.parkingLots = [];
+    this.parkingStore.highlightedParkingLotId = null;
+    this.parkingStore.parkingTabForceVisible = false;
     this.comments = [];
     this.commentsExpanded = false;
     this.commentsHasMore = false;
     this.commentsLoaded = false;
+    // Tear down the parking island rather than leaving it mounted (and
+    // subscribed to reactivity) for a panel that's now hidden — it's
+    // re-mounted lazily by the next renderParking() call.
+    this.parkingApp?.unmount();
+    this.parkingApp = null;
     this.closeElevation();
     this.onClose();
   }
@@ -434,7 +482,7 @@ export class SpotPanel {
 
     toursTab.style.display = isTrail ? 'block' : 'none';
     trailsTab.style.display = isTrail ? 'block' : 'none';
-    parkingTab.style.display = (this.parkingTabForceVisible || this.parkingLots.length > 0) ? 'block' : 'none';
+    parkingTab.style.display = (this.parkingStore.parkingTabForceVisible || this.parkingStore.parkingLots.length > 0) ? 'block' : 'none';
   }
 
   private async loadInfo() {
