@@ -9,7 +9,7 @@
         :download="`${item.name}.gpx`"
         aria-label="GPX herunterladen"
       ><i class="fas fa-download"></i></a>
-      <button class="spot-elevation-close" aria-label="Höhenprofil schließen" @click="onClose">✕</button>
+      <button class="spot-elevation-close" aria-label="Höhenprofil schließen" @click="store.clearSelection()">✕</button>
     </div>
   </div>
   <div ref="chartEl" class="spot-elevation-chart" v-html="elevationSvgHtml"></div>
@@ -27,19 +27,19 @@ import type { MtbTour, TourSegment } from '~/types/MtbTypes'
 import { elevationSVG, bindElevationHover, type AnyItem } from '~/map/spot_panel/elevationSvg'
 import { DIR_LABEL, trailStatusCardFor } from '~/map/spot_panel/spotPanelHtml'
 
-// Live island mounted by src/map/spot_panel/spotPanel.ts into
-// #spot-elevation-content (see the migration spec's "island mechanism" and
-// spotPanel.ts's renderElevation()). Replaces the DOM manipulation in the
-// vanilla showElevation()/closeElevation() (Phase 3 of the spot-panel Vue
-// migration). Reads useSpotPanelStore() directly for the selected item —
-// only the hover bridge and the close trigger cross back out as props,
-// since bindElevationHover()'s onHover/onLeave callbacks touch
-// spotPanel.ts's own hoverMarker/overlayLayer Leaflet fields (not moved to
-// useTrailMap.ts until the Phase 5 shell replacement deletes this class).
+// Mounted by SpotPanel.vue (src/components/map/SpotPanel.vue), the
+// top-level shell that replaced the vanilla spotPanel.ts class in Phase 5b
+// of the spot-panel Vue migration. Reads useSpotPanelStore() directly for
+// the selected item and closes itself via store.clearSelection() (Phase 5b
+// — there's no more spotPanel.ts instance to delegate to). onHover/
+// onHoverEnd stay callback props threaded down from useTrailMap.ts's
+// Leaflet-side hover marker (see the migration spec's "Hover bridge":
+// MapView.vue's `ready` event -> map.vue -> SpotPanel.vue -> here) — kept
+// out of the store since a store mutation on every mousemove would pay
+// Vue reactivity/devtools cost for an effect only the map ever observes.
 const props = defineProps<{
   onHover: (latlng: [number, number], color: string) => void
   onHoverEnd: () => void
-  onClose: () => void
 }>()
 
 const store = useSpotPanelStore()

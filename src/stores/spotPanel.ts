@@ -152,6 +152,20 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     selectedItemKind.value = kind
   }
 
+  /**
+   * Clears the tour/trail selection — closes the elevation panel (its
+   * visibility is derived reactively from selectedItemId/selectedItemKind
+   * being non-null, see SpotPanel.vue) and lets useTrailMap.ts's watcher on
+   * these two fields restore the Leaflet polyline styling / clear tour
+   * segment layers. Direct port of the vanilla class's closeElevation()'s
+   * store-facing half — the Leaflet-touching half moved to useTrailMap.ts
+   * (Phase 5b of the migration spec).
+   */
+  function clearSelection() {
+    selectedItemId.value = null
+    selectedItemKind.value = null
+  }
+
   // ── Header + Tabs (Phase 4) ─────────────────────────────────────────────
   // isLiked/likeVisible back the header's like button. Deliberately NOT
   // fetched independently — spotPanel.ts's loadInfo() (Info tab, still in
@@ -167,8 +181,94 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   const likeVisible = ref(false)
   const activeTab = ref<'info' | 'tours' | 'trails' | 'parking'>('info')
 
+  /**
+   * Direct port of the vanilla class's applyTab()'s "switching tabs closes
+   * the elevation panel" behavior (see SpotPanelTabs.vue, the only caller
+   * of this action). Only clears the selection when the tab is actually
+   * changing — re-clicking the already-active tab must NOT close an open
+   * elevation panel, same as the original: applyTab() was only triggered by
+   * the vanilla class's activeTab watch(), which only fires on a real value
+   * change. openInternal() below doesn't call this action — it clears the
+   * selection unconditionally itself, matching activateTab() being an
+   * unconditional call on every open.
+   */
   function setActiveTab(tab: typeof activeTab.value) {
+    if (activeTab.value !== tab) clearSelection()
     activeTab.value = tab
+  }
+
+  // ── Lifecycle (Phase 5b) ─────────────────────────────────────────────────
+  // Direct port of the vanilla class's openInternal()/open()/openParkingLot()/
+  // close() — the state-only half. Leaflet-touching side effects (polyline
+  // restyle, tour layers, hover marker, fitBounds) are driven by
+  // useTrailMap.ts's watch()es on isOpen/data/selectedItemId/selectedItemKind
+  // instead of living here (see the migration spec's "useTrailMap.ts —
+  // watches the store instead of owning a class"). Pane visibility/tab
+  // highlighting need no watcher at all anymore — SpotPanel.vue's template
+  // reads activeTab/selectedItemId reactively on every render, so the old
+  // suppressNextTabWatch double-run guard (needed only because spotPanel.ts
+  // used to apply side effects via imperative classList writes) is gone too.
+  function openInternal(item: Trail, initialTab: typeof activeTab.value) {
+    currentItem.value = item
+    isOpen.value = true
+    parkingLots.value = []
+    parkingTabForceVisible.value = initialTab === 'parking'
+    if (initialTab !== 'parking') highlightedParkingLotId.value = null
+    comments.value = []
+    commentsExpanded.value = false
+    commentsHasMore.value = false
+    commentsLoaded.value = false
+    // Like state stays hidden until SpotPanelInfoTab.vue's eager fetch
+    // reveals it — same coupling preserved since Phase 4/5a.
+    isLiked.value = false
+    likeVisible.value = false
+    data.value = null
+    clearSelection()
+    activeTab.value = initialTab
+
+    // Fire-and-forget, same as the vanilla class's openInternal() — direct
+    // port, just relocated here since there's no more class to call them
+    // from. loadSpotData() only applies to trail-type spots (bikeparks/
+    // dirtparks have no GPX tours/trails); loadParking() runs for every
+    // spot type, same as before.
+    if (item.type === 'trail') {
+      loadSpotData(item.id)
+    }
+    loadParking(item.id)
+  }
+
+  /** Opens the panel for `item`, defaulting to the Info tab. */
+  function openSpot(item: Trail) {
+    openInternal(item, 'info')
+  }
+
+  /**
+   * Opens the panel for the spot owning `parkingLot`, jumping straight to
+   * the Parking tab with that lot highlighted — instead of defaulting to
+   * Info like a normal spot-marker click.
+   */
+  function openParkingLot(item: Trail, parkingLot: SpotParkingLot) {
+    highlightedParkingLotId.value = parkingLot.id
+    openInternal(item, 'parking')
+  }
+
+  function close() {
+    isOpen.value = false
+    currentItem.value = null
+    parkingLots.value = []
+    highlightedParkingLotId.value = null
+    parkingTabForceVisible.value = false
+    comments.value = []
+    commentsExpanded.value = false
+    commentsHasMore.value = false
+    commentsLoaded.value = false
+    isLiked.value = false
+    likeVisible.value = false
+    data.value = null
+    clearSelection()
+    // activeTab is deliberately NOT reset here — the next openSpot()/
+    // openParkingLot() call always forces it via openInternal(), same as
+    // the original class's activateTab() being an unconditional write.
   }
 
   return {
@@ -194,9 +294,13 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     selectedItemKind,
     loadSpotData,
     selectItem,
+    clearSelection,
     isLiked,
     likeVisible,
     activeTab,
     setActiveTab,
+    openSpot,
+    openParkingLot,
+    close,
   }
 })

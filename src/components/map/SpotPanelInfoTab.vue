@@ -72,7 +72,7 @@ const authAdapter = {
     async signUp() { return {} as any },
     async signOut() { await authStore.signOut() },
     async uploadAvatar(file: File) { return authStore.uploadAvatar(file) },
-    async updatePassword(oldPw: string, newPw: string) { return authStore.updatePassword(oldPw, newPw) },
+    async updatePassword(_oldPw: string, newPw: string) { return authStore.updatePassword(newPw) },
     async updateProfile(params: any) { return authStore.updateProfile(params) },
     async resetPassword(email: string) { return authStore.resetPassword(email) },
     async signInWithGoogle() { return authStore.signInWithGoogle() as any },

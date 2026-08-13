@@ -38,12 +38,11 @@ function spotData(overrides: Partial<SpotMtbData> = {}): SpotMtbData {
   return { spotId: 's1', tours: [baseTour()], trails: [baseTrail()], ...overrides }
 }
 
-function mountElevation(props: Partial<{ onHover: any; onHoverEnd: any; onClose: any }> = {}) {
+function mountElevation(props: Partial<{ onHover: any; onHoverEnd: any }> = {}) {
   return mount(SpotPanelElevation, {
     props: {
       onHover: props.onHover ?? vi.fn(),
       onHoverEnd: props.onHoverEnd ?? vi.fn(),
-      onClose: props.onClose ?? vi.fn(),
     },
   })
 }
@@ -97,15 +96,15 @@ describe('SpotPanelElevation', () => {
     expect(wrapper.find('.spot-elevation-chart svg').exists()).toBe(true)
   })
 
-  it('clicking close calls the onClose prop', async () => {
-    const onClose = vi.fn()
+  it('clicking close clears the store selection (Phase 5b: no more spotPanel.ts instance to delegate to)', async () => {
     store.data = spotData()
     store.selectedItemId = 'trail-1'
     store.selectedItemKind = 'trail'
-    const wrapper = mountElevation({ onClose })
+    const wrapper = mountElevation()
 
     await wrapper.get('.spot-elevation-close').trigger('click')
-    expect(onClose).toHaveBeenCalledTimes(1)
+    expect(store.selectedItemId).toBeNull()
+    expect(store.selectedItemKind).toBeNull()
   })
 
   it('binds hover on the mounted SVG and calls onHover on mousemove', async () => {

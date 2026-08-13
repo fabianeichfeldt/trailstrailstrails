@@ -44,14 +44,20 @@ function fakeAuthService(): IAuthService {
   return { getUser: vi.fn().mockResolvedValue({ id: 'u1', accessToken: 'tok' }) } as unknown as IAuthService
 }
 
-function trail(id: string): Trail {
-  return { id, name: 'Testspot', type: 'trail', latitude: 1, longitude: 1, approved: true } as Trail
+function trail(id: string, type: Trail['type'] = 'trail'): Trail {
+  return { id, name: 'Testspot', type, latitude: 1, longitude: 1, approved: true } as Trail
 }
 
 describe('useSpotPanelStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(fetchMultipleSpotParking).mockReset()
+    // openSpot()/openParkingLot() (Phase 5b) fire-and-forget loadParking()
+    // on every open — default to an empty resolved Map so tests that don't
+    // care about the parking fetch itself (e.g. lifecycle state-reset
+    // tests) don't hit the try/catch's console.warn for an unmocked
+    // undefined return value. Tests that DO care override this per-case.
+    vi.mocked(fetchMultipleSpotParking).mockResolvedValue(new Map())
     vi.mocked(getSpotGpxData).mockReset()
     vi.mocked(getComments).mockReset()
     vi.mocked(getOlderComments).mockReset()
@@ -414,6 +420,141 @@ describe('useSpotPanelStore', () => {
       const store = useSpotPanelStore()
       store.setActiveTab('parking')
       expect(store.activeTab).toBe('parking')
+    })
+
+    // Direct port of the vanilla applyTab()'s "switching tabs closes the
+    // elevation panel" behavior (Phase 5b) — caught live by
+    // tests/spot-panel-tours-trails.spec.ts's "switching from the Trails
+    // tab to another tab closes the elevation panel".
+    it('clears the tour/trail selection when switching to a different tab', () => {
+      const store = useSpotPanelStore()
+      store.selectItem('trail-1', 'trail')
+      store.setActiveTab('tours')
+      expect(store.selectedItemId).toBeNull()
+      expect(store.selectedItemKind).toBeNull()
+    })
+
+    it('does not clear the selection when re-setting the already-active tab', () => {
+      const store = useSpotPanelStore()
+      store.setActiveTab('trails')
+      store.selectItem('trail-1', 'trail')
+      store.setActiveTab('trails')
+      expect(store.selectedItemId).toBe('trail-1')
+      expect(store.selectedItemKind).toBe('trail')
+    })
+  })
+
+  // ── Lifecycle (Phase 5b) ─────────────────────────────────────────────────
+  describe('openSpot', () => {
+    it('opens the panel on the Info tab and resets per-spot state', () => {
+      const store = useSpotPanelStore()
+      // Simulate leftover state from a previous spot
+      store.parkingLots = [{ id: 'p1', name: 'Old lot', lat: 1, lng: 1 }]
+      store.highlightedParkingLotId = 'p1'
+      store.comments = [comment()]
+      store.commentsExpanded = true
+      store.commentsLoaded = true
+      store.isLiked = true
+      store.likeVisible = true
+      store.selectedItemId = 'trail-1'
+      store.selectedItemKind = 'trail'
+      store.activeTab = 'parking'
+
+      store.openSpot(trail('s2'))
+
+      expect(store.currentItem?.id).toBe('s2')
+      expect(store.isOpen).toBe(true)
+      expect(store.activeTab).toBe('info')
+      expect(store.parkingLots).toEqual([])
+      expect(store.highlightedParkingLotId).toBeNull()
+      expect(store.parkingTabForceVisible).toBe(false)
+      expect(store.comments).toEqual([])
+      expect(store.commentsExpanded).toBe(false)
+      expect(store.commentsLoaded).toBe(false)
+      expect(store.isLiked).toBe(false)
+      expect(store.likeVisible).toBe(false)
+      expect(store.selectedItemId).toBeNull()
+      expect(store.selectedItemKind).toBeNull()
+    })
+
+    // Regression coverage: the vanilla class's openInternal() used to fire
+    // loadSpotData()/loadParking() itself after resetting state — once the
+    // class was deleted (Phase 5b), that trigger has to live somewhere, or
+    // Tours/Trails/Parking silently never fetch on open again (caught live
+    // by tests/spot-panel-parking.spec.ts and
+    // tests/spot-panel-tours-trails.spec.ts during manual verification).
+    it('fetches parking and GPX data for a trail-type spot', async () => {
+      const store = useSpotPanelStore()
+      vi.mocked(fetchMultipleSpotParking).mockResolvedValue(new Map([['s2', [{ id: 'p1', name: 'Lot', lat: 1, lng: 1 }]]]))
+      vi.mocked(getSpotGpxData).mockResolvedValue({ spotId: 's2', tours: [], trails: [] })
+
+      store.openSpot(trail('s2', 'trail'))
+      await Promise.resolve()
+      await Promise.resolve()
+
+      expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['s2'])
+      expect(getSpotGpxData).toHaveBeenCalledWith('s2')
+      expect(store.parkingLots).toEqual([{ id: 'p1', name: 'Lot', lat: 1, lng: 1 }])
+      expect(store.data).toEqual({ spotId: 's2', tours: [], trails: [] })
+    })
+
+    it('fetches parking but not GPX tour/trail data for a non-trail spot', async () => {
+      const store = useSpotPanelStore()
+
+      store.openSpot(trail('b1', 'bikepark'))
+      await Promise.resolve()
+
+      expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['b1'])
+      expect(getSpotGpxData).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('openParkingLot', () => {
+    it('opens the panel on the Parking tab with the lot highlighted', () => {
+      const store = useSpotPanelStore()
+      const lot: SpotParkingLot = { id: 'p2', name: 'Lot B', lat: 1, lng: 1 }
+
+      store.openParkingLot(trail('s3'), lot)
+
+      expect(store.currentItem?.id).toBe('s3')
+      expect(store.activeTab).toBe('parking')
+      expect(store.highlightedParkingLotId).toBe('p2')
+      expect(store.parkingTabForceVisible).toBe(true)
+    })
+  })
+
+  describe('close', () => {
+    it('closes the panel and clears per-spot state, but leaves activeTab untouched', () => {
+      const store = useSpotPanelStore()
+      store.openSpot(trail('s4'))
+      store.setActiveTab('tours')
+      store.selectItem('tour-1', 'tour')
+      store.data = { spotId: 's4', tours: [], trails: [] }
+      store.isLiked = true
+      store.likeVisible = true
+
+      store.close()
+
+      expect(store.isOpen).toBe(false)
+      expect(store.currentItem).toBeNull()
+      expect(store.data).toBeNull()
+      expect(store.selectedItemId).toBeNull()
+      expect(store.selectedItemKind).toBeNull()
+      expect(store.isLiked).toBe(false)
+      expect(store.likeVisible).toBe(false)
+      // Deliberately NOT reset — the next openSpot()/openParkingLot() call
+      // always forces it via openInternal().
+      expect(store.activeTab).toBe('tours')
+    })
+  })
+
+  describe('clearSelection', () => {
+    it('clears selectedItemId/selectedItemKind', () => {
+      const store = useSpotPanelStore()
+      store.selectItem('trail-1', 'trail')
+      store.clearSelection()
+      expect(store.selectedItemId).toBeNull()
+      expect(store.selectedItemKind).toBeNull()
     })
   })
 })
