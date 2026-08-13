@@ -119,12 +119,13 @@ src/anon.ts
 - Gold standard to follow: `src/spot_manager/Api.ts`.
 
 **`stores/`**
-- Each store owns one domain: `auth`, `trails`, `filters`, `map`.
+- Each store owns one domain: `auth`, `trails`, `filters`, `map`, `spotPanel`.
 - Auth store owns auth state and auth operations only (signIn/signUp/signOut/profile). Photo/file uploads that also write to DB tables belong in `src/communication/`.
+- `spotPanel` store (`src/stores/spotPanel.ts`) owns all spot-panel state: which spot is open, active tab, tour/trail selection, parking lots, comments. `SpotPanel.vue` and its child components (`SpotPanelHeader.vue`, `SpotPanelTabs.vue`, `SpotPanelInfoTab.vue`, etc.) read/write it directly.
 - Must not import from `src/map/`.
 
 **`composables/`**
-- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`).
+- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`). It also owns the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`src/stores/spotPanel.ts`.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
@@ -184,6 +185,8 @@ else { ... }
 | `src/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
 | `src/stores/auth.ts` | Auth state + auth operations only |
 | `src/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
-| `src/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB — client-only |
+| `src/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
+| `src/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `src/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
+| `src/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
 | `src/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |
