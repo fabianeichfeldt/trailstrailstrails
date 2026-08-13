@@ -14,14 +14,12 @@ import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
-import { confirmDialog } from '../confirmDialog';
 import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML, trailStatusCardFor, commentsHTML } from './spotPanelHtml';
+import { DIR_LABEL, toursHTML, trailsHTML, trailStatusCardFor } from './spotPanelHtml';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
-import { getComments, getOlderComments, postComment, deleteComment, COMMENTS_PAGE_SIZE } from '../../communication/comments';
-import { showToast } from '../../utils/toast';
 import SpotPanelParkingTab from '../../components/map/SpotPanelParkingTab.vue';
+import SpotPanelComments from '../../components/map/SpotPanelComments.vue';
 
 /**
  * Minimal duck-typed shape of the Parking slice of `useSpotPanelStore`
@@ -40,9 +38,23 @@ export interface SpotPanelParkingState {
   loadParking(spotId: string): Promise<void>;
 }
 
-// Comment counts at or below this stay expanded by default — few enough to
-// just show, not so many they need to be tucked behind a toggle.
-const AUTO_EXPAND_MAX_COMMENTS = 3;
+/**
+ * Minimal duck-typed shape of the Comments slice of `useSpotPanelStore`
+ * (src/stores/spotPanel.ts), injected the same way as SpotPanelParkingState
+ * above (Phase 2 of the migration spec). Unlike Parking, the *rendering* and
+ * *interaction handling* (post/delete/reply/toggle/load-more) live entirely
+ * in SpotPanelComments.vue now, which reads/writes the real store directly
+ * (it's under src/components/, not src/map/, so map-no-stores doesn't apply
+ * to it) — this class only needs enough to decide whether a fetch is
+ * necessary before mounting the island.
+ */
+export interface SpotPanelCommentsState {
+  comments: Comment[];
+  commentsExpanded: boolean;
+  commentsHasMore: boolean;
+  commentsLoaded: boolean;
+  loadComments(spotId: string, authInfo: { userId: string; isAdmin: boolean; isTrailcrew: boolean }): Promise<void>;
+}
 
 // ── SpotPanel ────────────────────────────────────────────────────────────────
 
@@ -58,12 +70,6 @@ export class SpotPanel {
   private infoLoaded = false;
   private onClose: () => void;
   private auth: Auth;
-  private comments: Comment[] = [];
-  private commentsExpanded = false;
-  private commentsHasMore = false;
-  private commentsLoaded = false;
-  private commentsCurrentUserId = '';
-  private commentsCanModerate = false;
 
   // Parking tab — Vue island (see SpotPanelParkingTab.vue). State itself
   // lives in the injected store; this class only owns the Vue app instance
@@ -74,11 +80,17 @@ export class SpotPanel {
     highlightId: undefined,
   });
 
+  // Comments tab — Vue island (see SpotPanelComments.vue). Unlike Parking,
+  // the component reads useSpotPanelStore() itself, so this class only owns
+  // the mounted Vue app instance — no props to sync.
+  private commentsApp: App | null = null;
+
   constructor(
     private readonly map: L.Map,
     auth: Auth,
     onClose: () => void,
     private readonly parkingStore: SpotPanelParkingState,
+    private readonly commentsStore: SpotPanelCommentsState,
   ) {
     this.auth = auth;
     this.onClose = onClose;
@@ -110,10 +122,10 @@ export class SpotPanel {
     this.activeId = null;
     this.parkingStore.parkingLots = [];
     this.parkingStore.parkingTabForceVisible = initialTab === 'parking';
-    this.comments = [];
-    this.commentsExpanded = false;
-    this.commentsHasMore = false;
-    this.commentsLoaded = false;
+    this.commentsStore.comments = [];
+    this.commentsStore.commentsExpanded = false;
+    this.commentsStore.commentsHasMore = false;
+    this.commentsStore.commentsLoaded = false;
     if (initialTab !== 'parking') this.parkingStore.highlightedParkingLotId = null;
     this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
     const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
@@ -186,170 +198,49 @@ export class SpotPanel {
   // ── Comments ─────────────────────────────────────────────────────────────
   // Comments aren't part of TrailDetails (unlike photos, which the trail-details
   // edge function embeds server-side) — they're fetched separately, same
-  // pattern as loadParking()/renderParking() above.
+  // pattern as loadParking()/renderParking() above. Rendering + interaction
+  // (post/delete/reply/toggle/load-more) live in SpotPanelComments.vue now
+  // (Phase 2 of the migration spec) — this class only mounts/unmounts the
+  // island and decides whether a fetch is needed before doing so.
 
   /** Called every time the popup's info-tab HTML is (re)rendered — after an
-   * upload refresh, `#spot-comments-section` is a fresh DOM node needing its
-   * own delegated listener; the comments data itself doesn't need refetching. */
+   * upload refresh, `#spot-comments-section` is a fresh DOM node that needs
+   * its own island mount; the comments data itself doesn't need refetching
+   * if it's already loaded for this spot. */
   private setupComments(spotId: string) {
-    this.bindCommentEvents();
-    if (this.commentsLoaded) {
-      this.renderCommentsSection();
-    } else {
+    this.renderComments();
+    if (!this.commentsStore.commentsLoaded) {
       this.loadComments(spotId);
     }
   }
 
   private async loadComments(spotId: string) {
-    try {
-      const [comments, user] = await Promise.all([
-        getComments(spotId),
-        this.auth.authService.getUser(),
-      ]);
-      if (this.currentItem?.id !== spotId) return;
-      this.comments = comments;
-      this.commentsHasMore = comments.length === COMMENTS_PAGE_SIZE;
-      // A handful of comments are worth showing right away rather than
-      // hiding behind an extra click; once there are enough to feel like a
-      // "section" rather than a couple of remarks, default to collapsed.
-      this.commentsExpanded = this.commentsExpanded || comments.length <= AUTO_EXPAND_MAX_COMMENTS;
-      this.commentsCurrentUserId = user.id;
-      this.commentsCanModerate = !!(user.isAdmin || user.isTrailcrew);
-      this.commentsLoaded = true;
-      this.renderCommentsSection();
-    } catch (err) {
-      console.warn('Failed to fetch spot comments:', err);
-    }
+    const user = await this.auth.authService.getUser();
+    // The panel may have moved on to a different spot while getUser() was
+    // pending — same guard the store itself applies around its fetch.
+    if (this.currentItem?.id !== spotId) return;
+    await this.commentsStore.loadComments(spotId, {
+      userId: user.id,
+      isAdmin: !!user.isAdmin,
+      isTrailcrew: !!user.isTrailcrew,
+    });
   }
 
-  private async loadMoreComments() {
-    if (!this.currentItem || !this.comments.length) return;
-    const spotId = this.currentItem.id;
-    const oldest = this.comments[this.comments.length - 1].created_at;
-    try {
-      const older = await getOlderComments(spotId, oldest);
-      if (this.currentItem?.id !== spotId) return;
-      this.comments = [...this.comments, ...older];
-      this.commentsHasMore = older.length === COMMENTS_PAGE_SIZE;
-      this.renderCommentsSection();
-    } catch (err) {
-      console.warn('Failed to fetch older comments:', err);
-    }
-  }
-
-  private renderCommentsSection() {
+  /**
+   * Mounts the Comments island fresh on every call rather than mutating
+   * props in place (contrast with renderParking()): the container is a
+   * brand-new DOM node each time setupComments() runs (see its doc comment
+   * above), so any previously mounted app instance is already orphaned —
+   * unmounting it here just releases its reactivity subscriptions instead
+   * of leaking them. The new instance reads useSpotPanelStore() directly,
+   * so no props need to be passed or synced.
+   */
+  private renderComments() {
     const container = this.panel.querySelector('#spot-comments-section') as HTMLElement | null;
     if (!container) return;
-    container.innerHTML = commentsHTML(this.comments, {
-      expanded: this.commentsExpanded,
-      hasMore: this.commentsHasMore,
-      loggedIn: this.auth.authService.loggedIn,
-      currentUserId: this.commentsCurrentUserId,
-      canModerate: this.commentsCanModerate,
-    });
-  }
-
-  private updateCommentCharCount(container: HTMLElement) {
-    const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
-    const counter = container.querySelector('.comments-char-count') as HTMLElement | null;
-    const postBtn = container.querySelector('.comments-post-btn') as HTMLButtonElement | null;
-    if (!textarea || !counter || !postBtn) return;
-    const len = textarea.value.length;
-    counter.textContent = `${len} / 500`;
-    postBtn.disabled = len === 0 || len > 500;
-  }
-
-  private async handlePostComment(container: HTMLElement) {
-    if (!this.currentItem) return;
-    const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
-    const errorEl = container.querySelector('.comments-error') as HTMLElement | null;
-    const postBtn = container.querySelector('.comments-post-btn') as HTMLButtonElement | null;
-    const text = textarea?.value.trim() ?? '';
-    if (!text) return;
-    errorEl?.classList.add('hidden');
-    if (postBtn) postBtn.disabled = true;
-    try {
-      const comment = await postComment(this.currentItem.id, text, this.auth.authService);
-      this.comments = [comment, ...this.comments];
-      this.renderCommentsSection();
-    } catch (err) {
-      console.error('Failed to post comment:', err);
-      if (errorEl) {
-        errorEl.textContent = err instanceof Error ? err.message : 'Kommentar konnte nicht gesendet werden.';
-        errorEl.classList.remove('hidden');
-      }
-      if (postBtn) postBtn.disabled = false;
-    }
-  }
-
-  private async handleDeleteComment(id: number) {
-    const confirmed = await confirmDialog('Kommentar wirklich löschen?');
-    if (!confirmed) return;
-    try {
-      await deleteComment(id, this.auth.authService);
-      this.comments = this.comments.filter(c => c.id !== id);
-      this.renderCommentsSection();
-    } catch (err) {
-      console.error('Failed to delete comment:', err);
-      showToast('Löschen fehlgeschlagen 😢');
-    }
-  }
-
-  private bindCommentEvents() {
-    const container = this.panel.querySelector('#spot-comments-section') as HTMLElement | null;
-    if (!container) return;
-
-    container.addEventListener('click', async (e) => {
-      const target = e.target as HTMLElement;
-      const actionEl = target.closest('[data-action]') as HTMLElement | null;
-      if (!actionEl) return;
-      // Handlers below re-render this section's innerHTML, detaching the
-      // original click target mid-bubble. Once detached, Chromium still
-      // continues dispatch along the pre-computed ancestor path — but
-      // L.DomEvent.disableClickPropagation(this.panel) (buildDOM()) stops it
-      // there, one hop too late: Leaflet's own map 'click' handler treats
-      // any click that reaches it as "clicked outside the panel" and closes
-      // it (composables/useTrailMap.ts). Stop it here instead, before any
-      // DOM mutation happens.
-      e.stopPropagation();
-
-      switch (actionEl.dataset.action) {
-        case 'toggle-comments':
-          this.commentsExpanded = !this.commentsExpanded;
-          this.renderCommentsSection();
-          break;
-        case 'load-more-comments':
-          await this.loadMoreComments();
-          break;
-        case 'reply-comment': {
-          const author = actionEl.dataset.author ?? '';
-          const textarea = container.querySelector('.comments-input') as HTMLTextAreaElement | null;
-          if (textarea) {
-            textarea.value = `@${author} ${textarea.value}`.trimStart();
-            textarea.focus();
-            this.updateCommentCharCount(container);
-          }
-          break;
-        }
-        case 'delete-comment': {
-          const id = Number(actionEl.dataset.commentId);
-          if (!Number.isNaN(id)) await this.handleDeleteComment(id);
-          break;
-        }
-        case 'post-comment':
-          await this.handlePostComment(container);
-          break;
-        case 'login-comments':
-          await this.auth.openSignInModal();
-          break;
-      }
-    });
-
-    container.addEventListener('input', (e) => {
-      if ((e.target as HTMLElement).classList.contains('comments-input')) {
-        this.updateCommentCharCount(container);
-      }
-    });
+    this.commentsApp?.unmount();
+    this.commentsApp = createApp(() => h(SpotPanelComments));
+    this.commentsApp.mount(container);
   }
 
   public close() {
@@ -366,15 +257,18 @@ export class SpotPanel {
     this.parkingStore.parkingLots = [];
     this.parkingStore.highlightedParkingLotId = null;
     this.parkingStore.parkingTabForceVisible = false;
-    this.comments = [];
-    this.commentsExpanded = false;
-    this.commentsHasMore = false;
-    this.commentsLoaded = false;
-    // Tear down the parking island rather than leaving it mounted (and
-    // subscribed to reactivity) for a panel that's now hidden — it's
-    // re-mounted lazily by the next renderParking() call.
+    this.commentsStore.comments = [];
+    this.commentsStore.commentsExpanded = false;
+    this.commentsStore.commentsHasMore = false;
+    this.commentsStore.commentsLoaded = false;
+    // Tear down the parking/comments islands rather than leaving them
+    // mounted (and subscribed to reactivity) for a panel that's now hidden —
+    // they're re-mounted lazily by the next renderParking()/renderComments()
+    // call.
     this.parkingApp?.unmount();
     this.parkingApp = null;
+    this.commentsApp?.unmount();
+    this.commentsApp = null;
     this.closeElevation();
     this.onClose();
   }
