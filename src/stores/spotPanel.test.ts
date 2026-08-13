@@ -8,9 +8,39 @@ vi.mock('~/communication/trails', () => ({
   fetchMultipleSpotParking: vi.fn(),
 }))
 
+// Same rationale for the Phase-2 Comments slice — mocked here rather than
+// mocking ~/stores/auth (which would drag in useSupabaseClient/useSupabaseUser,
+// only real inside a live Nuxt app). The store takes identity as a plain
+// CommentsAuthInfo/IAuthService argument instead of owning an auth source.
+vi.mock('~/communication/comments', () => ({
+  getComments: vi.fn(),
+  getOlderComments: vi.fn(),
+  postComment: vi.fn(),
+  deleteComment: vi.fn(),
+  COMMENTS_PAGE_SIZE: 20,
+}))
+
 import { fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
-import { useSpotPanelStore } from './spotPanel'
+import { getComments, getOlderComments, postComment, deleteComment } from '~/communication/comments'
+import { useSpotPanelStore, type CommentsAuthInfo } from './spotPanel'
 import type { Trail } from '~/types/Trail'
+import type { Comment } from '~/types/Comment'
+import type { IAuthService } from '~/auth/auth_service'
+
+function comment(overrides: Partial<Comment> = {}): Comment {
+  return {
+    id: 1, created_at: '2026-08-01T00:00:00Z', spot_id: 's1', user_id: 'u1',
+    comment_text: 'Trail war heute top in Schuss!',
+    profiles: { display_name: 'Alice', avatar_url: '' },
+    ...overrides,
+  }
+}
+
+const authInfo: CommentsAuthInfo = { userId: 'u1', isAdmin: false, isTrailcrew: false }
+
+function fakeAuthService(): IAuthService {
+  return { getUser: vi.fn().mockResolvedValue({ id: 'u1', accessToken: 'tok' }) } as unknown as IAuthService
+}
 
 function trail(id: string): Trail {
   return { id, name: 'Testspot', type: 'trail', latitude: 1, longitude: 1, approved: true } as Trail
@@ -20,6 +50,10 @@ describe('useSpotPanelStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(fetchMultipleSpotParking).mockReset()
+    vi.mocked(getComments).mockReset()
+    vi.mocked(getOlderComments).mockReset()
+    vi.mocked(postComment).mockReset()
+    vi.mocked(deleteComment).mockReset()
   })
 
   it('starts with empty/closed defaults', () => {
@@ -29,6 +63,12 @@ describe('useSpotPanelStore', () => {
     expect(store.parkingLots).toEqual([])
     expect(store.highlightedParkingLotId).toBeNull()
     expect(store.parkingTabForceVisible).toBe(false)
+    expect(store.comments).toEqual([])
+    expect(store.commentsExpanded).toBe(false)
+    expect(store.commentsHasMore).toBe(false)
+    expect(store.commentsLoaded).toBe(false)
+    expect(store.commentsCurrentUserId).toBe('')
+    expect(store.commentsCanModerate).toBe(false)
   })
 
   it('loadParking fetches lots for the given spot and stores them', async () => {
@@ -102,5 +142,184 @@ describe('useSpotPanelStore', () => {
     expect(store.parkingLots).toEqual([{ id: 'existing', name: 'Existing Lot', lat: 0, lng: 0 }])
     expect(warnSpy).toHaveBeenCalled()
     warnSpy.mockRestore()
+  })
+
+  // ── Comments (Phase 2) ─────────────────────────────────────────────────
+  describe('loadComments', () => {
+    it('fetches comments for the given spot and stores identity info from authInfo', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      vi.mocked(getComments).mockResolvedValue([comment()])
+
+      await store.loadComments('s1', { userId: 'u1', isAdmin: true, isTrailcrew: false })
+
+      expect(getComments).toHaveBeenCalledWith('s1')
+      expect(store.comments).toEqual([comment()])
+      expect(store.commentsCurrentUserId).toBe('u1')
+      expect(store.commentsCanModerate).toBe(true)
+      expect(store.commentsLoaded).toBe(true)
+    })
+
+    it('sets commentsHasMore when a full page comes back', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      const fullPage = Array.from({ length: 20 }, (_, i) => comment({ id: i + 1 }))
+      vi.mocked(getComments).mockResolvedValue(fullPage)
+
+      await store.loadComments('s1', authInfo)
+
+      expect(store.commentsHasMore).toBe(true)
+    })
+
+    it('auto-expands when 3 or fewer comments come back', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      vi.mocked(getComments).mockResolvedValue([comment(), comment({ id: 2 })])
+
+      await store.loadComments('s1', authInfo)
+
+      expect(store.commentsExpanded).toBe(true)
+    })
+
+    it('stays collapsed by default with more than 3 comments', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      vi.mocked(getComments).mockResolvedValue([1, 2, 3, 4].map(id => comment({ id })))
+
+      await store.loadComments('s1', authInfo)
+
+      expect(store.commentsExpanded).toBe(false)
+    })
+
+    it('bails out without overwriting state if the panel moved to a different spot while the fetch was in flight', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      let resolveFetch!: (value: Comment[]) => void
+      vi.mocked(getComments).mockReturnValue(new Promise(resolve => { resolveFetch = resolve }))
+
+      const pending = store.loadComments('s1', authInfo)
+      store.currentItem = trail('s2')
+      store.comments = [comment({ id: 999, comment_text: 'should not be overwritten' })]
+
+      resolveFetch([comment()])
+      await pending
+
+      expect(store.comments).toEqual([comment({ id: 999, comment_text: 'should not be overwritten' })])
+    })
+
+    it('logs and leaves comments untouched when the fetch rejects', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      store.comments = [comment({ id: 999 })]
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.mocked(getComments).mockRejectedValue(new Error('network error'))
+
+      await store.loadComments('s1', authInfo)
+
+      expect(store.comments).toEqual([comment({ id: 999 })])
+      expect(warnSpy).toHaveBeenCalled()
+      warnSpy.mockRestore()
+    })
+  })
+
+  describe('loadMoreComments', () => {
+    it('fetches comments older than the current oldest and appends them', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      store.comments = [comment({ id: 5, created_at: '2026-08-05T00:00:00Z' })]
+      const older = [comment({ id: 4, created_at: '2026-08-04T00:00:00Z' })]
+      vi.mocked(getOlderComments).mockResolvedValue(older)
+
+      await store.loadMoreComments()
+
+      expect(getOlderComments).toHaveBeenCalledWith('s1', '2026-08-05T00:00:00Z')
+      expect(store.comments).toEqual([comment({ id: 5, created_at: '2026-08-05T00:00:00Z' }), ...older])
+    })
+
+    it('does nothing when there is no current item or no comments loaded yet', async () => {
+      const store = useSpotPanelStore()
+      await store.loadMoreComments()
+      expect(getOlderComments).not.toHaveBeenCalled()
+    })
+
+    it('bails out without appending if the panel moved to a different spot while the fetch was in flight', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      store.comments = [comment({ id: 5 })]
+      let resolveFetch!: (value: Comment[]) => void
+      vi.mocked(getOlderComments).mockReturnValue(new Promise(resolve => { resolveFetch = resolve }))
+
+      const pending = store.loadMoreComments()
+      store.currentItem = trail('s2')
+
+      resolveFetch([comment({ id: 4 })])
+      await pending
+
+      expect(store.comments).toEqual([comment({ id: 5 })])
+    })
+  })
+
+  describe('postComment', () => {
+    it('posts the comment and prepends it to the list', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      const posted = comment({ id: 42, comment_text: 'Neu!' })
+      vi.mocked(postComment).mockResolvedValue(posted)
+
+      const result = await store.postComment('Neu!', fakeAuthService())
+
+      expect(postComment).toHaveBeenCalledWith('s1', 'Neu!', expect.anything())
+      expect(store.comments[0]).toEqual(posted)
+      expect(result).toEqual(posted)
+    })
+
+    it('throws without calling the API when no spot is open', async () => {
+      const store = useSpotPanelStore()
+      await expect(store.postComment('Neu!', fakeAuthService())).rejects.toThrow()
+      expect(postComment).not.toHaveBeenCalled()
+    })
+
+    it('propagates the error and leaves the list untouched when the API call fails', async () => {
+      const store = useSpotPanelStore()
+      store.currentItem = trail('s1')
+      store.comments = [comment({ id: 1 })]
+      vi.mocked(postComment).mockRejectedValue(new Error('rate limited'))
+
+      await expect(store.postComment('Neu!', fakeAuthService())).rejects.toThrow('rate limited')
+      expect(store.comments).toEqual([comment({ id: 1 })])
+    })
+  })
+
+  describe('deleteComment', () => {
+    it('deletes the comment and removes it from the list', async () => {
+      const store = useSpotPanelStore()
+      store.comments = [comment({ id: 1 }), comment({ id: 2 })]
+      vi.mocked(deleteComment).mockResolvedValue(undefined)
+
+      await store.deleteComment(1, fakeAuthService())
+
+      expect(deleteComment).toHaveBeenCalledWith(1, expect.anything())
+      expect(store.comments).toEqual([comment({ id: 2 })])
+    })
+
+    it('propagates the error and leaves the list untouched when the API call fails', async () => {
+      const store = useSpotPanelStore()
+      store.comments = [comment({ id: 1 })]
+      vi.mocked(deleteComment).mockRejectedValue(new Error('forbidden'))
+
+      await expect(store.deleteComment(1, fakeAuthService())).rejects.toThrow('forbidden')
+      expect(store.comments).toEqual([comment({ id: 1 })])
+    })
+  })
+
+  describe('toggleCommentsExpanded', () => {
+    it('flips commentsExpanded', () => {
+      const store = useSpotPanelStore()
+      expect(store.commentsExpanded).toBe(false)
+      store.toggleCommentsExpanded()
+      expect(store.commentsExpanded).toBe(true)
+      store.toggleCommentsExpanded()
+      expect(store.commentsExpanded).toBe(false)
+    })
   })
 })
