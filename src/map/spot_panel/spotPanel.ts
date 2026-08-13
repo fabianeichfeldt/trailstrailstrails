@@ -22,6 +22,8 @@ import SpotPanelComments from '../../components/map/SpotPanelComments.vue';
 import SpotPanelToursTab from '../../components/map/SpotPanelToursTab.vue';
 import SpotPanelTrailsTab from '../../components/map/SpotPanelTrailsTab.vue';
 import SpotPanelElevation from '../../components/map/SpotPanelElevation.vue';
+import SpotPanelHeader from '../../components/map/SpotPanelHeader.vue';
+import SpotPanelTabs from '../../components/map/SpotPanelTabs.vue';
 
 /**
  * Minimal duck-typed shape of the Parking slice of `useSpotPanelStore`
@@ -79,6 +81,25 @@ export interface SpotPanelToursTrailsState {
   loadSpotData(spotId: string): Promise<void>;
 }
 
+/**
+ * Minimal duck-typed shape of the Header+Tabs slice of `useSpotPanelStore`
+ * (src/stores/spotPanel.ts), injected the same way as the other slices above
+ * (Phase 4 of the migration spec). `isLiked`/`likeVisible` back the like
+ * button — SpotPanelHeader.vue reads them reactively; this class still owns
+ * *writing* them (updateLikeButton()/handleLike() below), since populating
+ * them stays coupled to loadInfo()'s getTrailDetails() fetch, same as
+ * before the migration (see the migration spec's "important wrinkle" note).
+ * `activeTab` is written by SpotPanelTabs.vue on click and by this class's
+ * activateTab() on open; this class watches it (constructor) to run the
+ * pane-toggling/closeElevation()/loadInfo() side effects that used to live
+ * directly in the old activateTab().
+ */
+export interface SpotPanelHeaderTabsState {
+  isLiked: boolean;
+  likeVisible: boolean;
+  activeTab: 'info' | 'tours' | 'trails' | 'parking';
+}
+
 // ── SpotPanel ────────────────────────────────────────────────────────────────
 
 export class SpotPanel {
@@ -116,6 +137,20 @@ export class SpotPanel {
   private trailsApp: App | null = null;
   private elevationApp: App | null = null;
 
+  // Header + Tabs — Vue islands (see SpotPanelHeader.vue/SpotPanelTabs.vue).
+  // Same "reads useSpotPanelStore() directly, no props to sync" shape as
+  // Comments/Tours/Trails — Header only takes the like/share/close callbacks
+  // as static props (bound once at mount, see renderHeader() below).
+  private headerApp: App | null = null;
+  private tabsApp: App | null = null;
+
+  // Set by activateTab() right before it writes headerTabsStore.activeTab,
+  // so the constructor's activeTab watch() (which exists to react to
+  // SpotPanelTabs.vue's own click-driven writes) doesn't ALSO re-run
+  // applyTab()'s side effects for a write this class already applied
+  // directly and synchronously. See activateTab()'s doc comment below.
+  private suppressNextTabWatch = false;
+
   constructor(
     private readonly map: L.Map,
     auth: Auth,
@@ -123,6 +158,7 @@ export class SpotPanel {
     private readonly parkingStore: SpotPanelParkingState,
     private readonly commentsStore: SpotPanelCommentsState,
     private readonly toursTrailsStore: SpotPanelToursTrailsState,
+    private readonly headerTabsStore: SpotPanelHeaderTabsState,
   ) {
     this.auth = auth;
     this.onClose = onClose;
@@ -150,6 +186,15 @@ export class SpotPanel {
         if (id && kind) this.selectItem(id, kind);
       },
     );
+
+    // Reacts to SpotPanelTabs.vue writing a new activeTab on button click.
+    // activateTab() (called directly by openInternal() for the tab a spot
+    // opens on) sets suppressNextTabWatch first so this doesn't double-run
+    // applyTab() for that same write — see activateTab()'s doc comment.
+    watch(() => this.headerTabsStore.activeTab, (tab) => {
+      if (this.suppressNextTabWatch) { this.suppressNextTabWatch = false; return; }
+      this.applyTab(tab);
+    });
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -181,25 +226,20 @@ export class SpotPanel {
     this.commentsStore.commentsHasMore = false;
     this.commentsStore.commentsLoaded = false;
     if (initialTab !== 'parking') this.parkingStore.highlightedParkingLotId = null;
-    this.panel.querySelector('.spot-panel-title')!.textContent = item.name;
-    const orgLink = this.panel.querySelector('.spot-panel-org-link') as HTMLAnchorElement;
-    if (item.url) {
-      orgLink.href = item.url;
-      orgLink.classList.remove('hidden');
-    } else {
-      orgLink.classList.add('hidden');
-    }
-    const shareBtn = this.panel.querySelector('.spot-share-btn') as HTMLElement;
-    shareBtn.classList.toggle('hidden', !item.approved);
-    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
-    likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
-    likeBtn.dataset.liked = 'false';
-    likeBtn.classList.add('hidden');
+    // Title/org-link/share-visibility are read reactively by
+    // SpotPanelHeader.vue straight off parkingStore.currentItem (just set
+    // above) — no separate DOM writes needed here anymore. The like button
+    // stays hidden until updateLikeButton() (called from loadInfo()) reveals
+    // it — same coupling as before the migration, see this class's
+    // SpotPanelHeaderTabsState doc comment.
+    this.headerTabsStore.isLiked = false;
+    this.headerTabsStore.likeVisible = false;
     this.closeElevation();
     this.panel.classList.add('open');
+    this.renderHeader();
+    this.renderTabs();
     this.renderParking();
     this.renderElevation();
-    this.updateTabsVisibility();
     this.activateTab(initialTab);
 
     if (item.type === 'trail') {
@@ -220,8 +260,10 @@ export class SpotPanel {
     // spot); guard again here so this class doesn't render over data that's
     // already correct for a newer spot.
     if (this.currentItem?.id !== spotId) return;
+    // Parking tab-button visibility is now computed reactively by
+    // SpotPanelTabs.vue straight off parkingStore.parkingLots/
+    // parkingTabForceVisible — no explicit call needed here anymore.
     this.renderParking();
-    this.updateTabsVisibility();
   }
 
   /**
@@ -307,10 +349,23 @@ export class SpotPanel {
     this.commentsStore.commentsExpanded = false;
     this.commentsStore.commentsHasMore = false;
     this.commentsStore.commentsLoaded = false;
-    // Tear down the parking/comments/tours/trails/elevation islands rather
-    // than leaving them mounted (and subscribed to reactivity) for a panel
-    // that's now hidden — they're re-mounted lazily by the next
-    // renderParking()/renderComments()/renderLists()/renderElevation() call.
+    this.headerTabsStore.isLiked = false;
+    this.headerTabsStore.likeVisible = false;
+    // activeTab is deliberately NOT reset here — openInternal()'s
+    // activateTab(initialTab) call always forces it (and applyTab()'s side
+    // effects) unconditionally on the next open, same as the original
+    // activateTab() being a plain, unconditional method call. Resetting it
+    // here would just trigger the constructor's activeTab watch() an extra
+    // time for no observable benefit.
+    // Tear down the header/tabs/parking/comments/tours/trails/elevation
+    // islands rather than leaving them mounted (and subscribed to
+    // reactivity) for a panel that's now hidden — they're re-mounted lazily
+    // by the next renderHeader()/renderTabs()/renderParking()/
+    // renderComments()/renderLists()/renderElevation() call.
+    this.headerApp?.unmount();
+    this.headerApp = null;
+    this.tabsApp?.unmount();
+    this.tabsApp = null;
     this.parkingApp?.unmount();
     this.parkingApp = null;
     this.commentsApp?.unmount();
@@ -334,31 +389,8 @@ export class SpotPanel {
     this.panel.className = 'spot-panel';
     this.panel.innerHTML = `
       <div class="spot-panel-handle" role="presentation"></div>
-      <div class="spot-panel-header">
-        <div class="spot-panel-title-row">
-          <div class="spot-panel-title"></div>
-          <button class="spot-panel-close" aria-label="Schließen">✕</button>
-        </div>
-        <div class="spot-panel-meta-row">
-          <a class="spot-panel-org-link hidden" target="_blank" rel="noopener noreferrer">
-            <i class="fas fa-external-link-alt"></i> Zur Trailcrew
-          </a>
-          <div class="spot-panel-actions">
-            <button class="spot-action-btn spot-like-btn hidden" aria-label="Favorit">
-              <i class="fa-regular fa-star"></i>
-            </button>
-            <button class="spot-action-btn spot-share-btn hidden" aria-label="Teilen">
-              <i class="fas fa-share-alt"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="spot-panel-tabs">
-        <button class="spot-tab active" data-tab="info">Spot-Info</button>
-        <button class="spot-tab" data-tab="tours">Touren</button>
-        <button class="spot-tab" data-tab="trails">Trails</button>
-        <button class="spot-tab" data-tab="parking">Parkplätze</button>
-      </div>
+      <div class="spot-panel-header" id="spot-panel-header"></div>
+      <div class="spot-panel-tabs" id="spot-panel-tabs"></div>
       <div class="spot-panel-body">
         <div class="spot-tab-content" id="spot-info-tab">
           <div class="spot-info-loading"><p>Lade Details …</p></div>
@@ -379,48 +411,89 @@ export class SpotPanel {
     L.DomEvent.disableClickPropagation(this.panel);
     L.DomEvent.disableScrollPropagation(this.panel);
 
-    this.panel.querySelector('.spot-panel-close')!
-      .addEventListener('click', () => this.close());
-    // .spot-elevation-close now lives inside the SpotPanelElevation.vue
-    // island (see renderElevation() below) — it calls closeElevation() via
-    // its onClose prop instead of a raw DOM listener bound here.
-    this.panel.querySelector('.spot-like-btn')!
-      .addEventListener('click', () => this.handleLike());
-    this.panel.querySelector('.spot-share-btn')!
-      .addEventListener('click', () => this.handleShare());
-    this.panel.querySelectorAll('.spot-tab').forEach(btn =>
-      btn.addEventListener('click', e => {
-        const tab = (e.currentTarget as HTMLElement).dataset.tab as 'tours' | 'trails' | 'info' | 'parking';
-        this.activateTab(tab);
-      })
-    );
+    // .spot-panel-close/.spot-like-btn/.spot-share-btn now live inside the
+    // SpotPanelHeader.vue island (see renderHeader() below) — they call
+    // onClose/onLike/onShare props instead of raw DOM listeners bound here.
+    // .spot-tab buttons now live inside the SpotPanelTabs.vue island (see
+    // renderTabs() below) — clicking one writes straight to
+    // headerTabsStore.activeTab instead of a raw DOM listener here.
+    // .spot-elevation-close similarly lives inside SpotPanelElevation.vue.
 
     initDragHandle(this.panel);
   }
 
   // ── Tabs & rendering ───────────────────────────────────────────────────────
 
+  /**
+   * Sets the active tab and immediately, synchronously applies its side
+   * effects (pane visibility, closing the elevation panel, triggering
+   * loadInfo() on first visit to 'info'). Called directly by openInternal()
+   * for the tab a spot opens on — NOT left to the constructor's activeTab
+   * watch() alone, since Vue's watch() only fires on an actual value change,
+   * and the initial tab is frequently the same value ('info') across two
+   * different opens, which must still re-run these side effects (e.g.
+   * infoLoaded was just reset to false). suppressNextTabWatch stops that
+   * same watch() from re-running applyTab() a second time for this write
+   * when the value *did* change.
+   *
+   * Highlighting which tab BUTTON is active is no longer this method's
+   * concern — SpotPanelTabs.vue derives that reactively from
+   * headerTabsStore.activeTab itself.
+   */
   private activateTab(tab: 'tours' | 'trails' | 'info' | 'parking') {
-    this.panel.querySelectorAll('.spot-tab').forEach(b => b.classList.remove('active'));
-    this.panel.querySelector(`[data-tab="${tab}"]`)!.classList.add('active');
+    // Only arm the suppress flag when this write will actually change the
+    // store value — Vue's watch() only fires on a real change, so if `tab`
+    // already equals the current value (the common case: a spot opens on
+    // 'info' and the store is already 'info' from a previous close()/open()),
+    // the watcher never fires and the flag would otherwise sit armed,
+    // silently swallowing the NEXT unrelated change (e.g. the user's first
+    // tab click) instead of the one it was meant for.
+    if (this.headerTabsStore.activeTab !== tab) this.suppressNextTabWatch = true;
+    this.headerTabsStore.activeTab = tab;
+    this.applyTab(tab);
+  }
+
+  /**
+   * Pane-toggling/elevation-close/info-load side effects for `tab` becoming
+   * active. Triggered either directly by activateTab() (panel open) or by
+   * the constructor's activeTab watch() (SpotPanelTabs.vue button click).
+   */
+  private applyTab(tab: 'tours' | 'trails' | 'info' | 'parking') {
     this.panel.querySelectorAll('.spot-tab-content').forEach(c => c.classList.add('hidden'));
     this.panel.querySelector(`#spot-${tab}-tab`)!.classList.remove('hidden');
     this.closeElevation();
     if (tab === 'info' && !this.infoLoaded) this.loadInfo();
   }
 
-  private updateTabsVisibility() {
-    // Tours/Trails stay trail-only. Parking is available for any spot type
-    // (trail/bikepark/dirtpark), but hidden until we know the spot has at
-    // least one lot — unless we're jumping straight there via openParkingLot.
-    const isTrail = this.currentItem && this.currentItem.type === 'trail';
-    const toursTab = this.panel.querySelector('[data-tab="tours"]') as HTMLElement;
-    const trailsTab = this.panel.querySelector('[data-tab="trails"]') as HTMLElement;
-    const parkingTab = this.panel.querySelector('[data-tab="parking"]') as HTMLElement;
+  /**
+   * Mounts the Header island on first use — never remounts (same
+   * "mount once, reads the store reactively" shape as renderParking()/
+   * renderLists()). Click handling for like/share/close now lives here as
+   * bound-instance-method props instead of raw DOM listeners in buildDOM().
+   */
+  private renderHeader() {
+    if (this.headerApp) return;
+    const container = this.panel.querySelector('#spot-panel-header') as HTMLElement | null;
+    if (!container) return;
+    this.headerApp = createApp(() => h(SpotPanelHeader, {
+      onLike: this.handleLike.bind(this),
+      onShare: this.handleShare.bind(this),
+      onClose: () => this.close(),
+    }));
+    this.headerApp.mount(container);
+  }
 
-    toursTab.style.display = isTrail ? 'block' : 'none';
-    trailsTab.style.display = isTrail ? 'block' : 'none';
-    parkingTab.style.display = (this.parkingStore.parkingTabForceVisible || this.parkingStore.parkingLots.length > 0) ? 'block' : 'none';
+  /**
+   * Mounts the Tabs island on first use — never remounts. Tab-button
+   * visibility/highlighting and the click-to-select-tab wiring all live in
+   * SpotPanelTabs.vue now, reading/writing headerTabsStore directly.
+   */
+  private renderTabs() {
+    if (this.tabsApp) return;
+    const container = this.panel.querySelector('#spot-panel-tabs') as HTMLElement | null;
+    if (!container) return;
+    this.tabsApp = createApp(() => h(SpotPanelTabs));
+    this.tabsApp.mount(container);
   }
 
   private async loadInfo() {
@@ -462,17 +535,13 @@ export class SpotPanel {
   }
 
   private async updateLikeButton(details: TrailDetails) {
-    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
     try {
       const user = await this.auth.authService.getUser();
-      const isLiked = user != null && !!details.likes?.find(l => l.user_id === user.id);
-      likeBtn.innerHTML = isLiked ? '⭐' : '<i class="fa-regular fa-star"></i>';
-      likeBtn.dataset.liked = String(isLiked);
+      this.headerTabsStore.isLiked = user != null && !!details.likes?.find(l => l.user_id === user.id);
     } catch {
-      likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
-      likeBtn.dataset.liked = 'false';
+      this.headerTabsStore.isLiked = false;
     }
-    likeBtn.classList.remove('hidden');
+    this.headerTabsStore.likeVisible = true;
   }
 
   private async handleLike() {
@@ -481,16 +550,12 @@ export class SpotPanel {
       await this.auth.openSignInModal();
       return;
     }
-    const likeBtn = this.panel.querySelector('.spot-like-btn') as HTMLElement;
-    const isLiked = likeBtn.dataset.liked === 'true';
-    if (isLiked) {
+    if (this.headerTabsStore.isLiked) {
       await dislikeTrail(this.currentItem.id, this.auth.authService);
-      likeBtn.innerHTML = '<i class="fa-regular fa-star"></i>';
-      likeBtn.dataset.liked = 'false';
+      this.headerTabsStore.isLiked = false;
     } else {
       await likeTrail(this.currentItem.id, this.auth.authService);
-      likeBtn.innerHTML = '⭐';
-      likeBtn.dataset.liked = 'true';
+      this.headerTabsStore.isLiked = true;
     }
   }
 

@@ -136,7 +136,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     const { SpotPanel } = await import('~/map/spot_panel/spotPanel')
     const spotPanel = new SpotPanel(mymap, authAdapter as any, () => {
       mapStore.panelOpen = false
-    }, spotPanelStore, spotPanelStore, spotPanelStore)
+    }, spotPanelStore, spotPanelStore, spotPanelStore, spotPanelStore)
 
     function renderMarkers() {
       // Swap cluster/plain layer without remove+re-add (re-add breaks _leaflet_pos)

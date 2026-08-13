@@ -75,6 +75,9 @@ describe('useSpotPanelStore', () => {
     expect(store.data).toBeNull()
     expect(store.selectedItemId).toBeNull()
     expect(store.selectedItemKind).toBeNull()
+    expect(store.isLiked).toBe(false)
+    expect(store.likeVisible).toBe(false)
+    expect(store.activeTab).toBe('info')
   })
 
   it('loadParking fetches lots for the given spot and stores them', async () => {
@@ -402,6 +405,15 @@ describe('useSpotPanelStore', () => {
       store.selectItem('tour-1', 'tour')
       expect(store.selectedItemId).toBe('tour-1')
       expect(store.selectedItemKind).toBe('tour')
+    })
+  })
+
+  // ── Header + Tabs (Phase 4) ────────────────────────────────────────────
+  describe('setActiveTab', () => {
+    it('sets activeTab', () => {
+      const store = useSpotPanelStore()
+      store.setActiveTab('parking')
+      expect(store.activeTab).toBe('parking')
     })
   })
 })

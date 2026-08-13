@@ -152,6 +152,25 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     selectedItemKind.value = kind
   }
 
+  // ── Header + Tabs (Phase 4) ─────────────────────────────────────────────
+  // isLiked/likeVisible back the header's like button. Deliberately NOT
+  // fetched independently — spotPanel.ts's loadInfo() (Info tab, still in
+  // spotPanel.ts, out of scope for this migration phase) is what populates
+  // these today via updateLikeButton(), same coupling as before the
+  // migration: the like button stays hidden until the Info tab has loaded
+  // once. activeTab drives which tab button SpotPanelTabs.vue highlights;
+  // spotPanel.ts still owns *reacting* to it (pane toggling, closing the
+  // elevation panel, triggering loadInfo() on first visit to 'info') via a
+  // watch() in its constructor, same pattern as the selectedItemId/
+  // selectedItemKind watchers above.
+  const isLiked = ref(false)
+  const likeVisible = ref(false)
+  const activeTab = ref<'info' | 'tours' | 'trails' | 'parking'>('info')
+
+  function setActiveTab(tab: typeof activeTab.value) {
+    activeTab.value = tab
+  }
+
   return {
     currentItem,
     isOpen,
@@ -175,5 +194,9 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     selectedItemKind,
     loadSpotData,
     selectItem,
+    isLiked,
+    likeVisible,
+    activeTab,
+    setActiveTab,
   }
 })
