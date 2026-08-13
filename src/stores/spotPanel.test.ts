@@ -6,6 +6,7 @@ import { createPinia, setActivePinia } from 'pinia'
 // communication/trails.ts export this store's Phase-1 action touches.
 vi.mock('~/communication/trails', () => ({
   fetchMultipleSpotParking: vi.fn(),
+  getSpotGpxData: vi.fn(),
 }))
 
 // Same rationale for the Phase-2 Comments slice — mocked here rather than
@@ -20,12 +21,13 @@ vi.mock('~/communication/comments', () => ({
   COMMENTS_PAGE_SIZE: 20,
 }))
 
-import { fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
+import { fetchMultipleSpotParking, getSpotGpxData, type SpotParkingLot } from '~/communication/trails'
 import { getComments, getOlderComments, postComment, deleteComment } from '~/communication/comments'
 import { useSpotPanelStore, type CommentsAuthInfo } from './spotPanel'
 import type { Trail } from '~/types/Trail'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
+import type { SpotMtbData, MtbTrail, MtbTour } from '~/types/MtbTypes'
 
 function comment(overrides: Partial<Comment> = {}): Comment {
   return {
@@ -50,6 +52,7 @@ describe('useSpotPanelStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(fetchMultipleSpotParking).mockReset()
+    vi.mocked(getSpotGpxData).mockReset()
     vi.mocked(getComments).mockReset()
     vi.mocked(getOlderComments).mockReset()
     vi.mocked(postComment).mockReset()
@@ -69,6 +72,9 @@ describe('useSpotPanelStore', () => {
     expect(store.commentsLoaded).toBe(false)
     expect(store.commentsCurrentUserId).toBe('')
     expect(store.commentsCanModerate).toBe(false)
+    expect(store.data).toBeNull()
+    expect(store.selectedItemId).toBeNull()
+    expect(store.selectedItemKind).toBeNull()
   })
 
   it('loadParking fetches lots for the given spot and stores them', async () => {
@@ -320,6 +326,82 @@ describe('useSpotPanelStore', () => {
       expect(store.commentsExpanded).toBe(true)
       store.toggleCommentsExpanded()
       expect(store.commentsExpanded).toBe(false)
+    })
+  })
+
+  // ── Tours + Trails + Elevation (Phase 3) ──────────────────────────────
+  function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
+    return {
+      id: 'trail-1', spotId: 's1', name: 'Testtrail', difficulty: 'blue',
+      distance_km: 3, elevation_gain: 100, elevation_loss: 300,
+      direction: 'one-way-down', gpxPoints: [], elevationProfile: [],
+      ...overrides,
+    }
+  }
+
+  function baseTour(overrides: Partial<MtbTour> = {}): MtbTour {
+    return {
+      id: 'tour-1', spotId: 's1', name: 'Testtour',
+      distance_km: 5, elevation_gain: 200, elevation_loss: 400,
+      direction: 'cw', duration_minutes: 60, trailCount: 2,
+      segments: [], gpxPoints: [], elevationProfile: [], hasFullGpx: true,
+      ...overrides,
+    }
+  }
+
+  function spotData(overrides: Partial<SpotMtbData> = {}): SpotMtbData {
+    return { spotId: 's1', tours: [baseTour()], trails: [baseTrail()], ...overrides }
+  }
+
+  describe('loadSpotData', () => {
+    it('fetches GPX data for the given spot and stores it', async () => {
+      const store = useSpotPanelStore()
+      const result = spotData()
+      vi.mocked(getSpotGpxData).mockResolvedValue(result)
+
+      await store.loadSpotData('s1')
+
+      expect(getSpotGpxData).toHaveBeenCalledWith('s1')
+      expect(store.data).toEqual(result)
+    })
+
+    it('stores null when the fetch resolves with no data', async () => {
+      const store = useSpotPanelStore()
+      vi.mocked(getSpotGpxData).mockResolvedValue(null)
+
+      await store.loadSpotData('s1')
+
+      expect(store.data).toBeNull()
+    })
+
+    it('logs and leaves data untouched when the fetch rejects', async () => {
+      const store = useSpotPanelStore()
+      store.data = spotData({ spotId: 'existing' })
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.mocked(getSpotGpxData).mockRejectedValue(new Error('network error'))
+
+      await store.loadSpotData('s1')
+
+      expect(store.data).toEqual(spotData({ spotId: 'existing' }))
+      expect(warnSpy).toHaveBeenCalled()
+      warnSpy.mockRestore()
+    })
+  })
+
+  describe('selectItem', () => {
+    it('sets selectedItemId/selectedItemKind for a trail', () => {
+      const store = useSpotPanelStore()
+      store.selectItem('trail-1', 'trail')
+      expect(store.selectedItemId).toBe('trail-1')
+      expect(store.selectedItemKind).toBe('trail')
+    })
+
+    it('sets selectedItemId/selectedItemKind for a tour, overwriting a previous trail selection', () => {
+      const store = useSpotPanelStore()
+      store.selectItem('trail-1', 'trail')
+      store.selectItem('tour-1', 'tour')
+      expect(store.selectedItemId).toBe('tour-1')
+      expect(store.selectedItemKind).toBe('tour')
     })
   })
 })

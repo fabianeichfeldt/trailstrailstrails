@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { trailsHTML, trailStatusCardFor } from './spotPanelHtml'
+import { trailStatusCardFor } from './spotPanelHtml'
 import type { MtbTrail, MtbTour } from '../../types/MtbTypes'
 
 // parkingHTML() and its tests were removed here — superseded by the
@@ -11,6 +11,14 @@ import type { MtbTrail, MtbTour } from '../../types/MtbTypes'
 // SpotPanelComments.vue island (src/components/map/SpotPanelComments.vue,
 // tested in SpotPanelComments.test.ts) as part of the spot-panel Vue
 // migration, Phase 2 (see the same spec).
+//
+// toursHTML()/trailsHTML() and their tests (including the "status row tint +
+// tag" block that used to live here) were removed here — superseded by the
+// SpotPanelToursTab.vue / SpotPanelTrailsTab.vue islands (tested in
+// SpotPanelToursTab.test.ts / SpotPanelTrailsTab.test.ts) as part of the
+// spot-panel Vue migration, Phase 3 (see the same spec). trailStatusCardFor()
+// stays here — it returns an HTMLElement (not markup), so SpotPanelElevation.vue
+// still calls it directly as an escape hatch rather than reimplementing it.
 
 function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
   return {
@@ -20,40 +28,6 @@ function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
     ...overrides,
   }
 }
-
-describe('trailsHTML — status row tint + tag', () => {
-  it('renders no status tint or tag for an open trail', () => {
-    const html = trailsHTML([baseTrail()])
-    expect(html).not.toContain('trail-status-row-')
-    expect(html).not.toContain('trail-status-tag')
-  })
-
-  it('tints the row and tags "Gesperrt" for a trail with an active closed_from', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2000-01-01T00:00:00Z' })])
-    expect(html).toContain('trail-status-row-closed')
-    expect(html).toContain('trail-status-tag-closed')
-    expect(html).toContain('Gesperrt')
-  })
-
-  it('tints the row and tags "Hinweis" for a future closed_from', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2999-01-01T00:00:00Z' })])
-    expect(html).toContain('trail-status-row-hint')
-    expect(html).toContain('trail-status-tag-hint')
-    expect(html).toContain('Hinweis')
-  })
-
-  it('tints the row and tags "Hinweis" for a hint with no schedule', () => {
-    const html = trailsHTML([baseTrail({ hint: 'Erdrutsch, bitte umfahren' })])
-    expect(html).toContain('trail-status-row-hint')
-    expect(html).toContain('trail-status-tag-hint')
-  })
-
-  it('renders no tint or tag once an expired schedule has passed', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2000-01-01T00:00:00Z', closed_to: '2000-02-01T00:00:00Z' })])
-    expect(html).not.toContain('trail-status-row-')
-    expect(html).not.toContain('trail-status-tag')
-  })
-})
 
 function baseTour(overrides: Partial<MtbTour> = {}): MtbTour {
   return {

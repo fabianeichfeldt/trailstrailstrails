@@ -1,10 +1,10 @@
 import L from 'leaflet';
-import { createApp, h, reactive, type App } from 'vue';
+import { createApp, h, reactive, watch, type App } from 'vue';
 import '@fortawesome/fontawesome-free/css/all.css';
-import { ElevationPoint, MtbTour, MtbTrail, SpotMtbData, TourSegment } from '../../types/MtbTypes';
+import { MtbTour, MtbTrail, SpotMtbData } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
-import { getTrailDetails, getSpotGpxData, likeTrail, dislikeTrail, type SpotParkingLot } from '../../communication/trails';
+import { getTrailDetails, likeTrail, dislikeTrail, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
 import { copyToClipboard } from '../../utils/clipboard';
 import { shareTrail } from './spotPanelShare';
@@ -14,12 +14,14 @@ import { renderTrailDetails } from '../detail_popup/detailsPopup';
 import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
 import { setupYT2Click } from '../detail_popup/yt';
 import { bindPhotoLightbox } from '../lightbox';
-import { AnyItem, IMBA, elevationSVG, bindElevationHover } from './elevationSvg';
-import { DIR_LABEL, toursHTML, trailsHTML, trailStatusCardFor } from './spotPanelHtml';
+import { IMBA } from './elevationSvg';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 import SpotPanelParkingTab from '../../components/map/SpotPanelParkingTab.vue';
 import SpotPanelComments from '../../components/map/SpotPanelComments.vue';
+import SpotPanelToursTab from '../../components/map/SpotPanelToursTab.vue';
+import SpotPanelTrailsTab from '../../components/map/SpotPanelTrailsTab.vue';
+import SpotPanelElevation from '../../components/map/SpotPanelElevation.vue';
 
 /**
  * Minimal duck-typed shape of the Parking slice of `useSpotPanelStore`
@@ -56,6 +58,27 @@ export interface SpotPanelCommentsState {
   loadComments(spotId: string, authInfo: { userId: string; isAdmin: boolean; isTrailcrew: boolean }): Promise<void>;
 }
 
+/**
+ * Minimal duck-typed shape of the Tours+Trails+Elevation slice of
+ * `useSpotPanelStore` (src/stores/spotPanel.ts), injected the same way as
+ * SpotPanelParkingState/SpotPanelCommentsState above (Phase 3 of the
+ * migration spec). `data` and `selectedItemId`/`selectedItemKind` are read
+ * by this class to drive the Leaflet-side polyline restyling and
+ * tour-segment layers (selectTrail()/selectTour()/clearTourLayers() below —
+ * unchanged Leaflet logic, only its trigger moved to the watchers set up in
+ * the constructor). The Tours/Trails tab rendering itself and the elevation
+ * panel's content read/write the real store directly from
+ * SpotPanelToursTab.vue/SpotPanelTrailsTab.vue/SpotPanelElevation.vue (they're
+ * under src/components/, so map-no-stores doesn't apply to them) — this
+ * class only mounts those islands and reacts to selection changes.
+ */
+export interface SpotPanelToursTrailsState {
+  data: SpotMtbData | null;
+  selectedItemId: string | null;
+  selectedItemKind: 'tour' | 'trail' | null;
+  loadSpotData(spotId: string): Promise<void>;
+}
+
 // ── SpotPanel ────────────────────────────────────────────────────────────────
 
 export class SpotPanel {
@@ -65,7 +88,6 @@ export class SpotPanel {
   private polylineMap = new Map<string, L.Polyline>(); // trailId → polyline
   private hoverMarker: L.CircleMarker | null = null;
   private activeId: string | null = null;
-  private data: SpotMtbData | null = null;
   private currentItem: Trail | null = null;
   private infoLoaded = false;
   private onClose: () => void;
@@ -85,17 +107,49 @@ export class SpotPanel {
   // the mounted Vue app instance — no props to sync.
   private commentsApp: App | null = null;
 
+  // Tours/Trails tabs + Elevation panel — Vue islands (see
+  // SpotPanelToursTab.vue/SpotPanelTrailsTab.vue/SpotPanelElevation.vue).
+  // Same "reads useSpotPanelStore() directly, no props to sync" shape as
+  // Comments — Elevation only takes the Leaflet-bound hover/close callbacks
+  // as static props (bound once at mount, see renderElevation() below).
+  private toursApp: App | null = null;
+  private trailsApp: App | null = null;
+  private elevationApp: App | null = null;
+
   constructor(
     private readonly map: L.Map,
     auth: Auth,
     onClose: () => void,
     private readonly parkingStore: SpotPanelParkingState,
     private readonly commentsStore: SpotPanelCommentsState,
+    private readonly toursTrailsStore: SpotPanelToursTrailsState,
   ) {
     this.auth = auth;
     this.onClose = onClose;
     this.overlayLayer = L.layerGroup().addTo(map);
     this.buildDOM();
+
+    // Reacts to GPX data arriving for the currently open spot — draws the
+    // individual trail polylines. Direct port of the tail end of the
+    // vanilla loadSpotData(), just re-triggered off the store instead of
+    // running inline after the fetch (see the migration spec's Phase 3
+    // notes on the useTrailMap.ts watch() pattern, applied here since
+    // src/map/ can't import stores directly — map-no-stores).
+    watch(() => this.toursTrailsStore.data, (data) => {
+      if (!data) return;
+      this.renderLists();
+      drawTrailPolylines(data, this.overlayLayer, this.polylineMap);
+    });
+
+    // Reacts to a tour/trail row being selected (in SpotPanelToursTab.vue /
+    // SpotPanelTrailsTab.vue) — same selectItem() logic the old click
+    // handler called directly, now triggered by the store changing instead.
+    watch(
+      () => [this.toursTrailsStore.selectedItemId, this.toursTrailsStore.selectedItemKind] as const,
+      ([id, kind]) => {
+        if (id && kind) this.selectItem(id, kind);
+      },
+    );
   }
 
   // ── Public API ─────────────────────────────────────────────────────────────
@@ -144,25 +198,17 @@ export class SpotPanel {
     this.closeElevation();
     this.panel.classList.add('open');
     this.renderParking();
+    this.renderElevation();
     this.updateTabsVisibility();
     this.activateTab(initialTab);
 
     if (item.type === 'trail') {
-      this.loadSpotData(item.id);
+      // Fire-and-forget, same as before — the store's loadSpotData() sets
+      // toursTrailsStore.data when it resolves, which the constructor's
+      // watch() picks up to render the lists and draw the polylines.
+      this.toursTrailsStore.loadSpotData(item.id);
     }
     this.loadParking(item.id);
-  }
-
-  private async loadSpotData(spotId: string) {
-    try {
-      this.data = await getSpotGpxData(spotId);
-    } catch (err) {
-      console.warn('Failed to fetch spot GPX data:', err);
-    }
-
-    if (!this.data) return;
-    this.renderLists();
-    drawTrailPolylines(this.data, this.overlayLayer, this.polylineMap);
   }
 
   private async loadParking(spotId: string) {
@@ -249,7 +295,7 @@ export class SpotPanel {
     this.clearTourLayers();
     this.polylineMap.clear();
     this.activeId = null;
-    this.data = null;
+    this.toursTrailsStore.data = null;
     this.currentItem = null;
     this.parkingStore.currentItem = null;
     this.parkingStore.isOpen = false;
@@ -261,14 +307,20 @@ export class SpotPanel {
     this.commentsStore.commentsExpanded = false;
     this.commentsStore.commentsHasMore = false;
     this.commentsStore.commentsLoaded = false;
-    // Tear down the parking/comments islands rather than leaving them
-    // mounted (and subscribed to reactivity) for a panel that's now hidden —
-    // they're re-mounted lazily by the next renderParking()/renderComments()
-    // call.
+    // Tear down the parking/comments/tours/trails/elevation islands rather
+    // than leaving them mounted (and subscribed to reactivity) for a panel
+    // that's now hidden — they're re-mounted lazily by the next
+    // renderParking()/renderComments()/renderLists()/renderElevation() call.
     this.parkingApp?.unmount();
     this.parkingApp = null;
     this.commentsApp?.unmount();
     this.commentsApp = null;
+    this.toursApp?.unmount();
+    this.toursApp = null;
+    this.trailsApp?.unmount();
+    this.trailsApp = null;
+    this.elevationApp?.unmount();
+    this.elevationApp = null;
     this.closeElevation();
     this.onClose();
   }
@@ -316,16 +368,7 @@ export class SpotPanel {
         <div class="spot-tab-content hidden" id="spot-parking-tab"></div>
       </div>
       <div class="spot-elevation-panel hidden">
-        <div class="spot-elevation-header">
-          <span class="spot-elevation-name"></span>
-          <div class="spot-elevation-actions">
-            <a class="spot-elevation-download hidden" download aria-label="GPX herunterladen"><i class="fas fa-download"></i></a>
-            <button class="spot-elevation-close" aria-label="Höhenprofil schließen">✕</button>
-          </div>
-        </div>
-        <div class="spot-elevation-chart"></div>
-        <div class="spot-elevation-stats"></div>
-        <div class="spot-elevation-status"></div>
+        <div id="spot-elevation-content"></div>
       </div>
     `;
 
@@ -338,8 +381,9 @@ export class SpotPanel {
 
     this.panel.querySelector('.spot-panel-close')!
       .addEventListener('click', () => this.close());
-    this.panel.querySelector('.spot-elevation-close')!
-      .addEventListener('click', () => this.closeElevation());
+    // .spot-elevation-close now lives inside the SpotPanelElevation.vue
+    // island (see renderElevation() below) — it calls closeElevation() via
+    // its onClose prop instead of a raw DOM listener bound here.
     this.panel.querySelector('.spot-like-btn')!
       .addEventListener('click', () => this.handleLike());
     this.panel.querySelector('.spot-share-btn')!
@@ -478,37 +522,85 @@ export class SpotPanel {
     window.setTimeout(() => toast!.classList.remove('show'), 2200);
   }
 
+  /**
+   * Mounts the Tours/Trails tabs' Vue islands on first use — never remounts
+   * (same "mount once, reads the store reactively" shape as renderParking()).
+   * Row click handling now lives inside SpotPanelToursTab.vue/
+   * SpotPanelTrailsTab.vue themselves (they write straight to the store);
+   * this replaces the old innerHTML write + bindItemClicks() DOM wiring.
+   */
   private renderLists() {
-    if (!this.data) return;
-    this.panel.querySelector('#spot-tours-tab')!.innerHTML = toursHTML(this.data.tours);
-    this.panel.querySelector('#spot-trails-tab')!.innerHTML = trailsHTML(this.data.trails);
-    this.bindItemClicks();
+    if (!this.toursApp) {
+      const toursContainer = this.panel.querySelector('#spot-tours-tab') as HTMLElement | null;
+      if (toursContainer) {
+        this.toursApp = createApp(() => h(SpotPanelToursTab));
+        this.toursApp.mount(toursContainer);
+      }
+    }
+    if (!this.trailsApp) {
+      const trailsContainer = this.panel.querySelector('#spot-trails-tab') as HTMLElement | null;
+      if (trailsContainer) {
+        this.trailsApp = createApp(() => h(SpotPanelTrailsTab));
+        this.trailsApp.mount(trailsContainer);
+      }
+    }
   }
 
-  private bindItemClicks() {
-    // Parking rows share the .spot-item class for consistent styling but are
-    // not selectable the way tours/trails are (no elevation profile) — they
-    // are excluded here and rendered/highlighted separately by renderParking().
-    this.panel.querySelectorAll('.spot-item:not(.parking-item)').forEach(el => {
-      el.addEventListener('click', () => {
-        const id   = (el as HTMLElement).dataset.id!;
-        const kind = (el as HTMLElement).dataset.kind as 'tour' | 'trail';
-        this.selectItem(id, kind);
-        this.panel.querySelectorAll('.spot-item:not(.parking-item)').forEach(i => i.classList.remove('active'));
-        el.classList.add('active');
-      });
-    });
+  /**
+   * Mounts the Elevation panel's Vue island on first use. Unlike Parking's
+   * reactive props, the only things crossing the src/map/ → Vue boundary here
+   * are the Leaflet-bound hover/close callbacks (bound once, at mount) — the
+   * selected item itself is read reactively from the store inside
+   * SpotPanelElevation.vue. See the migration spec's Phase 3 notes on why
+   * the hover bridge stays a callback prop rather than store state.
+   */
+  private renderElevation() {
+    if (this.elevationApp) return;
+    const container = this.panel.querySelector('#spot-elevation-content') as HTMLElement | null;
+    if (!container) return;
+    this.elevationApp = createApp(() => h(SpotPanelElevation, {
+      onHover: this.handleElevationHover.bind(this),
+      onHoverEnd: this.handleElevationHoverEnd.bind(this),
+      onClose: () => this.closeElevation(),
+    }));
+    this.elevationApp.mount(container);
+  }
+
+  private handleElevationHover(latlng: [number, number], color: string) {
+    if (!this.hoverMarker) {
+      this.hoverMarker = L.circleMarker(latlng, {
+        radius: 7, color, weight: 2.5,
+        fillColor: '#fff', fillOpacity: 1,
+        interactive: false,
+      }).addTo(this.overlayLayer);
+    } else {
+      this.hoverMarker.setLatLng(latlng);
+      this.hoverMarker.setStyle({ color });
+    }
+  }
+
+  private handleElevationHoverEnd() {
+    this.removeHoverMarker();
   }
 
   // ── Item selection ─────────────────────────────────────────────────────────
 
+  /**
+   * Triggered by the constructor's watch() on
+   * toursTrailsStore.selectedItemId/selectedItemKind (set by
+   * SpotPanelToursTab.vue/SpotPanelTrailsTab.vue on row click) — used to run
+   * directly off a DOM click listener (see bindItemClicks(), now removed).
+   * Body unchanged from before the migration: still reads the tours/trails
+   * list from the injected store instead of a local field.
+   */
   private selectItem(id: string, kind: 'tour' | 'trail') {
-    if (!this.data) return;
+    const data = this.toursTrailsStore.data;
+    if (!data) return;
     if (kind === 'tour') {
-      const tour = this.data.tours.find(t => t.id === id);
+      const tour = data.tours.find(t => t.id === id);
       if (tour) this.selectTour(tour);
     } else {
-      const trail = this.data.trails.find(t => t.id === id);
+      const trail = data.trails.find(t => t.id === id);
       if (trail) this.selectTrail(trail);
     }
     this.activeId = id;
@@ -525,7 +617,7 @@ export class SpotPanel {
     });
     const pl = this.polylineMap.get(trail.id);
     if (pl) this.map.fitBounds(pl.getBounds(), { padding: [60, 60], maxZoom: 15, animate: true });
-    this.showElevation(trail, trail.elevationProfile);
+    this.showElevation();
   }
 
   private clearTourLayers() {
@@ -571,61 +663,21 @@ export class SpotPanel {
     if (fullRoute.length)
       this.map.fitBounds(L.latLngBounds(fullRoute), { padding: [50, 50], maxZoom: 14, animate: true });
 
-    this.showElevation(tour, tour.elevationProfile,
-      tour.hasFullGpx ? undefined : tour.segments);
+    this.showElevation();
   }
 
   // ── Elevation profile ──────────────────────────────────────────────────────
+  // Rendering (name/chart/stats/status/GPX link) and the hover-bind-on-DOM-
+  // update dance now live in SpotPanelElevation.vue, which reads the
+  // selected item reactively straight off the store — the same
+  // selectedItemId/selectedItemKind this class just set via selectItem()
+  // above. showElevation()/closeElevation() are left owning only the
+  // Leaflet-adjacent bits that don't belong in a Vue component: the hover
+  // marker lifecycle and the panel's hidden/visible toggle.
 
-  private showElevation(item: AnyItem, profile: ElevationPoint[], segments?: TourSegment[]) {
+  private showElevation() {
     this.removeHoverMarker();
-    const panel = this.panel.querySelector('.spot-elevation-panel')!;
-    panel.querySelector('.spot-elevation-name')!.textContent = item.name;
-    panel.querySelector('.spot-elevation-chart')!.innerHTML  = elevationSVG(profile, item, segments);
-    panel.querySelector('.spot-elevation-stats')!.innerHTML  =
-      `<span>📍 ${item.distance_km} km</span>` +
-      `<span>↑ ${item.elevation_gain} m</span>` +
-      `<span>↓ ${item.elevation_loss} m</span>` +
-      `<span>${DIR_LABEL[item.direction]}</span>`;
-
-    // Trail status card — see trailStatusCardFor() in spotPanelHtml.ts.
-    const statusEl = panel.querySelector('.spot-elevation-status') as HTMLElement;
-    statusEl.innerHTML = '';
-    if (this.currentItem) {
-      const card = trailStatusCardFor(item, this.currentItem.name);
-      if (card) statusEl.appendChild(card);
-    }
-
-    // GPX download link
-    const dlLink = panel.querySelector('.spot-elevation-download') as HTMLAnchorElement;
-    if (item.gpx_url) {
-      dlLink.href = item.gpx_url;
-      dlLink.download = `${item.name}.gpx`;
-      dlLink.classList.remove('hidden');
-    } else {
-      dlLink.classList.add('hidden');
-    }
-
-    panel.classList.remove('hidden');
-    requestAnimationFrame(() => {
-      const svgEl = this.panel.querySelector('.spot-elevation-chart svg') as SVGSVGElement | null;
-      if (!svgEl) return;
-      bindElevationHover(svgEl, item,
-        (latlng, color) => {
-          if (!this.hoverMarker) {
-            this.hoverMarker = L.circleMarker(latlng, {
-              radius: 7, color, weight: 2.5,
-              fillColor: '#fff', fillOpacity: 1,
-              interactive: false,
-            }).addTo(this.overlayLayer);
-          } else {
-            this.hoverMarker.setLatLng(latlng);
-            this.hoverMarker.setStyle({ color });
-          }
-        },
-        () => this.removeHoverMarker(),
-      );
-    });
+    this.panel.querySelector('.spot-elevation-panel')!.classList.remove('hidden');
   }
 
   private closeElevation() {
@@ -637,7 +689,14 @@ export class SpotPanel {
       this.polylineMap.forEach(pl => pl.setStyle({ weight: 3, opacity: 0.65 }));
       this.activeId = null;
     }
-    this.panel.querySelectorAll('.spot-item').forEach(i => i.classList.remove('active'));
+    // Clears the selection reactively — SpotPanelToursTab.vue/
+    // SpotPanelTrailsTab.vue's `active` row class and SpotPanelElevation.vue's
+    // content both derive from these, so this replaces the old raw
+    // `.spot-item` classList.remove('active') DOM sweep (which predates the
+    // Tours/Trails tabs being Vue-rendered and would now just fight the
+    // framework's own re-render instead of reliably clearing anything).
+    this.toursTrailsStore.selectedItemId = null;
+    this.toursTrailsStore.selectedItemKind = null;
   }
 
   private removeHoverMarker() {

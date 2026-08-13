@@ -1,5 +1,5 @@
 import type { Trail } from '~/types/Trail'
-import { fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
+import { fetchMultipleSpotParking, getSpotGpxData, type SpotParkingLot } from '~/communication/trails'
 import {
   getComments,
   getOlderComments,
@@ -9,6 +9,7 @@ import {
 } from '~/communication/comments'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
+import type { SpotMtbData } from '~/types/MtbTypes'
 
 // Comment counts at or below this stay expanded by default — ported as-is
 // from spotPanel.ts's AUTO_EXPAND_MAX_COMMENTS (see loadComments() below).
@@ -32,8 +33,9 @@ export interface CommentsAuthInfo {
 
 // Phase 1 of the spotPanel.ts → Vue/Pinia migration (see
 // docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md)
-// added the Parking slice; Phase 2 adds Comments below. Tabs/tours/trails/
-// elevation are added in later phases, not stubbed out ahead of time.
+// added the Parking slice; Phase 2 added Comments; Phase 3 adds the
+// Tours+Trails+Elevation slice below (data/selection — the elevation panel
+// itself has no state of its own, it's fully derived from this slice).
 export const useSpotPanelStore = defineStore('spotPanel', () => {
   const currentItem = ref<Trail | null>(null)
   const isOpen = ref(false)
@@ -120,6 +122,36 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     commentsExpanded.value = !commentsExpanded.value
   }
 
+  // ── Tours + Trails + Elevation (Phase 3) ────────────────────────────────
+  // `data` is the spot's tours+trails list (GPX-derived); `selectedItemId`/
+  // `selectedItemKind` is which row is currently selected (drives both the
+  // elevation panel and, via a watcher in spotPanel.ts, the Leaflet polyline
+  // restyling / tour-segment layers — that Leaflet-touching logic stays in
+  // spotPanel.ts unchanged, only its trigger moved here). Direct port of the
+  // vanilla class's private `data`/`activeId` fields and `loadSpotData()`.
+  const data = ref<SpotMtbData | null>(null)
+  const selectedItemId = ref<string | null>(null)
+  const selectedItemKind = ref<'tour' | 'trail' | null>(null)
+
+  /**
+   * Direct port of the vanilla class's private loadSpotData() — same call
+   * into getSpotGpxData, no staleness guard against the panel moving to a
+   * different spot mid-fetch (the original didn't have one either; this
+   * migration doesn't add new behavior, just relocates it).
+   */
+  async function loadSpotData(spotId: string) {
+    try {
+      data.value = await getSpotGpxData(spotId)
+    } catch (err) {
+      console.warn('Failed to fetch spot GPX data:', err)
+    }
+  }
+
+  function selectItem(id: string, kind: 'tour' | 'trail') {
+    selectedItemId.value = id
+    selectedItemKind.value = kind
+  }
+
   return {
     currentItem,
     isOpen,
@@ -138,5 +170,10 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     postComment,
     deleteComment,
     toggleCommentsExpanded,
+    data,
+    selectedItemId,
+    selectedItemKind,
+    loadSpotData,
+    selectItem,
   }
 })
