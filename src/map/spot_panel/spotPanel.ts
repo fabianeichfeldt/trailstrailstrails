@@ -4,26 +4,21 @@ import '@fortawesome/fontawesome-free/css/all.css';
 import { MtbTour, MtbTrail, SpotMtbData } from '../../types/MtbTypes';
 import { Trail } from '../../types/Trail';
 import { Auth } from '../../auth/auth';
-import { getTrailDetails, likeTrail, dislikeTrail, type SpotParkingLot } from '../../communication/trails';
+import { likeTrail, dislikeTrail, type SpotParkingLot } from '../../communication/trails';
 import { share } from '../../communication/share';
 import { copyToClipboard } from '../../utils/clipboard';
 import { shareTrail } from './spotPanelShare';
-import { TrailDetails } from '../../types/TrailDetails';
 import { Comment } from '../../types/Comment';
-import { renderTrailDetails } from '../detail_popup/detailsPopup';
-import { bindPopupEvents, startPhotoCarousel } from '../detail_popup/logic';
-import { setupYT2Click } from '../detail_popup/yt';
-import { bindPhotoLightbox } from '../lightbox';
 import { IMBA } from './elevationSvg';
 import { initDragHandle } from './dragHandle';
 import { drawTrailPolylines, addSegmentLabel } from './spotPanelPolylines';
 import SpotPanelParkingTab from '../../components/map/SpotPanelParkingTab.vue';
-import SpotPanelComments from '../../components/map/SpotPanelComments.vue';
 import SpotPanelToursTab from '../../components/map/SpotPanelToursTab.vue';
 import SpotPanelTrailsTab from '../../components/map/SpotPanelTrailsTab.vue';
 import SpotPanelElevation from '../../components/map/SpotPanelElevation.vue';
 import SpotPanelHeader from '../../components/map/SpotPanelHeader.vue';
 import SpotPanelTabs from '../../components/map/SpotPanelTabs.vue';
+import SpotPanelInfoTab from '../../components/map/SpotPanelInfoTab.vue';
 
 /**
  * Minimal duck-typed shape of the Parking slice of `useSpotPanelStore`
@@ -49,8 +44,12 @@ export interface SpotPanelParkingState {
  * *interaction handling* (post/delete/reply/toggle/load-more) live entirely
  * in SpotPanelComments.vue now, which reads/writes the real store directly
  * (it's under src/components/, not src/map/, so map-no-stores doesn't apply
- * to it) — this class only needs enough to decide whether a fetch is
- * necessary before mounting the island.
+ * to it). As of Phase 5a, *deciding when to fetch* also moved out of this
+ * class — SpotPanelInfoTab.vue now owns that (see its setupComments()) since
+ * it's the one mounting the Comments island into the freshly-rendered
+ * #spot-comments-section placeholder. This interface only remains because
+ * openInternal()/close() below still reset the comment fields when the panel
+ * moves to a different spot.
  */
 export interface SpotPanelCommentsState {
   comments: Comment[];
@@ -85,14 +84,18 @@ export interface SpotPanelToursTrailsState {
  * Minimal duck-typed shape of the Header+Tabs slice of `useSpotPanelStore`
  * (src/stores/spotPanel.ts), injected the same way as the other slices above
  * (Phase 4 of the migration spec). `isLiked`/`likeVisible` back the like
- * button — SpotPanelHeader.vue reads them reactively; this class still owns
- * *writing* them (updateLikeButton()/handleLike() below), since populating
- * them stays coupled to loadInfo()'s getTrailDetails() fetch, same as
- * before the migration (see the migration spec's "important wrinkle" note).
+ * button — SpotPanelHeader.vue reads them reactively. As of Phase 5a,
+ * *writing* isLiked/likeVisible moved to SpotPanelInfoTab.vue's
+ * updateLikeButton() (it owns the getTrailDetails() fetch they're coupled
+ * to now) — this class only still owns handleLike() (the click action: auth
+ * check + like/dislike API calls), kept as a bound-instance-method prop on
+ * SpotPanelHeader.vue same as before.
  * `activeTab` is written by SpotPanelTabs.vue on click and by this class's
  * activateTab() on open; this class watches it (constructor) to run the
- * pane-toggling/closeElevation()/loadInfo() side effects that used to live
- * directly in the old activateTab().
+ * pane-toggling/closeElevation() side effects that used to live directly in
+ * the old activateTab() (loadInfo() is gone from this list as of Phase 5a —
+ * SpotPanelInfoTab.vue fetches eagerly off store.currentItem itself, not
+ * gated on tab activation anymore).
  */
 export interface SpotPanelHeaderTabsState {
   isLiked: boolean;
@@ -110,7 +113,6 @@ export class SpotPanel {
   private hoverMarker: L.CircleMarker | null = null;
   private activeId: string | null = null;
   private currentItem: Trail | null = null;
-  private infoLoaded = false;
   private onClose: () => void;
   private auth: Auth;
 
@@ -123,10 +125,13 @@ export class SpotPanel {
     highlightId: undefined,
   });
 
-  // Comments tab — Vue island (see SpotPanelComments.vue). Unlike Parking,
-  // the component reads useSpotPanelStore() itself, so this class only owns
-  // the mounted Vue app instance — no props to sync.
-  private commentsApp: App | null = null;
+  // Info tab — Vue island (see SpotPanelInfoTab.vue). As of Phase 5a it owns
+  // its own fetch (eager, off store.currentItem) and mounts the Comments
+  // island itself into the #spot-comments-section placeholder embedded in
+  // its rendered HTML — this class only mounts/unmounts the outer island,
+  // same "reads useSpotPanelStore() directly, no props to sync" shape as
+  // every other tab below.
+  private infoApp: App | null = null;
 
   // Tours/Trails tabs + Elevation panel — Vue islands (see
   // SpotPanelToursTab.vue/SpotPanelTrailsTab.vue/SpotPanelElevation.vue).
@@ -217,7 +222,6 @@ export class SpotPanel {
     this.currentItem = item;
     this.parkingStore.currentItem = item;
     this.parkingStore.isOpen = true;
-    this.infoLoaded = false;
     this.activeId = null;
     this.parkingStore.parkingLots = [];
     this.parkingStore.parkingTabForceVisible = initialTab === 'parking';
@@ -229,15 +233,17 @@ export class SpotPanel {
     // Title/org-link/share-visibility are read reactively by
     // SpotPanelHeader.vue straight off parkingStore.currentItem (just set
     // above) — no separate DOM writes needed here anymore. The like button
-    // stays hidden until updateLikeButton() (called from loadInfo()) reveals
-    // it — same coupling as before the migration, see this class's
-    // SpotPanelHeaderTabsState doc comment.
+    // stays hidden until SpotPanelInfoTab.vue's updateLikeButton() (fired by
+    // its own eager fetch off store.currentItem) reveals it — same coupling
+    // as before the migration, see this class's SpotPanelHeaderTabsState
+    // doc comment.
     this.headerTabsStore.isLiked = false;
     this.headerTabsStore.likeVisible = false;
     this.closeElevation();
     this.panel.classList.add('open');
     this.renderHeader();
     this.renderTabs();
+    this.renderInfo();
     this.renderParking();
     this.renderElevation();
     this.activateTab(initialTab);
@@ -283,52 +289,27 @@ export class SpotPanel {
     this.parkingApp.mount(container);
   }
 
-  // ── Comments ─────────────────────────────────────────────────────────────
-  // Comments aren't part of TrailDetails (unlike photos, which the trail-details
-  // edge function embeds server-side) — they're fetched separately, same
-  // pattern as loadParking()/renderParking() above. Rendering + interaction
-  // (post/delete/reply/toggle/load-more) live in SpotPanelComments.vue now
-  // (Phase 2 of the migration spec) — this class only mounts/unmounts the
-  // island and decides whether a fetch is needed before doing so.
-
-  /** Called every time the popup's info-tab HTML is (re)rendered — after an
-   * upload refresh, `#spot-comments-section` is a fresh DOM node that needs
-   * its own island mount; the comments data itself doesn't need refetching
-   * if it's already loaded for this spot. */
-  private setupComments(spotId: string) {
-    this.renderComments();
-    if (!this.commentsStore.commentsLoaded) {
-      this.loadComments(spotId);
-    }
-  }
-
-  private async loadComments(spotId: string) {
-    const user = await this.auth.authService.getUser();
-    // The panel may have moved on to a different spot while getUser() was
-    // pending — same guard the store itself applies around its fetch.
-    if (this.currentItem?.id !== spotId) return;
-    await this.commentsStore.loadComments(spotId, {
-      userId: user.id,
-      isAdmin: !!user.isAdmin,
-      isTrailcrew: !!user.isTrailcrew,
-    });
-  }
+  // ── Info tab ─────────────────────────────────────────────────────────────
+  // Detail fetch/render (getTrailDetails() → renderTrailDetails() →
+  // bindPopupEvents() → photo carousel/lightbox/YT setup), the like button's
+  // isLiked/likeVisible, and the Comments section (mounted into the
+  // #spot-comments-section placeholder embedded in the rendered HTML) all
+  // live in SpotPanelInfoTab.vue now (Phase 5a of the migration spec) — this
+  // class only mounts the outer island once, same "mount once, reads the
+  // store reactively" shape as renderParking()/renderLists().
 
   /**
-   * Mounts the Comments island fresh on every call rather than mutating
-   * props in place (contrast with renderParking()): the container is a
-   * brand-new DOM node each time setupComments() runs (see its doc comment
-   * above), so any previously mounted app instance is already orphaned —
-   * unmounting it here just releases its reactivity subscriptions instead
-   * of leaking them. The new instance reads useSpotPanelStore() directly,
-   * so no props need to be passed or synced.
+   * Mounts the Info tab's Vue island on first use — never remounts.
+   * SpotPanelInfoTab.vue fetches eagerly off store.currentItem itself (see
+   * its doc comment), so no explicit trigger is needed here beyond mounting
+   * it once the container exists.
    */
-  private renderComments() {
-    const container = this.panel.querySelector('#spot-comments-section') as HTMLElement | null;
+  private renderInfo() {
+    if (this.infoApp) return;
+    const container = this.panel.querySelector('#spot-info-tab') as HTMLElement | null;
     if (!container) return;
-    this.commentsApp?.unmount();
-    this.commentsApp = createApp(() => h(SpotPanelComments));
-    this.commentsApp.mount(container);
+    this.infoApp = createApp(() => h(SpotPanelInfoTab));
+    this.infoApp.mount(container);
   }
 
   public close() {
@@ -341,7 +322,6 @@ export class SpotPanel {
     this.currentItem = null;
     this.parkingStore.currentItem = null;
     this.parkingStore.isOpen = false;
-    this.infoLoaded = false;
     this.parkingStore.parkingLots = [];
     this.parkingStore.highlightedParkingLotId = null;
     this.parkingStore.parkingTabForceVisible = false;
@@ -357,19 +337,19 @@ export class SpotPanel {
     // activateTab() being a plain, unconditional method call. Resetting it
     // here would just trigger the constructor's activeTab watch() an extra
     // time for no observable benefit.
-    // Tear down the header/tabs/parking/comments/tours/trails/elevation
-    // islands rather than leaving them mounted (and subscribed to
-    // reactivity) for a panel that's now hidden — they're re-mounted lazily
-    // by the next renderHeader()/renderTabs()/renderParking()/
-    // renderComments()/renderLists()/renderElevation() call.
+    // Tear down the header/tabs/info/parking/tours/trails/elevation islands
+    // rather than leaving them mounted (and subscribed to reactivity) for a
+    // panel that's now hidden — they're re-mounted lazily by the next
+    // renderHeader()/renderTabs()/renderInfo()/renderParking()/
+    // renderLists()/renderElevation() call.
     this.headerApp?.unmount();
     this.headerApp = null;
     this.tabsApp?.unmount();
     this.tabsApp = null;
+    this.infoApp?.unmount();
+    this.infoApp = null;
     this.parkingApp?.unmount();
     this.parkingApp = null;
-    this.commentsApp?.unmount();
-    this.commentsApp = null;
     this.toursApp?.unmount();
     this.toursApp = null;
     this.trailsApp?.unmount();
@@ -392,9 +372,7 @@ export class SpotPanel {
       <div class="spot-panel-header" id="spot-panel-header"></div>
       <div class="spot-panel-tabs" id="spot-panel-tabs"></div>
       <div class="spot-panel-body">
-        <div class="spot-tab-content" id="spot-info-tab">
-          <div class="spot-info-loading"><p>Lade Details …</p></div>
-        </div>
+        <div class="spot-tab-content" id="spot-info-tab"></div>
         <div class="spot-tab-content hidden" id="spot-tours-tab"></div>
         <div class="spot-tab-content hidden" id="spot-trails-tab"></div>
         <div class="spot-tab-content hidden" id="spot-parking-tab"></div>
@@ -426,15 +404,14 @@ export class SpotPanel {
 
   /**
    * Sets the active tab and immediately, synchronously applies its side
-   * effects (pane visibility, closing the elevation panel, triggering
-   * loadInfo() on first visit to 'info'). Called directly by openInternal()
-   * for the tab a spot opens on — NOT left to the constructor's activeTab
-   * watch() alone, since Vue's watch() only fires on an actual value change,
-   * and the initial tab is frequently the same value ('info') across two
-   * different opens, which must still re-run these side effects (e.g.
-   * infoLoaded was just reset to false). suppressNextTabWatch stops that
-   * same watch() from re-running applyTab() a second time for this write
-   * when the value *did* change.
+   * effects (pane visibility, closing the elevation panel). Called directly
+   * by openInternal() for the tab a spot opens on — NOT left to the
+   * constructor's activeTab watch() alone, since Vue's watch() only fires on
+   * an actual value change, and the initial tab is frequently the same
+   * value ('info') across two different opens, which must still re-run
+   * these side effects. suppressNextTabWatch stops that same watch() from
+   * re-running applyTab() a second time for this write when the value *did*
+   * change.
    *
    * Highlighting which tab BUTTON is active is no longer this method's
    * concern — SpotPanelTabs.vue derives that reactively from
@@ -454,15 +431,17 @@ export class SpotPanel {
   }
 
   /**
-   * Pane-toggling/elevation-close/info-load side effects for `tab` becoming
-   * active. Triggered either directly by activateTab() (panel open) or by
-   * the constructor's activeTab watch() (SpotPanelTabs.vue button click).
+   * Pane-toggling/elevation-close side effects for `tab` becoming active.
+   * Triggered either directly by activateTab() (panel open) or by the
+   * constructor's activeTab watch() (SpotPanelTabs.vue button click).
+   * Info-tab loading is no longer gated on tab activation — as of Phase 5a,
+   * SpotPanelInfoTab.vue fetches eagerly off store.currentItem itself (see
+   * its doc comment).
    */
   private applyTab(tab: 'tours' | 'trails' | 'info' | 'parking') {
     this.panel.querySelectorAll('.spot-tab-content').forEach(c => c.classList.add('hidden'));
     this.panel.querySelector(`#spot-${tab}-tab`)!.classList.remove('hidden');
     this.closeElevation();
-    if (tab === 'info' && !this.infoLoaded) this.loadInfo();
   }
 
   /**
@@ -496,53 +475,13 @@ export class SpotPanel {
     this.tabsApp.mount(container);
   }
 
-  private async loadInfo() {
-    if (!this.currentItem) return;
-    const item = this.currentItem;
-    const container = this.panel.querySelector('#spot-info-tab')!;
-
-    // Show loading spinner
-    container.innerHTML = `
-      <div class="spot-info-loading">
-        <div class="loading-spinner"></div>
-        <p>Lade Details …</p>
-      </div>
-    `;
-
-    try {
-      const details = await getTrailDetails(item);
-      await this.updateLikeButton(details);
-      const html = renderTrailDetails(item, details, this.auth);
-      container.innerHTML = `<div class="spot-info-content">${html}</div>`;
-      const content = container.querySelector('.spot-info-content') as HTMLElement;
-      await bindPopupEvents(content, this.auth, async () => {
-        const freshDetails = await getTrailDetails(item);
-        content.innerHTML = renderTrailDetails(item, freshDetails, this.auth);
-        startPhotoCarousel(content);
-        bindPhotoLightbox(content);
-        setupYT2Click(content);
-        this.setupComments(item.id);
-      });
-      startPhotoCarousel(content);
-      bindPhotoLightbox(content);
-      setupYT2Click(content);
-      this.setupComments(item.id);
-      this.infoLoaded = true;
-    } catch (e) {
-      console.error('Failed to fetch trail details:', e);
-      container.innerHTML = '<p class="spot-info-error">⚠️ Details derzeit nicht verfügbar.</p>';
-    }
-  }
-
-  private async updateLikeButton(details: TrailDetails) {
-    try {
-      const user = await this.auth.authService.getUser();
-      this.headerTabsStore.isLiked = user != null && !!details.likes?.find(l => l.user_id === user.id);
-    } catch {
-      this.headerTabsStore.isLiked = false;
-    }
-    this.headerTabsStore.likeVisible = true;
-  }
+  // loadInfo()/updateLikeButton() were removed here — superseded by
+  // SpotPanelInfoTab.vue (src/components/map/SpotPanelInfoTab.vue), which
+  // fetches eagerly off store.currentItem and populates isLiked/likeVisible
+  // itself, as part of Phase 5a of the spot-panel Vue migration (see
+  // docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
+  // handleLike() below still owns the click *action* (auth check + the
+  // like/dislike API calls) — only the fetch-driven state population moved.
 
   private async handleLike() {
     if (!this.currentItem) return;
