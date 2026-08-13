@@ -2,17 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 // Mocked at the module boundary — never hit a real Supabase URL in tests
-// (CLAUDE.md's test mandate). fetchMultipleSpotParking is the only
-// communication/trails.ts export this store's Phase-1 action touches.
+// (CLAUDE.md's test mandate).
 vi.mock('~/communication/trails', () => ({
   fetchMultipleSpotParking: vi.fn(),
   getSpotGpxData: vi.fn(),
 }))
 
-// Same rationale for the Phase-2 Comments slice — mocked here rather than
-// mocking ~/stores/auth (which would drag in useSupabaseClient/useSupabaseUser,
-// only real inside a live Nuxt app). The store takes identity as a plain
-// CommentsAuthInfo/IAuthService argument instead of owning an auth source.
+// Mocked rather than mocking ~/stores/auth (which would drag in
+// useSupabaseClient/useSupabaseUser, only real inside a live Nuxt app) — the
+// store takes identity as a plain CommentsAuthInfo/IAuthService argument
+// instead of owning an auth source.
 vi.mock('~/communication/comments', () => ({
   getComments: vi.fn(),
   getOlderComments: vi.fn(),
@@ -52,11 +51,11 @@ describe('useSpotPanelStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.mocked(fetchMultipleSpotParking).mockReset()
-    // openSpot()/openParkingLot() (Phase 5b) fire-and-forget loadParking()
-    // on every open — default to an empty resolved Map so tests that don't
-    // care about the parking fetch itself (e.g. lifecycle state-reset
-    // tests) don't hit the try/catch's console.warn for an unmocked
-    // undefined return value. Tests that DO care override this per-case.
+    // openSpot()/openParkingLot() fire-and-forget loadParking() on every
+    // open — default to an empty resolved Map so tests that don't care
+    // about the parking fetch (e.g. lifecycle state-reset tests) don't hit
+    // the try/catch's console.warn for an unmocked undefined return value.
+    // Tests that DO care override this per-case.
     vi.mocked(fetchMultipleSpotParking).mockResolvedValue(new Map())
     vi.mocked(getSpotGpxData).mockReset()
     vi.mocked(getComments).mockReset()
@@ -159,7 +158,7 @@ describe('useSpotPanelStore', () => {
     warnSpy.mockRestore()
   })
 
-  // ── Comments (Phase 2) ─────────────────────────────────────────────────
+  // ── Comments ─────────────────────────────────────────────────────────
   describe('loadComments', () => {
     it('fetches comments for the given spot and stores identity info from authInfo', async () => {
       const store = useSpotPanelStore()
@@ -338,7 +337,7 @@ describe('useSpotPanelStore', () => {
     })
   })
 
-  // ── Tours + Trails + Elevation (Phase 3) ──────────────────────────────
+  // ── Tours + Trails + Elevation ───────────────────────────────────────
   function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
     return {
       id: 'trail-1', spotId: 's1', name: 'Testtrail', difficulty: 'blue',
@@ -414,7 +413,7 @@ describe('useSpotPanelStore', () => {
     })
   })
 
-  // ── Header + Tabs (Phase 4) ────────────────────────────────────────────
+  // ── Header + Tabs ────────────────────────────────────────────────────
   describe('setActiveTab', () => {
     it('sets activeTab', () => {
       const store = useSpotPanelStore()
@@ -422,10 +421,6 @@ describe('useSpotPanelStore', () => {
       expect(store.activeTab).toBe('parking')
     })
 
-    // Direct port of the vanilla applyTab()'s "switching tabs closes the
-    // elevation panel" behavior (Phase 5b) — caught live by
-    // tests/spot-panel-tours-trails.spec.ts's "switching from the Trails
-    // tab to another tab closes the elevation panel".
     it('clears the tour/trail selection when switching to a different tab', () => {
       const store = useSpotPanelStore()
       store.selectItem('trail-1', 'trail')
@@ -444,7 +439,7 @@ describe('useSpotPanelStore', () => {
     })
   })
 
-  // ── Lifecycle (Phase 5b) ─────────────────────────────────────────────────
+  // ── Lifecycle ────────────────────────────────────────────────────────
   describe('openSpot', () => {
     it('opens the panel on the Info tab and resets per-spot state', () => {
       const store = useSpotPanelStore()
@@ -477,12 +472,8 @@ describe('useSpotPanelStore', () => {
       expect(store.selectedItemKind).toBeNull()
     })
 
-    // Regression coverage: the vanilla class's openInternal() used to fire
-    // loadSpotData()/loadParking() itself after resetting state — once the
-    // class was deleted (Phase 5b), that trigger has to live somewhere, or
-    // Tours/Trails/Parking silently never fetch on open again (caught live
-    // by tests/spot-panel-parking.spec.ts and
-    // tests/spot-panel-tours-trails.spec.ts during manual verification).
+    // Regression coverage: without an explicit trigger here, Tours/Trails/
+    // Parking silently never fetch on open.
     it('fetches parking and GPX data for a trail-type spot', async () => {
       const store = useSpotPanelStore()
       vi.mocked(fetchMultipleSpotParking).mockResolvedValue(new Map([['s2', [{ id: 'p1', name: 'Lot', lat: 1, lng: 1 }]]]))

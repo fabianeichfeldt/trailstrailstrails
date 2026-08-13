@@ -6,12 +6,9 @@ import type { Trail } from '~/types/Trail'
 
 // SpotPanelInfoTab.vue relies on Nuxt's implicit auto-imports for the Pinia
 // stores/composables it reads (useSpotPanelStore/useAuthStore/useMapStore/
-// useSupabaseUser) — same pattern as SpotPanelComments.test.ts. Replaces the
-// innerHTML-driven loadInfo()/updateLikeButton()/setupComments()/
-// loadComments() in spotPanel.ts (Phase 5a of the spot-panel Vue migration).
-// detail_popup/, lightbox.ts stay unchanged per the migration's hard
-// constraint — mocked here purely to isolate this component's own logic
-// (fetch orchestration, like-state population, eager refetch on spot
+// useSupabaseUser) — same pattern as SpotPanelComments.test.ts. detail_popup/
+// and lightbox.ts are mocked here purely to isolate this component's own
+// logic (fetch orchestration, like-state population, eager refetch on spot
 // change), not to test their internals (already covered elsewhere).
 let fakeAuthStore: {
   isLoggedIn: boolean

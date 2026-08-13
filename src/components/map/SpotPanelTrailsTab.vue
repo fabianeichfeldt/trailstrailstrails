@@ -47,18 +47,10 @@ import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { DIR_LABEL } from '~/map/spot_panel/spotPanelHtml'
 import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
 
-// Live island mounted by src/map/spot_panel/spotPanel.ts into #spot-trails-tab
-// (see the migration spec's "island mechanism" and spotPanel.ts's
-// renderLists()). Replaces trailsHTML() from spotPanelHtml.ts (Phase 3 of the
-// spot-panel Vue migration) — same rationale/pattern as SpotPanelToursTab.vue.
 const store = useSpotPanelStore()
 
 const trails = computed<MtbTrail[]>(() => store.data?.trails ?? [])
 
-// `new Date()` evaluated once per render pass here rather than per-row
-// (deriveTrailStatus takes `now` as a pure input) — negligible drift risk
-// for a client-rendered list, matches the precision the vanilla trailsHTML()
-// had (it also computed `new Date()` per trail, but at the same instant).
 function statusOf(t: MtbTrail): TrailStatusResult {
   return deriveTrailStatus({ closed_from: t.closed_from, closed_to: t.closed_to, hint: t.hint }, new Date())
 }

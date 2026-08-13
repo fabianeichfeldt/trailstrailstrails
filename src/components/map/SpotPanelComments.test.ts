@@ -9,10 +9,9 @@ import type { Comment } from '~/types/Comment'
 // Pinia stores it reads (useSpotPanelStore/useAuthStore/useMapStore) — see
 // vitest.setup.ts for ref/watch/onMounted/defineStore stubs. useSpotPanelStore
 // is stubbed with the *real* implementation (plain Pinia, no Supabase
-// dependency — see spotPanel.ts's CommentsAuthInfo doc comment); useAuthStore
-// is a minimal fake since the real store pulls in useSupabaseClient/
-// useSupabaseUser, only available inside a live Nuxt app. Same pattern as
-// ReportErrorModal.test.ts / Drawer.test.ts.
+// dependency); useAuthStore is a minimal fake since the real store pulls in
+// useSupabaseClient/useSupabaseUser, only available inside a live Nuxt app.
+// Same pattern as ReportErrorModal.test.ts / Drawer.test.ts.
 let fakeAuthStore: {
   isLoggedIn: boolean
   userId: string

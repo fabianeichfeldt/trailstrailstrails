@@ -6,10 +6,7 @@ import type { Trail } from '~/types/Trail'
 
 // SpotPanelHeader.vue relies on Nuxt's implicit auto-imports for the Pinia
 // stores it reads (useSpotPanelStore/useAuthStore/useMapStore) — see
-// vitest.setup.ts and SpotPanelComments.test.ts for the same pattern. As of
-// Phase 5b (spotPanel.ts class deleted), this component owns
-// like/share/close directly instead of taking them as bound-instance-method
-// props from that class.
+// vitest.setup.ts and SpotPanelComments.test.ts for the same pattern.
 let fakeAuthStore: {
   isLoggedIn: boolean
   userId: string

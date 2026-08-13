@@ -20,23 +20,11 @@ import { setupYT2Click } from '~/map/detail_popup/yt'
 import { bindPhotoLightbox } from '~/map/lightbox'
 import SpotPanelComments from './SpotPanelComments.vue'
 
-// Live island mounted by src/map/spot_panel/spotPanel.ts into #spot-info-tab
-// (see the migration spec's "island mechanism" and spotPanel.ts's
-// renderInfo()). Replaces the innerHTML-driven loadInfo()/updateLikeButton()/
-// setupComments()/loadComments() (Phase 5a of the spot-panel Vue migration —
-// the last section still doing raw innerHTML writes). detail_popup/,
-// lightbox.ts and confirmDialog.ts (via SpotPanelComments.vue) stay
-// unchanged — only their call site moved here, per the migration's hard
-// constraint.
-//
 // Deliberately eager: fetches as soon as a spot is open (mount / currentItem
-// change), not lazily gated on the user actually clicking the Info tab (the
-// old activateTab()'s `if (tab === 'info' && !infoLoaded) loadInfo()`).
-// Matches the pattern already established by Tours/Trails (Phase 3), which
-// fetch unconditionally on open regardless of the initial tab. The one
-// behavior change: opening straight onto the Parking tab (openParkingLot())
-// now also fires the Info-tab fetch (and therefore the like button/comment
-// count) in the background instead of waiting for a manual tab switch.
+// change), not gated on the user clicking the Info tab — same as
+// Tours/Trails. This means opening straight onto the Parking tab
+// (openParkingLot()) also fires the Info-tab fetch (like button, comment
+// count) in the background, not just on a manual tab switch.
 const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
@@ -49,10 +37,8 @@ const contentEl = ref<HTMLElement | null>(null)
 
 let commentsApp: App | null = null
 
-// Auth adapter bridging Pinia → the legacy `Auth`-shaped interface that
-// detail_popup/logic.ts (bindPopupEvents) and detailsPopup.ts
-// (renderTrailDetails) expect — same shape/rationale as useTrailMap.ts's
-// authAdapter and SpotPanelComments.vue's authServiceAdapter().
+// Bridges Pinia to the `Auth`-shaped interface detail_popup/logic.ts
+// (bindPopupEvents) and detailsPopup.ts (renderTrailDetails) expect.
 const authAdapter = {
   authService: {
     get loggedIn() { return authStore.isLoggedIn },
@@ -106,13 +92,9 @@ async function loadComments(spotId: string) {
   })
 }
 
-/**
- * Mounts (or remounts) the Comments island into the freshly-rendered
- * #spot-comments-section placeholder embedded in detailsHtml — that div is a
- * brand-new DOM node every time detailsHtml changes (initial load or a
- * post-upload refresh), same as the vanilla setupComments()'s doc comment
- * explained, so any previous app instance is already orphaned.
- */
+// #spot-comments-section is a brand-new DOM node every time detailsHtml
+// changes (initial load or a post-upload refresh), so any previously
+// mounted app instance is already orphaned — unmount rather than reuse.
 function setupComments(spotId: string, content: HTMLElement) {
   const container = content.querySelector('#spot-comments-section') as HTMLElement | null
   if (!container) return

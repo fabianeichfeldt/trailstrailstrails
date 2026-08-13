@@ -50,16 +50,9 @@
 import type { ImbaColor, MtbTour } from '~/types/MtbTypes'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 
-// Live island mounted by src/map/spot_panel/spotPanel.ts into #spot-tours-tab
-// (see the migration spec's "island mechanism" and spotPanel.ts's
-// renderLists()). Replaces toursHTML() from spotPanelHtml.ts (Phase 3 of the
-// spot-panel Vue migration). Reads useSpotPanelStore() directly, same as
-// SpotPanelComments.vue (Phase 2) — it lives under src/components/, which has
-// no map-no-stores restriction. Row selection now writes straight to the
-// store instead of the old data-id/data-kind + bindItemClicks() DOM wiring;
-// spotPanel.ts reacts to store.selectedItemId/selectedItemKind via a watcher
-// to keep driving the Leaflet-side polyline/tour-segment rendering and the
-// elevation panel (unchanged Leaflet logic, only the trigger moved).
+// Row selection writes straight to the store; useTrailMap.ts watches
+// selectedItemId/selectedItemKind to drive Leaflet polyline/tour-segment
+// rendering, and SpotPanelElevation.vue reads them for the elevation panel.
 const store = useSpotPanelStore()
 
 const tours = computed<MtbTour[]>(() => store.data?.tours ?? [])

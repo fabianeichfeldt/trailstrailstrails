@@ -3,12 +3,11 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSpotPanelStore } from '~/stores/spotPanel'
 
-// Top-level shell (Phase 5b of the spot-panel Vue migration — replaces the
-// vanilla spotPanel.ts class). This test covers SpotPanel.vue's own job —
-// deriving pane/elevation visibility reactively off the store and wiring
-// the drag handle — not the descendants' internals, which already have
-// their own test files (SpotPanelHeader.test.ts, SpotPanelTabs.test.ts,
-// etc.). Every child island is stubbed for that reason.
+// Covers SpotPanel.vue's own job — deriving pane/elevation visibility
+// reactively off the store and wiring the drag handle — not the
+// descendants' internals, which already have their own test files
+// (SpotPanelHeader.test.ts, SpotPanelTabs.test.ts, etc.). Every child
+// component is stubbed for that reason.
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
 vi.mock('~/map/spot_panel/dragHandle', () => ({ initDragHandle: vi.fn() }))

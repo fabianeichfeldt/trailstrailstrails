@@ -27,16 +27,11 @@ import type { MtbTour, TourSegment } from '~/types/MtbTypes'
 import { elevationSVG, bindElevationHover, type AnyItem } from '~/map/spot_panel/elevationSvg'
 import { DIR_LABEL, trailStatusCardFor } from '~/map/spot_panel/spotPanelHtml'
 
-// Mounted by SpotPanel.vue (src/components/map/SpotPanel.vue), the
-// top-level shell that replaced the vanilla spotPanel.ts class in Phase 5b
-// of the spot-panel Vue migration. Reads useSpotPanelStore() directly for
-// the selected item and closes itself via store.clearSelection() (Phase 5b
-// — there's no more spotPanel.ts instance to delegate to). onHover/
-// onHoverEnd stay callback props threaded down from useTrailMap.ts's
-// Leaflet-side hover marker (see the migration spec's "Hover bridge":
-// MapView.vue's `ready` event -> map.vue -> SpotPanel.vue -> here) — kept
-// out of the store since a store mutation on every mousemove would pay
-// Vue reactivity/devtools cost for an effect only the map ever observes.
+// onHover/onHoverEnd are callback props (not store state) threaded down
+// from useTrailMap.ts's Leaflet-side hover marker via MapView.vue's `ready`
+// event -> map.vue -> SpotPanel.vue -> here — a store mutation on every
+// mousemove would pay Vue reactivity/devtools cost for an effect only the
+// map ever observes.
 const props = defineProps<{
   onHover: (latlng: [number, number], color: string) => void
   onHoverEnd: () => void
@@ -59,8 +54,7 @@ const item = computed<AnyItem | null>(() => {
 const profile = computed(() => item.value?.elevationProfile ?? [])
 
 // A tour's individually-recorded segments are only rendered as distinct
-// colored slices when the tour itself has no single real GPX recording
-// (hasFullGpx === false) — same condition the vanilla selectTour() used.
+// colored slices when the tour itself has no single real GPX recording.
 const segments = computed<TourSegment[] | undefined>(() => {
   if (store.selectedItemKind !== 'tour' || !item.value) return undefined
   const tour = item.value as MtbTour
@@ -72,15 +66,12 @@ const elevationSvgHtml = computed(() => (item.value ? elevationSVG(profile.value
 const chartEl = ref<HTMLElement | null>(null)
 const statusEl = ref<HTMLElement | null>(null)
 
-/**
- * Appends the trail-status card (imperative DOM — trailStatusCardFor()
- * returns an HTMLElement, not markup, so it can't go through v-html) and
- * (re)binds the elevation-chart hover listeners on the freshly-rendered
- * <svg>. Depends on both template refs (chartEl/statusEl) being populated,
- * so it must never run before mount — see the onMounted()/watch() split
- * below, not a single `watch(item, ..., { immediate: true })`, which would
- * fire this during setup() while both refs are still null.
- */
+// Appends the trail-status card imperatively — trailStatusCardFor() returns
+// an HTMLElement, not markup, so it can't go through v-html — and (re)binds
+// hover listeners on the freshly-rendered <svg>. Must run via onMounted()
+// + a non-immediate watch() below, not a single `watch(item, ...,
+// { immediate: true })`: an immediate watcher fires during setup(), before
+// chartEl/statusEl are populated, and would silently no-op.
 async function syncStatusAndHover(newItem: AnyItem | null) {
   if (statusEl.value) {
     statusEl.value.innerHTML = ''
@@ -91,18 +82,13 @@ async function syncStatusAndHover(newItem: AnyItem | null) {
   }
 
   if (!newItem) return
-  // v-html above is reactive but not synchronous — wait for Vue to actually
-  // patch the DOM before querying the <svg> it produced (documented gotcha
-  // in the migration spec: nextTick(), not requestAnimationFrame).
+  // v-html is reactive but not synchronous — wait for Vue to patch the DOM
+  // before querying the <svg> it produced.
   await nextTick()
   const svgEl = chartEl.value?.querySelector('svg') as SVGSVGElement | null
   if (svgEl) bindElevationHover(svgEl, newItem, props.onHover, props.onHoverEnd)
 }
 
-// Refs are guaranteed populated by mount time — handles whatever item is
-// already selected when this island gets mounted.
 onMounted(() => syncStatusAndHover(item.value))
-// Handles every subsequent selection change. Not `immediate: true` — the
-// mount-time case above already covers the initial state.
 watch(item, (newItem) => syncStatusAndHover(newItem))
 </script>

@@ -7,8 +7,7 @@ import SpotPanelToursTab from './SpotPanelToursTab.vue'
 
 // SpotPanelToursTab.vue relies on Nuxt's implicit auto-import of
 // useSpotPanelStore — see vitest.setup.ts and SpotPanelComments.test.ts for
-// the same pattern. Replaces the toursHTML() describe block that used to
-// live in spotPanelHtml.test.ts (Phase 3 of the spot-panel Vue migration).
+// the same pattern.
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
 function baseTour(overrides: Partial<MtbTour> = {}): MtbTour {

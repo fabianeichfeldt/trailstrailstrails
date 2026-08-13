@@ -46,20 +46,12 @@ import { copyToClipboard } from '~/utils/clipboard'
 import { shareTrail } from '~/map/spot_panel/spotPanelShare'
 import type { IAuthService } from '~/auth/auth_service'
 
-// Top-level shell mounted island — src/components/map/SpotPanel.vue. As of
-// Phase 5b (the vanilla spotPanel.ts class shell was deleted), this
-// component owns like/share/close directly rather than taking them as
-// bound-instance-method props from that class — there's no more "class
-// holding the injected Auth adapter" to delegate to. Same
-// useAuthStore()/useMapStore() direct-access pattern SpotPanelComments.vue
-// already established in Phase 2 for building an auth adapter locally.
 const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
 
-/** Minimal IAuthService adapter — likeTrail()/dislikeTrail()
- * (communication/trails.ts) only ever call authService.getUser(), same
- * rationale as SpotPanelComments.vue's authServiceAdapter(). */
+// Minimal IAuthService adapter — likeTrail()/dislikeTrail()
+// (communication/trails.ts) only ever call authService.getUser().
 function authServiceAdapter(): IAuthService {
   return {
     loggedIn: authStore.isLoggedIn,
@@ -97,10 +89,7 @@ async function handleLike() {
 // Anchored under the share button rather than the app-wide bottom-center
 // toast — this only fires for the clipboard fallback (Firefox desktop,
 // where navigator.share doesn't exist), right next to the button the user
-// just pressed, so it's easy to notice. Ref-based local component state
-// replacing the vanilla class's showShareToast()'s
-// `panel.querySelector('.spot-panel-actions')` DOM manipulation — there's
-// no more `this.panel` to query once spotPanel.ts is gone (Phase 5b).
+// just pressed, so it's easy to notice.
 const shareToast = ref<{ message: string; type: string } | null>(null)
 const shareToastVisible = ref(false)
 let shareToastTimer: ReturnType<typeof setTimeout> | null = null

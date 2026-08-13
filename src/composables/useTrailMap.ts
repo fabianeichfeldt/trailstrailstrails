@@ -27,10 +27,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const openTrailFn = ref<((id: string) => void) | null>(null)
   const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
 
-  // Exposed for SpotPanelElevation.vue (hover bridge — see the migration
-  // spec's "Hover bridge" diagram: MapView.vue's `ready` event -> map.vue ->
-  // SpotPanel.vue -> SpotPanelElevation.vue). Assigned inside onMounted()
-  // once the Leaflet-side hover marker closures exist, same pattern as
+  // Hover bridge for SpotPanelElevation.vue, threaded via MapView.vue's
+  // `ready` event -> map.vue -> SpotPanel.vue. Assigned in onMounted() once
+  // the Leaflet-side hover marker closures exist, same pattern as
   // openTrailFn/flyToFn above.
   const elevationHoverFn = ref<((latlng: [number, number], color: string) => void) | null>(null)
   const elevationHoverEndFn = ref<(() => void) | null>(null)
@@ -105,19 +104,13 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       return L.divIcon(markerIconOptions(trail.type, trail.approved))
     }
 
-    // ── Spot panel — Leaflet-side state (Phase 5b) ──────────────────────────
-    // The vanilla spotPanel.ts class used to own this state directly; now
-    // that the class is deleted, useTrailMap.ts owns it and drives it via
-    // watch()es on the store instead of direct method calls (see the
-    // migration spec's "useTrailMap.ts — watches the store instead of
-    // owning a class"). Kept as its own layer group / maps rather than
-    // reusing gpxLayers/gpxSpotLines above — those exist for the GPX
-    // *overview* mode (every visible spot's trails, at high zoom, with
-    // hover tooltips) and are cleared/rebuilt on every pan/zoom; this one is
-    // for the single currently-open spot's trails (select-highlight styling,
-    // fitBounds, tour-segment layers), independent of view mode and never
-    // torn down by switchView()/renderGpxView(). Merging them would couple
-    // two independently-changing rendering paths for no real benefit.
+    // ── Spot panel — Leaflet-side state ──────────────────────────────────────
+    // Kept separate from gpxLayers/gpxSpotLines above rather than reused:
+    // those serve the GPX *overview* mode (every visible spot, cleared/
+    // rebuilt on every pan/zoom); this is for the single currently-open
+    // spot (select-highlight styling, fitBounds, tour-segment layers),
+    // independent of view mode and never torn down by renderGpxView().
+    // Merging them would couple two independently-changing rendering paths.
     const spotOverlayLayer = L.layerGroup().addTo(mymap)
     let spotTourLayers: L.Layer[] = []
     const spotPolylineMap = new Map<string, L.Polyline>()
@@ -212,9 +205,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     elevationHoverEndFn.value = removeSpotHoverMarker
 
     // Draws the individual trail polylines once GPX data arrives for the
-    // currently open spot. Direct port of the vanilla loadSpotData()'s tail
-    // end, re-triggered off the store instead of running inline after the
-    // fetch.
+    // currently open spot.
     watch(() => spotPanelStore.data, (data) => {
       if (!data) return
       drawTrailPolylines(data, spotOverlayLayer, spotPolylineMap)
@@ -222,9 +213,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // Reacts to a tour/trail row being selected (SpotPanelToursTab.vue/
     // SpotPanelTrailsTab.vue) or cleared (SpotPanelElevation.vue's close
-    // button, or a tab switch/panel close via store.clearSelection()/
-    // store.close()) — direct port of the vanilla selectItem()/
-    // closeElevation()'s Leaflet-restyling half.
+    // button, a tab switch, or a panel close).
     watch(
       () => [spotPanelStore.selectedItemId, spotPanelStore.selectedItemKind] as const,
       ([id, kind]) => {

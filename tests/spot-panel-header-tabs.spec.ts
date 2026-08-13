@@ -1,11 +1,8 @@
 import { test, expect, MOCK_SESSION, MOCK_USER } from './fixtures';
 
-// Safety net for the Phase 4 spot-panel-to-Vue migration (see
-// docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-// Before this spec, the header's like/share buttons had zero E2E coverage,
-// and tab-button highlighting (as opposed to tab-content switching, which
-// has partial incidental coverage in spot-panel-tours-trails.spec.ts /
-// spot-panel-parking.spec.ts) had no dedicated case either.
+// E2E coverage for the header's like/share buttons and tab-button
+// highlighting (tab-content switching itself has partial incidental
+// coverage in spot-panel-tours-trails.spec.ts / spot-panel-parking.spec.ts).
 
 async function openTrailPanel(page: import('@playwright/test').Page) {
   await page.locator('[data-testid="search-input"]').fill('Flow');

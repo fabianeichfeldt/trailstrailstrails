@@ -18,10 +18,9 @@ export const DIR_LABEL: Record<TrailDirection, string> = {
  * Returns null when nothing should be shown, so the caller can skip
  * appending anything.
  *
- * Returns an HTMLElement (not a markup string) — SpotPanelElevation.vue
- * (src/components/map/SpotPanelElevation.vue) appends it imperatively via a
- * template ref rather than v-html, same as the vanilla showElevation() did
- * (see the spot-panel Vue migration spec's Phase 3 notes).
+ * Returns an HTMLElement (not a markup string) — callers that need it in a
+ * Vue template must append it imperatively (e.g. via a template ref),
+ * not v-html.
  */
 export function trailStatusCardFor(item: MtbTrail | MtbTour, spotName: string): HTMLElement | null {
   if (!('difficulty' in item)) return null;
@@ -29,13 +28,3 @@ export function trailStatusCardFor(item: MtbTrail | MtbTour, spotName: string): 
   if (status.state === 'open') return null;
   return buildTrailStatusContent(status, spotName);
 }
-
-// toursHTML() and trailsHTML() (plus their private tourDifficultyDots()/
-// trailStatusRowClass()/trailStatusTagHtml() helpers) were removed here —
-// superseded by the SpotPanelToursTab.vue / SpotPanelTrailsTab.vue islands
-// (src/components/map/SpotPanelToursTab.vue, SpotPanelTrailsTab.vue) as part
-// of the spot-panel Vue migration, Phase 3 (see
-// docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-//
-// parkingHTML() and its tests were removed here in Phase 1; commentsHTML()
-// and its tests were removed here in Phase 2 (see the same spec).

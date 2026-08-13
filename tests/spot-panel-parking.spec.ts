@@ -1,10 +1,6 @@
 import { test, expect } from './fixtures';
 
-// Safety net for the Phase 1 spot-panel-to-Vue migration (see
-// docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-// Before this spec, the Parking tab had zero E2E coverage — this file must
-// pass against the unmodified vanilla spotPanel.ts *before* the parking
-// island lands, then stay green afterwards, proving no behavior regressed.
+// E2E coverage for the Parking tab.
 
 const LOT_WITH_INFO = {
   id: 'p1', spot_id: 't1', name: 'Talstation Parkplatz', lat: 47.709, lng: 11.758,

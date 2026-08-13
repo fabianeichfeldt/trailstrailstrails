@@ -7,10 +7,6 @@ import SpotPanelTrailsTab from './SpotPanelTrailsTab.vue'
 
 // SpotPanelTrailsTab.vue relies on Nuxt's implicit auto-import of
 // useSpotPanelStore — see vitest.setup.ts and SpotPanelComments.test.ts.
-// Replaces the trailsHTML() describe block (list rendering) that used to
-// live in spotPanelHtml.test.ts; the status-row tint/tag assertions are
-// ported 1:1 from that file's "trailsHTML — status row tint + tag" block
-// (Phase 3 of the spot-panel Vue migration).
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
 function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {

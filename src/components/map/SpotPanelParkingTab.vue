@@ -25,10 +25,6 @@
 <script setup lang="ts">
 import type { SpotParkingLot } from '~/communication/trails'
 
-// Prop-driven island component — mounted via createApp(() => h(..., reactiveProps))
-// inside src/map/spot_panel/spotPanel.ts (see the migration spec's "island
-// mechanism"). It replaces parkingHTML() from spotPanelHtml.ts and receives
-// exactly the same two inputs that function took.
 defineProps<{
   lots: SpotParkingLot[]
   highlightId?: string

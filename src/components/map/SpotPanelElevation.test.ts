@@ -7,8 +7,6 @@ import SpotPanelElevation from './SpotPanelElevation.vue'
 
 // SpotPanelElevation.vue relies on Nuxt's implicit auto-import of
 // useSpotPanelStore — see vitest.setup.ts and SpotPanelComments.test.ts.
-// Replaces the DOM manipulation in the vanilla showElevation()/
-// closeElevation() (Phase 3 of the spot-panel Vue migration).
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
 function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
@@ -96,7 +94,7 @@ describe('SpotPanelElevation', () => {
     expect(wrapper.find('.spot-elevation-chart svg').exists()).toBe(true)
   })
 
-  it('clicking close clears the store selection (Phase 5b: no more spotPanel.ts instance to delegate to)', async () => {
+  it('clicking close clears the store selection', async () => {
     store.data = spotData()
     store.selectedItemId = 'trail-1'
     store.selectedItemKind = 'trail'

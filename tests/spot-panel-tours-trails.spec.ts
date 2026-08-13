@@ -1,9 +1,7 @@
 import { test, expect } from './fixtures';
 
-// Safety net for the Phase 3 spot-panel-to-Vue migration (see
-// docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-// Before this spec, Tours/Trails tab switching, tour/trail selection, and
-// the elevation panel had zero E2E coverage.
+// E2E coverage for Tours/Trails tab switching, tour/trail selection, and
+// the elevation panel.
 
 const GPX_TRAIL_OPEN = {
   id: 'gt1', spot_id: 't1', name: 'Talabfahrt', difficulty: 'blue', direction: 'one-way-down',

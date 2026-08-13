@@ -2,23 +2,8 @@ import { describe, it, expect } from 'vitest'
 import { trailStatusCardFor } from './spotPanelHtml'
 import type { MtbTrail, MtbTour } from '../../types/MtbTypes'
 
-// parkingHTML() and its tests were removed here — superseded by the
-// SpotPanelParkingTab.vue island (src/components/map/SpotPanelParkingTab.vue,
-// tested in SpotPanelParkingTab.test.ts) as part of the spot-panel Vue
-// migration, Phase 1 (see docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-//
-// commentsHTML() and its tests were removed here — superseded by the
-// SpotPanelComments.vue island (src/components/map/SpotPanelComments.vue,
-// tested in SpotPanelComments.test.ts) as part of the spot-panel Vue
-// migration, Phase 2 (see the same spec).
-//
-// toursHTML()/trailsHTML() and their tests (including the "status row tint +
-// tag" block that used to live here) were removed here — superseded by the
-// SpotPanelToursTab.vue / SpotPanelTrailsTab.vue islands (tested in
-// SpotPanelToursTab.test.ts / SpotPanelTrailsTab.test.ts) as part of the
-// spot-panel Vue migration, Phase 3 (see the same spec). trailStatusCardFor()
-// stays here — it returns an HTMLElement (not markup), so SpotPanelElevation.vue
-// still calls it directly as an escape hatch rather than reimplementing it.
+// trailStatusCardFor() returns an HTMLElement, not markup — Vue components
+// that need it call it directly rather than reimplementing it.
 
 function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
   return {

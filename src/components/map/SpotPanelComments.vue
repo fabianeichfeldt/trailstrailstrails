@@ -58,17 +58,9 @@ import { formatDate } from '~/utils/formatDate'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
 
-// Live island mounted by src/map/spot_panel/spotPanel.ts into
-// #spot-comments-section (see the migration spec's "island mechanism" and
-// spotPanel.ts's renderComments()/setupComments()). Unlike
-// SpotPanelParkingTab.vue (Phase 1 — purely props-driven, since spotPanel.ts
-// can't import stores per the map-no-stores dependency-cruiser rule), this
-// component reads/writes useSpotPanelStore() directly: it lives under
-// src/components/, which has no such restriction (same pattern as
-// Drawer.vue/ReportErrorModal.vue calling useMapStore()/useAuthStore()
-// directly). spotPanel.ts only mounts/unmounts this island and still decides
-// *when* to fetch, since it already holds the injected Auth adapter needed
-// to build the CommentsAuthInfo that loadComments() takes.
+// Mounted by SpotPanelInfoTab.vue into #spot-comments-section, which
+// decides when to fetch (loadComments()) since it already builds the auth
+// snapshot loadComments() needs.
 const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
@@ -105,13 +97,8 @@ function reply(c: Comment) {
   nextTick(() => textareaEl.value?.focus())
 }
 
-/**
- * Minimal IAuthService adapter — postComment()/deleteComment()
- * (communication/comments.ts) only ever call authService.getUser(), so the
- * rest of the interface is satisfied via a cast rather than reproducing
- * useTrailMap.ts's full authAdapter (signIn/signUp/... are never reached
- * from here).
- */
+// Minimal IAuthService adapter — postComment()/deleteComment()
+// (communication/comments.ts) only ever call authService.getUser().
 function authServiceAdapter(): IAuthService {
   return {
     loggedIn: authStore.isLoggedIn,

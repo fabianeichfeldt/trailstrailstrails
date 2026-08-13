@@ -1,4 +1,6 @@
 <template>
+  <!-- `hidden` class (not v-if) is load-bearing: spot_panel.css and
+       tests/spot-panel-*.spec.ts both select on it directly. -->
   <div ref="panelEl" class="spot-panel" :class="{ open: store.isOpen }">
     <div class="spot-panel-handle" role="presentation"></div>
     <div class="spot-panel-header"><SpotPanelHeader /></div>
@@ -35,48 +37,26 @@ import SpotPanelTrailsTab from './SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from './SpotPanelParkingTab.vue'
 import SpotPanelElevation from './SpotPanelElevation.vue'
 
-// Top-level shell — mounts as a sibling of <MapView> in src/pages/map.vue,
-// same pattern as Drawer.vue/NearbyModal.vue/AddSpotModal.vue. Replaces the
-// vanilla spotPanel.ts class (Phase 5b, the final phase of the spot-panel
-// Vue migration — see
-// docs/superpowers/specs/2026-08-13-spot-panel-vue-migration-design.md).
-// Assembles every tab/section island built in Phases 1-5a as real Vue child
-// components instead of createApp()-mounted islands into raw innerHTML
-// containers — there's no more legacy DOM shell to mount into.
-//
-// Pane visibility (tab content, the elevation panel) is now derived
-// reactively straight off the store on every render — replacing the old
-// applyTab()'s imperative classList.add/remove('hidden') writes and the
-// suppressNextTabWatch double-run guard that existed only to keep those
-// writes from firing twice for one store change. The `hidden` CSS class is
-// kept (not swapped for v-if/v-show) because src/assets/css/spot_panel.css
-// and the spot-panel E2E specs (tests/spot-panel-*.spec.ts) both key off
-// that exact class name.
+// Mounts as a sibling of <MapView> in src/pages/map.vue, same pattern as
+// Drawer.vue/NearbyModal.vue/AddSpotModal.vue.
 const store = useSpotPanelStore()
 
 const elevationVisible = computed(() => store.selectedItemId !== null && store.selectedItemKind !== null)
 
-// Hover bridge (elevation chart <-> map marker) — threaded down as plain
-// props from useTrailMap.ts's Leaflet-side hover marker, via MapView.vue's
-// `ready` event -> map.vue -> here -> SpotPanelElevation.vue, exactly like
-// openTrail/flyToPlace already reach map.vue today. Kept as callbacks (not
-// store state) since a store mutation on every mousemove would pay Vue
-// reactivity/devtools cost for an effect only the map ever observes.
+// Kept as callback props rather than store state: a store mutation on every
+// mousemove would pay Vue reactivity/devtools cost for an effect only the
+// map (useTrailMap.ts's hover marker) ever observes. Threaded down via
+// MapView.vue's `ready` event -> map.vue -> here -> SpotPanelElevation.vue,
+// same as openTrail/flyToPlace.
 defineProps<{
   onHover: (latlng: [number, number], color: string) => void
   onHoverEnd: () => void
 }>()
 
-// .spot-panel is no longer appended inside the Leaflet container div (see
-// the migration spec's CSS positioning risk item) — it's a template-native
-// sibling of <MapView> now, so L.DomEvent.disableClickPropagation()/
-// disableScrollPropagation() (used by the vanilla buildDOM() to stop clicks
-// on the panel bubbling into Leaflet's own map-click handler) are no longer
-// needed at all: clicks inside .spot-panel can't bubble into
-// .leaflet-container in the first place, since the two are siblings, not
-// ancestor/descendant. This also keeps Leaflet (`L`) out of this file,
-// preserving CLAUDE.md's "useTrailMap.ts is the only place Leaflet L
-// exists" rule.
+// No L.DomEvent.disableClickPropagation() needed: .spot-panel is a sibling
+// of the Leaflet container, not a descendant, so clicks inside it can't
+// bubble into Leaflet's map-click handler. Also keeps Leaflet (`L`) out of
+// this file — useTrailMap.ts is the only place it should exist.
 const panelEl = ref<HTMLElement | null>(null)
 onMounted(() => {
   if (panelEl.value) initDragHandle(panelEl.value)

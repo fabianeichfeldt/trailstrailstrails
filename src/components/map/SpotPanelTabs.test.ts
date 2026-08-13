@@ -7,12 +7,9 @@ import SpotPanelTabs from './SpotPanelTabs.vue'
 
 // SpotPanelTabs.vue relies on Nuxt's implicit auto-import of
 // useSpotPanelStore — see vitest.setup.ts and SpotPanelToursTab.test.ts for
-// the same pattern. Replaces the tab-button markup that used to live inline
-// in spotPanel.ts's buildDOM() + the visibility logic from
-// updateTabsVisibility() (Phase 4 of the spot-panel Vue migration). Tab
-// *content* panes (#spot-*-tab) stay owned by spotPanel.ts — this component
-// only owns the button bar: which one is highlighted, which are visible,
-// and writing a click to store.activeTab.
+// the same pattern. This component only owns the tab-button bar: which one
+// is highlighted, which are visible, and writing a click to
+// store.activeTab — the content panes live in SpotPanel.vue.
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
 function trail(overrides: Partial<Trail> = {}): Trail {
