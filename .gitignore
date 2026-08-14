@@ -14,3 +14,7 @@ test-results/
 
 # Brainstorm mockups
 .superpowers/
+
+# Native IDE project state (machine-specific)
+android/.idea/
+ios/App/App.xcworkspace/xcuserdata/
