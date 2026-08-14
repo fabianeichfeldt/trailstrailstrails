@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Trailradar</string>
+    <string name="title_activity_main">Trailradar</string>
+    <string name="package_name">org.trailradar.app</string>
+    <string name="custom_url_scheme">org.trailradar.app</string>
+</resources>

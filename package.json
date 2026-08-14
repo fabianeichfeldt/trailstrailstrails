@@ -38,6 +38,10 @@
     "vitest": "^4.1.6"
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@nuxtjs/supabase": "^2.0.8",
     "@pinia/nuxt": "^0.10.1",
