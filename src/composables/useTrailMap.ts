@@ -1,4 +1,6 @@
 import type { Ref } from 'vue'
+import { Capacitor } from '@capacitor/core'
+import { App } from '@capacitor/app'
 import type { Trail } from '~/types/Trail'
 import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
 import {
@@ -549,6 +551,16 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }, { signal })
     }
 
+    function cancelAddMode() {
+      addMode = undefined
+      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
+      if (addBtn) {
+        addBtn.textContent = '+'
+        addBtn.classList.remove('active')
+      }
+      mymap.getContainer().classList.remove('crosshair-cursor')
+    }
+
     // Attach FAB listeners once the map is mounted; auth check happens inside the click handler
     await nextTick()
     attachFabListeners()
@@ -573,17 +585,28 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       if (proceed) {
         addSpotPicked.value = { lat: e.latlng.lat, lng: e.latlng.lng, type: addMode }
       }
-      addMode = undefined
-      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
-      if (addBtn) {
-        addBtn.textContent = '+'
-        addBtn.classList.remove('active')
-        mymap.getContainer().classList.remove('crosshair-cursor')
-      }
+      cancelAddMode()
     })
+
+    // Android hardware/gesture back: dismiss whatever's on top before falling
+    // back to router history, and only exit the app once there's nothing left
+    // to close. Without this, Capacitor's default behaviour exits the app
+    // from anywhere, including with the spot panel or add-mode still open.
+    let removeBackButtonListener: (() => void) | null = null
+    if (Capacitor.isNativePlatform()) {
+      const handle = await App.addListener('backButton', ({ canGoBack }) => {
+        if (spotPanel.isOpen) { spotPanel.close(); return }
+        if (statusSheet.isOpen) { statusSheet.close(); return }
+        if (addMode) { cancelAddMode(); return }
+        if (canGoBack) { window.history.back() }
+        else { App.exitApp() }
+      })
+      removeBackButtonListener = () => handle.remove()
+    }
 
     cleanupFn = () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+      removeBackButtonListener?.()
       mymap.remove()
     }
   })

@@ -1,5 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { Capacitor } from '@capacitor/core'
+import { Browser } from '@capacitor/browser'
 import { uploadTrailPhoto as uploadTrailPhotoImpl } from '~/communication/photos'
+
+// Google blocks OAuth sign-in from embedded WebViews, so on native we route
+// through the system browser instead and catch the redirect via a custom
+// URL scheme (registered in AndroidManifest.xml / Info.plist) rather than
+// window.location.origin, which inside the app's WebView isn't a URL the
+// OS or an email client can navigate back to.
+const NATIVE_AUTH_CALLBACK = 'org.trailradar.app://auth-callback'
 
 export const useAuthStore = defineStore('auth', () => {
   const client = useSupabaseClient() as SupabaseClient
@@ -66,6 +75,15 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function signInWithGoogle() {
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: NATIVE_AUTH_CALLBACK, skipBrowserRedirect: true },
+      })
+      if (error) throw new Error(error.message)
+      if (data?.url) await Browser.open({ url: data.url })
+      return
+    }
     await client.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
@@ -73,9 +91,37 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function resetPassword(email: string) {
-    await client.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    })
+    const redirectTo = Capacitor.isNativePlatform()
+      ? NATIVE_AUTH_CALLBACK
+      : `${window.location.origin}/reset-password`
+    await client.auth.resetPasswordForEmail(email, { redirectTo })
+  }
+
+  // Handles the redirect Google OAuth / password-recovery emails land on when
+  // opened natively (see NATIVE_AUTH_CALLBACK). supabase-js's own URL session
+  // detection only runs against window.location, which never navigates for a
+  // deep link — the tokens have to be pulled from the callback URL by hand.
+  // Returns the auth event `type` (e.g. 'recovery') so the caller can route.
+  async function handleNativeAuthCallback(url: string): Promise<string | null> {
+    const parsed = new URL(url)
+    const hashParams = new URLSearchParams(parsed.hash.replace(/^#/, ''))
+    const code = parsed.searchParams.get('code')
+    const type = parsed.searchParams.get('type') ?? hashParams.get('type')
+
+    if (code) {
+      const { error } = await client.auth.exchangeCodeForSession(code)
+      if (error) throw new Error(error.message)
+    } else {
+      const access_token = hashParams.get('access_token')
+      const refresh_token = hashParams.get('refresh_token')
+      if (access_token && refresh_token) {
+        const { error } = await client.auth.setSession({ access_token, refresh_token })
+        if (error) throw new Error(error.message)
+      }
+    }
+
+    await Browser.close().catch(() => {})
+    return type
   }
 
   async function updateProfile(params: { avatar_url?: string; name?: string }) {
@@ -131,6 +177,7 @@ export const useAuthStore = defineStore('auth', () => {
     signUp,
     signInWithGoogle,
     resetPassword,
+    handleNativeAuthCallback,
     updateProfile,
     updatePassword,
     uploadAvatar,
