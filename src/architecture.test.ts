@@ -151,7 +151,7 @@ describe('Segment editor (architectural isolation)', () => {
 
   test('GpxProcessor exports processSegment', () => {
     const src = read('src/spot_manager/GpxProcessor.ts')
-    expect(src).toContain('export function processSegment')
+    expect(src).toContain('export async function processSegment')
   })
 
   test('MapView exports showSourceTrack, updateLiveSlice, clearLiveSlice, clearSourceTrack', () => {

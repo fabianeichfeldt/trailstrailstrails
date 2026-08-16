@@ -1,4 +1,5 @@
 import { ElevationPoint, ImbaColor, TrailDirection } from '../types/MtbTypes';
+import { fetchDemElevations } from './DemElevation';
 
 export interface GpxPoint {
   lat: number;
@@ -19,6 +20,7 @@ export interface ProcessedGpx {
   rawCount: number;
   thinnedCount: number;
   gpxContent: string;
+  demCorrected: boolean;
 }
 
 const EPSILON_M = 0.5;
@@ -226,15 +228,32 @@ export interface SegmentResult {
   rawCount: number;
   thinnedCount: number;
   gpxContent: string;
+  demCorrected: boolean;
 }
 
-export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number, name = ''): SegmentResult | null {
+// Replaces recorded GPX altitude with DEM-derived elevation (see DemElevation.ts).
+// Falls back to the existing smoothed-GPX-altitude behaviour if the lookup
+// fails (offline, rate-limited, API down) so an upload never gets blocked.
+async function correctElevation(points: GpxPoint[]): Promise<{ points: GpxPoint[]; demCorrected: boolean }> {
+  try {
+    const elevations = await fetchDemElevations(points.map(p => [p.lat, p.lng] as [number, number]));
+    return {
+      points: points.map((p, i) => ({ ...p, alt: Math.round(elevations[i]) })),
+      demCorrected: true,
+    };
+  } catch (err) {
+    console.warn('DEM elevation lookup failed, keeping recorded GPX altitude:', err);
+    return { points: smoothElevation(points), demCorrected: false };
+  }
+}
+
+export async function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number, name = ''): Promise<SegmentResult | null> {
   const slice = rawPoints.slice(startIdx, endIdx + 1);
   if (slice.length === 0) return null;
-  const smoothed = smoothElevation(slice);
-  const thinned  = rdp(smoothed, EPSILON_M);
-  const stats    = computeStats(thinned);
-  const gpxPoints = thinned.map(p => [
+  const thinned = rdp(slice, EPSILON_M);
+  const { points: corrected, demCorrected } = await correctElevation(thinned);
+  const stats = computeStats(corrected);
+  const gpxPoints = corrected.map(p => [
     Math.round(p.lat * 1e6) / 1e6,
     Math.round(p.lng * 1e6) / 1e6,
     p.alt,
@@ -246,17 +265,18 @@ export function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: 
     ...stats,
     rawCount:     slice.length,
     thinnedCount: thinned.length,
-    gpxContent:   buildGpxXml(thinned, name),
+    gpxContent:   buildGpxXml(corrected, name),
+    demCorrected,
   };
 }
 
-export function processGpx(content: string): ProcessedGpx | null {
+export async function processGpx(content: string): Promise<ProcessedGpx | null> {
   const { name, points } = parseGpx(content);
   if (points.length === 0) return null;
-  const smoothed = smoothElevation(points);
-  const thinned  = rdp(smoothed, EPSILON_M);
-  const stats    = computeStats(thinned);
-  const gpxPoints = thinned.map(p => [
+  const thinned = rdp(points, EPSILON_M);
+  const { points: corrected, demCorrected } = await correctElevation(thinned);
+  const stats = computeStats(corrected);
+  const gpxPoints = corrected.map(p => [
     Math.round(p.lat * 1e6) / 1e6,
     Math.round(p.lng * 1e6) / 1e6,
     p.alt,
@@ -270,6 +290,7 @@ export function processGpx(content: string): ProcessedGpx | null {
     rawCount:     points.length,
     thinnedCount: thinned.length,
     gpxContent:   content,
+    demCorrected,
   };
 }
 

@@ -1,6 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { processGpx, processSegment, rewriteGpxHeader, toElevationProfile, matchTrailsInTour, DIFFICULTIES, DIRECTIONS, DIFF_COLOR } from './GpxProcessor';
 import type { GpxPoint } from './GpxProcessor';
+import { fetchDemElevations } from './DemElevation';
+
+// DemElevation does real network calls + rate-limit sleeps in production —
+// mocked here so GpxProcessor tests stay fast, deterministic, and offline.
+vi.mock('./DemElevation', () => ({
+  fetchDemElevations: vi.fn(),
+}));
+
+// Deterministic synthetic elevation: rises with latitude, falls with
+// longitude — matches the shape of MINIMAL_GPX (climbs north, then descends
+// east), so gain/loss/monotonicity assertions written against the *real*
+// GPX altitude still hold once altitude comes from this mock instead.
+function syntheticElevation(latLngs: [number, number][]): number[] {
+  return latLngs.map(([lat, lng]) => Math.round(1000 + (lat - 48) * 100000 - (lng - 11.5) * 100000));
+}
+
+beforeEach(() => {
+  vi.mocked(fetchDemElevations).mockReset();
+  vi.mocked(fetchDemElevations).mockImplementation(async latLngs => syntheticElevation(latLngs));
+});
 
 // L-shaped path: climbs north then descends east. The corner is far off the
 // start→end line (~600 m perpendicular), so RDP always keeps it and
@@ -46,18 +66,18 @@ const TIMED_GPX = `<?xml version="1.0"?>
 </gpx>`;
 
 describe('processGpx', () => {
-  it('returns null for empty or invalid GPX', () => {
-    expect(processGpx('')).toBeNull();
-    expect(processGpx('<gpx></gpx>')).toBeNull();
+  it('returns null for empty or invalid GPX', async () => {
+    expect(await processGpx('')).toBeNull();
+    expect(await processGpx('<gpx></gpx>')).toBeNull();
   });
 
-  it('parses the trail name from the GPX', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('parses the trail name from the GPX', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result?.suggestedName).toBe('Test Trail');
   });
 
-  it('returns gpxPoints as [lat, lng, alt] tuples', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('returns gpxPoints as [lat, lng, alt] tuples', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result).not.toBeNull();
     expect(result!.gpxPoints.length).toBeGreaterThan(0);
     for (const p of result!.gpxPoints) {
@@ -68,43 +88,43 @@ describe('processGpx', () => {
     }
   });
 
-  it('computes positive elevation gain for an ascending trail', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('computes positive elevation gain for an ascending trail', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.elevation_gain).toBeGreaterThan(0);
   });
 
-  it('computes positive elevation loss for a descending section', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('computes positive elevation loss for a descending section', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.elevation_loss).toBeGreaterThan(0);
   });
 
-  it('computes a positive distance', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('computes a positive distance', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.distance_km).toBeGreaterThan(0);
   });
 
-  it('sets rawCount to the number of input trackpoints', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('sets rawCount to the number of input trackpoints', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.rawCount).toBe(10);
   });
 
-  it('thinnedCount is <= rawCount (RDP never adds points)', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('thinnedCount is <= rawCount (RDP never adds points)', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.thinnedCount).toBeLessThanOrEqual(result!.rawCount);
   });
 
-  it('computes duration_minutes from timestamps when present', () => {
-    const result = processGpx(TIMED_GPX);
+  it('computes duration_minutes from timestamps when present', async () => {
+    const result = await processGpx(TIMED_GPX);
     expect(result!.duration_minutes).toBe(10);
   });
 
-  it('sets duration_minutes to null when no timestamps', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('sets duration_minutes to null when no timestamps', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     expect(result!.duration_minutes).toBeNull();
   });
 
-  it('includes elevationProfile with monotonically increasing dist', () => {
-    const result = processGpx(MINIMAL_GPX);
+  it('includes elevationProfile with monotonically increasing dist', async () => {
+    const result = await processGpx(MINIMAL_GPX);
     const profile = result!.elevationProfile;
     expect(profile.length).toBeGreaterThan(0);
     for (let i = 1; i < profile.length; i++) {
@@ -152,7 +172,7 @@ describe('toElevationProfile', () => {
 // ── processGpx edge cases ──────────────────────────────────────────────────────
 
 describe('processGpx edge cases', () => {
-  it('returns empty suggestedName when GPX has no <name> tag', () => {
+  it('returns empty suggestedName when GPX has no <name> tag', async () => {
     const noName = `<?xml version="1.0"?>
 <gpx>
   <trk>
@@ -162,19 +182,19 @@ describe('processGpx edge cases', () => {
     </trkseg>
   </trk>
 </gpx>`;
-    const result = processGpx(noName);
+    const result = await processGpx(noName);
     expect(result).not.toBeNull();
     expect(result!.suggestedName).toBe('');
   });
 
-  it('handles a single trackpoint without crashing', () => {
+  it('handles a single trackpoint without crashing', async () => {
     const single = `<?xml version="1.0"?>
 <gpx>
   <trk><trkseg>
     <trkpt lat="48.0" lon="11.5"><ele>500</ele></trkpt>
   </trkseg></trk>
 </gpx>`;
-    const result = processGpx(single);
+    const result = await processGpx(single);
     expect(result).not.toBeNull();
     expect(result!.distance_km).toBe(0);
     expect(result!.elevation_gain).toBe(0);
@@ -183,40 +203,77 @@ describe('processGpx edge cases', () => {
   });
 });
 
+// ── DEM elevation correction ─────────────────────────────────────────────────
+
+describe('DEM elevation correction', () => {
+  it('replaces GPX altitude with the DEM-derived elevation and reports demCorrected', async () => {
+    vi.mocked(fetchDemElevations).mockResolvedValueOnce([111, 222, 333, 444, 555, 666, 777, 888, 999, 1000]);
+    const result = await processGpx(MINIMAL_GPX);
+    expect(result).not.toBeNull();
+    expect(result!.demCorrected).toBe(true);
+    // None of the raw <ele> values (500, 520, 540, ...) survive.
+    expect(result!.gpxPoints.every(p => ![500, 520, 540, 570, 600, 580, 560].includes(p[2]))).toBe(true);
+  });
+
+  it('falls back to the recorded GPX altitude when the DEM lookup fails, without throwing', async () => {
+    vi.mocked(fetchDemElevations).mockRejectedValueOnce(new Error('network down'));
+    const result = await processGpx(MINIMAL_GPX);
+    expect(result).not.toBeNull();
+    expect(result!.demCorrected).toBe(false);
+    expect(result!.gpxPoints.length).toBeGreaterThan(0);
+  });
+
+  it('processSegment also DEM-corrects and reports demCorrected', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    vi.mocked(fetchDemElevations).mockResolvedValueOnce([100, 200, 300, 400, 500]);
+    const result = await processSegment(source.rawPoints, 0, 4);
+    expect(result).not.toBeNull();
+    expect(result!.demCorrected).toBe(true);
+  });
+
+  it('falls back to raw altitude for processSegment on DEM failure', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    vi.mocked(fetchDemElevations).mockRejectedValueOnce(new Error('rate limited'));
+    const result = await processSegment(source.rawPoints, 0, 4);
+    expect(result).not.toBeNull();
+    expect(result!.demCorrected).toBe(false);
+  });
+});
+
 // ── processSegment ─────────────────────────────────────────────────────────────
 
 describe('processSegment', () => {
-  it('returns null when the slice is empty', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    expect(processSegment(source.rawPoints, 5, 4)).toBeNull();
-    expect(processSegment([], 0, 0)).toBeNull();
+  it('returns null when the slice is empty', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    expect(await processSegment(source.rawPoints, 5, 4)).toBeNull();
+    expect(await processSegment([], 0, 0)).toBeNull();
   });
 
-  it('slices to the exact start/end boundaries', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 2, 6)!;
+  it('slices to the exact start/end boundaries', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 2, 6))!;
     expect(result).not.toBeNull();
     expect(result.rawCount).toBe(5); // indices 2..6 inclusive
     expect(result.rawPoints[0]).toEqual(source.rawPoints[2]);
     expect(result.rawPoints[result.rawPoints.length - 1]).toEqual(source.rawPoints[6]);
   });
 
-  it('stats match the sub-slice (gain, loss, distance are positive for L-shaped track)', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 0, 4)!; // ascending leg
+  it('stats match the sub-slice (gain, loss, distance are positive for L-shaped track)', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 0, 4))!; // ascending leg
     expect(result.elevation_gain).toBeGreaterThan(0);
     expect(result.distance_km).toBeGreaterThan(0);
   });
 
-  it('thinnedCount is <= rawCount', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 0, source.rawPoints.length - 1)!;
+  it('thinnedCount is <= rawCount', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 0, source.rawPoints.length - 1))!;
     expect(result.thinnedCount).toBeLessThanOrEqual(result.rawCount);
   });
 
-  it('gpxPoints are [lat, lng, alt] tuples with numeric values', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 1, 5)!;
+  it('gpxPoints are [lat, lng, alt] tuples with numeric values', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 1, 5))!;
     for (const p of result.gpxPoints) {
       expect(p).toHaveLength(3);
       expect(typeof p[0]).toBe('number');
@@ -225,18 +282,18 @@ describe('processSegment', () => {
     }
   });
 
-  it('gpxContent is parseable by processGpx and contains the expected points', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 2, 7)!;
-    const reparsed = processGpx(result.gpxContent);
+  it('gpxContent is parseable by processGpx and contains the expected points', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 2, 7))!;
+    const reparsed = await processGpx(result.gpxContent);
     expect(reparsed).not.toBeNull();
     expect(reparsed!.rawCount).toBeGreaterThan(0);
     expect(reparsed!.distance_km).toBeGreaterThan(0);
   });
 
-  it('full-range processSegment stats are consistent with processGpx stats', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const all = processSegment(source.rawPoints, 0, source.rawPoints.length - 1)!;
+  it('full-range processSegment stats are consistent with processGpx stats', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const all = (await processSegment(source.rawPoints, 0, source.rawPoints.length - 1))!;
     // Stats should be close (smoothing & thinning may differ slightly due to edge effects)
     expect(Math.abs(all.distance_km - source.distance_km)).toBeLessThan(0.5);
   });
@@ -304,14 +361,14 @@ describe('rewriteGpxHeader', () => {
     expect(result).toContain('<trk>\n    <name>Heidenbergtrails - Milky Way - grün/blau - IGH - sponsored by VELOVITA</name>');
   });
 
-  it('inserts the canonical header on a bare-bones file with no <metadata> block', () => {
+  it('inserts the canonical header on a bare-bones file with no <metadata> block', async () => {
     const result = rewriteGpxHeader(BARE_GPX, 'Bare Trail');
     expect(result).toContain('<metadata>');
     expect(result).toContain('creator="https://trailradar.org"');
     expect(result).toContain('<name>Bare Trail</name>');
     expect(result).toContain('<trk>\n    <name>Bare Trail</name>');
 
-    const reparsed = processGpx(result);
+    const reparsed = await processGpx(result);
     expect(reparsed).not.toBeNull();
     expect(reparsed!.rawCount).toBe(2);
   });
@@ -331,9 +388,9 @@ describe('rewriteGpxHeader', () => {
 // ── buildGpxXml (via processSegment) ────────────────────────────────────────────
 
 describe('buildGpxXml header (via processSegment gpxContent)', () => {
-  it('emits the canonical TrailRadar header/metadata block', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'Cut Segment')!;
+  it('emits the canonical TrailRadar header/metadata block', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'Cut Segment'))!;
     expect(result.gpxContent).toContain('creator="https://trailradar.org"');
     expect(result.gpxContent).toContain('<metadata>');
     expect(result.gpxContent).toContain('<name>Cut Segment</name>');
@@ -341,9 +398,9 @@ describe('buildGpxXml header (via processSegment gpxContent)', () => {
     expect(result.gpxContent).toContain('https://trailradar.org');
   });
 
-  it('escapes XML-special characters in the segment name', () => {
-    const source = processGpx(MINIMAL_GPX)!;
-    const result = processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'A & B')!;
+  it('escapes XML-special characters in the segment name', async () => {
+    const source = (await processGpx(MINIMAL_GPX))!;
+    const result = (await processSegment(source.rawPoints, 0, source.rawPoints.length - 1, 'A & B'))!;
     expect(result.gpxContent).toContain('<name>A &amp; B</name>');
   });
 });
