@@ -316,6 +316,14 @@ import IconHeart from '~/assets/icons/heart.svg'
 import IconBriefcase from '~/assets/icons/briefcase.svg'
 import IconShield from '~/assets/icons/shield.svg'
 import { getRecentActivity } from '~/communication/activity'
+// The hero's CSS `background: url('/assets/hero-*.webp')` gets rewritten by
+// Vite's SFC style processing into a hashed /_nuxt/ asset URL, not served
+// verbatim from public/. Importing the same files here (content-hashed, so
+// guaranteed to resolve to the identical URL) lets us <link rel="preload">
+// the exact resource the browser will actually request for the CSS
+// background, instead of a same-content-different-URL duplicate.
+import heroMobileUrl from '~/public/assets/hero-mobile.webp?url'
+import heroDesktopUrl from '~/public/assets/hero-desktop.webp?url'
 
 const { data: activity } = await useAsyncData('activity', () => getRecentActivity(), { default: () => [] })
 
@@ -341,7 +349,16 @@ useSeoMeta({
 })
 useHead({
   titleTemplate: '%s',
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/' }],
+  link: [
+    { rel: 'canonical', href: 'https://trailradar.org/' },
+    // The hero image is set via CSS `background:`, so the browser only
+    // discovers it after fetching+parsing the page's CSS — Lighthouse
+    // flags this as late LCP resource discovery. Preloading it lets the
+    // HTML preload scanner start the fetch immediately, in parallel with
+    // CSS/JS, instead of waiting on the CSS cascade.
+    { rel: 'preload', as: 'image', href: heroMobileUrl, media: '(max-width: 799px)', fetchpriority: 'high' },
+    { rel: 'preload', as: 'image', href: heroDesktopUrl, media: '(min-width: 800px)', fetchpriority: 'high' },
+  ],
   script: [
     {
       type: 'application/ld+json',

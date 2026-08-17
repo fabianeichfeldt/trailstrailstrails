@@ -20,15 +20,6 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
-  // Nuxt inlines all page CSS as <style> tags in <head> by default. On this
-  // site that means the full @fortawesome/fontawesome-free bundle (~126KB)
-  // gets re-embedded on every route, blocking first paint. Emit it as a
-  // linked stylesheet instead so the browser can fetch it in parallel and
-  // cache it across route navigations.
-  features: {
-    inlineStyles: false,
-  },
-
   experimental: {
     payloadExtraction: false,
     defaults: {
@@ -96,6 +87,7 @@ export default defineNuxtConfig({
 
   css: [
     '@fortawesome/fontawesome-free/css/all.css',
+    '~/assets/css/fontawesome-font-display.css',
     '~/assets/css/variables.css',
     '~/assets/css/base.css',
     '~/assets/css/marker.css',
