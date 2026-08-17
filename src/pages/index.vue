@@ -336,6 +336,30 @@ useSeoMeta({
 useHead({
   titleTemplate: '%s',
   link: [{ rel: 'canonical', href: 'https://trailradar.org/' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': 'https://trailradar.org/#organization',
+            name: 'Trailradar',
+            url: 'https://trailradar.org/',
+            logo: 'https://trailradar.org/assets/icon-512.png',
+          },
+          {
+            '@type': 'WebSite',
+            '@id': 'https://trailradar.org/#website',
+            name: 'Trailradar',
+            url: 'https://trailradar.org/',
+            publisher: { '@id': 'https://trailradar.org/#organization' },
+          },
+        ],
+      }),
+    },
+  ],
 })
 </script>
 
