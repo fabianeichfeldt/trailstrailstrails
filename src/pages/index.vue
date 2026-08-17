@@ -327,11 +327,17 @@ function formatDate(iso: string) {
 useSeoMeta({
   title: 'Trailradar – Offizielle MTB-Trails in Deutschland',
   description: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
+  ogTitle: 'Trailradar – Offizielle MTB-Trails in Deutschland',
+  ogDescription: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
   ogUrl: 'https://trailradar.org/',
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
   ogType: 'website',
   ogImage: 'https://trailradar.org/assets/spotchecks/fuerth.webp',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Trailradar – Offizielle MTB-Trails in Deutschland',
+  twitterDescription: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
+  twitterImage: 'https://trailradar.org/assets/spotchecks/fuerth.webp',
 })
 useHead({
   titleTemplate: '%s',
