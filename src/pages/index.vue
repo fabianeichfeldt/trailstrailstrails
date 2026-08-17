@@ -3,6 +3,10 @@
 
     <!-- Hero -->
     <section class="hero">
+      <picture class="hero-bg">
+        <source media="(min-width: 800px)" :srcset="'/assets/hero-desktop.webp'" />
+        <img :src="'/assets/hero-mobile.webp'" alt="" class="hero-bg-img" fetchpriority="high" />
+      </picture>
       <div class="hero-overlay" />
       <div class="hero-content">
         <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="hero-logo" />
@@ -316,14 +320,6 @@ import IconHeart from '~/assets/icons/heart.svg'
 import IconBriefcase from '~/assets/icons/briefcase.svg'
 import IconShield from '~/assets/icons/shield.svg'
 import { getRecentActivity } from '~/communication/activity'
-// The hero's CSS `background: url('/assets/hero-*.webp')` gets rewritten by
-// Vite's SFC style processing into a hashed /_nuxt/ asset URL, not served
-// verbatim from public/. Importing the same files here (content-hashed, so
-// guaranteed to resolve to the identical URL) lets us <link rel="preload">
-// the exact resource the browser will actually request for the CSS
-// background, instead of a same-content-different-URL duplicate.
-import heroMobileUrl from '~/public/assets/hero-mobile.webp?url'
-import heroDesktopUrl from '~/public/assets/hero-desktop.webp?url'
 
 const { data: activity } = await useAsyncData('activity', () => getRecentActivity(), { default: () => [] })
 
@@ -349,16 +345,7 @@ useSeoMeta({
 })
 useHead({
   titleTemplate: '%s',
-  link: [
-    { rel: 'canonical', href: 'https://trailradar.org/' },
-    // The hero image is set via CSS `background:`, so the browser only
-    // discovers it after fetching+parsing the page's CSS — Lighthouse
-    // flags this as late LCP resource discovery. Preloading it lets the
-    // HTML preload scanner start the fetch immediately, in parallel with
-    // CSS/JS, instead of waiting on the CSS cascade.
-    { rel: 'preload', as: 'image', href: heroMobileUrl, media: '(max-width: 799px)', fetchpriority: 'high' },
-    { rel: 'preload', as: 'image', href: heroDesktopUrl, media: '(min-width: 800px)', fetchpriority: 'high' },
-  ],
+  link: [{ rel: 'canonical', href: 'https://trailradar.org/' }],
   script: [
     {
       type: 'application/ld+json',
@@ -395,10 +382,17 @@ useHead({
   align-items: center;
   min-height: 260px;
   border-radius: 0 0 14px 14px;
-  background: url('/assets/hero-mobile.webp') center/cover no-repeat, #121212;
+  background: #121212;
 }
 @media (min-width: 800px) {
-  .hero { background-image: url('/assets/hero-desktop.webp'); min-height: 300px; }
+  .hero { min-height: 300px; }
+}
+.hero-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .hero-overlay {
   position: absolute;
