@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, writeFileSync } from 'node:fs'
 import { regions } from './build/region'
 import svgLoader from 'vite-svg-loader'
 
@@ -19,6 +19,15 @@ export default defineNuxtConfig({
   serverDir: './src/server',
 
   devtools: { enabled: true },
+
+  // Nuxt inlines all page CSS as <style> tags in <head> by default. On this
+  // site that means the full @fortawesome/fontawesome-free bundle (~126KB)
+  // gets re-embedded on every route, blocking first paint. Emit it as a
+  // linked stylesheet instead so the browser can fetch it in parallel and
+  // cache it across route navigations.
+  features: {
+    inlineStyles: false,
+  },
 
   experimental: {
     payloadExtraction: false,
@@ -298,6 +307,36 @@ export default defineNuxtConfig({
           (nitroConfig.prerender.routes as string[]).push(`/trails/${t.id}`)
         }
         console.log(`  ✓ Added ${all.length} trail routes for prerender (${trails.length} trails, ${parks.length} parks, ${dirtParks.length} dirtparks)`)
+
+        // Generate sitemap.xml from the same route data used for prerendering
+        // above, so it can never drift out of sync with the actual site
+        // (it previously was a hand-maintained file that omitted the
+        // homepage and referenced dead pre-migration .html URLs).
+        const staticPages: { path: string; priority: string; changefreq: string }[] = [
+          { path: '/', priority: '1.0', changefreq: 'daily' },
+          { path: '/map', priority: '0.9', changefreq: 'daily' },
+          { path: '/trailradar-vs-komoot', priority: '0.8', changefreq: 'monthly' },
+          { path: '/trailradar-vs-trailforks', priority: '0.8', changefreq: 'monthly' },
+          { path: '/articles', priority: '0.7', changefreq: 'weekly' },
+          { path: '/about', priority: '0.6', changefreq: 'monthly' },
+          { path: '/faq', priority: '0.6', changefreq: 'monthly' },
+          { path: '/support', priority: '0.6', changefreq: 'monthly' },
+          { path: '/business', priority: '0.6', changefreq: 'monthly' },
+          { path: '/legal', priority: '0.3', changefreq: 'yearly' },
+          { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
+          { path: '/terms', priority: '0.3', changefreq: 'yearly' },
+        ]
+        const lastmod = new Date().toISOString().slice(0, 10)
+        const urlXml = (loc: string, priority: string, changefreq: string) =>
+          `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+        const sitemapEntries = [
+          ...staticPages.map(p => urlXml(`https://trailradar.org${p.path}`, p.priority, p.changefreq)),
+          ...Object.keys(regions).map(slug => urlXml(`https://trailradar.org/trails/${slug}`, '0.8', 'weekly')),
+          ...all.map(t => urlXml(`https://trailradar.org/trails/${t.id}`, '0.6', 'weekly')),
+        ]
+        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
+        writeFileSync('src/public/sitemap.xml', sitemapXml)
+        console.log(`  ✓ Generated sitemap.xml with ${sitemapEntries.length} URLs`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)
       }
