@@ -124,7 +124,7 @@ export async function dislikeTrail(trailID: string, authService: IAuthService) {
 
 // ── GPX Data ──────────────────────────────────────────────────────────────────
 
-function toElevationProfile(points: [number, number, number][]): ElevationPoint[] {
+export function toElevationProfile(points: [number, number, number][]): ElevationPoint[] {
   if (points.length === 0) return []
   let cum = 0
   return points.map((p, i) => {
@@ -133,7 +133,7 @@ function toElevationProfile(points: [number, number, number][]): ElevationPoint[
       const dlng = (p[1] - points[i - 1][1]) * 111000 * Math.cos(p[0] * Math.PI / 180)
       cum += Math.hypot(dlat, dlng) / 1000
     }
-    return { dist: Math.round(cum * 10) / 10, alt: p[2] }
+    return { dist: cum, alt: p[2] }
   })
 }
 

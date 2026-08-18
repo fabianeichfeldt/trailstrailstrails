@@ -167,6 +167,20 @@ describe('toElevationProfile', () => {
     expect(profile[0].alt).toBe(500);
     expect(profile[1].alt).toBe(600);
   });
+
+  it('does not collapse closely-spaced points onto the same distance bucket', () => {
+    // Points ~11m apart (0.0001deg lat). Rounding cumulative distance to
+    // 0.1km/100m — as this function used to do — would give every one of
+    // these nine points the same `dist`, corrupting the x-axis of any chart
+    // drawn from this profile (a short/technical trail's elevation line
+    // collapses into vertical stacks instead of a readable curve).
+    const points: [number, number, number][] = Array.from({ length: 9 }, (_, i) => [
+      48.0 + i * 0.0001, 11.5, 500 + i,
+    ]);
+    const profile = toElevationProfile(points);
+    const dists = profile.map(p => p.dist);
+    expect(new Set(dists).size).toBe(dists.length);
+  });
 });
 
 // ── processGpx edge cases ──────────────────────────────────────────────────────
