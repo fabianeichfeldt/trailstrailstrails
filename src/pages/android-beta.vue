@@ -16,8 +16,9 @@
             <li>Du hilfst mit, die App vor dem offiziellen Release rund zu machen.</li>
           </ul>
 
-          <form v-if="status !== 'success'" @submit.prevent="handleSubmit">
-            <div v-if="status === 'duplicate'" class="form-error" role="alert">
+          <form v-if="status !== 'success' && status !== 'already'" @submit.prevent="handleSubmit">
+            <div v-if="fieldError" class="form-error" role="alert">{{ fieldError }}</div>
+            <div v-else-if="status === 'duplicate'" class="form-error" role="alert">
               Diese E-Mail-Adresse ist schon auf der Liste – danke, du bist schon dabei!
             </div>
             <div v-else-if="status === 'error'" class="form-error" role="alert">
@@ -38,6 +39,10 @@
               Für die Beta eintragen
             </button>
           </form>
+
+          <div v-else-if="status === 'already'" class="form-success" role="status">
+            Du bist schon auf der Liste – wir melden uns, sobald die Beta startet.
+          </div>
 
           <div v-else class="form-success" role="status">
             Danke, {{ name }}! Du bist auf der Liste – wir melden uns, sobald die Beta startet.
@@ -66,6 +71,9 @@
 
 <script setup lang="ts">
 import { submitBetaSignup } from '../communication/betaSignup'
+import { isValidEmail } from '../utils/isValidEmail'
+
+const SIGNED_UP_KEY = 'android-beta-signed-up'
 
 useSeoMeta({
   title: 'Android-Beta – Trailradar',
@@ -75,18 +83,40 @@ useSeoMeta({
 
 const name = ref('')
 const email = ref('')
-const status = ref<'idle' | 'submitting' | 'success' | 'duplicate' | 'error'>('idle')
+const status = ref<'idle' | 'submitting' | 'success' | 'duplicate' | 'error' | 'already'>('idle')
+const fieldError = ref('')
+
+// Already signed up on this device — skip the form and the API call
+// entirely instead of letting them submit again.
+onMounted(() => {
+  if (localStorage.getItem(SIGNED_UP_KEY) === '1') status.value = 'already'
+})
 
 async function handleSubmit() {
+  if (status.value === 'submitting') return
+
+  const trimmedName = name.value.trim()
+  const trimmedEmail = email.value.trim()
+
+  if (!trimmedName || !trimmedEmail) {
+    fieldError.value = 'Bitte Name und E-Mail-Adresse ausfüllen.'
+    return
+  }
+  if (!isValidEmail(trimmedEmail)) {
+    fieldError.value = 'Bitte eine gültige E-Mail-Adresse eingeben.'
+    return
+  }
+  fieldError.value = ''
+
   status.value = 'submitting'
   try {
-    await submitBetaSignup(name.value.trim(), email.value.trim())
+    await submitBetaSignup(trimmedName, trimmedEmail)
     status.value = 'success'
-    localStorage.setItem('android-beta-signed-up', '1')
+    localStorage.setItem(SIGNED_UP_KEY, '1')
   } catch (e) {
     const duplicate = e instanceof Error && e.message === 'DUPLICATE_EMAIL'
     status.value = duplicate ? 'duplicate' : 'error'
-    if (duplicate) localStorage.setItem('android-beta-signed-up', '1')
+    if (duplicate) localStorage.setItem(SIGNED_UP_KEY, '1')
   }
 }
 </script>
