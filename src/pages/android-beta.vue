@@ -42,6 +42,12 @@
           <div v-else class="form-success" role="status">
             Danke, {{ name }}! Du bist auf der Liste – wir melden uns, sobald die Beta startet.
           </div>
+
+          <p class="disclaimer">
+            Die Daten werden ausschließlich für den Rollout der Android-App verwendet und nach der
+            Beta-Phase gelöscht. Die Daten werden in Deutschland gespeichert und selbstverständlich
+            nicht weitergegeben. Mehr dazu unter <NuxtLink to="/privacy">Datenschutz</NuxtLink>.
+          </p>
         </div>
 
         <div class="visual-col">
@@ -223,5 +229,13 @@ form input:focus {
   background: #f5f5f5;
   max-width: 420px;
   font-weight: 500;
+}
+
+.disclaimer {
+  margin-top: 1.2rem;
+  max-width: 420px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #888;
 }
 </style>
