@@ -22,7 +22,7 @@
               Diese E-Mail-Adresse ist schon auf der Liste – danke, du bist schon dabei!
             </div>
             <div v-else-if="status === 'error'" class="form-error" role="alert">
-              Da ist etwas schiefgelaufen. Bitte versuch es gleich nochmal.
+              {{ errorMessage || 'Da ist etwas schiefgelaufen. Bitte versuch es gleich nochmal.' }}
             </div>
 
             <label>
@@ -85,6 +85,7 @@ const name = ref('')
 const email = ref('')
 const status = ref<'idle' | 'submitting' | 'success' | 'duplicate' | 'error' | 'already'>('idle')
 const fieldError = ref('')
+const errorMessage = ref('')
 
 // Already signed up on this device — skip the form and the API call
 // entirely instead of letting them submit again.
@@ -115,8 +116,13 @@ async function handleSubmit() {
     localStorage.setItem(SIGNED_UP_KEY, '1')
   } catch (e) {
     const duplicate = e instanceof Error && e.message === 'DUPLICATE_EMAIL'
-    status.value = duplicate ? 'duplicate' : 'error'
-    if (duplicate) localStorage.setItem(SIGNED_UP_KEY, '1')
+    if (duplicate) {
+      status.value = 'duplicate'
+      localStorage.setItem(SIGNED_UP_KEY, '1')
+    } else {
+      status.value = 'error'
+      errorMessage.value = e instanceof Error ? e.message : ''
+    }
   }
 }
 </script>

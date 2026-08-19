@@ -27,6 +27,16 @@ function err(status: number, text = 'error') {
   })
 }
 
+function rateLimited() {
+  return Promise.resolve({
+    ok: false,
+    status: 400,
+    text: () => Promise.resolve(JSON.stringify({
+      message: 'Gerade sehr viele Anmeldungen – bitte versuch es in ein paar Minuten erneut.',
+    })),
+  })
+}
+
 afterEach(() => vi.unstubAllGlobals())
 
 describe('submitBetaSignup', () => {
@@ -60,5 +70,11 @@ describe('submitBetaSignup', () => {
   it('throws a generic error with the status on other failures', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'server error')))
     await expect(submitBetaSignup('Jamie', 'jamie@example.com')).rejects.toThrow('500')
+  })
+
+  it('throws the Postgres error message when the response is a rate-limit rejection', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(rateLimited()))
+    await expect(submitBetaSignup('Jamie', 'jamie@example.com'))
+      .rejects.toThrow('Gerade sehr viele Anmeldungen – bitte versuch es in ein paar Minuten erneut.')
   })
 })
