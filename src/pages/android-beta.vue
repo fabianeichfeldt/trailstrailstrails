@@ -45,7 +45,13 @@
         </div>
 
         <div class="visual-col">
-          <img :src="'/assets/playstore.jpg'" alt="Google Play" class="playstore-logo" />
+          <div class="phone-frame">
+            <img :src="'/assets/phone-mockup.png'" alt="Trailradar auf dem Smartphone" class="phone-image" />
+            <div class="store-badge">
+              <img :src="'/assets/playstore.jpg'" alt="Google Play" class="playstore-logo" />
+              <span>Bald im Play Store</span>
+            </div>
+          </div>
         </div>
       </section>
     </main>
@@ -92,19 +98,46 @@ async function handleSubmit() {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.5rem;
+}
+
+.phone-frame {
+  position: relative;
+  width: 240px;
+}
+
+.phone-image {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.store-badge {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.9rem 0.4rem 0.5rem;
+  background: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a1a1a;
 }
 
 .playstore-logo {
-  width: 120px;
-  height: 120px;
+  width: 26px;
+  height: 26px;
   object-fit: contain;
 }
 
 @media (max-width: 700px) {
-  .signup-row { flex-direction: column-reverse; }
-  .visual-col { margin-bottom: 0.5rem; }
-  .playstore-logo { width: 90px; height: 90px; }
+  .signup-row { flex-direction: column-reverse; gap: 2.5rem; }
+  .phone-frame { width: 200px; }
 }
 
 .pitch {
