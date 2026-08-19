@@ -8,38 +8,44 @@
     <main class="container">
       <NuxtLink to="/" class="back-link">← Zurück zur Startseite</NuxtLink>
 
-      <section class="section">
-        <ul class="pitch">
-          <li>Alle Trails, Bikeparks und Dirtparks direkt auf dem Handy.</li>
-          <li>Offline-Karten für die nächste Tour ohne Empfang.</li>
-          <li>Du hilfst mit, die App vor dem offiziellen Release rund zu machen.</li>
-        </ul>
+      <section class="section signup-row">
+        <div class="form-col">
+          <ul class="pitch">
+            <li>Alle Trails, Bikeparks und Dirtparks direkt auf dem Handy.</li>
+            <li>Offline-Karten für die nächste Tour ohne Empfang.</li>
+            <li>Du hilfst mit, die App vor dem offiziellen Release rund zu machen.</li>
+          </ul>
 
-        <form v-if="status !== 'success'" @submit.prevent="handleSubmit">
-          <div v-if="status === 'duplicate'" class="form-error" role="alert">
-            Diese E-Mail-Adresse ist schon auf der Liste – danke, du bist schon dabei!
+          <form v-if="status !== 'success'" @submit.prevent="handleSubmit">
+            <div v-if="status === 'duplicate'" class="form-error" role="alert">
+              Diese E-Mail-Adresse ist schon auf der Liste – danke, du bist schon dabei!
+            </div>
+            <div v-else-if="status === 'error'" class="form-error" role="alert">
+              Da ist etwas schiefgelaufen. Bitte versuch es gleich nochmal.
+            </div>
+
+            <label>
+              <span>Name</span>
+              <input v-model="name" type="text" autocomplete="name" required />
+            </label>
+
+            <label>
+              <span>E-Mail</span>
+              <input v-model="email" type="email" autocomplete="email" required />
+            </label>
+
+            <button class="primary" type="submit" :class="{ loading: status === 'submitting' }">
+              Für die Beta eintragen
+            </button>
+          </form>
+
+          <div v-else class="form-success" role="status">
+            Danke, {{ name }}! Du bist auf der Liste – wir melden uns, sobald die Beta startet.
           </div>
-          <div v-else-if="status === 'error'" class="form-error" role="alert">
-            Da ist etwas schiefgelaufen. Bitte versuch es gleich nochmal.
-          </div>
+        </div>
 
-          <label>
-            <span>Name</span>
-            <input v-model="name" type="text" autocomplete="name" required />
-          </label>
-
-          <label>
-            <span>E-Mail</span>
-            <input v-model="email" type="email" autocomplete="email" required />
-          </label>
-
-          <button class="primary" type="submit" :class="{ loading: status === 'submitting' }">
-            Für die Beta eintragen
-          </button>
-        </form>
-
-        <div v-else class="form-success" role="status">
-          Danke, {{ name }}! Du bist auf der Liste – wir melden uns, sobald die Beta startet.
+        <div class="visual-col">
+          <img :src="'/assets/playstore.jpg'" alt="Google Play" class="playstore-logo" />
         </div>
       </section>
     </main>
@@ -72,6 +78,34 @@ async function handleSubmit() {
 
 <style scoped>
 .section { margin-bottom: 3em; }
+
+.signup-row {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+}
+
+.form-col { flex: 1 1 420px; }
+
+.visual-col {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.playstore-logo {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .signup-row { flex-direction: column-reverse; }
+  .visual-col { margin-bottom: 0.5rem; }
+  .playstore-logo { width: 90px; height: 90px; }
+}
 
 .pitch {
   list-style: none;
