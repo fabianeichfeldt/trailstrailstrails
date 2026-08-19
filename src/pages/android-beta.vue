@@ -82,8 +82,11 @@ async function handleSubmit() {
   try {
     await submitBetaSignup(name.value.trim(), email.value.trim())
     status.value = 'success'
+    localStorage.setItem('android-beta-signed-up', '1')
   } catch (e) {
-    status.value = e instanceof Error && e.message === 'DUPLICATE_EMAIL' ? 'duplicate' : 'error'
+    const duplicate = e instanceof Error && e.message === 'DUPLICATE_EMAIL'
+    status.value = duplicate ? 'duplicate' : 'error'
+    if (duplicate) localStorage.setItem('android-beta-signed-up', '1')
   }
 }
 </script>

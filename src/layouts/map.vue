@@ -3,6 +3,7 @@
     <slot />
     <ClientOnly>
       <PwaBanner />
+      <AndroidBetaHint />
     </ClientOnly>
   </div>
 </template>

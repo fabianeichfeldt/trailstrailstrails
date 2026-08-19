@@ -46,6 +46,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { usePwaInstall } from '~/composables/usePwaInstall'
+import { bottomBannerActive } from '~/composables/bottomBannerSlot'
 import IconShare from '~/assets/icons/share.svg'
 
 const { show, isIos, install, dismiss } = usePwaInstall()
@@ -59,6 +60,7 @@ const animatingOut = ref(false)
 watch(show, (newVal) => {
   if (newVal) {
     visible.value = true
+    bottomBannerActive.value = true
   }
 })
 
@@ -72,6 +74,7 @@ function handleDismiss() {
 
 function onAfterLeave() {
   animatingOut.value = false
+  bottomBannerActive.value = false
 }
 </script>
 
