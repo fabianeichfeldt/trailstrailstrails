@@ -3,7 +3,7 @@ import { bottomBannerActive } from './bottomBannerSlot'
 
 const DISMISS_KEY   = 'android-beta-hint-dismiss'
 const SIGNED_UP_KEY = 'android-beta-signed-up'
-const DISMISS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000
+const DISMISS_WINDOW_MS = 3 * 24 * 60 * 60 * 1000
 const DWELL_MS = 10_000
 
 export function useAndroidBetaHint() {
@@ -19,7 +19,7 @@ export function useAndroidBetaHint() {
     return { show, dismiss }
   }
 
-  // 3. Dismissed recently (within 14 days) — bail out
+  // 3. Dismissed recently (within 3 days) — bail  #out
   const dismissedAt = localStorage.getItem(DISMISS_KEY)
   if (dismissedAt && Date.now() - Number(dismissedAt) < DISMISS_WINDOW_MS) {
     return { show, dismiss }
