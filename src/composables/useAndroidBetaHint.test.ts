@@ -75,9 +75,9 @@ describe('useAndroidBetaHint', () => {
     unmount()
   })
 
-  it('dismissed within 14 days — show stays false', async () => {
-    const thirteenDaysAgo = Date.now() - 13 * 24 * 60 * 60 * 1000
-    mockLocalStorage({ 'android-beta-hint-dismiss': String(thirteenDaysAgo) })
+  it('dismissed within 3 days — show stays false', async () => {
+    const twoDays = Date.now() - 2 * 24 * 60 * 60 * 1000
+    mockLocalStorage({ 'android-beta-hint-dismiss': String(twoDays) })
     const useAndroidBetaHint = await getUseAndroidBetaHint()
     const { result, unmount } = withSetup(() => useAndroidBetaHint())
 
@@ -86,9 +86,9 @@ describe('useAndroidBetaHint', () => {
     unmount()
   })
 
-  it('dismissed >14 days ago — show becomes true after dwell', async () => {
-    const fifteenDaysAgo = Date.now() - 15 * 24 * 60 * 60 * 1000
-    mockLocalStorage({ 'android-beta-hint-dismiss': String(fifteenDaysAgo) })
+  it('dismissed >3 days ago — show becomes true after dwell', async () => {
+    const fifeDaysAgo = Date.now() - 5 * 24 * 60 * 60 * 1000
+    mockLocalStorage({ 'android-beta-hint-dismiss': String(fifeDaysAgo) })
     const useAndroidBetaHint = await getUseAndroidBetaHint()
     const { result, unmount } = withSetup(() => useAndroidBetaHint())
 
