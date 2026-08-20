@@ -81,7 +81,13 @@ export function useSegmentEditor(opts: Options) {
 
   async function loadFile(file: File) {
     const content = await file.text();
-    const processed = processGpx(content);
+    busy.value = true;
+    let processed;
+    try {
+      processed = await processGpx(content);
+    } finally {
+      busy.value = false;
+    }
     if (!processed) { alert('Ungültige GPX-Datei.'); return; }
 
     segmentSource.value    = processed;
@@ -284,7 +290,7 @@ export function useSegmentEditor(opts: Options) {
 
     for (const seg of pendingSegments.value) {
       try {
-        const result = processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx, seg.name);
+        const result = await processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx, seg.name);
         if (!result) continue;
         const gpxUrl = await uploadGpx(spotId.value, 'trails', `${seg.name}.gpx`, result.gpxContent, jwt);
         const newTrail = await upsertTrail({

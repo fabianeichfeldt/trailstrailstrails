@@ -3,6 +3,10 @@
 
     <!-- Hero -->
     <section class="hero">
+      <picture class="hero-bg">
+        <source media="(min-width: 800px)" :srcset="'/assets/hero-desktop.webp'" />
+        <img :src="'/assets/hero-mobile.webp'" alt="" class="hero-bg-img" fetchpriority="high" />
+      </picture>
       <div class="hero-overlay" />
       <div class="hero-content">
         <img :src="'/assets/logo.webp'" alt="Trailradar Logo" class="hero-logo" />
@@ -327,15 +331,45 @@ function formatDate(iso: string) {
 useSeoMeta({
   title: 'Trailradar – Offizielle MTB-Trails in Deutschland',
   description: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
+  ogTitle: 'Trailradar – Offizielle MTB-Trails in Deutschland',
+  ogDescription: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
   ogUrl: 'https://trailradar.org/',
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
   ogType: 'website',
   ogImage: 'https://trailradar.org/assets/spotchecks/fuerth.webp',
+  twitterCard: 'summary_large_image',
+  twitterTitle: 'Trailradar – Offizielle MTB-Trails in Deutschland',
+  twitterDescription: 'Trailradar gibt dir den besten Überblick über alle legal gebauten, offiziellen MTB Trails in Deutschland – übersichtlich auf der Karte.',
+  twitterImage: 'https://trailradar.org/assets/spotchecks/fuerth.webp',
 })
 useHead({
   titleTemplate: '%s',
   link: [{ rel: 'canonical', href: 'https://trailradar.org/' }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: JSON.stringify({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': 'https://trailradar.org/#organization',
+            name: 'Trailradar',
+            url: 'https://trailradar.org/',
+            logo: 'https://trailradar.org/assets/icon-512.png',
+          },
+          {
+            '@type': 'WebSite',
+            '@id': 'https://trailradar.org/#website',
+            name: 'Trailradar',
+            url: 'https://trailradar.org/',
+            publisher: { '@id': 'https://trailradar.org/#organization' },
+          },
+        ],
+      }),
+    },
+  ],
 })
 </script>
 
@@ -348,10 +382,17 @@ useHead({
   align-items: center;
   min-height: 260px;
   border-radius: 0 0 14px 14px;
-  background: url('/assets/hero-mobile.webp') center/cover no-repeat, #121212;
+  background: #121212;
 }
 @media (min-width: 800px) {
-  .hero { background-image: url('/assets/hero-desktop.webp'); min-height: 300px; }
+  .hero { min-height: 300px; }
+}
+.hero-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .hero-overlay {
   position: absolute;

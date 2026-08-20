@@ -132,13 +132,17 @@
 }
 
 .photo-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 0.2em;
-  padding: 0.35em 0.9em;
+  min-height: 44px;
+  padding: 0 18px;
   border-radius: 999px;
   border: none;
   background: linear-gradient(135deg, #2b6cb0, #3182ce);
   color: #fff;
-  font-size: 0.65em;
+  font-size: 13px;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
@@ -156,7 +160,7 @@
 
 .photo-login-link {
   margin-top: 0.2em;
-  font-size: 0.8em;
+  font-size: 13px;
   font-weight: bold;
   cursor: pointer;
   color: #2b6cb0;

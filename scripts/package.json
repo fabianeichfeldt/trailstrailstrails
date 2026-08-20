@@ -17,6 +17,8 @@
     "push-gpx-dry": "DRY_RUN=1 node push-gpx.js",
     "rewrite-gpx-headers": "node --env-file=.env rewrite-gpx-headers.js",
     "rewrite-gpx-headers-dry": "DRY_RUN=1 node --env-file=.env rewrite-gpx-headers.js",
+    "backfill-dem-elevation": "node --env-file=.env backfill-dem-elevation.js",
+    "backfill-dem-elevation-dry": "DRY_RUN=1 node --env-file=.env backfill-dem-elevation.js",
     "backup": "node --env-file=.env backup.js /Users/fabian/Documents/backups",
     "restore": "node --env-file=.env restore.js"
   },

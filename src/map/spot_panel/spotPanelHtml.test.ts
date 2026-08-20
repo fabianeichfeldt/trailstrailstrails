@@ -1,57 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { parkingHTML, trailsHTML, trailStatusCardFor, commentsHTML, type CommentsHtmlOptions } from './spotPanelHtml'
-import type { SpotParkingLot } from '../../communication/trails'
-import type { MtbTrail, MtbTour } from '../../types/MtbTypes'
-import { Comment } from '../../types/Comment'
+import { trailStatusCardFor, DIR_LABEL, DIR_ICON } from './spotPanelHtml'
+import type { MtbTrail, MtbTour, TrailDirection } from '../../types/MtbTypes'
 
-describe('parkingHTML', () => {
-  it('shows an empty-state message when there are no lots', () => {
-    const html = parkingHTML([])
-    expect(html).toContain('spot-empty')
-    expect(html).toContain('Keine Parkplätze')
-  })
-
-  it('renders the lot name plus all info entries', () => {
-    const lot: SpotParkingLot = {
-      id: 'p1', name: 'Main Lot', lat: 47.8, lng: 13.0,
-      info: ['Gewichtsbeschränkung: 3.5t', 'Öffnungszeiten: 24/7', 'Kosten: Kostenlos'],
-    }
-    const html = parkingHTML([lot])
-    expect(html).toContain('Main Lot')
-    expect(html).toContain('Gewichtsbeschränkung: 3.5t')
-    expect(html).toContain('Öffnungszeiten: 24/7')
-    expect(html).toContain('Kosten: Kostenlos')
-  })
-
-  it('renders no info lines when the info array is empty or missing, never rendering "null"/"undefined"', () => {
-    const lots: SpotParkingLot[] = [
-      { id: 'p2', name: 'North Entrance', lat: 47.8, lng: 13.0, info: [] },
-      { id: 'p3', name: 'South Entrance', lat: 47.9, lng: 13.1 },
-    ]
-    const html = parkingHTML(lots)
-    expect(html).toContain('North Entrance')
-    expect(html).toContain('South Entrance')
-    expect(html).not.toContain('null')
-    expect(html).not.toContain('undefined')
-  })
-
-  it('marks the highlighted lot as active and leaves others untouched', () => {
-    const lots: SpotParkingLot[] = [
-      { id: 'p1', name: 'Lot A', lat: 1, lng: 1 },
-      { id: 'p2', name: 'Lot B', lat: 2, lng: 2 },
-    ]
-    const html = parkingHTML(lots, 'p2')
-    const lotADiv = html.match(/<div class="spot-item[^"]*" data-id="p1"[^>]*>/)?.[0] ?? ''
-    const lotBDiv = html.match(/<div class="spot-item[^"]*" data-id="p2"[^>]*>/)?.[0] ?? ''
-    expect(lotADiv).not.toContain('active')
-    expect(lotBDiv).toContain('active')
-  })
-
-  it('renders each lot with a "parking" data-kind so click handling can dispatch on it', () => {
-    const lots: SpotParkingLot[] = [{ id: 'p1', name: 'Lot A', lat: 1, lng: 1 }]
-    expect(parkingHTML(lots)).toContain('data-kind="parking"')
-  })
-})
+// trailStatusCardFor() returns an HTMLElement, not markup — Vue components
+// that need it call it directly rather than reimplementing it.
 
 function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
   return {
@@ -61,40 +13,6 @@ function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
     ...overrides,
   }
 }
-
-describe('trailsHTML — status row tint + tag', () => {
-  it('renders no status tint or tag for an open trail', () => {
-    const html = trailsHTML([baseTrail()])
-    expect(html).not.toContain('trail-status-row-')
-    expect(html).not.toContain('trail-status-tag')
-  })
-
-  it('tints the row and tags "Gesperrt" for a trail with an active closed_from', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2000-01-01T00:00:00Z' })])
-    expect(html).toContain('trail-status-row-closed')
-    expect(html).toContain('trail-status-tag-closed')
-    expect(html).toContain('Gesperrt')
-  })
-
-  it('tints the row and tags "Hinweis" for a future closed_from', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2999-01-01T00:00:00Z' })])
-    expect(html).toContain('trail-status-row-hint')
-    expect(html).toContain('trail-status-tag-hint')
-    expect(html).toContain('Hinweis')
-  })
-
-  it('tints the row and tags "Hinweis" for a hint with no schedule', () => {
-    const html = trailsHTML([baseTrail({ hint: 'Erdrutsch, bitte umfahren' })])
-    expect(html).toContain('trail-status-row-hint')
-    expect(html).toContain('trail-status-tag-hint')
-  })
-
-  it('renders no tint or tag once an expired schedule has passed', () => {
-    const html = trailsHTML([baseTrail({ closed_from: '2000-01-01T00:00:00Z', closed_to: '2000-02-01T00:00:00Z' })])
-    expect(html).not.toContain('trail-status-row-')
-    expect(html).not.toContain('trail-status-tag')
-  })
-})
 
 function baseTour(overrides: Partial<MtbTour> = {}): MtbTour {
   return {
@@ -131,93 +49,11 @@ describe('trailStatusCardFor', () => {
   })
 })
 
-function baseComment(overrides: Partial<Comment> = {}): Comment {
-  return {
-    id: 1, created_at: '2026-08-01T00:00:00Z', spot_id: 's1', user_id: 'u1',
-    comment_text: 'Trail war heute top in Schuss!',
-    profiles: { display_name: 'Alice', avatar_url: '' },
-    ...overrides,
-  }
-}
-
-function baseOpts(overrides: Partial<CommentsHtmlOptions> = {}): CommentsHtmlOptions {
-  return {
-    expanded: true, hasMore: false, loggedIn: true,
-    currentUserId: 'u1', canModerate: false,
-    ...overrides,
-  }
-}
-
-describe('commentsHTML', () => {
-  it('collapsed: shows only the count toggle, no list or write box', () => {
-    const html = commentsHTML([baseComment()], baseOpts({ expanded: false }))
-    expect(html).toContain('data-action="toggle-comments"')
-    expect(html).toContain('1 Kommentar')
-    expect(html).not.toContain('comments-list')
-    expect(html).not.toContain('comments-write-box')
-  })
-
-  it('uses singular "Kommentar" for exactly one, plural "Kommentare" otherwise', () => {
-    expect(commentsHTML([baseComment()], baseOpts({ expanded: false }))).toContain('1 Kommentar<')
-    expect(commentsHTML([], baseOpts({ expanded: false }))).toContain('0 Kommentare')
-    expect(commentsHTML([baseComment({ id: 1 }), baseComment({ id: 2 })], baseOpts({ expanded: false })))
-      .toContain('2 Kommentare')
-  })
-
-  it('appends a "+" to the count when more comments exist than the loaded page', () => {
-    const html = commentsHTML([baseComment()], baseOpts({ expanded: false, hasMore: true }))
-    expect(html).toContain('1+ Kommentar')
-  })
-
-  it('shows an empty-state message when expanded with no comments', () => {
-    const html = commentsHTML([], baseOpts())
-    expect(html).toContain('Noch keine Kommentare')
-  })
-
-  it('expanded: renders author, date and text for each comment', () => {
-    const html = commentsHTML([baseComment({ comment_text: 'Super Trail!' })], baseOpts())
-    expect(html).toContain('Alice')
-    expect(html).toContain('Super Trail!')
-  })
-
-  it('escapes HTML in comment text and author name (freeform user content, XSS risk)', () => {
-    const html = commentsHTML([baseComment({
-      comment_text: '<img src=x onerror=alert(1)>',
-      profiles: { display_name: '<b>Mallory</b>', avatar_url: '' },
-    })], baseOpts())
-    expect(html).not.toContain('<img src=x onerror=alert(1)>')
-    expect(html).not.toContain('<b>Mallory</b>')
-    expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;')
-    expect(html).toContain('&lt;b&gt;Mallory&lt;/b&gt;')
-  })
-
-  it('shows a delete control for the comment author, even when not a moderator', () => {
-    const html = commentsHTML([baseComment({ user_id: 'u1' })], baseOpts({ currentUserId: 'u1', canModerate: false }))
-    expect(html).toContain('data-action="delete-comment"')
-  })
-
-  it('shows a delete control for a moderator on someone else\'s comment', () => {
-    const html = commentsHTML([baseComment({ user_id: 'other' })], baseOpts({ currentUserId: 'u1', canModerate: true }))
-    expect(html).toContain('data-action="delete-comment"')
-  })
-
-  it('hides the delete control for a non-author, non-moderator viewer', () => {
-    const html = commentsHTML([baseComment({ user_id: 'other' })], baseOpts({ currentUserId: 'u1', canModerate: false }))
-    expect(html).not.toContain('data-action="delete-comment"')
-  })
-
-  it('shows "load older" only when expanded and hasMore is true', () => {
-    expect(commentsHTML([baseComment()], baseOpts({ hasMore: true }))).toContain('data-action="load-more-comments"')
-    expect(commentsHTML([baseComment()], baseOpts({ hasMore: false }))).not.toContain('data-action="load-more-comments"')
-  })
-
-  it('shows the write box when logged in, and a login prompt otherwise', () => {
-    const loggedIn = commentsHTML([], baseOpts({ loggedIn: true }))
-    expect(loggedIn).toContain('data-action="post-comment"')
-    expect(loggedIn).not.toContain('data-action="login-comments"')
-
-    const anon = commentsHTML([], baseOpts({ loggedIn: false }))
-    expect(anon).toContain('data-action="login-comments"')
-    expect(anon).not.toContain('data-action="post-comment"')
+describe('DIR_ICON', () => {
+  it('has a leading-glyph-only entry for every DIR_LABEL direction', () => {
+    const directions = Object.keys(DIR_LABEL) as TrailDirection[]
+    for (const dir of directions) {
+      expect(DIR_ICON[dir]).toBe(DIR_LABEL[dir].split(' ')[0])
+    }
   })
 })

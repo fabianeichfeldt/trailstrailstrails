@@ -37,6 +37,7 @@
         :initial-type="addSpotModal.type"
         @close="addSpotModal.open = false"
       />
+      <SpotPanel :on-hover="handleElevationHover" :on-hover-end="handleElevationHoverEnd" />
     </ClientOnly>
 
     <AuthModal />
@@ -65,14 +66,23 @@ const route = useRoute()
 
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
+let onElevationHover = (_latlng: [number, number], _color: string) => {}
+let onElevationHoverEnd = () => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
 const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
 const trailIdFromQuery = route.query.trail as string | undefined
 
-function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (lat: number, lon: number) => void }) {
+function onMapReady(handlers: {
+  openTrail: (id: string) => void
+  flyToPlace: (lat: number, lon: number) => void
+  onElevationHover: (latlng: [number, number], color: string) => void
+  onElevationHoverEnd: () => void
+}) {
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
+  onElevationHover = handlers.onElevationHover
+  onElevationHoverEnd = handlers.onElevationHoverEnd
 
   // Open trail from query param — only after map is ready so openTrail is the real function
   if (trailIdFromQuery) {
@@ -89,6 +99,12 @@ function onMapReady(handlers: { openTrail: (id: string) => void; flyToPlace: (la
 
 function handleOpenTrail(id: string) { openTrail(id) }
 function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
+// SpotPanel.vue -> SpotPanelElevation.vue's hover bridge props — thin
+// wrappers so SpotPanel always calls the CURRENT closure (onElevationHover
+// is reassigned once MapView's `ready` event fires), same pattern as
+// handleOpenTrail/handleFlyTo above.
+function handleElevationHover(latlng: [number, number], color: string) { onElevationHover(latlng, color) }
+function handleElevationHoverEnd() { onElevationHoverEnd() }
 
 function onSpotPicked(pick: { lat: number; lng: number; type: string }) {
   addSpotModal.lat = pick.lat

@@ -233,10 +233,11 @@
             @drop.prevent="onDrop"
           >
             <i class="fas fa-cloud-upload-alt sm-drop-icon" />
-            <p>GPX-Dateien hier ablegen</p>
-            <label class="sm-btn-secondary sm-drop-browse">
+            <p v-if="busy">Höhendaten werden ermittelt …</p>
+            <p v-else>GPX-Dateien hier ablegen</p>
+            <label class="sm-btn-secondary sm-drop-browse" :class="{ 'sm-btn-disabled': busy }">
               <i class="fas fa-folder-open" /> Durchsuchen
-              <input type="file" accept=".gpx" multiple hidden @change="onFileInput" />
+              <input type="file" accept=".gpx" multiple hidden :disabled="busy" @change="onFileInput" />
             </label>
           </div>
 
@@ -388,7 +389,7 @@
             />
           </label>
           <label class="sm-file-label">GPX ersetzen (optional)
-            <input type="file" accept=".gpx" @change="onEditGpx" />
+            <input type="file" accept=".gpx" :disabled="busy" @change="onEditGpx" />
           </label>
           <div v-if="editGpxInfo" class="sm-gpx-info">{{ editGpxInfo }}</div>
 
@@ -436,7 +437,7 @@
             </label>
           </div>
           <label class="sm-file-label">GPX ersetzen (optional)
-            <input type="file" accept=".gpx" @change="onEditGpx" />
+            <input type="file" accept=".gpx" :disabled="busy" @change="onEditGpx" />
           </label>
           <div v-if="editGpxInfo" class="sm-gpx-info">{{ editGpxInfo }}</div>
           <div class="sm-form-actions">
@@ -1236,13 +1237,20 @@ async function onEditGpx(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
   const content = await file.text()
-  const processed = processGpx(content)
-  if (!processed) return
-  editNewGpx.value = processed
-  editGpxInfo.value = `✓ ${processed.rawCount} → ${processed.thinnedCount} Punkte · ${processed.distance_km} km`
-  const color = editingTrail.value ? (DIFF_COLOR[editingTrail.value.difficulty as ImbaColor] ?? '#888') : '#333'
-  mapView.value?.addPendingPolyline('edit-preview', processed.gpxPoints, color)
-  mapView.value?.fitTo('edit-preview')
+  busy.value = true
+  editGpxInfo.value = 'Höhendaten werden ermittelt …'
+  try {
+    const processed = await processGpx(content)
+    if (!processed) { editGpxInfo.value = ''; return }
+    editNewGpx.value = processed
+    const heightNote = processed.demCorrected ? '' : ' · Höhe: GPX (DEM nicht erreichbar)'
+    editGpxInfo.value = `✓ ${processed.rawCount} → ${processed.thinnedCount} Punkte · ${processed.distance_km} km${heightNote}`
+    const color = editingTrail.value ? (DIFF_COLOR[editingTrail.value.difficulty as ImbaColor] ?? '#888') : '#333'
+    mapView.value?.addPendingPolyline('edit-preview', processed.gpxPoints, color)
+    mapView.value?.fitTo('edit-preview')
+  } finally {
+    busy.value = false
+  }
 }
 
 async function saveTrailEdit() {
@@ -1372,22 +1380,27 @@ function onFileInput(e: Event) {
 }
 
 async function handleFiles(files: File[]) {
-  for (const file of files) {
-    if (!file.name.toLowerCase().endsWith('.gpx')) continue
-    const content = await file.text()
-    const processed = processGpx(content)
-    if (!processed) continue
+  busy.value = true
+  try {
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.gpx')) continue
+      const content = await file.text()
+      const processed = await processGpx(content)
+      if (!processed) continue
 
-    const key = `pending-${crypto.randomUUID()}`
-    pending.value.push({
-      key, filename: file.name, processed,
-      name: processed.suggestedName || file.name.replace(/\.gpx$/i, ''),
-      difficulty: 'blue',
-      direction: 'one-way-down',
-    })
-    mapView.value?.addPendingPolyline(key, processed.gpxPoints, DIFF_COLOR['blue'])
+      const key = `pending-${crypto.randomUUID()}`
+      pending.value.push({
+        key, filename: file.name, processed,
+        name: processed.suggestedName || file.name.replace(/\.gpx$/i, ''),
+        difficulty: 'blue',
+        direction: 'one-way-down',
+      })
+      mapView.value?.addPendingPolyline(key, processed.gpxPoints, DIFF_COLOR['blue'])
+    }
+    if (pending.value.length > 0) mapView.value?.fitAll()
+  } finally {
+    busy.value = false
   }
-  if (pending.value.length > 0) mapView.value?.fitAll()
 }
 
 function updatePendingColor(i: number) {
@@ -1761,6 +1774,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
 }
+.sm-drop-browse.sm-btn-disabled { opacity: .5; cursor: not-allowed; }
 .sm-pending-cards-list { display: flex; flex-direction: column; gap: 10px; }
 .sm-pending-card {
   border: 1px solid #d4e6f7; border-radius: 10px; background: #f0f7ff;

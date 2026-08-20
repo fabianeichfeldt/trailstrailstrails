@@ -1,0 +1,30 @@
+/*
+ * @fortawesome/fontawesome-free ships its @font-face rules with
+ * font-display: block (invisible text until the font loads). Lighthouse
+ * flags this as ~3s of avoidable FCP delay. Re-declaring the same
+ * family/weight/src with font-display: swap overrides it — @font-face
+ * matching is by declaration order, not specificity, so this just needs
+ * to load after fontawesome's own CSS (see the `css` array order in
+ * nuxt.config.ts).
+ */
+@font-face {
+  font-family: "Font Awesome 7 Free";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-regular-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Font Awesome 7 Free";
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url("../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-solid-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Font Awesome 7 Brands";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../../../node_modules/@fortawesome/fontawesome-free/webfonts/fa-brands-400.woff2") format("woff2");
+}
