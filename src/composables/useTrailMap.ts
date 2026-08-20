@@ -1,6 +1,5 @@
 import type { Ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
-import { App } from '@capacitor/app'
 import type { Trail } from '~/types/Trail'
 import type { MtbTour, MtbTrail } from '~/types/MtbTypes'
 import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
@@ -17,7 +16,7 @@ import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { drawTrailPolylines, addSegmentLabel } from '~/map/spot_panel/spotPanelPolylines'
-import { showToast } from '~/utils/toast'
+import { registerBackHandler } from '~/utils/nativeBack'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -691,33 +690,24 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       cancelAddMode()
     })
 
-    // Android hardware/gesture back: dismiss whatever's on top before falling
-    // back to router history, and only exit the app once there's nothing left
-    // to close. Without this, Capacitor's default behaviour exits the app
-    // from anywhere, including with the spot panel or add-mode still open.
-    let removeBackButtonListener: (() => void) | null = null
+    // Android hardware/gesture back: dismiss whatever's on top of the map
+    // before the global listener (plugins/capacitor.client.ts — it has to
+    // live outside this composable since it must also handle back on pages,
+    // like root, that never mount a map at all) falls through to router
+    // history or app exit.
+    let unregisterBackHandler: (() => void) | null = null
     if (Capacitor.isNativePlatform()) {
-      let lastExitPressAt = 0
-      const handle = await App.addListener('backButton', ({ canGoBack }) => {
-        if (spotPanelStore.isOpen) { spotPanelStore.close(); return }
-        if (statusSheet.isOpen) { statusSheet.close(); return }
-        if (addMode) { cancelAddMode(); return }
-        if (canGoBack) { window.history.back(); return }
-        // Nothing left to close and nowhere left to go back to — require a
-        // second press within 2s rather than exiting on a single accidental tap.
-        if (Date.now() - lastExitPressAt < 2000) {
-          App.exitApp()
-        } else {
-          lastExitPressAt = Date.now()
-          showToast('Nochmal drücken zum Beenden')
-        }
+      unregisterBackHandler = registerBackHandler(() => {
+        if (spotPanelStore.isOpen) { spotPanelStore.close(); return true }
+        if (statusSheet.isOpen) { statusSheet.close(); return true }
+        if (addMode) { cancelAddMode(); return true }
+        return false
       })
-      removeBackButtonListener = () => handle.remove()
     }
 
     cleanupFn = () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
-      removeBackButtonListener?.()
+      unregisterBackHandler?.()
       mymap.remove()
     }
   })
