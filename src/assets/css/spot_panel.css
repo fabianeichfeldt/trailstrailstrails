@@ -41,6 +41,22 @@
   height: 8px;
 }
 
+/* Capacitor safe-area readiness — mobile bottom sheet only. Scoped to its
+   own query (rather than the base .spot-panel/.spot-panel-handle rules)
+   because the desktop panel below already has its own bottom:12px/top:12px
+   spacing and doesn't reset padding, so adding this inline up top would
+   leak into the desktop panel too. env() resolves to 0 on the web and on
+   any non-notched device, so both rules are a no-op until wrapped natively
+   on a device with real insets. */
+@media (max-width: 767px) {
+  .spot-panel {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .spot-panel-handle {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 /* ── Header ───────────────────────────────────────────────── */
 .spot-panel-header {
   display: flex;
