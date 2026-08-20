@@ -25,6 +25,11 @@
               {{ errorMessage || 'Da ist etwas schiefgelaufen. Bitte versuch es gleich nochmal.' }}
             </div>
 
+            <p class="form-note">
+              Sorry, die Beta ist noch nicht ganz fertig. Trag dich einfach mit deiner E-Mail-Adresse
+              ein und du bekommst eine Benachrichtigung, sobald es losgeht.
+            </p>
+
             <label>
               <span>Name</span>
               <input v-model="name" type="text" autocomplete="name" required />
@@ -235,6 +240,17 @@ form input[type="text"] {
 form input:focus {
   outline: none;
   border-color: var(--color-page-accent);
+}
+
+.form-note {
+  margin: 0 0 1.2rem;
+  padding: .7rem .9rem;
+  border-radius: 12px;
+  background: rgba(88, 194, 125, 0.1);
+  border: 1px solid rgba(88, 194, 125, 0.25);
+  color: #3a3a3a;
+  font-size: .85rem;
+  line-height: 1.5;
 }
 
 .primary {
