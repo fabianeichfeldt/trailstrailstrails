@@ -17,6 +17,7 @@ import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { drawTrailPolylines, addSegmentLabel } from '~/map/spot_panel/spotPanelPolylines'
+import { showToast } from '~/utils/toast'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -696,12 +697,20 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // from anywhere, including with the spot panel or add-mode still open.
     let removeBackButtonListener: (() => void) | null = null
     if (Capacitor.isNativePlatform()) {
+      let lastExitPressAt = 0
       const handle = await App.addListener('backButton', ({ canGoBack }) => {
-        if (spotPanel.isOpen) { spotPanel.close(); return }
+        if (spotPanelStore.isOpen) { spotPanelStore.close(); return }
         if (statusSheet.isOpen) { statusSheet.close(); return }
         if (addMode) { cancelAddMode(); return }
-        if (canGoBack) { window.history.back() }
-        else { App.exitApp() }
+        if (canGoBack) { window.history.back(); return }
+        // Nothing left to close and nowhere left to go back to — require a
+        // second press within 2s rather than exiting on a single accidental tap.
+        if (Date.now() - lastExitPressAt < 2000) {
+          App.exitApp()
+        } else {
+          lastExitPressAt = Date.now()
+          showToast('Nochmal drücken zum Beenden')
+        }
       })
       removeBackButtonListener = () => handle.remove()
     }
