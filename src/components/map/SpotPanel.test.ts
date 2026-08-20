@@ -10,8 +10,12 @@ import { useSpotPanelStore } from '~/stores/spotPanel'
 // component is stubbed for that reason.
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
-vi.mock('~/map/spot_panel/dragHandle', () => ({ initDragHandle: vi.fn() }))
-import { initDragHandle } from '~/map/spot_panel/dragHandle'
+vi.mock('~/map/spot_panel/dragHandle', () => ({
+  initDragHandle: vi.fn(),
+  snapTo: vi.fn(),
+  isDesktopViewport: vi.fn(() => false),
+}))
+import { initDragHandle, snapTo, isDesktopViewport } from '~/map/spot_panel/dragHandle'
 
 import SpotPanel from './SpotPanel.vue'
 import SpotPanelParkingTab from './SpotPanelParkingTab.vue'
@@ -25,6 +29,8 @@ describe('SpotPanel', () => {
     setActivePinia(createPinia())
     store = useSpotPanelStore()
     vi.mocked(initDragHandle).mockReset()
+    vi.mocked(snapTo).mockReset()
+    vi.mocked(isDesktopViewport).mockReset().mockReturnValue(false)
   })
 
   function mountPanel() {
@@ -93,5 +99,37 @@ describe('SpotPanel', () => {
   it('initializes the drag handle on mount', () => {
     mountPanel()
     expect(initDragHandle).toHaveBeenCalledTimes(1)
+  })
+
+  it('snaps the sheet to full when a selection is made on mobile', async () => {
+    const wrapper = mountPanel()
+    expect(snapTo).not.toHaveBeenCalled()
+
+    store.selectItem('trail-1', 'trail')
+    await wrapper.vm.$nextTick()
+
+    expect(snapTo).toHaveBeenCalledTimes(1)
+    expect(snapTo).toHaveBeenCalledWith(wrapper.get('.spot-panel').element, 'full')
+  })
+
+  it('does not snap again when switching the selection while already selected', async () => {
+    const wrapper = mountPanel()
+    store.selectItem('trail-1', 'trail')
+    await wrapper.vm.$nextTick()
+    expect(snapTo).toHaveBeenCalledTimes(1)
+
+    store.selectItem('trail-2', 'trail')
+    await wrapper.vm.$nextTick()
+    expect(snapTo).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not snap on desktop', async () => {
+    vi.mocked(isDesktopViewport).mockReturnValue(true)
+    const wrapper = mountPanel()
+
+    store.selectItem('trail-1', 'trail')
+    await wrapper.vm.$nextTick()
+
+    expect(snapTo).not.toHaveBeenCalled()
   })
 })

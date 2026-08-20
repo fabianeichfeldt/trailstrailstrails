@@ -13,8 +13,8 @@
   display: flex;
   flex-direction: column;
   height: 56vh;
-  min-height: 320px;
-  max-height: 72vh;
+  min-height: 15vh;
+  max-height: 92vh;
   pointer-events: none; /* prevent map clicks bleeding through when closed */
 }
 
@@ -41,13 +41,29 @@
   height: 8px;
 }
 
+/* Capacitor safe-area readiness — mobile bottom sheet only. Scoped to its
+   own query (rather than the base .spot-panel/.spot-panel-handle rules)
+   because the desktop panel below already has its own bottom:12px/top:12px
+   spacing and doesn't reset padding, so adding this inline up top would
+   leak into the desktop panel too. env() resolves to 0 on the web and on
+   any non-notched device, so both rules are a no-op until wrapped natively
+   on a device with real insets. */
+@media (max-width: 767px) {
+  .spot-panel {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .spot-panel-handle {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
 /* ── Header ───────────────────────────────────────────────── */
 .spot-panel-header {
   display: flex;
   flex-direction: column;
   padding: 10px 14px 6px;
   flex-shrink: 0;
-  gap: 3px;
+  gap: 7px;
 }
 
 .spot-panel-title-row {
@@ -58,7 +74,7 @@
 
 .spot-panel-title {
   font-weight: 700;
-  font-size: 15px;
+  font-size: 18px;
   color: #1a1a2e;
   white-space: nowrap;
   overflow: hidden;
@@ -70,7 +86,7 @@
 .spot-panel-meta-row {
   display: flex;
   align-items: center;
-  min-height: 20px;
+  min-height: 44px;
 }
 
 .spot-panel-org-link {
@@ -125,12 +141,17 @@
 }
 
 .spot-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   font-size: 16px;
   cursor: pointer;
   color: #777;
-  padding: 3px 6px;
+  padding: 0;
   line-height: 1;
   border-radius: 6px;
   transition: background 0.15s, color 0.15s;
@@ -139,12 +160,17 @@
 .spot-action-btn.hidden { display: none; }
 
 .spot-panel-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   font-size: 17px;
   cursor: pointer;
   color: #666;
-  padding: 4px 6px;
+  padding: 0;
   line-height: 1;
   border-radius: 50%;
   flex-shrink: 0;
@@ -178,8 +204,18 @@
 }
 
 /* ── Item list ────────────────────────────────────────────── */
-.spot-panel-body {
+/* Takes the flex column's remaining space below the tabs (what
+   .spot-panel-body's own flex:1 used to do) and gives .spot-panel-body /
+   .spot-elevation-panel a positioning context to layer inside — see below. */
+.spot-panel-content-area {
+  position: relative;
   flex: 1;
+  min-height: 0;
+}
+
+.spot-panel-body {
+  position: absolute;
+  inset: 0;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
@@ -270,7 +306,7 @@
   min-width: 0;
 }
 .spot-item-info strong {
-  font-size: 13px;
+  font-size: 14px;
   color: #1a1a1a;
   white-space: nowrap;
   overflow: hidden;
@@ -281,8 +317,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: 13px;
   flex-shrink: 0;
   cursor: pointer;
@@ -313,18 +349,16 @@
 
 .spot-item-stats {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: center;
   font-size: 11px;
   color: #555;
 }
 .spot-item-stats span { white-space: nowrap; }
 
 .direction-tag {
-  font-size: 10px;
+  font-size: 12px;
+  margin-left: 4px;
   color: #2b6cb0;
-  font-weight: 600;
 }
 
 .spot-item-arrow {
@@ -377,11 +411,17 @@
 .parking-hint strong { color: #444; font-weight: 600; }
 
 /* ── Elevation profile ────────────────────────────────────── */
+/* Drill-in overlay: fully replaces .spot-panel-body instead of squeezing it
+   into a shrunk sibling — both are absolutely positioned inside the same
+   .spot-panel-content-area, so only one is ever actually taking up room. */
 .spot-elevation-panel {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   border-top: 1px solid #eee;
   padding: 10px 14px 12px;
   background: #fafafa;
-  flex-shrink: 0;
   transition: opacity 0.2s;
 }
 .spot-elevation-panel.hidden { display: none; }
@@ -412,8 +452,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  min-width: 44px;
+  min-height: 44px;
   font-size: 14px;
   cursor: pointer;
   border: none;
@@ -433,12 +473,17 @@
   display: none;
 }
 .spot-elevation-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   background: none;
   border: none;
   font-size: 13px;
   color: #aaa;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0;
   line-height: 1;
 }
 
@@ -487,8 +532,8 @@
 }
 
 .ssb-dot {
-  width: 10px;
-  height: 10px;
+  width: 13px;
+  height: 13px;
   border-radius: 50%;
   flex-shrink: 0;
   margin-top: 3px;
@@ -503,14 +548,14 @@
   flex-direction: column;
   min-width: 0;
 }
-.ssb-labels strong { font-size: 13px; font-weight: 700; line-height: 1.3; }
+.ssb-labels strong { font-size: 16px; font-weight: 700; line-height: 1.3; }
 .ssb-open    .ssb-labels strong { color: #276749; }
 .ssb-limited .ssb-labels strong { color: #744210; }
 .ssb-closed  .ssb-labels strong { color: #822727; }
 .ssb-unknown .ssb-labels strong { color: #555;    }
 
 .ssb-hint {
-  font-size: 11px;
+  font-size: 13px;
   color: #666;
   margin-top: 1px;
   line-height: 1.3;
