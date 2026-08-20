@@ -10,6 +10,10 @@ const config: CapacitorConfig = {
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
     },
+    StatusBar: {
+      style: 'DARK',
+      overlaysWebView: true,
+    },
   },
 };
 

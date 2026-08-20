@@ -5,6 +5,9 @@
 html, body {
   margin: 0;
   font-family: var(--font-base);
+  /* Kills the rubber-band/glow overscroll effect — inside a native WebView
+     shell it reads as "this is just a website", not a native gesture. */
+  overscroll-behavior: none;
 }
 
 h1, h2, h3, h4, h5, h6 {

@@ -40,7 +40,7 @@ export default defineNuxtConfig({
       ],
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#1b4332' },
         { property: 'og:image', content: 'https://trailradar.org/assets/hero-desktop.webp' },
         { property: 'og:type', content: 'website' },
