@@ -44,7 +44,10 @@ describe('SpotPanelTrailsTab', () => {
     const wrapper = mount(SpotPanelTrailsTab)
     expect(wrapper.text()).toContain('Flowtrail')
     expect(wrapper.text()).toContain('4.2 km')
-    expect(wrapper.text()).toContain('Nur bergab')
+    // Direction is shown as an icon-only glyph (§Phase 2 list-density), with
+    // the full German label kept as the accessible/tooltip title.
+    expect(wrapper.get('.direction-tag').text()).toBe('⤵')
+    expect(wrapper.get('.direction-tag').attributes('title')).toBe('⤵ Nur bergab')
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')
   })
 

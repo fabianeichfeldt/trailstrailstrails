@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { trailStatusCardFor } from './spotPanelHtml'
-import type { MtbTrail, MtbTour } from '../../types/MtbTypes'
+import { trailStatusCardFor, DIR_LABEL, DIR_ICON } from './spotPanelHtml'
+import type { MtbTrail, MtbTour, TrailDirection } from '../../types/MtbTypes'
 
 // trailStatusCardFor() returns an HTMLElement, not markup — Vue components
 // that need it call it directly rather than reimplementing it.
@@ -46,5 +46,14 @@ describe('trailStatusCardFor', () => {
     expect(el).not.toBeNull()
     expect(el!.className).toContain('trail-status-info-closing')
     expect(el!.textContent).toContain('Erdrutsch, bitte umfahren')
+  })
+})
+
+describe('DIR_ICON', () => {
+  it('has a leading-glyph-only entry for every DIR_LABEL direction', () => {
+    const directions = Object.keys(DIR_LABEL) as TrailDirection[]
+    for (const dir of directions) {
+      expect(DIR_ICON[dir]).toBe(DIR_LABEL[dir].split(' ')[0])
+    }
   })
 })

@@ -26,14 +26,15 @@
               @click.stop
             ><i class="fas fa-download"></i></a>
           </div>
-          <span class="spot-item-sub">{{ IMBA[t.difficulty].label }}</span>
+          <span class="spot-item-sub">
+            {{ IMBA[t.difficulty].label }}
+            <span class="direction-tag" :title="DIR_LABEL[t.direction]">{{ DIR_ICON[t.direction] }}</span>
+          </span>
         </div>
       </div>
       <div class="spot-item-right">
         <div class="spot-item-stats">
-          <span>📍 {{ t.distance_km }} km</span>
-          <span>↑{{ t.elevation_gain }}m &nbsp;↓{{ t.elevation_loss }}m</span>
-          <span class="direction-tag">{{ DIR_LABEL[t.direction] }}</span>
+          <span>📍 {{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
         </div>
         <span class="spot-item-arrow">›</span>
       </div>
@@ -44,7 +45,7 @@
 <script setup lang="ts">
 import type { MtbTrail } from '~/types/MtbTypes'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
-import { DIR_LABEL } from '~/map/spot_panel/spotPanelHtml'
+import { DIR_LABEL, DIR_ICON } from '~/map/spot_panel/spotPanelHtml'
 import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
 
 const store = useSpotPanelStore()
