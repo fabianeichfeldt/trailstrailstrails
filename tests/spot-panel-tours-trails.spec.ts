@@ -193,3 +193,60 @@ test('Tours/Trails tabs and the elevation panel render correctly on a small (mob
   await expect(page.locator('.spot-elevation-panel')).toBeVisible();
   await expect(page.locator('.spot-elevation-name')).toHaveText('Talabfahrt');
 });
+
+test('selecting a trail at mobile width snaps the sheet to full height and the elevation view fully covers the list (drill-in, not a squeeze)', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await mockGpxData(page);
+  await openTrailPanel(page);
+
+  const panelBoxBefore = await page.locator('.spot-panel').boundingBox();
+  expect(panelBoxBefore).not.toBeNull();
+  const beforeVh = (panelBoxBefore!.height / 700) * 100;
+  expect(beforeVh).toBeLessThan(70); // still at the default 'half' (56vh), not already expanded
+
+  await page.locator('.spot-tab[data-tab="trails"]').click();
+  await page.locator('.spot-item[data-id="gt1"]').click();
+  await page.waitForTimeout(350); // let the height transition finish
+
+  const panelBoxAfter = await page.locator('.spot-panel').boundingBox();
+  expect(panelBoxAfter).not.toBeNull();
+  const afterVh = (panelBoxAfter!.height / 700) * 100;
+  expect(afterVh).toBeGreaterThan(85); // snapped to ~92vh ('full')
+
+  // The elevation overlay fills exactly the area the list used to occupy —
+  // confirms a drill-in replace, not a flex sibling squeezing the list.
+  const contentArea = await page.locator('.spot-panel-content-area').boundingBox();
+  const elevationPanel = await page.locator('.spot-elevation-panel').boundingBox();
+  expect(contentArea).not.toBeNull();
+  expect(elevationPanel).not.toBeNull();
+  expect(elevationPanel!.height).toBeCloseTo(contentArea!.height, 0);
+});
+
+test('dragging the handle upward snaps the sheet toward full height, not wherever the drag ended', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await mockGpxData(page);
+  await openTrailPanel(page);
+  // Let the panel's own 0.32s open-slide transition settle before reading
+  // the handle's position — grabbing it mid-slide races the animation and
+  // the drag starts on stale coordinates that no longer land on the handle.
+  await page.waitForTimeout(400);
+
+  const handle = page.locator('.spot-panel-handle');
+  const handleBox = await handle.boundingBox();
+  expect(handleBox).not.toBeNull();
+  const startX = handleBox!.x + handleBox!.width / 2;
+  const startY = handleBox!.y + handleBox!.height / 2;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  // Drag most of the way toward the top — short of the exact 92vh target,
+  // to prove release snaps rather than just stopping at the drag height.
+  await page.mouse.move(startX, 120, { steps: 10 });
+  await page.mouse.up();
+  await page.waitForTimeout(350); // let the height transition finish
+
+  const panelBox = await page.locator('.spot-panel').boundingBox();
+  expect(panelBox).not.toBeNull();
+  const heightVh = (panelBox!.height / 700) * 100;
+  expect(heightVh).toBeGreaterThan(85);
+});

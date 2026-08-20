@@ -5,30 +5,32 @@
     <div class="spot-panel-handle" role="presentation"></div>
     <div class="spot-panel-header"><SpotPanelHeader /></div>
     <div class="spot-panel-tabs"><SpotPanelTabs /></div>
-    <div class="spot-panel-body">
-      <div class="spot-tab-content" id="spot-info-tab" :class="{ hidden: store.activeTab !== 'info' }">
-        <SpotPanelInfoTab />
+    <div class="spot-panel-content-area">
+      <div class="spot-panel-body">
+        <div class="spot-tab-content" id="spot-info-tab" :class="{ hidden: store.activeTab !== 'info' }">
+          <SpotPanelInfoTab />
+        </div>
+        <div class="spot-tab-content" id="spot-tours-tab" :class="{ hidden: store.activeTab !== 'tours' }">
+          <SpotPanelToursTab />
+        </div>
+        <div class="spot-tab-content" id="spot-trails-tab" :class="{ hidden: store.activeTab !== 'trails' }">
+          <SpotPanelTrailsTab />
+        </div>
+        <div class="spot-tab-content" id="spot-parking-tab" :class="{ hidden: store.activeTab !== 'parking' }">
+          <SpotPanelParkingTab :lots="store.parkingLots" :highlight-id="store.highlightedParkingLotId ?? undefined" />
+        </div>
       </div>
-      <div class="spot-tab-content" id="spot-tours-tab" :class="{ hidden: store.activeTab !== 'tours' }">
-        <SpotPanelToursTab />
-      </div>
-      <div class="spot-tab-content" id="spot-trails-tab" :class="{ hidden: store.activeTab !== 'trails' }">
-        <SpotPanelTrailsTab />
-      </div>
-      <div class="spot-tab-content" id="spot-parking-tab" :class="{ hidden: store.activeTab !== 'parking' }">
-        <SpotPanelParkingTab :lots="store.parkingLots" :highlight-id="store.highlightedParkingLotId ?? undefined" />
-      </div>
-    </div>
-    <div class="spot-elevation-panel" :class="{ hidden: !elevationVisible }">
-      <div id="spot-elevation-content">
-        <SpotPanelElevation :on-hover="onHover" :on-hover-end="onHoverEnd" />
+      <div class="spot-elevation-panel" :class="{ hidden: !elevationVisible }">
+        <div id="spot-elevation-content">
+          <SpotPanelElevation :on-hover="onHover" :on-hover-end="onHoverEnd" />
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { initDragHandle } from '~/map/spot_panel/dragHandle'
+import { initDragHandle, isDesktopViewport, snapTo } from '~/map/spot_panel/dragHandle'
 import SpotPanelHeader from './SpotPanelHeader.vue'
 import SpotPanelTabs from './SpotPanelTabs.vue'
 import SpotPanelInfoTab from './SpotPanelInfoTab.vue'
@@ -61,4 +63,22 @@ const panelEl = ref<HTMLElement | null>(null)
 onMounted(() => {
   if (panelEl.value) initDragHandle(panelEl.value)
 })
+
+// Picking a tour/trail opens the elevation drill-in (elevationVisible
+// above) — on mobile, give it the whole sheet instead of squeezing the list
+// beside it (see dragHandle.ts's snap points). Only fires on the
+// null -> non-null transition, not on every subsequent row switch while
+// already selected. Desktop's panel is already near-full-height, so
+// there's nothing worth snapping there.
+watch(
+  () => [store.selectedItemId, store.selectedItemKind] as const,
+  ([id, kind], prev) => {
+    const [prevId, prevKind] = prev ?? [null, null]
+    const wasSelected = prevId !== null && prevKind !== null
+    const isSelected = id !== null && kind !== null
+    if (!wasSelected && isSelected && panelEl.value && !isDesktopViewport()) {
+      snapTo(panelEl.value, 'full')
+    }
+  },
+)
 </script>
