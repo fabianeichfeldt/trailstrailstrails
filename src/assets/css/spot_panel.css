@@ -270,7 +270,7 @@
   min-width: 0;
 }
 .spot-item-info strong {
-  font-size: 13px;
+  font-size: 14px;
   color: #1a1a1a;
   white-space: nowrap;
   overflow: hidden;
@@ -313,18 +313,16 @@
 
 .spot-item-stats {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  align-items: center;
   font-size: 11px;
   color: #555;
 }
 .spot-item-stats span { white-space: nowrap; }
 
 .direction-tag {
-  font-size: 10px;
+  font-size: 12px;
+  margin-left: 4px;
   color: #2b6cb0;
-  font-weight: 600;
 }
 
 .spot-item-arrow {

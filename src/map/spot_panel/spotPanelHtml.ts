@@ -10,6 +10,17 @@ export const DIR_LABEL: Record<TrailDirection, string> = {
   'both':         '↔ Beide Richtungen',
 };
 
+// Icon-only counterpart of DIR_LABEL — used where a full-text tag would take
+// a whole line (e.g. the trail list rows), with DIR_LABEL kept as the
+// title/aria-label so the full German text stays reachable.
+export const DIR_ICON: Record<TrailDirection, string> = {
+  'cw':           '↻',
+  'ccw':          '↺',
+  'one-way-down': '⤵',
+  'one-way-up':   '⤴',
+  'both':         '↔',
+};
+
 /**
  * Status card for the elevation view: shown when a selected item is a trail
  * (not a tour — tours have no closed_from/closed_to/hint of their own) whose
