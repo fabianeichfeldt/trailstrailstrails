@@ -18,6 +18,22 @@
   pointer-events: none; /* prevent map clicks bleeding through when closed */
 }
 
+/* `vh` is pinned to the browser's *large* viewport (chrome collapsed) on
+   mobile, not the currently-visible one — so at 92vh, if the address bar
+   happens to be showing, the sheet renders taller than the visible screen
+   and its top edge (the handle) goes off-screen with no way to scroll to
+   it (.map-page below is overflow:hidden). `dvh` tracks the viewport
+   that's actually visible right now. Progressive enhancement: real phones
+   in use today all support it; anything that doesn't just keeps the `vh`
+   values above, which is exactly today's (buggy but functional) behavior. */
+@supports (height: 100dvh) {
+  .spot-panel {
+    height: 56dvh;
+    min-height: 15dvh;
+    max-height: 92dvh;
+  }
+}
+
 .spot-panel.open {
   transform: translateY(0);
   pointer-events: all;

@@ -35,13 +35,34 @@ export function nearestSnapPoint(currentVh: number): SnapPoint {
 // rule's duration/easing.
 const PANEL_TRANSITION = 'height 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.32s cubic-bezier(0.4, 0, 0.2, 1)';
 
+// `vh` is pinned to the mobile browser's *large* viewport (chrome
+// collapsed), not the currently-visible one — at the 92 target that gap is
+// enough to push the sheet's top edge (and its handle) off-screen with no
+// way to scroll back to it. `dvh` tracks the viewport that's actually
+// visible right now; mirrors the same fallback in spot_panel.css's
+// @supports block.
+//
+// Deliberately not feature-detected via `CSS.supports('height', '100dvh')`:
+// some CSSOM implementations report that as supported while their actual
+// style parser still silently rejects the unit (assignment is a no-op,
+// leaving the previous value in place) — the two disagreeing is exactly
+// the kind of gap that would leave the sheet's height untouched. Trying
+// the real value and reading it back is the only check that can't lie.
+function setSnapHeight(panel: HTMLElement, vhValue: number): void {
+  const dvhValue = vhValue + 'dvh';
+  panel.style.height = dvhValue;
+  if (panel.style.height !== dvhValue) {
+    panel.style.height = vhValue + 'vh';
+  }
+}
+
 // Animates the mobile sheet to one of the three snap heights. Exported so
 // SpotPanel.vue can trigger a snap-to-full when a tour/trail is selected
 // (see its onMounted watch), reusing this instead of duplicating the
 // animation/cleanup logic in two places.
 export function snapTo(panel: HTMLElement, target: SnapPoint): void {
   panel.style.transition = PANEL_TRANSITION;
-  panel.style.height = SNAP_VH[target] + 'vh';
+  setSnapHeight(panel, SNAP_VH[target]);
   // Clear the inline transition once it's done so it doesn't linger and
   // fight the next drag's `transition: none` — startResize() below already
   // relies on being able to freely overwrite this.
