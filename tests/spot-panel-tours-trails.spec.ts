@@ -250,3 +250,29 @@ test('dragging the handle upward snaps the sheet toward full height, not whereve
   const heightVh = (panelBox!.height / 700) * 100;
   expect(heightVh).toBeGreaterThan(85);
 });
+
+test('tapping the handle (no drag) cycles the sheet through peek, full and back to half', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await mockGpxData(page);
+  await openTrailPanel(page);
+  await page.waitForTimeout(400); // let the open-slide settle before the first tap
+
+  const handle = page.locator('.spot-panel-handle');
+  const heightVh = async () => ((await page.locator('.spot-panel').boundingBox())!.height / 700) * 100;
+
+  expect(await heightVh()).toBeLessThan(70); // starts at the default 'half' (56vh)
+
+  await handle.click();
+  await page.waitForTimeout(300);
+  expect(await heightVh()).toBeGreaterThan(85); // half -> full
+
+  await handle.click();
+  await page.waitForTimeout(300);
+  expect(await heightVh()).toBeLessThan(25); // full -> peek
+
+  await handle.click();
+  await page.waitForTimeout(300);
+  const backToHalf = await heightVh();
+  expect(backToHalf).toBeGreaterThan(45);
+  expect(backToHalf).toBeLessThan(70); // peek -> half, cycle wraps
+});

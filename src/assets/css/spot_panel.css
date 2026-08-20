@@ -24,21 +24,50 @@
 }
 
 /* ── Drag handle (mobile & desktop) ───────────────────────── */
+/* Wrapper is the actual hit target and drag/tap surface (dragHandle.ts
+   binds its listeners here) — kept taller than the visual bar so the
+   touch zone and the "this is grabbable" zone agree, same split as the
+   44px icon-button targets elsewhere in this file. */
 .spot-panel-handle {
-  width: 40px;
-  height: 6px;
-  background: #d0d5dd;
-  border-radius: 3px;
-  margin: 10px auto 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
   flex-shrink: 0;
   cursor: grab;
   touch-action: none;
-  transition: background 0.15s, height 0.15s;
 }
 .spot-panel-handle:active {
   cursor: grabbing;
+}
+.spot-panel-handle-bar {
+  width: 44px;
+  height: 5px;
+  border-radius: 3px;
+  background: #8b93a0; /* ~3:1 against white — today's #d0d5dd sat near 1.5:1 */
+  transition: background 0.15s, box-shadow 0.15s;
+}
+/* Color/glow, not resize — a handle that changes size under a thumb feels
+   like layout shifting underneath it. */
+.spot-panel-handle:active .spot-panel-handle-bar {
   background: #2b6cb0;
-  height: 8px;
+  box-shadow: 0 0 0 5px rgba(43, 108, 176, 0.15);
+}
+
+@keyframes spot-panel-invite-bounce {
+  0%   { transform: translateY(0); }
+  30%  { transform: translateY(-9px); }
+  50%  { transform: translateY(2px); }
+  70%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+/* One-time nudge the first time a sheet opens in a session (triggered from
+   SpotPanel.vue) — a physical cue that this thing has weight and moves,
+   cheaper and less cluttered than a permanent icon. */
+@media (prefers-reduced-motion: no-preference) {
+  .spot-panel.bounce {
+    animation: spot-panel-invite-bounce 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) 1;
+  }
 }
 
 /* Capacitor safe-area readiness — mobile bottom sheet only. Scoped to its
@@ -735,6 +764,7 @@
     height: auto;
     background: transparent;
     margin: 0;
+    padding-top: 0; /* clear the mobile safe-area padding above */
     border-radius: 0;
     cursor: col-resize;
     transition: none;
@@ -744,5 +774,10 @@
   }
   .spot-panel-handle:active {
     background: #2b6cb0;
+  }
+  /* Desktop's handle is its own visible fixed strip — the mobile bar/glow
+     styling has no home here. */
+  .spot-panel-handle-bar {
+    display: none;
   }
 }

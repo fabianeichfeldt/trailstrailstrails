@@ -2,7 +2,7 @@
   <!-- `hidden` class (not v-if) is load-bearing: spot_panel.css and
        tests/spot-panel-*.spec.ts both select on it directly. -->
   <div ref="panelEl" class="spot-panel" :class="{ open: store.isOpen }">
-    <div class="spot-panel-handle" role="presentation"></div>
+    <div class="spot-panel-handle" role="presentation"><div class="spot-panel-handle-bar"></div></div>
     <div class="spot-panel-header"><SpotPanelHeader /></div>
     <div class="spot-panel-tabs"><SpotPanelTabs /></div>
     <div class="spot-panel-content-area">
@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { initDragHandle, isDesktopViewport, snapTo } from '~/map/spot_panel/dragHandle'
+import { initDragHandle, isDesktopViewport, snapTo, playInviteBounce } from '~/map/spot_panel/dragHandle'
 import SpotPanelHeader from './SpotPanelHeader.vue'
 import SpotPanelTabs from './SpotPanelTabs.vue'
 import SpotPanelInfoTab from './SpotPanelInfoTab.vue'
@@ -78,6 +78,24 @@ watch(
     const isSelected = id !== null && kind !== null
     if (!wasSelected && isSelected && panelEl.value && !isDesktopViewport()) {
       snapTo(panelEl.value, 'full')
+    }
+  },
+)
+
+// One nudge, the first time the sheet opens in this page load — not on
+// every open, or it'd just become idle wobble. Plain closure flag rather
+// than a ref: nothing else needs to read or react to it.
+let hasPlayedOpenBounce = false
+watch(
+  () => store.isOpen,
+  (open) => {
+    if (open && !hasPlayedOpenBounce && panelEl.value && !isDesktopViewport()) {
+      hasPlayedOpenBounce = true
+      // Wait out the sheet's own 0.32s open-slide transition first — playing
+      // the bounce mid-slide would fight it instead of reading as a settle.
+      window.setTimeout(() => {
+        if (panelEl.value) playInviteBounce(panelEl.value)
+      }, 380)
     }
   },
 )

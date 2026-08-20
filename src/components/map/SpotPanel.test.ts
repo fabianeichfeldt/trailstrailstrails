@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { useSpotPanelStore } from '~/stores/spotPanel'
@@ -14,8 +14,9 @@ vi.mock('~/map/spot_panel/dragHandle', () => ({
   initDragHandle: vi.fn(),
   snapTo: vi.fn(),
   isDesktopViewport: vi.fn(() => false),
+  playInviteBounce: vi.fn(),
 }))
-import { initDragHandle, snapTo, isDesktopViewport } from '~/map/spot_panel/dragHandle'
+import { initDragHandle, snapTo, isDesktopViewport, playInviteBounce } from '~/map/spot_panel/dragHandle'
 
 import SpotPanel from './SpotPanel.vue'
 import SpotPanelParkingTab from './SpotPanelParkingTab.vue'
@@ -31,6 +32,7 @@ describe('SpotPanel', () => {
     vi.mocked(initDragHandle).mockReset()
     vi.mocked(snapTo).mockReset()
     vi.mocked(isDesktopViewport).mockReset().mockReturnValue(false)
+    vi.mocked(playInviteBounce).mockReset()
   })
 
   function mountPanel() {
@@ -131,5 +133,46 @@ describe('SpotPanel', () => {
     await wrapper.vm.$nextTick()
 
     expect(snapTo).not.toHaveBeenCalled()
+  })
+
+  describe('open bounce', () => {
+    beforeEach(() => vi.useFakeTimers())
+    afterEach(() => vi.useRealTimers())
+
+    it('plays once, after the open-slide settles, the first time the panel opens on mobile', async () => {
+      const wrapper = mountPanel()
+      store.isOpen = true
+      await wrapper.vm.$nextTick()
+      expect(playInviteBounce).not.toHaveBeenCalled() // still mid open-slide
+
+      vi.advanceTimersByTime(380)
+      expect(playInviteBounce).toHaveBeenCalledTimes(1)
+      expect(playInviteBounce).toHaveBeenCalledWith(wrapper.get('.spot-panel').element)
+    })
+
+    it('does not play again on a second open in the same session', async () => {
+      const wrapper = mountPanel()
+      store.isOpen = true
+      await wrapper.vm.$nextTick()
+      vi.advanceTimersByTime(380)
+      expect(playInviteBounce).toHaveBeenCalledTimes(1)
+
+      store.isOpen = false
+      await wrapper.vm.$nextTick()
+      store.isOpen = true
+      await wrapper.vm.$nextTick()
+      vi.advanceTimersByTime(380)
+      expect(playInviteBounce).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not play on desktop', async () => {
+      vi.mocked(isDesktopViewport).mockReturnValue(true)
+      const wrapper = mountPanel()
+      store.isOpen = true
+      await wrapper.vm.$nextTick()
+      vi.advanceTimersByTime(380)
+
+      expect(playInviteBounce).not.toHaveBeenCalled()
+    })
   })
 })

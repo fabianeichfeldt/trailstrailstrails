@@ -10,6 +10,14 @@ export type SnapPoint = 'peek' | 'half' | 'full';
 // spot_panel.css — kept here too since the snap itself is JS-driven, not
 // something CSS alone can express.
 const SNAP_VH: Record<SnapPoint, number> = { peek: 15, half: 56, full: 92 };
+const SNAP_ORDER: SnapPoint[] = ['peek', 'half', 'full'];
+
+// A press-release with less than this much total vertical travel counts as
+// a tap, not a drag — forgiving enough that a real finger (which never
+// lands perfectly still) still reads as a tap, tight enough that a genuine
+// drag-and-release-early never also fires a tap-cycle on top of its own
+// snap.
+const TAP_THRESHOLD_PX = 6;
 
 // Pure and DOM-free on purpose, so it's unit-testable without mounting
 // anything: picks whichever of the three targets currentVh is closest to.
@@ -42,12 +50,25 @@ export function snapTo(panel: HTMLElement, target: SnapPoint): void {
   }, 260);
 }
 
+// One-time settle nudge (see spot_panel.css's .bounce keyframes) — a
+// physical cue that the sheet has weight and moves, played once from
+// SpotPanel.vue the first time a spot opens. Removing and re-adding the
+// class (with a forced reflow between) lets it be retriggered on demand
+// rather than only ever playing once per element lifetime.
+export function playInviteBounce(panel: HTMLElement): void {
+  panel.classList.remove('bounce');
+  void panel.offsetWidth;
+  panel.classList.add('bounce');
+  window.setTimeout(() => panel.classList.remove('bounce'), 950);
+}
+
 export function initDragHandle(panel: HTMLElement): void {
   const handle = panel.querySelector('.spot-panel-handle') as HTMLElement;
   let isResizing = false;
   let startPos = 0;
   let startSize = 0;
   let isHorizontal = false;
+  let maxMove = 0;
 
   const isDesktopMode = isDesktopViewport;
 
@@ -65,6 +86,7 @@ export function initDragHandle(panel: HTMLElement): void {
   const startResize = (clientX: number, clientY: number) => {
     isResizing = true;
     isHorizontal = isDesktopMode();
+    maxMove = 0;
     if (isHorizontal) {
       startPos = clientX;
       startSize = panel.getBoundingClientRect().width;
@@ -79,10 +101,12 @@ export function initDragHandle(panel: HTMLElement): void {
   const doResize = (clientX: number, clientY: number) => {
     if (!isResizing) return;
     if (isHorizontal) {
+      maxMove = Math.max(maxMove, Math.abs(clientX - startPos));
       const w = Math.max(280, Math.min(window.innerWidth * 0.6, startSize - (clientX - startPos)));
       panel.style.width = w + 'px';
       updateHandlePosition();
     } else {
+      maxMove = Math.max(maxMove, Math.abs(clientY - startPos));
       const min = window.innerHeight * (SNAP_VH.peek / 100);
       const max = window.innerHeight * (SNAP_VH.full / 100);
       const h = Math.max(min, Math.min(max, startSize + (startPos - clientY)));
@@ -96,8 +120,18 @@ export function initDragHandle(panel: HTMLElement): void {
     panel.style.userSelect = '';
     if (isHorizontal) {
       panel.style.transition = '';
+      return;
+    }
+    const currentVh = (panel.getBoundingClientRect().height / window.innerHeight) * 100;
+    if (maxMove < TAP_THRESHOLD_PX) {
+      // A tap (barely any movement) advances to the next fixed stop rather
+      // than re-snapping to wherever it already was — always the same
+      // forward order (peek → half → full → peek…), never reversing, so
+      // it stays predictable without needing dots or an icon to explain it.
+      const current = nearestSnapPoint(currentVh);
+      const next = SNAP_ORDER[(SNAP_ORDER.indexOf(current) + 1) % SNAP_ORDER.length];
+      snapTo(panel, next);
     } else {
-      const currentVh = (panel.getBoundingClientRect().height / window.innerHeight) * 100;
       snapTo(panel, nearestSnapPoint(currentVh));
     }
   };
