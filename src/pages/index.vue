@@ -777,19 +777,22 @@ useHead({
   border: 1px solid #e4e9f0;
   border-radius: 14px;
   padding: 1.8rem 1.8rem;
-  font-size: 0.88rem;
+  /* Mobile Safari/Chrome auto-boost small paragraph text in narrow columns
+     ("font boosting") — the Capacitor WebView doesn't apply that heuristic,
+     so this needs to be legible at face value rather than relying on it. */
+  font-size: 1rem;
   color: #4a5568;
   line-height: 1.65;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
-.seo-text h2 { font-size: 1rem; color: #1a2035; margin-top: 1.4rem; margin-bottom: 0.6rem; }
+.seo-text h2 { font-size: 1.15rem; color: #1a2035; margin-top: 1.4rem; margin-bottom: 0.6rem; }
 .seo-text h2:first-child { margin-top: 0; }
 .seo-text p { margin: 0 0 0.8rem; }
 .seo-text strong { color: #1a2035; }
 .seo-text ul { padding-left: 1.4rem; margin: 0.5rem 0 0.8rem; }
 .seo-text li { margin-bottom: 0.3em; }
 .seo-text hr { border: none; border-top: 1px solid #e8ecf2; margin: 1.4rem 0; }
-.region-links { font-size: 0.8rem; line-height: 1.8; }
+.region-links { font-size: 0.95rem; line-height: 1.8; }
 .region-links a { color: #2a9d5c; text-decoration: none; }
 .region-links a:hover { text-decoration: underline; color: #1e7a46; }
 
@@ -884,7 +887,7 @@ useHead({
   flex-wrap: wrap;
 }
 .foerderung-label {
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   color: #5a6478;
 }
 .dav-logo {
