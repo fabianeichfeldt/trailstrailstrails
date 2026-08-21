@@ -13,12 +13,9 @@ export default defineNuxtPlugin({
   setup() {
     if (!Capacitor.isNativePlatform()) return
 
-    // Non-overlay: Android only exposes env(safe-area-inset-top) for actual
-    // display cutouts, not the general status bar height, so an overlaid
-    // WebView left the topbar covered by the status bar on non-notched
-    // phones. Reserving the space natively sidesteps that CSS gap entirely.
-    StatusBar.setOverlaysWebView({ overlay: false })
-    StatusBar.setBackgroundColor({ color: '#16181a' })
+    // Icon color only — overlaysWebView/setBackgroundColor are no-ops on
+    // Android 15+ (enforced edge-to-edge, see MainActivity.java, which pads
+    // the WebView with real WindowInsets instead of relying on this plugin).
     StatusBar.setStyle({ style: Style.Dark })
 
     // Any link leaving the app's own origin (Instagram, PayPal, donation

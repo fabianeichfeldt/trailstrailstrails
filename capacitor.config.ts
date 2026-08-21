@@ -12,11 +12,10 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'DARK',
-      // false — Android only reports env(safe-area-inset-top) for actual
-      // display cutouts (camera notch), not the general status bar height,
-      // so an overlaid WebView on a non-notched phone had nothing to push
-      // the topbar down by and the status bar (clock/wifi) covered it.
-      // Non-overlay makes the OS reserve that space natively instead.
+      // Only takes effect below Android 15 (targetSdk 35), where the OS
+      // still honors it — Android 15+ enforces edge-to-edge and ignores
+      // both of these, so MainActivity.java pads the WebView with real
+      // WindowInsets instead. Kept for the pre-15 install base (minSdk 24).
       overlaysWebView: false,
       backgroundColor: '#16181a',
     },
