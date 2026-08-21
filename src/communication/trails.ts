@@ -74,16 +74,6 @@ export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]
     .map(i => ({ url: i.url, created_at: i.created_at, trailName: i.trails.name, trailID: i.trail_id }))
 }
 
-export async function getLatestPhotos(num = 7): Promise<PhotoResponse[]> {
-  const res = await fetch(
-    `${REST}/trail_photos?select=*,trails(name)&order=created_at.desc`,
-    { method: 'GET', cache: 'no-store', headers: anonHeaders({ 'Range-Unit': 'items', 'Range': `0-${num - 1}` }) },
-  )
-  const data = await res.json()
-  return (data as { url: string; created_at: string; trail_id: string; trails: { name: string } }[])
-    .map(i => ({ url: i.url, created_at: i.created_at, trailName: i.trails.name, trailID: i.trail_id }))
-}
-
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   const cached = detailsCache.get(trail.id)
   if (cached && Date.now() - cached.ts < DETAILS_TTL) return cached.data
