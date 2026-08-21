@@ -4,6 +4,7 @@ import { Browser } from '@capacitor/browser'
 import { App } from '@capacitor/app'
 import { runBackHandlers } from '~/utils/nativeBack'
 import { showToast } from '~/utils/toast'
+import { resolveExternalLinkUrl } from '~/utils/externalLink'
 
 // App UI is dark-themed throughout, so a single global light-content
 // (white icon) status bar matches every screen — see the mobile-topbar
@@ -27,21 +28,12 @@ export default defineNuxtPlugin({
     document.addEventListener('click', (event) => {
       const anchor = (event.target as HTMLElement | null)?.closest?.('a')
       if (!anchor) return
-      const href = anchor.getAttribute('href')
-      if (!href || href.startsWith('#')) return
 
-      let url: URL
-      try {
-        url = new URL(href, window.location.href)
-      } catch {
-        return
-      }
-
-      if (url.origin === window.location.origin) return
-      if (url.protocol !== 'http:' && url.protocol !== 'https:') return
+      const externalUrl = resolveExternalLinkUrl(anchor.getAttribute('href'), window.location.href)
+      if (!externalUrl) return
 
       event.preventDefault()
-      Browser.open({ url: url.href })
+      Browser.open({ url: externalUrl })
     }, { capture: true })
 
     // Registered once, for the app's lifetime, so it handles back on every
