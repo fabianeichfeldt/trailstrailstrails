@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { Capacitor } from '@capacitor/core'
+import { App } from '@capacitor/app'
 
 export default defineNuxtPlugin({
   enforce: 'post',
@@ -6,6 +8,19 @@ export default defineNuxtPlugin({
     const client = useSupabaseClient() as SupabaseClient
     const session = useSupabaseSession()
     const user = useSupabaseUser()
+
+    // Google OAuth and password-recovery emails redirect back into the app
+    // via a custom URL scheme when running natively (see stores/auth.ts).
+    // The OS delivers that as an appUrlOpen event, not a WebView navigation,
+    // so the auth store has to parse the tokens out of it by hand.
+    if (Capacitor.isNativePlatform()) {
+      App.addListener('appUrlOpen', async ({ url }) => {
+        if (!url.startsWith('org.trailradar.app://auth-callback')) return
+        const authStore = useAuthStore()
+        const type = await authStore.handleNativeAuthCallback(url)
+        if (type === 'recovery') await navigateTo('/reset-password')
+      })
+    }
 
     // @nuxtjs/supabase's page:start hook calls getClaims() on every navigation.
     // getClaims() has two failure modes that incorrectly wipe user AND session:

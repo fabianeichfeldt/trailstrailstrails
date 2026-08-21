@@ -146,9 +146,12 @@ function flyToUserLocation() {
   .mobile-topbar {
     position: absolute;
     top: 0; left: 0; right: 0;
-    height: 62px;
-    background: white;
-    box-shadow: 0 1px 6px rgba(0,0,0,0.12);
+    /* Dark to match the rest of the app's dark theme — a white strip here
+       would sit directly under the status bar, forcing per-screen status
+       bar icon colors instead of one consistent light-content style. */
+    height: calc(62px + env(safe-area-inset-top));
+    background: var(--color-page-bg-light, #16181a);
+    box-shadow: 0 1px 6px rgba(0,0,0,0.3);
     z-index: 1050;
   }
 }
@@ -156,7 +159,7 @@ function flyToUserLocation() {
 .add-btn-wrapper {
   position: absolute;
   right: 10px;
-  bottom: 5.5em;
+  bottom: calc(5.5em + env(safe-area-inset-bottom));
   z-index: 1000;
 }
 
@@ -198,7 +201,7 @@ function flyToUserLocation() {
 .location-btn {
   position: absolute;
   right: 10px;
-  bottom: 8em;
+  bottom: calc(8em + env(safe-area-inset-bottom));
   z-index: 1000;
   background: #2b6cb0;
   color: white;

@@ -14,7 +14,7 @@
       </div>
 
       <div class="header-right">
-        <NuxtLink to="/map" class="header-map-link">Zur Karte →</NuxtLink>
+        <NuxtLink to="/map" class="header-map-link">Karte</NuxtLink>
 
         <ClientOnly>
           <template v-if="!authStore.isLoggedIn">

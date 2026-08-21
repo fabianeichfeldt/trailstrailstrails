@@ -204,7 +204,7 @@ onMounted(() => {
 
 .search-wrapper {
   position: absolute;
-  top: 12px;
+  top: calc(12px + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 1100;
@@ -269,9 +269,9 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
-  /* Inline search bar — sits in the white mobile top bar */
+  /* Inline search bar — sits in the dark mobile top bar */
   .search-wrapper {
-    top: 9px;
+    top: calc(9px + env(safe-area-inset-top));
     left: 64px;   /* 12px margin + 44px burger + 8px gap */
     right: 60px;  /* 44px avatar + 8px gap + 8px margin */
     transform: none;

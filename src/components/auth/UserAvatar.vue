@@ -73,7 +73,7 @@ onUnmounted(() => {
 <style scoped>
 .user-menu {
   position: absolute;
-  top: 0.8em;
+  top: calc(0.8em + env(safe-area-inset-top));
   right: 1em;
   display: flex;
   flex-direction: column;
@@ -104,14 +104,14 @@ onUnmounted(() => {
 
 @media (max-width: 800px) {
   .auth-signup-btn { font-size: 0.5em; }
-  .user-menu { top: 0.6em; right: 0.6em; }
+  .user-menu { top: calc(0.6em + env(safe-area-inset-top)); right: 0.6em; }
   .auth-login-btn { padding: 0.3em 0.6em; font-size: 0.65em; }
 }
 
 /* On mobile map: hide login text buttons (drawer handles them), show avatar in topbar */
 @media (max-width: 600px) {
   .auth-login-btn, .auth-signup-btn { display: none; }
-  .user-menu { top: 9px; right: 8px; z-index: 1110; }
+  .user-menu { top: calc(9px + env(safe-area-inset-top)); right: 8px; z-index: 1110; }
 }
 
 .user-avatar-btn {

@@ -99,7 +99,7 @@ const filters = [
 /* Burger — top-left */
 .burger-btn {
   position: absolute;
-  top: 0.75em;
+  top: calc(0.75em + env(safe-area-inset-top));
   left: 0.75em;
   z-index: 1100;
   background: rgba(255,255,255,0.95);
@@ -119,7 +119,7 @@ const filters = [
 @media (max-width: 600px) {
   /* Align burger vertically inside the mobile top bar (62px tall) */
   .burger-btn {
-    top: 9px;
+    top: calc(9px + env(safe-area-inset-top));
     box-shadow: none;
     background: #f0f0f0;
   }
@@ -140,6 +140,8 @@ const filters = [
   flex-direction: column;
   transition: left 0.3s ease;
   overflow-y: auto;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 .drawer.open { left: 0; }
 

@@ -1,4 +1,5 @@
 import type { Ref } from 'vue'
+import { Capacitor } from '@capacitor/core'
 import type { Trail } from '~/types/Trail'
 import type { MtbTour, MtbTrail } from '~/types/MtbTypes'
 import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
@@ -15,6 +16,7 @@ import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { drawTrailPolylines, addSegmentLabel } from '~/map/spot_panel/spotPanelPolylines'
+import { registerBackHandler } from '~/utils/nativeBack'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -651,6 +653,16 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }, { signal })
     }
 
+    function cancelAddMode() {
+      addMode = undefined
+      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
+      if (addBtn) {
+        addBtn.textContent = '+'
+        addBtn.classList.remove('active')
+      }
+      mymap.getContainer().classList.remove('crosshair-cursor')
+    }
+
     // Attach FAB listeners once the map is mounted; auth check happens inside the click handler
     await nextTick()
     attachFabListeners()
@@ -675,17 +687,27 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       if (proceed) {
         addSpotPicked.value = { lat: e.latlng.lat, lng: e.latlng.lng, type: addMode }
       }
-      addMode = undefined
-      const addBtn = document.getElementById('add-btn') as HTMLButtonElement | null
-      if (addBtn) {
-        addBtn.textContent = '+'
-        addBtn.classList.remove('active')
-        mymap.getContainer().classList.remove('crosshair-cursor')
-      }
+      cancelAddMode()
     })
+
+    // Android hardware/gesture back: dismiss whatever's on top of the map
+    // before the global listener (plugins/capacitor.client.ts — it has to
+    // live outside this composable since it must also handle back on pages,
+    // like root, that never mount a map at all) falls through to router
+    // history or app exit.
+    let unregisterBackHandler: (() => void) | null = null
+    if (Capacitor.isNativePlatform()) {
+      unregisterBackHandler = registerBackHandler(() => {
+        if (spotPanelStore.isOpen) { spotPanelStore.close(); return true }
+        if (statusSheet.isOpen) { statusSheet.close(); return true }
+        if (addMode) { cancelAddMode(); return true }
+        return false
+      })
+    }
 
     cleanupFn = () => {
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+      unregisterBackHandler?.()
       mymap.remove()
     }
   })
