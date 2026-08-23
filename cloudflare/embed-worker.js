@@ -6,7 +6,7 @@
 // machine with the right account) whenever this file changes. See
 // docs/production-architecture.md.
 //
-// It is a hand-maintained mirror of src/server/routes/_embed/[token].get.ts
+// It is a hand-maintained mirror of server/routes/_embed/[token].get.ts
 // (the Nitro route `nuxt dev` runs locally). Whenever that route changes,
 // port the change here too and redeploy — the two WILL drift silently
 // otherwise, which is exactly what happened when `parking` was added to the

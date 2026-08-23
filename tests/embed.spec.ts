@@ -90,7 +90,7 @@ embedTest('embed page shows error overlay for inactive token', async ({ page }) 
 // never that it's centered where it was actually asked to be. If lat/lng
 // ever silently fall back to embedQuery.ts's DEFAULT_LAT/DEFAULT_LNG (the
 // exact bug this page was fixed for once already — see the comment in
-// src/pages/embed/[token].vue), every embed would render a real, valid-
+// app/pages/embed/[token].vue), every embed would render a real, valid-
 // looking map, just centered near Salzburg instead of the requested spot —
 // something none of the other assertions here would ever catch. This test
 // reads the actual OSM tile requests the map makes and decodes them back to

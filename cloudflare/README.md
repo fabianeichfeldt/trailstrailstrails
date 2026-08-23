@@ -10,12 +10,12 @@ Deploy manually after any change:
    (Or `wrangler deploy embed-worker.js` if you have wrangler set up locally.)
 2. Verify: `curl 'https://trailradar.org/_embed/<a-real-token>?parentHost=trailradar.org'`
    and check the response shape matches `EmbedTrail` in
-   `src/server/routes/_embed/[token].get.ts`.
+   `server/routes/_embed/[token].get.ts`.
 
 ## Files
 
 - `embed-worker.js` — handles `/_embed/*`. Hand-maintained mirror of
-  `src/server/routes/_embed/[token].get.ts` (the Nitro route Nuxt runs live
+  `server/routes/_embed/[token].get.ts` (the Nitro route Nuxt runs live
   during `nuxt dev`, but which never ships to the static `nuxt generate`
   output). **Whenever the Nitro route changes, port the change here and
   redeploy**, or production and local will silently diverge — this is what

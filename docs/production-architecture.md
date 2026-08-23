@@ -55,7 +55,7 @@ Alternatively: add a `nitro:close` hook that copies `.output/public/index.html` 
 `cloudflare/embed-worker.js` is a checked-in mirror of the `/_embed/*` Worker
 running on Cloudflare. It is **not** deployed by CI — see `cloudflare/README.md`
 for the manual deploy steps. It must be hand-kept in sync with
-`src/server/routes/_embed/[token].get.ts` (the Nitro route, which only ever
+`server/routes/_embed/[token].get.ts` (the Nitro route, which only ever
 runs live during `nuxt dev` — it's never part of the `nuxt generate` output).
 Letting the two drift is exactly what caused a production-only
 `e.parking is not iterable` crash on 2026-07-31: the Nitro route gained a
