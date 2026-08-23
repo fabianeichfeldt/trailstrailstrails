@@ -1731,7 +1731,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 /* ── Buttons ──────────────────────────────────────────────────────── */
 /* .sm-btn-primary/.sm-btn-secondary/.sm-btn-add/.sm-btn-icon/.sm-btn-danger/
    .sm-btn-back and their shared form chrome live in
-   src/assets/css/spotmanager-shared.css (global, not scoped) — see that
+   app/assets/css/spotmanager-shared.css (global, not scoped) — see that
    file's header comment for why. */
 
 /* ── Edit form ────────────────────────────────────────────────────── */

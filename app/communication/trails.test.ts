@@ -101,7 +101,7 @@ describe('toElevationProfile', () => {
     // Points ~11m apart. Rounding cumulative distance to 0.1km/100m — as
     // this function used to do — gave every one of these nine points the
     // same `dist`, corrupting the SpotPanel elevation chart's x-axis for
-    // short/technical trails (see src/map/spot_panel/elevationSvg.ts, which
+    // short/technical trails (see app/map/spot_panel/elevationSvg.ts, which
     // positions each plotted point by `dist`).
     const points: [number, number, number][] = Array.from({ length: 9 }, (_, i) => [
       48.0 + i * 0.0001, 11.5, 500 + i,

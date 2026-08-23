@@ -1,7 +1,7 @@
 # TrailRadar — Claude Code instructions
 
 ## Project in one line
-Nuxt 3 + Pinia + Supabase + Leaflet app for discovering legal MTB trails. SSG via `nuxt generate`, deployed to GitHub Pages + Cloudflare Workers. PWA for mobile. Target audience: mountainbikers — tech-savvy, expect a polished modern app aesthetic (custom CSS, no component framework).
+Nuxt 4 + Pinia + Supabase + Leaflet app for discovering legal MTB trails. SSG via `nuxt generate`, deployed to GitHub Pages + Cloudflare Workers. PWA for mobile. Target audience: mountainbikers — tech-savvy, expect a polished modern app aesthetic (custom CSS, no component framework).
 
 ---
 
@@ -20,7 +20,7 @@ Nuxt 3 + Pinia + Supabase + Leaflet app for discovering legal MTB trails. SSG vi
 
 **Trail approval** (new spots submitted by any user) is admin-only and currently handled directly in Supabase — there is no approval UI yet.
 
-### SpotManager (`src/spot_manager/`)
+### SpotManager (`app/spot_manager/`)
 The SpotManager is the privileged maintenance interface, visible only to trailcrew and admin. It allows editing all operational fields of a spot:
 
 - **GPX tracks** — upload, reorder, delete trail and tour GPX files; automatic RDP thinning + Fréchet-based tour segment matching (`GpxProcessor.ts`)
@@ -54,7 +54,7 @@ These facts are not derivable from reading the TypeScript code — get them wron
 
 ## No live Nitro server in production
 
-SSG deploy = no server at runtime. A `src/server/api/*.ts` route only works in prod if the prerender crawler bakes it into `.output/public/api/...` at build time — otherwise `$fetch()` 404s silently (often masked by `default: () => []`). Don't add server/api routes expecting live execution; fetch Supabase REST directly from the client instead (`REST`/`anonHeaders()` in `http.ts`, pattern: `getLatestPhotos` in `trails.ts`).
+SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod if the prerender crawler bakes it into `.output/public/api/...` at build time — otherwise `$fetch()` 404s silently (often masked by `default: () => []`). Don't add server/api routes expecting live execution; fetch Supabase REST directly from the client instead (`REST`/`anonHeaders()` in `http.ts`, pattern: `getLatestPhotos` in `trails.ts`).
 
 ---
 
@@ -64,7 +64,7 @@ SSG deploy = no server at runtime. A `src/server/api/*.ts` route only works in p
 - **Always run `npm test` before reporting work done.** All unit tests must pass.
 - Playwright E2E: run `npm run test:e2e` when touching map interaction, auth flow, or add-spot flow.
 - **Every bug fix and every new feature needs a corresponding test.** If you add a function, add a unit test. If you add a user flow, extend the Playwright spec.
-- The architecture tests in `src/architecture.test.ts` enforce structural invariants — if you change architecture, update those tests to match the new target, don't just delete the assertion.
+- The architecture tests in `app/architecture.test.ts` enforce structural invariants — if you change architecture, update those tests to match the new target, don't just delete the assertion.
 - **When fixing a bug, write a failing test first.** The test must fail on the broken code before you touch the fix. A test that passes before the fix is not acceptable.
 - **Tests must never call the production database.** Use a placeholder `SUPABASE_URL` (e.g. `http://localhost:54321`) in the test environment. Mock at the HTTP boundary if DB behaviour is needed.
 - **Prefer vitest over Playwright.** Default to vitest for all new tests. Only use Playwright when the behaviour genuinely cannot be tested with vitest (e.g. real browser rendering, real auth cookie flows).
@@ -83,13 +83,14 @@ SSG deploy = no server at runtime. A `src/server/api/*.ts` route only works in p
 
 ---
 
-## `srcDir: 'src'` — path traps
+## `srcDir: 'app'` — path traps
 
-- `~/` = `src/`, `@@/` = project root. Use `@@/build/region`, never `~/build/...`.
-- Public dir is `src/public/`, not `public/` — Nuxt resolves it relative to `srcDir`. Files at root `public/` will 404.
-- Image tags for public assets: `:src="'/assets/foo.webp'"` not `src="/assets/foo.webp"` — Vite transforms static `src=` into a module import from `src/`, which misses `src/public/`.
-- Never write `../../src/something` from inside `src/` — resolves to `src/src/` (double segment).
-- CSS imports in TS modules: relative paths only (`../css/foo.css`), never `/src/css/foo.css`.
+- `~/` = `app/`, `@@/` = project root. Use `@@/build/region`, never `~/build/...`.
+- `public/` and `server/` are **root-level**, siblings of `app/`, not nested inside it — Nuxt 4 resolves them relative to the project root even though `srcDir` is `app`. Don't move them under `app/public/` or `app/server/`; Nuxt won't find them there.
+- Inside `app/` or `server/`, never reach *into* the other tree with a literal `~/server/...` or similar srcDir-relative alias — `~/` only resolves inside `app/`. Use the root alias instead: `@@/server/...`.
+- Image tags for public assets: `:src="'/assets/foo.webp'"` not `src="/assets/foo.webp"` — Vite transforms static `src=` into a module import from `app/`, which misses root-level `public/`.
+- Never write `../../app/something` from inside `app/` — resolves to `app/app/` (double segment).
+- CSS imports in TS modules: relative paths only (`../css/foo.css`), never `/app/css/foo.css`.
 
 Full rationale: `docs/folder-structure-plan.md`.
 
@@ -100,46 +101,46 @@ Full rationale: `docs/folder-structure-plan.md`.
 ### Dependency layers (bottom → top; lower layers must not import higher)
 
 ```
-src/anon.ts
-  └── src/communication/http.ts        (shared HTTP client, env-based URL)
-        └── src/communication/*.ts     (data/API functions)
-              └── src/map/             (map UI, receives deps via injection)
-              └── src/stores/          (Pinia state — imports communication/, never map/)
-                    └── src/composables/   (Vue composables — orchestrates stores + map)
-                          └── src/components/ / src/pages/
+app/anon.ts
+  └── app/communication/http.ts        (shared HTTP client, env-based URL)
+        └── app/communication/*.ts     (data/API functions)
+              └── app/map/             (map UI, receives deps via injection)
+              └── app/stores/          (Pinia state — imports communication/, never map/)
+                    └── app/composables/   (Vue composables — orchestrates stores + map)
+                          └── app/components/ / app/pages/
 ```
 
-**Enforced by:** `src/architecture.test.ts` (vitest) + `.dependency-cruiser.cjs`
+**Enforced by:** `app/architecture.test.ts` (vitest) + `.dependency-cruiser.cjs`
 
 ### Key rules per layer
 
-**`src/communication/`**
+**`app/communication/`**
 - No hardcoded Supabase project URL. Always use `REST`, `FUNCTIONS`, `anonHeaders()`, `userHeaders(token)` from `./http.ts`.
-- Must not import from `stores/`, `composables/`, or `src/map/`.
-- Gold standard to follow: `src/spot_manager/Api.ts`.
+- Must not import from `stores/`, `composables/`, or `app/map/`.
+- Gold standard to follow: `app/spot_manager/Api.ts`.
 
 **`stores/`**
 - Each store owns one domain: `auth`, `trails`, `filters`, `map`, `spotPanel`.
-- Auth store owns auth state and auth operations only (signIn/signUp/signOut/profile). Photo/file uploads that also write to DB tables belong in `src/communication/`.
-- `spotPanel` store (`src/stores/spotPanel.ts`) owns all spot-panel state: which spot is open, active tab, tour/trail selection, parking lots, comments. `SpotPanel.vue` and its child components (`SpotPanelHeader.vue`, `SpotPanelTabs.vue`, `SpotPanelInfoTab.vue`, etc.) read/write it directly.
-- Must not import from `src/map/`.
+- Auth store owns auth state and auth operations only (signIn/signUp/signOut/profile). Photo/file uploads that also write to DB tables belong in `app/communication/`.
+- `spotPanel` store (`app/stores/spotPanel.ts`) owns all spot-panel state: which spot is open, active tab, tour/trail selection, parking lots, comments. `SpotPanel.vue` and its child components (`SpotPanelHeader.vue`, `SpotPanelTabs.vue`, `SpotPanelInfoTab.vue`, etc.) read/write it directly.
+- Must not import from `app/map/`.
 
 **`composables/`**
-- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`). It also owns the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`src/stores/spotPanel.ts`.
+- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`). It also owns the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
-**`src/map/`**
+**`app/map/`**
 - Receives auth/state via constructor injection (not by importing stores).
 - Must not import from `stores/`.
 
 ### Adding a new spot type
-1. Add a new interface in `src/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
-2. Add an entry to `DETAIL_ENDPOINT` in `src/communication/trails.ts` — **nothing else in that file changes**.
+1. Add a new interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
+2. Add an entry to `DETAIL_ENDPOINT` in `app/communication/trails.ts` — **nothing else in that file changes**.
 3. Add a filter entry in `stores/filters.ts` `apply()`.
 4. Add a marker category in `composables/useTrailMap.ts` `createCustomIcon()`.
 5. Add entries to `server/api/trails.get.ts` and `server/api/trail/[id].get.ts`.
-6. Update `src/architecture.test.ts` if any new invariants apply.
+6. Update `app/architecture.test.ts` if any new invariants apply.
 
 ### Open/Closed pattern for trail type dispatch
 ```typescript
@@ -167,8 +168,8 @@ else { ... }
 | `npm run test:e2e` | Playwright tests covering map, auth, add-spot, search, filters |
 
 **Test locations:**
-- Unit tests: `src/**/*.test.ts` (picked up by vitest automatically)
-- Architecture tests: `src/architecture.test.ts`
+- Unit tests: `app/**/*.test.ts` (picked up by vitest automatically)
+- Architecture tests: `app/architecture.test.ts`
 - E2E tests: `tests/*.spec.ts`
 
 ---
@@ -177,16 +178,16 @@ else { ... }
 
 | File | Role |
 |---|---|
-| `src/communication/http.ts` | Shared HTTP client — single source of Supabase URL and auth headers |
-| `src/communication/trails.ts` | Trail/GPX data fetching |
-| `src/communication/photos.ts` | Trail photo upload + image resizing |
-| `src/spot_manager/Api.ts` | Admin/trailcrew API — **gold standard for HTTP layer design** |
-| `src/spot_manager/GpxProcessor.ts` | GPX parsing, RDP thinning, Fréchet matching — pure functions |
-| `src/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
-| `src/stores/auth.ts` | Auth state + auth operations only |
-| `src/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
-| `src/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
-| `src/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `src/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
-| `src/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
-| `src/architecture.test.ts` | Vitest tests that enforce structural invariants |
+| `app/communication/http.ts` | Shared HTTP client — single source of Supabase URL and auth headers |
+| `app/communication/trails.ts` | Trail/GPX data fetching |
+| `app/communication/photos.ts` | Trail photo upload + image resizing |
+| `app/spot_manager/Api.ts` | Admin/trailcrew API — **gold standard for HTTP layer design** |
+| `app/spot_manager/GpxProcessor.ts` | GPX parsing, RDP thinning, Fréchet matching — pure functions |
+| `app/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
+| `app/stores/auth.ts` | Auth state + auth operations only |
+| `app/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
+| `app/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
+| `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
+| `app/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |

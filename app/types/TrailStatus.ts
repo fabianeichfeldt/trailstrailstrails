@@ -1,12 +1,12 @@
 // Trail status visualization — pure derivation logic.
 //
 // Placement: this is a bottom-of-graph pure module (no imports at all),
-// alongside src/types/Trail.ts. It must be importable from both
-// src/communication/ (data layer, forbidden from importing stores/,
-// composables/, or src/map/ — see .dependency-cruiser.cjs) and from
-// src/composables/useTrailMap.ts (the only place Leaflet exists). src/types/
+// alongside app/types/Trail.ts. It must be importable from both
+// app/communication/ (data layer, forbidden from importing stores/,
+// composables/, or app/map/ — see .dependency-cruiser.cjs) and from
+// app/composables/useTrailMap.ts (the only place Leaflet exists). app/types/
 // is the one layer both of those are already allowed to depend on, so a new
-// file here — rather than src/communication/ or src/map/ — keeps the module
+// file here — rather than app/communication/ or app/map/ — keeps the module
 // usable from either side without adding a new edge to the dependency graph.
 //
 // See docs/superpowers/specs/2026-07-31-trail-status-visualization-design.md
@@ -56,7 +56,7 @@ const OPEN: TrailStatusResult = { state: 'open', title: null, dateLine: null, hi
  * Derives the live trail-closure status of a spot_gpx_trails row. Always
  * surfaces since-when (and until-when, if known) a closure applies — the
  * date line is never dropped just because a hint was also set. The caller
- * (see src/map/trailStatusSheet.ts) is responsible for also attributing the
+ * (see app/map/trailStatusSheet.ts) is responsible for also attributing the
  * information to the spot's trailcrew when rendering.
  *
  * `now` is injected (never read from Date.now() internally) so this stays a

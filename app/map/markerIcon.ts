@@ -41,7 +41,7 @@ export function parkingIconOptions(): MarkerIconOptions {
 
 /**
  * Glossy status badge for a GPX trail track, shown at the track's midpoint
- * when its derived status (see src/types/TrailStatus.ts) is 'closing_soon'
+ * when its derived status (see app/types/TrailStatus.ts) is 'closing_soon'
  * or 'closed'. Additive only — never used for the 'open' state, and never
  * touches the track's difficulty-color line rendering.
  *

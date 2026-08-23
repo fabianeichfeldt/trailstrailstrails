@@ -10,7 +10,7 @@
 // The sheet itself is visually consistent with the app's existing
 // bottom-sheet pattern (.spot-panel: fixed to viewport bottom, rounded top
 // corners, slide-up transform, drag-handle-style bar — see
-// src/assets/css/marker.css and src/assets/css/spot_panel.css) without
+// app/assets/css/marker.css and app/assets/css/spot_panel.css) without
 // pulling in the full SpotPanel, which is a much larger, unrelated concern
 // (tabs, GPX list, elevation...).
 

@@ -39,7 +39,7 @@ import SpotPanelTrailsTab from './SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from './SpotPanelParkingTab.vue'
 import SpotPanelElevation from './SpotPanelElevation.vue'
 
-// Mounts as a sibling of <MapView> in src/pages/map.vue, same pattern as
+// Mounts as a sibling of <MapView> in app/pages/map.vue, same pattern as
 // Drawer.vue/NearbyModal.vue/AddSpotModal.vue.
 const store = useSpotPanelStore()
 

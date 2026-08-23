@@ -1,12 +1,12 @@
 // Pure helpers for the SpotManager "Status" section (closed_from / closed_to
 // / hint) on spot_gpx_trails — the write side of the trail-status feature
-// whose read side is src/types/TrailStatus.ts (deriveTrailStatus).
+// whose read side is app/types/TrailStatus.ts (deriveTrailStatus).
 //
-// Extracted (same precedent as src/spot_manager/GpxProcessor.ts) so the
+// Extracted (same precedent as app/spot_manager/GpxProcessor.ts) so the
 // `datetime-local` <-> ISO 8601 conversions, the "Bis must be after Von"
 // validation, and the list-badge label/color lookup can be unit-tested in
 // isolation, without mounting the full SpotManagerApp.vue — this is the
-// logic src/components/spotmanager/TrailStatusFields.vue and
+// logic app/components/spotmanager/TrailStatusFields.vue and
 // SpotManagerApp.vue's openEditTrail()/saveTrailEdit() both call into.
 //
 // See docs/superpowers/specs/2026-08-02-spotmanager-trail-status-editing-design.md

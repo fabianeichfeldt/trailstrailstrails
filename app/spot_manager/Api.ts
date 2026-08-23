@@ -40,7 +40,7 @@ export interface GpxTrailRow {
   gpx_url?: string;
   trail_description?: string;
   sort_order: number;
-  // Trail status visualization — see src/types/TrailStatus.ts. All nullable;
+  // Trail status visualization — see app/types/TrailStatus.ts. All nullable;
   // an untouched row has all three null and renders as plain "open".
   closed_from?: string | null;
   closed_to?: string | null;

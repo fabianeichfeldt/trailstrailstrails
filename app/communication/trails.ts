@@ -138,7 +138,7 @@ interface RawGpxTrail {
   elevation_loss: number
   gpx_points: [number, number, number][]
   gpx_url?: string
-  // Trail status visualization — see src/types/TrailStatus.ts.
+  // Trail status visualization — see app/types/TrailStatus.ts.
   closed_from?: string | null
   closed_to?: string | null
   hint?: string | null
@@ -242,7 +242,7 @@ export interface SpotGpxTrail {
   difficulty: string
   gpx_points: [number, number, number][]
   trail_description?: string
-  // Trail status visualization — see src/types/TrailStatus.ts. Fed straight
+  // Trail status visualization — see app/types/TrailStatus.ts. Fed straight
   // into deriveTrailStatus() by the map's GPX badge rendering.
   closed_from?: string | null
   closed_to?: string | null

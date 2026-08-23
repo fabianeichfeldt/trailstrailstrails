@@ -18,7 +18,7 @@ export interface MtbTrail {
   gpxPoints: [number, number, number][];  // [lat, lng, alt]
   elevationProfile: ElevationPoint[];
   gpx_url?: string;  // URL to download original GPX file
-  // Trail status visualization — see src/types/TrailStatus.ts.
+  // Trail status visualization — see app/types/TrailStatus.ts.
   closed_from?: string | null;
   closed_to?: string | null;
   hint?: string | null;

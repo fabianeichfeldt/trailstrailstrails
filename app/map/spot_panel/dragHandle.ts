@@ -1,6 +1,6 @@
 // Shared mobile/desktop breakpoint check — the app's one mechanism for
 // distinguishing viewport modes. Reused by the trail-status badge
-// (src/composables/useTrailMap.ts) so desktop popup vs. mobile bottom-sheet
+// (app/composables/useTrailMap.ts) so desktop popup vs. mobile bottom-sheet
 // branching stays consistent with the panel's own mobile/desktop switch.
 export const isDesktopViewport = () => window.innerWidth >= 768;
 

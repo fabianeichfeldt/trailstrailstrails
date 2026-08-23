@@ -3,7 +3,7 @@ import { describe, test, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-// Resolve project root relative to this file (src/prerender-config.test.ts → ../)
+// Resolve project root relative to this file (app/prerender-config.test.ts → ../)
 const ROOT = new URL('../', import.meta.url).pathname
 const nuxtConfig = readFileSync(join(ROOT, 'nuxt.config.ts'), 'utf8')
 

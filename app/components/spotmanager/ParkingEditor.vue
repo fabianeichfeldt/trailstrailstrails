@@ -112,7 +112,7 @@ const saveError = ref<string | null>(null)
 
 const canSave = computed(() => form.name.trim().length > 0 && location.value !== null)
 
-// Reuses the persistent big map (src/spot_manager/MapView.ts) as the
+// Reuses the persistent big map (app/spot_manager/MapView.ts) as the
 // coordinate picker instead of embedding a second Leaflet instance.
 props.mapView?.enablePointPicker(location.value, (pos) => { location.value = pos })
 

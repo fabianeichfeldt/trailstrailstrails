@@ -4,7 +4,7 @@ import type { SpotParkingLot } from '~/communication/trails'
 import SpotPanelParkingTab from './SpotPanelParkingTab.vue'
 
 // Ported 1:1 from the parkingHTML() describe block in
-// src/map/spot_panel/spotPanelHtml.test.ts (deleted once this component's
+// app/map/spot_panel/spotPanelHtml.test.ts (deleted once this component's
 // island replaces parkingHTML() as the live renderer — see spotPanel.ts).
 describe('SpotPanelParkingTab', () => {
   it('shows an empty-state message when there are no lots', () => {
