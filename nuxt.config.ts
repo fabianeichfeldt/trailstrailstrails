@@ -15,8 +15,11 @@ if (existsSync(envFile)) {
 }
 
 export default defineNuxtConfig({
-  srcDir: 'src',
-  serverDir: './src/server',
+  srcDir: 'app',
+  serverDir: './server',
+  // dir.public resolves relative to srcDir on Nuxt 3 (the rootDir-relative
+  // default only lands in Nuxt 4), so escape srcDir explicitly here.
+  dir: { public: '../public' },
 
   devtools: { enabled: true },
 
@@ -327,7 +330,7 @@ export default defineNuxtConfig({
           ...all.map(t => urlXml(`https://trailradar.org/trails/${t.id}`, '0.6', 'weekly')),
         ]
         const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
-        writeFileSync('src/public/sitemap.xml', sitemapXml)
+        writeFileSync('public/sitemap.xml', sitemapXml)
         console.log(`  ✓ Generated sitemap.xml with ${sitemapEntries.length} URLs`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)

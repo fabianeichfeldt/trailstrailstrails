@@ -1,4 +1,4 @@
-import { resolveHostname, isHostAllowed } from '~/server/utils/embedHostValidation'
+import { resolveHostname, isHostAllowed } from '@@/server/utils/embedHostValidation'
 
 export interface EmbedGpxTrail {
   name: string

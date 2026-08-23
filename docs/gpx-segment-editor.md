@@ -110,8 +110,8 @@ After commit → `view = 'list'`, new rows appear in trails and tours lists, map
 
 | File | Change |
 |---|---|
-| `src/spot_manager/GpxProcessor.ts` | Add `processSegment(rawPoints, startIdx, endIdx)` — slices, smooths, thins, computes stats, generates GPX XML string |
-| `src/spot_manager/MapView.ts` | Add `showSourceTrack(points)`, `updateLiveSlice(points, color)`, `clearLiveSlice()` |
+| `app/spot_manager/GpxProcessor.ts` | Add `processSegment(rawPoints, startIdx, endIdx)` — slices, smooths, thins, computes stats, generates GPX XML string |
+| `app/spot_manager/MapView.ts` | Add `showSourceTrack(points)`, `updateLiveSlice(points, color)`, `clearLiveSlice()` |
 | `components/spotmanager/SpotManagerApp.vue` | Add `'segment-upload'` and `'segment-editor'` to the `View` union; entry point button; bottom panel layout toggle; scrubber + editor logic |
 | `CONTEXT.md` | Already created — defines Source track, Segment, GPX Segment Editor, Elevation scrubber |
 
@@ -128,7 +128,7 @@ No DB migrations needed — no new tables or columns.
   - `processSegment` stat accuracy (distance, gain, loss match sub-slice)
   - `processSegment` GPX XML output is valid and parseable by `parseGpx`
 - Unit test: `trail_names` on the committed tour equals the names of all defined segments
-- Architecture test (`src/architecture.test.ts`): segment editor state stays within `SpotManagerApp.vue`, does not import `src/map/` directly
+- Architecture test (`app/architecture.test.ts`): segment editor state stays within `SpotManagerApp.vue`, does not import `app/map/` directly
 
 ---
 

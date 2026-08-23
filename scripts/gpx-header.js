@@ -6,7 +6,7 @@
  * (one-off backfill of GPX files already in Supabase Storage) so the
  * two scripts can't drift out of sync with each other.
  *
- * Mirrors the TypeScript implementation in src/spot_manager/GpxProcessor.ts
+ * Mirrors the TypeScript implementation in app/spot_manager/GpxProcessor.ts
  * (kept as a separate implementation there — different runtime/module
  * system, not worth sharing across the Vite/Node boundary).
  *

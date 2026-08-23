@@ -44,14 +44,14 @@ baseTest('/trails/[id] shows the trail name and map link', async ({ page }) => {
 
 // Regression test for "the embedded map on a trail page shows the wrong
 // location" (reported: /trails/[uuid] pages showing a map centered near
-// Salzburg — the DEFAULT_LAT/DEFAULT_LNG fallback in src/utils/embedQuery.ts
+// Salzburg — the DEFAULT_LAT/DEFAULT_LNG fallback in app/utils/embedQuery.ts
 // — instead of the trail's actual coordinates). Nothing previously asserted
 // on the <iframe class="trail-map"> element at all: the only existing test
 // above only checks the h1 and the "open in map" link, both of which are
 // derived from the slug/name and would stay green even if the iframe's
 // src carried completely wrong (or default) coordinates. This test follows
 // the full first-party chain that was actually broken in production:
-// trail.latitude/longitude (src/pages/trails/[slug].vue) -> the embedSrc
+// trail.latitude/longitude (app/pages/trails/[slug].vue) -> the embedSrc
 // computed -> the rendered <iframe src>.
 baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, not the embed-query default', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
@@ -71,7 +71,7 @@ baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, no
   assertNoLeaks();
 });
 
-// This page (src/pages/trails/[slug].vue) also renders region overview
+// This page (app/pages/trails/[slug].vue) also renders region overview
 // pages through the exact same component and iframe-building logic
 // (regionEmbedSrc) — same guard, different data source (a static region
 // table instead of a fetched trail), covering the two branches that feed

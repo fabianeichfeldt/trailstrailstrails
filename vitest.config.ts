@@ -6,9 +6,9 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      // Mirrors Nuxt's `~/` -> `srcDir` alias (see nuxt.config.ts `srcDir: 'src'`)
+      // Mirrors Nuxt's `~/` -> `srcDir` alias (see nuxt.config.ts `srcDir: 'app'`)
       // so component/test files that import via `~/...` resolve under vitest too.
-      '~': fileURLToPath(new URL('./src', import.meta.url)),
+      '~': fileURLToPath(new URL('./app', import.meta.url)),
     },
   },
   define: {
@@ -17,7 +17,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['src/**/*.test.ts', 'server/**/*.test.ts', 'composables/**/*.test.ts'],
+    include: ['app/**/*.test.ts', 'server/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });
