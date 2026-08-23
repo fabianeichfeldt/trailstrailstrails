@@ -17,9 +17,9 @@ if (existsSync(envFile)) {
 export default defineNuxtConfig({
   srcDir: 'app',
   serverDir: './server',
-  // dir.public resolves relative to srcDir on Nuxt 3 (the rootDir-relative
-  // default only lands in Nuxt 4), so escape srcDir explicitly here.
-  dir: { public: '../public' },
+  // public/ and server/ resolve relative to rootDir by default on Nuxt 4
+  // (they're srcDir-relative on Nuxt 3), so no dir.public override is
+  // needed here — 'public' at the project root is already the default.
 
   devtools: { enabled: true },
 

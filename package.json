@@ -49,14 +49,14 @@
     "@capacitor/status-bar": "^8.0.3",
     "@fortawesome/fontawesome-free": "^7.1.0",
     "@nuxtjs/supabase": "^2.0.8",
-    "@pinia/nuxt": "^0.10.1",
+    "@pinia/nuxt": "^1.0.2",
     "@supabase/supabase-js": "^2.89.0",
     "@vite-pwa/nuxt": "^0.10.6",
     "leaflet": "^1.9.4",
     "leaflet-gesture-handling": "^1.2.2",
     "leaflet.fullscreen": "^5.1.1",
     "leaflet.markercluster": "^1.5.3",
-    "nuxt": "^3.16.0",
-    "pinia": "^3.0.1"
+    "nuxt": "^4.5.2",
+    "pinia": "^4.0.3"
   }
 }

@@ -148,6 +148,14 @@ const { data: trail } = await useAsyncData(`trail-${slug}`, async () => {
   } catch {
     return null
   }
+}, {
+  // Nuxt 4 always inlines the SSR result into the hydration payload
+  // (payloadExtraction only controls whether it's split into a separate
+  // _payload.json file), so the client no longer refetches after
+  // hydration on its own. Opt out of trusting the SSR value here so a
+  // client-side fetch always follows — cheap for this low-traffic detail
+  // page, and keeps it consistent if the server-rendered result is stale.
+  getCachedData: () => undefined,
 })
 
 const embedSrc = computed(() => {
