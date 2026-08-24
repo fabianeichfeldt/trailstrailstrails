@@ -4,12 +4,15 @@
   },
   "permissions": {
     "allow": [
+      "Bash(npm audit)",
+      "Bash(npm outdated)",
       "Bash(npm test)",
       "Bash(npm test *)",
       "Bash(npm run *)",
       "Bash(npx vitest *)",
       "Bash(npx playwright *)",
       "Bash(npx nuxt *)",
+      "Bash(npx tsc*)",
       "Bash(npx depcruise *)",
       "Bash(git status)",
       "Bash(git status *)",

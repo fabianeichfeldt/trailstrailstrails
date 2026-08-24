@@ -20,7 +20,7 @@
 
       <section class="section">
         <h2>So sieht das aus</h2>
-        <p>Ein Beispiel: eine eingebettete Karte für ein Trailgebiet im nördlichen Baden-Württemberg –
+        <p>Ein Beispiel: eine eingebettete Karte für ein Trailgebiet im nördlichen Bayern –
           genau so, wie sie auch auf eurer Website erscheinen würde.</p>
 
         <div class="embed-example">
@@ -36,7 +36,7 @@
             allowfullscreen
           />
         </div>
-        <p class="caption">Beispiel: eingebettete Karte für ein Trailgebiet im nördlichen Baden-Württemberg</p>
+        <p class="caption">Beispiel: eingebettete Karte für ein Trailgebiet im nördlichen Bayern</p>
       </section>
 
       <section class="section">
@@ -103,11 +103,11 @@
 </template>
 
 <script setup lang="ts">
-const DEMO_LAT  = 49.0069
-const DEMO_LNG  = 8.4037
-const DEMO_ZOOM = 10
+const DEMO_LAT  = 50.1043
+const DEMO_LNG  = 11.4497
+const DEMO_ZOOM = 12
 
-// Real embed token, scoped to a demo spot near Karlsruhe, allowed for trailradar.org itself —
+// Real embed token, scoped to a demo spot near Kulmbach, allowed for trailradar.org itself —
 // used to render a genuine embed on this page (not a mockup).
 const demoToken = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 const demoEmbedSrc = `/embed/${demoToken}?lat=${DEMO_LAT}&lng=${DEMO_LNG}&zoom=${DEMO_ZOOM}`
