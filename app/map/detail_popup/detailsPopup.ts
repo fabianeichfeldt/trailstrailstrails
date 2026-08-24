@@ -84,10 +84,14 @@ function renderSpotStatusBanner(details: TrailDetails): string {
   const { status, reason } = computeEffectiveStatus(details);
   const sm = STATUS_META[status] ?? STATUS_META.unknown;
 
-  let hint = reason || details.status_hint || '';
-  if (!hint && details.status_until && status !== 'open') {
-    const d = new Date(details.status_until);
-    hint = `Gesperrt bis ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+  const isClosedOrLimited = status === 'closed' || status === 'limited';
+  let hint = '';
+  if (isClosedOrLimited) {
+    hint = reason || details.status_hint || '';
+    if (!hint && details.status_until) {
+      const d = new Date(details.status_until);
+      hint = `Gesperrt bis ${d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+    }
   }
 
   const accessType = details.access_type;
@@ -99,7 +103,7 @@ function renderSpotStatusBanner(details: TrailDetails): string {
         ? `<a class="ssb-donate-cta" href="${details.donation_url}" target="_blank" rel="noopener noreferrer"><i class="fas fa-heart"></i> Kostenlos · Spenden willkommen</a>`
         : '';
 
-  const rainHint = details.rain_policy === 'during'
+  const rainHint = status === 'closed' ? '' : details.rain_policy === 'during'
     ? `<span class="ssb-rain"><i class="fas fa-cloud-rain"></i> Geschlossen bei Regen</span>`
     : details.rain_policy === 'after'
       ? `<span class="ssb-rain"><i class="fas fa-cloud-rain"></i> Geschlossen ${details.rain_closed_hours ?? 24}h nach Regen</span>`
