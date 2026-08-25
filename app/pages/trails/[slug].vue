@@ -46,17 +46,13 @@
     </template>
 
     <!-- Trail detail page -->
-    <template v-else-if="trail">
-      <section class="trail-hero">
-        <p class="hero-eyebrow">{{ typeLabel }}</p>
-        <h1>{{ trail.name }}</h1>
-        <NuxtLink :to="`/map?trail=${slug}`" class="btn-discover">
-          <IconSend class="btn-icon" />
-          Trailradar-Karte öffnen
-        </NuxtLink>
-      </section>
+    <template v-else-if="trail && trailForStore">
+      <SpotDetailHero :trail="trailForStore" />
 
-      <!-- Map CTA -->
+      <!-- Embedded map — read-only token-scoped widget for geographic
+           context, same iframe pattern as before this rework (Decision 9:
+           double-Leaflet-bundle cost accepted, not opening a new
+           map-rendering approach here). -->
       <section class="map-section content-section">
         <iframe
           v-if="embedSrc"
@@ -66,45 +62,40 @@
           loading="lazy"
           title="Trailradar Karte"
         />
-        <NuxtLink :to="`/map?trail=${slug}`" class="map-cta-overlay">
-          <div class="map-cta-inner">
-            <IconSend class="btn-icon" />
-            Auf der Karte entdecken
-          </div>
-        </NuxtLink>
       </section>
 
-      <section v-if="trail.trail_description || trail.description" class="trail-descr content-section card">
-        <h2>Beschreibung</h2>
-        <p>{{ trail.trail_description || trail.description }}</p>
+      <SpotDetailNav :trail="trailForStore" :parking-count="spotPanelStore.parkingLots.length" />
+
+      <SpotDetailInfo :trail="trailForStore" :baked="bakedDetails" />
+
+      <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
+        <h2>Touren</h2>
+        <SpotPanelToursTab />
+        <SpotPanelElevation
+          v-if="spotPanelStore.selectedItemKind === 'tour'"
+          :on-hover="noop"
+          :on-hover-end="noop"
+        />
       </section>
 
-      <section v-if="trail.rules && trail.rules.length" class="trail-rules content-section card">
-        <h2>Regeln & Hinweise</h2>
-        <ul class="rules-list">
-          <li v-for="(rule, i) in trail.rules" :key="i">{{ rule }}</li>
-        </ul>
+      <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
+        <h2>Trails</h2>
+        <SpotPanelTrailsTab />
+        <SpotPanelElevation
+          v-if="spotPanelStore.selectedItemKind === 'trail'"
+          :on-hover="noop"
+          :on-hover-end="noop"
+        />
       </section>
 
-      <section v-if="trail.photos && trail.photos.length" class="trail-photos content-section">
-        <h2 class="section-label">Fotos</h2>
-        <div class="photo-grid">
-          <img v-for="photo in trail.photos" :key="photo.id" :src="photo.url" :alt="trail.name" loading="lazy" />
-        </div>
+      <section v-if="spotPanelStore.parkingLots.length" id="parkplaetze" class="content-section card">
+        <h2>Parkplätze</h2>
+        <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" />
       </section>
 
-      <section class="trail-info content-section card">
-        <h2>Infos</h2>
-        <dl class="info-list">
-          <div v-if="trail.opening_hours">
-            <dt>Öffnungszeiten</dt>
-            <dd>{{ trail.opening_hours }}</dd>
-          </div>
-          <div>
-            <dt>Koordinaten</dt>
-            <dd>{{ trail.latitude?.toFixed(5) }}, {{ trail.longitude?.toFixed(5) }}</dd>
-          </div>
-        </dl>
+      <section id="kommentare" class="content-section card">
+        <h2>Kommentare</h2>
+        <SpotPanelComments />
       </section>
 
       <section class="bottom-cta content-section">
@@ -126,12 +117,24 @@
       </section>
     </template>
 
+    <ReportErrorModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
+import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
+import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
+import SpotDetailInfo from '~/components/trail_detail/SpotDetailInfo.vue'
+import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
+import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
+import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
+import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
+import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
+import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
+import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
+import type { Trail } from '~/types/Trail'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 //const EMBED_BASE = 'https://trailradar.org'
@@ -176,36 +179,51 @@ const otherRegions = computed(() =>
   ),
 )
 
-const typeLabel = computed(() => {
-  const t = trail.value?.type
-  if (t === 'bikepark') return 'Bikepark'
-  if (t === 'dirtpark') return 'Dirtpark / Pumptrack'
-  return 'Trail'
+// ── Spot-detail data orchestration ──────────────────────────────────────
+// `trailForStore` re-shapes the SSG-baked JSON (base trail fields + the
+// trail_details row + type + photos — see server/api/trail/[id].get.ts)
+// into the Trail-shaped object the (repurposed) spotPanel store and the new
+// section components expect. `bakedDetails` seeds SpotDetailInfo.vue so its
+// description/rules/photos/opening-hours render immediately from the
+// prerendered payload — see app/utils/bakedTrailDetails.ts.
+const trailForStore = computed<Trail | null>(() => (!isRegion && trail.value) ? (trail.value as unknown as Trail) : null)
+const bakedDetails = computed(() => bakedTrailDetails(trail.value))
+
+const spotPanelStore = useSpotPanelStore()
+const authStore = useAuthStore()
+const supabaseUser = useSupabaseUser()
+
+// Elevation-hover-highlights-map-marker is dropped on this page — there's
+// no live interactive map here to target, only the read-only embed iframe
+// (see the spec's "Known behavior changes"). The tour-segment SVG coloring
+// remains as the visual aid that stays.
+function noop() {}
+
+// spotPanelStore.load()/loadComments() do real network fetches — onMounted
+// never fires during SSR/prerender, so this is inherently client-only (see
+// CLAUDE.md's "No live Nitro server in production"); no extra guard needed.
+function loadLiveSpotData(item: Trail) {
+  spotPanelStore.load(item)
+  spotPanelStore.loadComments(item.id, {
+    userId: supabaseUser.value?.id ?? '',
+    isAdmin: authStore.isAdmin,
+    isTrailcrew: authStore.isTrailcrew,
+  })
+}
+
+onMounted(() => {
+  if (trailForStore.value) loadLiveSpotData(trailForStore.value)
 })
 
-const statusColor = computed(() => {
-  const s = trail.value?.status
-  if (s === 'open') return 'green'
-  if (s === 'closed') return 'red'
-  if (s === 'limited') return 'orange'
-  return 'gray'
-})
-
-const statusLabel = computed(() => {
-  const s = trail.value?.status
-  if (s === 'open') return 'Geöffnet'
-  if (s === 'closed') return 'Geschlossen'
-  if (s === 'limited') return 'Eingeschränkt'
-  return 'Unbekannt'
-})
-
-const accessLabel = computed(() => {
-  const a = trail.value?.access_type
-  if (a === 'free') return 'Kostenlos'
-  if (a === 'paid') return 'Kostenpflichtig'
-  if (a === 'membership') return 'Mitgliedschaft'
-  return a
-})
+// Client-side navigation to a different spot's page (e.g. via search)
+// reuses this page's component instance — reload for the new spot.
+watch(
+  () => trailForStore.value?.id,
+  (id, oldId) => {
+    if (!id || id === oldId || !trailForStore.value) return
+    loadLiveSpotData(trailForStore.value)
+  },
+)
 
 const pageTitle = isRegion
   ? `Offizielle MTB Trails ${region!.pronom}`

@@ -148,15 +148,15 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     activeTab.value = tab
   }
 
-  // Leaflet-touching side effects (polyline restyle, tour layers, hover
-  // marker, fitBounds) live in useTrailMap.ts as watch()es on
-  // isOpen/data/selectedItemId/selectedItemKind, not here.
-  function openInternal(item: Trail, initialTab: typeof activeTab.value) {
+  // Shared per-spot state reset — used both by the (soon-to-be-retired)
+  // panel's openInternal() below and by load() for the routed spot-detail
+  // page. Same "moving to a different spot" semantics either way: wipe
+  // per-spot data and kick off the fire-and-forget fetches. loadSpotData()
+  // only applies to trail-type spots (bikeparks/dirtparks have no GPX
+  // tours/trails); loadParking() runs for every spot type.
+  function resetForSpot(item: Trail) {
     currentItem.value = item
-    isOpen.value = true
     parkingLots.value = []
-    parkingTabForceVisible.value = initialTab === 'parking'
-    if (initialTab !== 'parking') highlightedParkingLotId.value = null
     comments.value = []
     commentsExpanded.value = false
     commentsHasMore.value = false
@@ -165,20 +165,37 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     likeVisible.value = false
     data.value = null
     clearSelection()
-    activeTab.value = initialTab
-
-    // Fire-and-forget. loadSpotData() only applies to trail-type spots
-    // (bikeparks/dirtparks have no GPX tours/trails); loadParking() runs
-    // for every spot type.
     if (item.type === 'trail') {
       loadSpotData(item.id)
     }
     loadParking(item.id)
   }
 
+  // Leaflet-touching side effects (polyline restyle, tour layers, hover
+  // marker, fitBounds) live in useTrailMap.ts as watch()es on
+  // isOpen/data/selectedItemId/selectedItemKind, not here.
+  function openInternal(item: Trail, initialTab: typeof activeTab.value) {
+    resetForSpot(item)
+    isOpen.value = true
+    parkingTabForceVisible.value = initialTab === 'parking'
+    if (initialTab !== 'parking') highlightedParkingLotId.value = null
+    activeTab.value = initialTab
+  }
+
   /** Opens the panel for `item`, defaulting to the Info tab. */
   function openSpot(item: Trail) {
     openInternal(item, 'info')
+  }
+
+  /**
+   * Loads `item` for the routed spot-detail page
+   * (app/pages/trails/[slug].vue) — that page's replacement for
+   * openSpot()'s panel-open state. There's no isOpen/activeTab concept
+   * here: every section is always present in the page's long scroll, just
+   * populated once the per-spot fetches this kicks off resolve.
+   */
+  function load(item: Trail) {
+    resetForSpot(item)
   }
 
   /**
@@ -240,5 +257,6 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     openSpot,
     openParkingLot,
     close,
+    load,
   }
 })

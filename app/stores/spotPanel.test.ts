@@ -514,6 +514,59 @@ describe('useSpotPanelStore', () => {
     })
   })
 
+  // ── Routed spot-detail page ─────────────────────────────────────────
+  describe('load', () => {
+    it('sets currentItem and resets per-spot state, without touching isOpen/activeTab', () => {
+      const store = useSpotPanelStore()
+      store.parkingLots = [{ id: 'p1', name: 'Old lot', lat: 1, lng: 1 }]
+      store.comments = [comment()]
+      store.commentsExpanded = true
+      store.commentsLoaded = true
+      store.isLiked = true
+      store.likeVisible = true
+      store.selectedItemId = 'trail-1'
+      store.selectedItemKind = 'trail'
+
+      store.load(trail('s2'))
+
+      expect(store.currentItem?.id).toBe('s2')
+      expect(store.isOpen).toBe(false)
+      expect(store.parkingLots).toEqual([])
+      expect(store.comments).toEqual([])
+      expect(store.commentsExpanded).toBe(false)
+      expect(store.commentsLoaded).toBe(false)
+      expect(store.isLiked).toBe(false)
+      expect(store.likeVisible).toBe(false)
+      expect(store.selectedItemId).toBeNull()
+      expect(store.selectedItemKind).toBeNull()
+    })
+
+    it('fetches parking and GPX data for a trail-type spot', async () => {
+      const store = useSpotPanelStore()
+      vi.mocked(fetchMultipleSpotParking).mockResolvedValue(new Map([['s2', [{ id: 'p1', name: 'Lot', lat: 1, lng: 1 }]]]))
+      vi.mocked(getSpotGpxData).mockResolvedValue({ spotId: 's2', tours: [], trails: [] })
+
+      store.load(trail('s2', 'trail'))
+      await Promise.resolve()
+      await Promise.resolve()
+
+      expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['s2'])
+      expect(getSpotGpxData).toHaveBeenCalledWith('s2')
+      expect(store.parkingLots).toEqual([{ id: 'p1', name: 'Lot', lat: 1, lng: 1 }])
+      expect(store.data).toEqual({ spotId: 's2', tours: [], trails: [] })
+    })
+
+    it('fetches parking but not GPX tour/trail data for a non-trail spot', async () => {
+      const store = useSpotPanelStore()
+
+      store.load(trail('b1', 'bikepark'))
+      await Promise.resolve()
+
+      expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['b1'])
+      expect(getSpotGpxData).not.toHaveBeenCalled()
+    })
+  })
+
   describe('close', () => {
     it('closes the panel and clears per-spot state, but leaves activeTab untouched', () => {
       const store = useSpotPanelStore()
