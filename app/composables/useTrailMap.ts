@@ -23,6 +23,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const filtersStore = useFiltersStore()
   const mapStore = useMapStore()
   const spotPanelStore = useSpotPanelStore()
+  const router = useRouter()
 
   // Exposed for search bar
   const mapInstance = shallowRef<any>(null)
@@ -36,9 +37,22 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const elevationHoverFn = ref<((latlng: [number, number], color: string) => void) | null>(null)
   const elevationHoverEndFn = ref<(() => void) | null>(null)
 
+  // Marker/search clicks now do a real router.push instead of opening a
+  // panel on top of the still-live map (spot-detail-real-pages rework), so
+  // this composable can unmount mid-way through its own async setup — even
+  // before `cleanupFn` below has been assigned (e.g. a marker is clicked
+  // before the dynamic `import('leaflet')` resolves). Set directly in
+  // onUnmounted(), not only inside cleanupFn, so it's still true for that
+  // early-unmount case. Checked after every `await` inside onMounted()
+  // below so a resumed continuation never touches a Leaflet map that's
+  // already been torn down (or never even creates one).
+  let destroyed = false
   // Cleanup registered synchronously — can't call onUnmounted after await
   let cleanupFn: (() => void) | null = null
-  onUnmounted(() => cleanupFn?.())
+  onUnmounted(() => {
+    destroyed = true
+    cleanupFn?.()
+  })
 
   // Nearby conflict state (replaces DOM-based modal)
   const nearbyConflict = ref<{
@@ -60,6 +74,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Dynamic imports — all Leaflet code runs client-only
     const L = (await import('leaflet')).default
     await import('leaflet.markercluster')
+    if (destroyed) return
 
     const mymap = L.map(mapEl.value, {
       zoomControl: false,
@@ -271,8 +286,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }).addTo(currentLayer() as any)
 
         marker.on('click', () => {
-          mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.0 })
-          spotPanelStore.openSpot(trail as any)
+          router.push(`/trails/${trail.id}`)
         })
       }
     }
@@ -332,8 +346,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       let lastTapId   = ''
 
       function openPanel(trail: Trail) {
-        spotPanelStore.openSpot(trail as any)
         tooltipEl.style.display = 'none'
+        router.push(`/trails/${trail.id}`)
       }
 
       function showTooltip(
@@ -493,7 +507,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: createCustomIcon(trail),
           }).addTo(fallbackLayer)
           marker.on('click', () => {
-            spotPanelStore.openSpot(trail as any)
+            router.push(`/trails/${trail.id}`)
           })
           continue
         }
@@ -526,7 +540,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: L.divIcon(parkingIconOptions()),
           }).addTo(mymap)
           marker.on('click', () => {
-            spotPanelStore.openParkingLot(trail as any, lot)
+            // No deep-linking to a specific lot selection (YAGNI per the
+            // spot-detail-real-pages spec) — jump straight to the spot
+            // page's Parkplätze section instead of highlighting one lot.
+            router.push(`/trails/${trail.id}#parkplaetze`)
           })
           parkingLayers.push(marker)
         }
@@ -556,14 +573,14 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     openTrailFn.value = (id: string) => {
       const trail = trailsStore.all.find(t => t.id === id)
       if (!trail) return
-      mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.2 })
-      spotPanelStore.openSpot(trail as any)
+      router.push(`/trails/${trail.id}`)
     }
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
 
     // Initial location
     const { getApproxLocation } = await import('~/communication/location')
     const loc = await getApproxLocation()
+    if (destroyed) return
     if (loc.lat !== 0 || loc.lng !== 0) {
       mymap.setView([loc.lat, loc.lng], 9)
     } else {
@@ -572,6 +589,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     // Load data and do initial render
     await trailsStore.fetchAll()
+    if (destroyed) return
     switchView()
 
     // React to filter / data changes in whichever view is active
@@ -706,6 +724,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
 
     cleanupFn = () => {
+      renderGuard.destroy()
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
       unregisterBackHandler?.()
       mymap.remove()

@@ -72,6 +72,14 @@ const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } |
 const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
 const trailIdFromQuery = route.query.trail as string | undefined
+// "View on map" CTA (app/pages/trails/[slug].vue's bottom-cta, Decision 10
+// of the spot-detail-real-pages spec): `?fly=lat,lng` flies/centers the
+// camera on a spot without opening anything on top — replaces the old
+// `?trail=slug` panel-reopen pattern for that one CTA. `?trail=` itself
+// stays wired below for other existing entry points (search, landing-page
+// links) — openTrail() now does a real router.push to the spot's page
+// instead of opening the panel (see useTrailMap.ts).
+const flyToQuery = route.query.fly as string | undefined
 
 function onMapReady(handlers: {
   openTrail: (id: string) => void
@@ -94,6 +102,13 @@ function onMapReady(handlers: {
         if (n > 0) { openTrail(trailIdFromQuery); stop() }
       })
     }
+  }
+
+  if (flyToQuery) {
+    const [latStr, lngStr] = flyToQuery.split(',')
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isNaN(lat) && !Number.isNaN(lng)) flyToPlace(lat, lng)
   }
 }
 

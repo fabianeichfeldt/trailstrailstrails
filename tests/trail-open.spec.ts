@@ -1,44 +1,45 @@
 import { test as baseTest } from '@playwright/test';
 import { test, expect, setupAllMocks } from './fixtures';
 
-// Helper: assert the spot panel is open and showing the right trail
-async function expectPanelOpen(page: import('@playwright/test').Page, trailName: string) {
-  await expect(page.locator('.spot-panel')).toHaveClass(/open/, { timeout: 8000 });
-  await expect(page.locator('.spot-panel-title')).toContainText(trailName);
-}
-
 // ── Via ?trail= query param ────────────────────────────────────────────────────
-// The news cards on the landing page link to /map?trail=ID.
-// The map page reads this query param on mount and opens the spot panel.
+// The news cards on the landing page link to /map?trail=ID. The map page
+// reads this query param on mount and, since the spot-detail-real-pages
+// rework (marker clicks and other "open this spot" entry points are now
+// real navigations — see useTrailMap.ts's openTrailFn), navigates straight
+// to the spot's own page instead of opening a panel on top of the map.
 
-baseTest('/map?trail= opens the spot panel on load', async ({ page }) => {
+baseTest('/map?trail= navigates to the spot\'s own page', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/map?trail=t1');
-  await page.waitForLoadState('networkidle');
 
-  await expectPanelOpen(page, 'Flowtrail Tegernsee');
+  await expect(page).toHaveURL(/\/trails\/t1$/);
+  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
   assertNoLeaks();
 });
 
 baseTest('/map?trail= works for a bikepark', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/map?trail=b1');
-  await page.waitForLoadState('networkidle');
 
-  await expectPanelOpen(page, 'Bikepark Lenggries');
+  await expect(page).toHaveURL(/\/trails\/b1$/);
+  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
   assertNoLeaks();
 });
 
 // ── Trail detail page ──────────────────────────────────────────────────────────
-// /trails/[id] is a static SEO page — it shows trail details and links to the map.
+// /trails/[id] is the full spot-detail page (evolved from a thin static SEO
+// shell — see app/pages/trails/[slug].vue and tests/trails-detail-page.spec.ts
+// for its section coverage). The "View on map" CTA now flies the live map
+// to the spot's coordinates (Decision 10 of the spec) instead of reopening
+// a panel via ?trail=.
 
-baseTest('/trails/[id] shows the trail name and map link', async ({ page }) => {
+baseTest('/trails/[id] shows the trail name and a "View on map" link that flies to its coordinates', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('a[href="/map?trail=t1"]').first()).toBeVisible();
+  await expect(page.locator('a[href="/map?fly=47.71,11.76"]').first()).toBeVisible();
   assertNoLeaks();
 });
 
@@ -116,48 +117,63 @@ baseTest('/trails/[slug] refreshes the embedded map location on client-side navi
   assertNoLeaks();
 });
 
-// ── Via search ─────────────────────────────────────────────────────────────────
+// ── Via search — real navigation, not a panel ────────────────────────────────────
+// Rewritten for the spot-detail-real-pages rework: "open this spot" from
+// /map (marker click, search result, ?trail= query param — all wired
+// through the same openTrailFn/marker click handlers in useTrailMap.ts) is
+// now a real router.push to the spot's own page, not a panel opened on top
+// of the still-live map. This exercises the identical navigation mechanism
+// a marker click uses; see tests/trails-detail-page.spec.ts and
+// tests/spot-panel-*.spec.ts for the resulting page's own section coverage.
 
-test('clicking a search result opens the spot panel for that trail', async ({ page }) => {
+test('clicking a search result navigates to that trail\'s own page', async ({ page }) => {
   await page.locator('[data-testid="search-input"]').fill('Flow');
   await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   // Click the result item (not just the text — click the whole row)
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
 
-  await expectPanelOpen(page, 'Flowtrail Tegernsee');
+  await expect(page).toHaveURL(/\/trails\/t1$/);
+  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
 });
 
-test('clicking a bikepark in search results opens the spot panel', async ({ page }) => {
+test('clicking a bikepark in search results navigates to its own page', async ({ page }) => {
   await page.locator('[data-testid="search-input"]').fill('Bikepark');
   await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
 
-  await expectPanelOpen(page, 'Bikepark Lenggries');
+  await expect(page).toHaveURL(/\/trails\/b1$/);
+  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
 });
 
-// ── Panel lifecycle ─────────────────────────────────────────────────────────────
+// ── Back navigation ───────────────────────────────────────────────────────────
+// New coverage per the spec's testing implications: marker click (here,
+// search — see the comment above) → real navigation → back returns to /map.
 
-test('spot panel close button closes the panel', async ({ page }) => {
-  // Open via search
+test('going back from a spot\'s page returns to /map', async ({ page }) => {
   await page.locator('[data-testid="search-input"]').fill('Flow');
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
-  await expect(page.locator('.spot-panel')).toHaveClass(/open/);
+  await expect(page).toHaveURL(/\/trails\/t1$/);
 
-  await page.locator('.spot-panel-close').click();
+  await page.goBack();
 
-  await expect(page.locator('.spot-panel')).not.toHaveClass(/open/);
+  await expect(page).toHaveURL(/\/map$/);
+  await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
 });
 
-test('opening a second trail replaces the first one in the panel', async ({ page }) => {
+test('navigating to a second trail via search lands on that trail\'s own page, not the first one', async ({ page }) => {
   await page.locator('[data-testid="search-input"]').fill('Flow');
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
-  await expectPanelOpen(page, 'Flowtrail Tegernsee');
+  await expect(page).toHaveURL(/\/trails\/t1$/);
 
-  // After clicking a result the search input is cleared automatically — just fill again
+  await page.goBack();
+  await expect(page).toHaveURL(/\/map$/);
+
+  // After landing back on the result the search input is cleared automatically — fill again
   await page.locator('[data-testid="search-input"]').fill('Bikepark');
   await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
 
-  await expectPanelOpen(page, 'Bikepark Lenggries');
+  await expect(page).toHaveURL(/\/trails\/b1$/);
+  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
 });

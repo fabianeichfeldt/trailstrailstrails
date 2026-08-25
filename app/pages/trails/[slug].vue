@@ -100,7 +100,7 @@
 
       <section class="bottom-cta content-section">
         <p class="bottom-cta-label">Alle offiziellen MTB-Trails auf einen Blick</p>
-        <NuxtLink :to="`/map?trail=${slug}`" class="btn-bottom-cta">
+        <NuxtLink :to="mapFlyToHref" class="btn-bottom-cta">
           <IconSend class="btn-icon" />
           Auf Trailradar entdecken
         </NuxtLink>
@@ -188,6 +188,16 @@ const otherRegions = computed(() =>
 // prerendered payload — see app/utils/bakedTrailDetails.ts.
 const trailForStore = computed<Trail | null>(() => (!isRegion && trail.value) ? (trail.value as unknown as Trail) : null)
 const bakedDetails = computed(() => bakedTrailDetails(trail.value))
+
+// "View on map" CTA (Decision 10): navigates to /map and flies/centers the
+// camera on the spot's marker instead of reopening a panel on top —
+// there's no panel any more, this page *is* the detail view now. map.vue
+// reads `fly` and calls the live map's flyToPlace() once it's ready, the
+// same pattern it already uses for `trail` (see onMapReady there).
+const mapFlyToHref = computed(() => {
+  if (!trailForStore.value) return '/map'
+  return `/map?fly=${trailForStore.value.latitude},${trailForStore.value.longitude}`
+})
 
 const spotPanelStore = useSpotPanelStore()
 const authStore = useAuthStore()

@@ -24,6 +24,17 @@ describe('GpxRenderGuard', () => {
     guard.enterMarkerMode()  // user zoomed back out while fetch was in flight
     expect(guard.isStale(gen)).toBe(true)
   })
+
+  // A marker/search click now does a real router.push instead of opening a
+  // panel on top of the still-live map (spot-detail-real-pages rework), so
+  // the map can be torn down while a renderGpxView() fetch is in flight.
+  it('is stale once destroyed, even with a matching gen and gpx mode', () => {
+    const guard = new GpxRenderGuard()
+    guard.enterGpxMode()
+    const gen = guard.beginRender()
+    guard.destroy()
+    expect(guard.isStale(gen)).toBe(true)
+  })
 })
 
 // ── Async race simulation ────────────────────────────────────────────────────
