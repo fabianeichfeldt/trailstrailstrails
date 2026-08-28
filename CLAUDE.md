@@ -49,6 +49,7 @@ These facts are not derivable from reading the TypeScript code — get them wron
 - **DELETE is admin-only** on `spot_gpx_trails`, `spot_gpx_tours`. Trailcrew can insert and update but not delete.
 - **RLS is enforced on all write tables.** The anon key is embedded in client JS — all write protection is in Postgres, not in application code.
 - **Key tables:** `user_roles` (role per user), `trailcrew_spots` (user ↔ assigned spot), `trail_details` (status/rules/description per spot), `spot_gpx_trails`, `spot_gpx_tours`, `embed_tokens`, `embed_token_trails`.
+- **`app/types/database.types.ts` is generated, gitignored, and machine-local.** It types the handful of places using `useSupabaseClient()` directly (`stores/auth.ts`, `stores/trails.ts`, `AddSpotModal.vue`, `profile.vue`, `plugins/auth.client.ts`) — most data fetching goes through the raw-REST `communication/` layer instead, which this file doesn't affect. Without it, `@nuxt/supabase` logs a harmless `Database = unknown` warning and those few call sites lose autocomplete/type-checking on table and column names. **Regenerate it after any schema change** (new/renamed table or column, new RPC): `npx supabase gen types typescript --project-id ixafegmxkadbzhxmepsd --schema public > app/types/database.types.ts` (requires the Supabase CLI logged in with access to the project — run this yourself rather than asking Claude to run it non-interactively).
 
 ---
 
