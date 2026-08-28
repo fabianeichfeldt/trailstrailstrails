@@ -144,21 +144,21 @@ const slug = route.params.slug as string
 const region = regions[slug as keyof typeof regions] ?? null
 const isRegion = !!region
 
-const { data: trail } = await useAsyncData(`trail-${slug}`, async () => {
+// Trust the SSR-embedded payload for hydration (default getCachedData
+// behavior) instead of forcing a redundant client refetch of identical
+// data: with a forced refetch, Vue's hydration comparison runs against
+// the still-pending state before that promise resolves, producing a
+// spurious hydration mismatch even though the resolved value ends up
+// identical to what the server already rendered. Live/dynamic fields
+// (status, likes, GPX, parking) are already refreshed separately and
+// safely post-mount, in SpotDetailInfo.vue and via spotPanelStore.load().
+const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}`, async () => {
   if (isRegion) return null
   try {
     return await $fetch<Record<string, any>>(`/api/trail/${slug}`)
   } catch {
     return null
   }
-}, {
-  // Nuxt 4 always inlines the SSR result into the hydration payload
-  // (payloadExtraction only controls whether it's split into a separate
-  // _payload.json file), so the client no longer refetches after
-  // hydration on its own. Opt out of trusting the SSR value here so a
-  // client-side fetch always follows — cheap for this low-traffic detail
-  // page, and keeps it consistent if the server-rendered result is stale.
-  getCachedData: () => undefined,
 })
 
 const embedSrc = computed(() => {
@@ -221,7 +221,19 @@ function loadLiveSpotData(item: Trail) {
   })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  // Runs after hydration completes, not during it: safe to let this update
+  // `trail` reactively (a normal post-mount re-render, not a hydration
+  // comparison) even if it resolves to something different than SSR got.
+  // clearNuxtData() is required, not cosmetic: calling refreshTrail() alone
+  // is a silent no-op here — Nuxt still treats the SSR-time promise for
+  // this key as satisfying the request and skips a real refetch unless the
+  // cached entry is explicitly cleared first (confirmed by direct
+  // reproduction against a mocked endpoint).
+  if (!isRegion) {
+    clearNuxtData(`trail-${slug}`)
+    await refreshTrail()
+  }
   if (trailForStore.value) loadLiveSpotData(trailForStore.value)
 })
 
