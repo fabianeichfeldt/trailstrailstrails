@@ -8,11 +8,18 @@ describe('parseEmbedQuery', () => {
       lng: 13.4,
       zoom: 10,
       parentHost: 'example.com',
+      interactive: false,
     })
   })
 
   test('falls back to defaults when the query string is genuinely empty', () => {
-    expect(parseEmbedQuery('')).toEqual({ lat: 47.8, lng: 13.0, zoom: 10, parentHost: '' })
+    expect(parseEmbedQuery('')).toEqual({ lat: 47.8, lng: 13.0, zoom: 10, parentHost: '', interactive: false })
+  })
+
+  test('enables interactive only when explicitly requested via interactive=1', () => {
+    expect(parseEmbedQuery('?interactive=1').interactive).toBe(true)
+    expect(parseEmbedQuery('?interactive=true').interactive).toBe(false)
+    expect(parseEmbedQuery('').interactive).toBe(false)
   })
 
   // Regression: /embed/[token] is prerendered with the bare path only, no

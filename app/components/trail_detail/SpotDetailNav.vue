@@ -1,9 +1,9 @@
 <template>
   <nav class="spot-detail-nav" aria-label="Abschnitte">
-    <a class="spot-detail-nav-link" href="#beschreibung">Info</a>
     <a v-if="isTrail" class="spot-detail-nav-link" href="#touren">Touren</a>
     <a v-if="isTrail" class="spot-detail-nav-link" href="#trails">Trails</a>
     <a v-if="parkingVisible" class="spot-detail-nav-link" href="#parkplaetze">Parkplätze</a>
+    <a class="spot-detail-nav-link" href="#beschreibung">Info</a>
     <a class="spot-detail-nav-link" href="#kommentare">Kommentare</a>
   </nav>
 </template>

@@ -205,7 +205,11 @@ baseTest('Touren/Trails sections and the elevation panel render correctly on a s
 
   const row = page.locator('#trails .spot-item[data-id="gt1"]');
   await expect(row).toBeVisible();
-  await row.click();
+  // Click the name text, not the row's bare center: at this width the
+  // prominent distance/elevation stats widen .spot-item-right enough that
+  // the row's geometric center can land on the GPX download icon
+  // (.spot-item-dl, which stops propagation) instead of selecting the row.
+  await row.locator('strong').click();
 
   await expect(page.locator('#trails .spot-elevation-name')).toBeVisible();
   await expect(page.locator('#trails .spot-elevation-name')).toHaveText('Talabfahrt');

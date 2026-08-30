@@ -2,13 +2,14 @@ import { test as baseTest } from '@playwright/test';
 import { expect, setupAllMocks } from './fixtures';
 
 // Covers the evolved /trails/[slug] page from the spot-detail-real-pages
-// rework: a long-scroll page with real sections (hero, embedded map,
-// sticky jump-nav, Beschreibung/Touren/Trails/Kommentare) instead of the
-// old thin SEO shell. Phase 1 of that rework — the panel-open flows this
-// page used to link to (?trail= query param, search results) are still
-// covered by tests/trail-open.spec.ts and stay on the SpotPanel for now;
-// those get rewritten around real navigation in a later phase once marker
-// clicks become router.push calls.
+// rework: a long-scroll page with real sections instead of the old thin SEO
+// shell. Order (drastic-redesign follow-up): Hero -> Status -> Photos ->
+// Touren/Trails/Parkplätze+Map (stacked on mobile, side-by-side from tablet
+// width up) -> Beschreibung -> Kommentare -> Regeln -> Video. Phase 1 of the
+// original rework — the panel-open flows this page used to link to (?trail=
+// query param, search results) are still covered by tests/trail-open.spec.ts
+// and stay on the SpotPanel for now; those get rewritten around real
+// navigation in a later phase once marker clicks become router.push calls.
 
 baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
@@ -61,8 +62,41 @@ baseTest('renders the empty-photos prompt once the live details fetch resolves (
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  await expect(page.locator('.no-photos')).toBeVisible();
+  await expect(page.locator('.no-photos-visual')).toBeVisible();
   await expect(page.locator('.spot-status-banner')).toHaveCount(0);
+
+  assertNoLeaks();
+});
+
+// Drastic-redesign reorder: Photos sit right under the hero/status, above
+// the Touren/Trails/Map "explore" block, which itself sits above the
+// Beschreibung/Kommentare tail — see app/pages/trails/[slug].vue.
+baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Kommentare', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;
+  const tourenY = (await page.locator('#touren').boundingBox())!.y;
+  const beschreibungY = (await page.locator('#beschreibung').boundingBox())!.y;
+  const kommentareY = (await page.locator('#kommentare').boundingBox())!.y;
+
+  expect(photosY).toBeLessThan(tourenY);
+  expect(tourenY).toBeLessThan(beschreibungY);
+  expect(beschreibungY).toBeLessThan(kommentareY);
+
+  assertNoLeaks();
+});
+
+// This page's own embed (not a third-party site's) may enable dragging/
+// zooming — see app/utils/embedQuery.ts's `interactive` flag.
+baseTest('embeds an interactive map (drag/zoom enabled), unlike a third-party embed', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  const src = await page.locator('iframe.trail-map').getAttribute('src');
+  expect(src).toContain('interactive=1');
 
   assertNoLeaks();
 });

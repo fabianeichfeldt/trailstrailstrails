@@ -39,7 +39,7 @@ onMounted(async () => {
   // Timing entry instead, which reflects the real requested URL and is
   // never touched by that later History API rewrite.
   const token = useRoute().params.token as string
-  const { lat, lng, zoom, parentHost } = parseEmbedQuery(getRequestedSearch())
+  const { lat, lng, zoom, parentHost, interactive } = parseEmbedQuery(getRequestedSearch())
 
   let trails: EmbedTrail[] = []
 
@@ -69,13 +69,13 @@ onMounted(async () => {
   const L = (await import('leaflet')).default
 
   const map = L.map(mapEl.value, {
-    zoomControl: false,
-    dragging: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
-    touchZoom: false,
-    boxZoom: false,
-    keyboard: false,
+    zoomControl: interactive,
+    dragging: interactive,
+    scrollWheelZoom: interactive,
+    doubleClickZoom: interactive,
+    touchZoom: interactive,
+    boxZoom: interactive,
+    keyboard: interactive,
   })
   map.setView([lat, lng], zoom)
   map.setMaxZoom(19)

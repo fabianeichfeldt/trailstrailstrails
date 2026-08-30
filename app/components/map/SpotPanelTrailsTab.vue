@@ -33,8 +33,12 @@
         </div>
       </div>
       <div class="spot-item-right">
-        <div class="spot-item-stats">
-          <span>📍 {{ t.distance_km }} km · ↑{{ t.elevation_gain }}m ↓{{ t.elevation_loss }}m</span>
+        <div class="spot-item-stats-prominent">
+          <span class="stat-distance">{{ t.distance_km }} km</span>
+          <span class="stat-elevation">
+            <span class="stat-up">↑{{ t.elevation_gain }}m</span>
+            <span class="stat-down">↓{{ t.elevation_loss }}m</span>
+          </span>
         </div>
         <span class="spot-item-arrow">›</span>
       </div>
@@ -73,3 +77,27 @@ function select(id: string) {
   store.selectItem(id, 'trail')
 }
 </script>
+
+<style scoped>
+.spot-item-stats-prominent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+.stat-distance {
+  font-size: 1em;
+  font-weight: 800;
+  color: #1a2035;
+  white-space: nowrap;
+}
+.stat-elevation {
+  display: flex;
+  gap: 6px;
+  font-size: 0.74em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.stat-up { color: #2a9d5c; }
+.stat-down { color: #c53030; }
+</style>

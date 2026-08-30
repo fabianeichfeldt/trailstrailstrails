@@ -49,54 +49,76 @@
     <template v-else-if="trail && trailForStore">
       <SpotDetailHero :trail="trailForStore" />
 
-      <!-- Embedded map — read-only token-scoped widget for geographic
-           context, same iframe pattern as before this rework (Decision 9:
-           double-Leaflet-bundle cost accepted, not opening a new
-           map-rendering approach here). -->
-      <section class="map-section content-section">
-        <iframe
-          v-if="embedSrc"
-          :src="embedSrc"
-          class="trail-map"
-          frameborder="0"
-          loading="lazy"
-          title="Trailradar Karte"
-        />
-      </section>
+      <SpotDetailStatus :details="details" />
+
+      <SpotDetailPhotos
+        :trail="trailForStore"
+        :details="details"
+        @uploaded="refreshDetails"
+      />
 
       <SpotDetailNav :trail="trailForStore" :parking-count="spotPanelStore.parkingLots.length" />
 
-      <SpotDetailInfo :trail="trailForStore" :baked="bakedDetails" />
+      <!-- Touren/Trails/Parkplätze + the embedded map form one "explore"
+           block: stacked list-then-map on mobile, side-by-side (map left,
+           list right) from tablet width up — see .explore-grid below. -->
+      <div class="explore-grid">
+        <div class="explore-list">
+          <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
+            <h2>Touren</h2>
+            <SpotPanelToursTab />
+            <SpotPanelElevation
+              v-if="spotPanelStore.selectedItemKind === 'tour'"
+              :on-hover="noop"
+              :on-hover-end="noop"
+            />
+          </section>
 
-      <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
-        <h2>Touren</h2>
-        <SpotPanelToursTab />
-        <SpotPanelElevation
-          v-if="spotPanelStore.selectedItemKind === 'tour'"
-          :on-hover="noop"
-          :on-hover-end="noop"
-        />
-      </section>
+          <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
+            <h2>Trails</h2>
+            <SpotPanelTrailsTab />
+            <SpotPanelElevation
+              v-if="spotPanelStore.selectedItemKind === 'trail'"
+              :on-hover="noop"
+              :on-hover-end="noop"
+            />
+          </section>
 
-      <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
-        <h2>Trails</h2>
-        <SpotPanelTrailsTab />
-        <SpotPanelElevation
-          v-if="spotPanelStore.selectedItemKind === 'trail'"
-          :on-hover="noop"
-          :on-hover-end="noop"
-        />
-      </section>
+          <section v-if="spotPanelStore.parkingLots.length" id="parkplaetze" class="content-section card">
+            <h2>Parkplätze</h2>
+            <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" />
+          </section>
+        </div>
 
-      <section v-if="spotPanelStore.parkingLots.length" id="parkplaetze" class="content-section card">
-        <h2>Parkplätze</h2>
-        <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" />
-      </section>
+        <!-- Embedded map — token-scoped widget, same iframe pattern as
+             before this rework (Decision 9: double-Leaflet-bundle cost
+             accepted), now with panning/zooming enabled (interactive=1)
+             since this is trailradar.org's own page, not a third-party
+             embed. -->
+        <div class="explore-map">
+          <section class="map-section content-section">
+            <iframe
+              v-if="embedSrc"
+              :src="embedSrc"
+              class="trail-map"
+              frameborder="0"
+              loading="lazy"
+              title="Trailradar Karte"
+            />
+          </section>
+        </div>
+      </div>
+
+      <SpotDetailDescription :trail="trailForStore" :details="details" />
 
       <section id="kommentare" class="content-section card">
         <h2>Kommentare</h2>
         <SpotPanelComments />
       </section>
+
+      <SpotDetailRules :details="details" />
+
+      <SpotDetailVideo :details="details" />
 
       <section class="bottom-cta content-section">
         <p class="bottom-cta-label">Alle offiziellen MTB-Trails auf einen Blick</p>
@@ -125,8 +147,12 @@
 import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
 import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
+import SpotDetailStatus from '~/components/trail_detail/SpotDetailStatus.vue'
+import SpotDetailPhotos from '~/components/trail_detail/SpotDetailPhotos.vue'
 import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
-import SpotDetailInfo from '~/components/trail_detail/SpotDetailInfo.vue'
+import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescription.vue'
+import SpotDetailRules from '~/components/trail_detail/SpotDetailRules.vue'
+import SpotDetailVideo from '~/components/trail_detail/SpotDetailVideo.vue'
 import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
 import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
@@ -134,6 +160,8 @@ import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
 import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
+import { getTrailDetails } from '~/communication/trails'
+import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
@@ -151,7 +179,7 @@ const isRegion = !!region
 // spurious hydration mismatch even though the resolved value ends up
 // identical to what the server already rendered. Live/dynamic fields
 // (status, likes, GPX, parking) are already refreshed separately and
-// safely post-mount, in SpotDetailInfo.vue and via spotPanelStore.load().
+// safely post-mount, via refreshDetails() and spotPanelStore.load() below.
 const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}`, async () => {
   if (isRegion) return null
   try {
@@ -161,9 +189,12 @@ const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}
   }
 })
 
+// interactive=1: unlike third-party embeds, this is trailradar.org's own
+// page for this exact spot, so panning/zooming the map here can't hijack a
+// host page's scroll the way a third-party iframe embed could.
 const embedSrc = computed(() => {
   if (!trail.value) return ''
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org`
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
 })
 
 const regionEmbedSrc = computed(() => {
@@ -183,9 +214,9 @@ const otherRegions = computed(() =>
 // `trailForStore` re-shapes the SSG-baked JSON (base trail fields + the
 // trail_details row + type + photos — see server/api/trail/[id].get.ts)
 // into the Trail-shaped object the (repurposed) spotPanel store and the new
-// section components expect. `bakedDetails` seeds SpotDetailInfo.vue so its
-// description/rules/photos/opening-hours render immediately from the
-// prerendered payload — see app/utils/bakedTrailDetails.ts.
+// section components expect. `bakedDetails` seeds `details` below so the
+// description/rules/photos/opening-hours sections render immediately from
+// the prerendered payload — see app/utils/bakedTrailDetails.ts.
 const trailForStore = computed<Trail | null>(() => (!isRegion && trail.value) ? (trail.value as unknown as Trail) : null)
 const bakedDetails = computed(() => bakedTrailDetails(trail.value))
 
@@ -208,6 +239,40 @@ const supabaseUser = useSupabaseUser()
 // (see the spec's "Known behavior changes"). The tour-segment SVG coloring
 // remains as the visual aid that stays.
 function noop() {}
+
+// `details` (trail_details row: status/rules/description/photos/videos/
+// likes) is owned here rather than by any single section component, since
+// it now feeds several sibling sections (SpotDetailStatus, SpotDetailPhotos,
+// SpotDetailDescription, SpotDetailRules, SpotDetailVideo) instead of one
+// monolithic card. Seeded from the SSG-baked payload so content renders
+// immediately (SEO-safe, no loading flash); onMounted() below then kicks
+// off a live getTrailDetails() refresh for the genuinely dynamic bits that
+// aren't in the static payload at all: status_hint freshness and likes.
+const details = ref<TrailDetails>(bakedDetails.value)
+
+async function updateLikeButton(d: TrailDetails) {
+  try {
+    const user = { id: supabaseUser.value?.id ?? '' }
+    spotPanelStore.isLiked = !!user.id && !!d.likes?.find(l => l.user_id === user.id)
+  } catch {
+    spotPanelStore.isLiked = false
+  }
+  spotPanelStore.likeVisible = true
+}
+
+async function refreshDetails() {
+  const item = trailForStore.value
+  if (!item) return
+  const id = item.id
+  try {
+    const d = await getTrailDetails(item)
+    if (trailForStore.value?.id !== id) return // spot moved on while the fetch was in flight
+    await updateLikeButton(d)
+    details.value = d
+  } catch (e) {
+    console.warn('Failed to refresh live trail details, keeping prerendered content:', e)
+  }
+}
 
 // spotPanelStore.load()/loadComments() do real network fetches — onMounted
 // never fires during SSR/prerender, so this is inherently client-only (see
@@ -234,7 +299,10 @@ onMounted(async () => {
     clearNuxtData(`trail-${slug}`)
     await refreshTrail()
   }
-  if (trailForStore.value) loadLiveSpotData(trailForStore.value)
+  if (trailForStore.value) {
+    loadLiveSpotData(trailForStore.value)
+    refreshDetails()
+  }
 })
 
 // Client-side navigation to a different spot's page (e.g. via search)
@@ -243,7 +311,9 @@ watch(
   () => trailForStore.value?.id,
   (id, oldId) => {
     if (!id || id === oldId || !trailForStore.value) return
+    details.value = bakedDetails.value
     loadLiveSpotData(trailForStore.value)
+    refreshDetails()
   },
 )
 
@@ -444,41 +514,45 @@ useHead({
   isolation: isolate;
 }
 
-.map-cta-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
+/* ── Explore block (Touren/Trails/Parkplätze + map) ──
+   Mobile: list sections stacked above the map (Touren → Trails →
+   Parkplätze → Map). From tablet width up: side-by-side, map on the left,
+   list on the right, map pinned while the list scrolls past it. */
+.explore-grid {
   display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 2em;
-  background: linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.52) 100%);
-  text-decoration: none;
-  transition: background 0.2s;
-  cursor: pointer;
+  flex-direction: column;
+  gap: 1.2em;
 }
-.map-cta-overlay:hover {
-  background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.38) 100%);
+.explore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+.explore-list .content-section {
+  margin-bottom: 0;
 }
 
-.map-cta-inner {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55em;
-  background: #2a9d5c;
-  color: white;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.8em 2em;
-  border-radius: 2em;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
-  letter-spacing: 0.01em;
-}
-.map-cta-overlay:hover .map-cta-inner {
-  transform: translateY(-3px);
-  background: #239052;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+@media (min-width: 900px) {
+  .explore-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-areas: "map list";
+    align-items: start;
+    gap: 1.4em;
+  }
+  .explore-list { grid-area: list; }
+  .explore-map {
+    grid-area: map;
+    position: sticky;
+    top: 4.6em;
+  }
+  .explore-map .map-section {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .explore-map .trail-map {
+    height: 520px;
+  }
 }
 
 /* ── Cards ── */
