@@ -34,6 +34,16 @@ useHead({
 .embed-layout-page .embed-root *::before,
 .embed-layout-page .embed-root *::after {
   box-sizing: border-box;
+}
+
+/* The trail-hover tooltip (app/map/trailTooltip.ts, styled by
+   trail-tooltip.css) is appended into the map container, i.e. inside
+   .embed-root — exempted here so its own margin/padding apply instead of
+   being zeroed, matching how it renders on the live /map page. */
+.embed-layout-page .embed-root,
+.embed-layout-page .embed-root *:not(.ttr-wrapper, .ttr-wrapper *),
+.embed-layout-page .embed-root *::before,
+.embed-layout-page .embed-root *::after {
   margin: 0;
   padding: 0;
 }
