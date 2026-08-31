@@ -43,8 +43,8 @@ describe('SpotPanelTrailsTab', () => {
     })])
     const wrapper = mount(SpotPanelTrailsTab)
     expect(wrapper.text()).toContain('Flowtrail')
-    // Distance is always shown in meters, not km.
-    expect(wrapper.text()).toContain('4200 m')
+    // Under 10km, distance is shown in meters with a german thousands separator.
+    expect(wrapper.text()).toContain('4.200m')
     // The per-trail direction glyph was dropped as visual noise.
     expect(wrapper.find('.direction-tag').exists()).toBe(false)
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')

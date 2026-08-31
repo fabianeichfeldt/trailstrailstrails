@@ -52,7 +52,8 @@ describe('SpotPanelToursTab', () => {
     const wrapper = mount(SpotPanelToursTab)
     expect(wrapper.text()).toContain('Alpencross')
     expect(wrapper.text()).toContain('3 Trails · 90 min')
-    expect(wrapper.text()).toContain('12500 m')
+    // 12.5km is over the 10km threshold, so it's shown in km with a german decimal comma.
+    expect(wrapper.text()).toContain('12,5km')
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')
   })
 

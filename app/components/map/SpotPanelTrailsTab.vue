@@ -32,7 +32,7 @@
         </div>
         <div class="spot-item-right">
           <div class="spot-item-stats-prominent">
-            <span class="stat-distance">{{ formatDistanceMeters(t.distance_km) }}</span>
+            <span class="stat-distance">{{ formatDistance(t.distance_km) }}</span>
             <span class="stat-elevation">
               <span class="stat-up">↑{{ t.elevation_gain }}m</span>
               <span class="stat-down">↓{{ t.elevation_loss }}m</span>
@@ -56,7 +56,7 @@
 import type { MtbTrail } from '~/types/MtbTypes'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
-import { formatDistanceMeters } from '~/utils/formatDistance'
+import { formatDistance } from '~/utils/formatDistance'
 import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
 
 // Elevation-hover-highlights-map-marker is dropped on the routed spot-detail
