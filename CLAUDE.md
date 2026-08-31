@@ -74,6 +74,7 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 
 ### Mobile is first-class
 - Every UI change must work on mobile. Check touch targets, scrolling, and layout at small viewports before reporting done.
+- **No browser chrome outside a normal tab.** The app also runs as an installed PWA (standalone display-mode) and inside the Capacitor native shell. In those contexts there's no URL bar and no browser back button; swipe-back is unreliable or absent. Android native has a global hardware-back handler (`plugins/capacitor.client.ts` → `window.history.back()`), but **iOS native and standalone PWA have nothing** — a full-page route the user lands on there is a dead end unless it ships its own visible "back" affordance. Content pages use a static `<NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>`. Pages reachable by client-side nav from the map (`trails/[slug]`) use `useBackNavigation()` (`app/composables/useBackNavigation.ts`) instead: `router.back()` when there's in-app history (returns to the map with its pan/zoom/panel state), hard-navigate to `/map` when the page was opened cold from a shared link / search / home-screen icon / push. Test any new top-level page by opening it as the *first* page in the iOS app or a standalone window.
 
 ### Ask, don't assume
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.

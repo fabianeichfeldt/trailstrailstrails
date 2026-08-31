@@ -1,6 +1,12 @@
 <template>
   <div class="trails-page">
 
+    <!-- iOS native shell / standalone PWA have no back button — this page
+         must ship its own or the user is stranded. See useBackNavigation. -->
+    <button type="button" class="back-btn" @click="goBack()">
+      <span aria-hidden="true">←</span> Zurück
+    </button>
+
     <!-- Region page -->
     <template v-if="isRegion">
       <section class="hero-region">
@@ -159,6 +165,7 @@ const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 //const EMBED_BASE = 'https://trailradar.org'
 const EMBED_BASE = ''
 const route = useRoute()
+const { goBack } = useBackNavigation()
 const slug = route.params.slug as string
 const region = regions[slug as keyof typeof regions] ?? null
 const isRegion = !!region
@@ -407,6 +414,24 @@ useHead({
   color: #1a2035;
   min-height: 100vh;
 }
+
+/* ── Back button ── */
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  min-height: 44px;
+  margin: 0.4em 0 0.2em;
+  padding: 0.4em 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 0.9em;
+  font-weight: 600;
+  color: #2a9d5c;
+  cursor: pointer;
+}
+.back-btn:hover { color: #1b7a4a; }
 
 /* ── Region hero ── */
 .hero-region {
