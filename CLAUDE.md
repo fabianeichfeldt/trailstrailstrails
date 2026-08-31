@@ -140,7 +140,7 @@ app/anon.ts
 2. Add an entry to `DETAIL_ENDPOINT` in `app/communication/trails.ts` — **nothing else in that file changes**.
 3. Add a filter entry in `stores/filters.ts` `apply()`.
 4. Add a marker category in `composables/useTrailMap.ts` `createCustomIcon()`.
-5. Add entries to `server/api/trails.get.ts` and `server/api/trail/[id].get.ts`.
+5. Add entries to `server/api/trails.get.ts` and to `getTrailById()` in `app/communication/trails.ts` (the trails/[slug].vue detail-page fetch — a direct Supabase REST call, not a server/api route; see "No live Nitro server in production" above for why).
 6. Update `app/architecture.test.ts` if any new invariants apply.
 
 ### Open/Closed pattern for trail type dispatch
