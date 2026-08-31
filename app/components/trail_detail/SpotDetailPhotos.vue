@@ -177,6 +177,12 @@ async function onFileChosen(e: Event) {
   }
   .photo-container {
     border-radius: 14px;
+    /* 4/5 (from photo_caroussel.css) is a mobile portrait ratio — at the
+       page's desktop width that renders taller than the viewport. 16/9
+       plus a viewport-relative cap keeps it a landscape hero shot that
+       fits on screen regardless of how wide the page gets. */
+    aspect-ratio: 16 / 9;
+    max-height: 70vh;
   }
 }
 </style>

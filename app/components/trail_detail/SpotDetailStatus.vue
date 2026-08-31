@@ -13,7 +13,7 @@
         <span v-else-if="accessBadge.kind === 'membership'" class="ssb-access ssb-access-membership"><i class="fas fa-id-card"></i> {{ accessBadge.label }}</span>
         <a v-else class="ssb-donate-cta" :href="accessBadge.url" target="_blank" rel="noopener noreferrer"><i class="fas fa-heart"></i> Kostenlos · Spenden willkommen</a>
       </div>
-      <div v-if="rainHint" class="ssb-row">
+      <div v-if="rainHint" class="ssb-row ssb-row-rain">
         <span class="ssb-rain"><i class="fas fa-cloud-rain"></i> {{ rainHint }}</span>
       </div>
     </div>

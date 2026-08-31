@@ -518,10 +518,6 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   gap: 6px;
 }
-.ssb-open    { background: #f0fff4; }
-.ssb-limited { background: #fffbeb; }
-.ssb-closed  { background: #fff5f5; }
-.ssb-unknown { background: #f8f8f8; }
 
 .ssb-info {
   display: flex;
@@ -532,6 +528,21 @@
 
 .ssb-row {
   margin-left: 18px;
+}
+
+/* Donation/access badge sits on the same line as the status from tablet
+   width up — the rain hint (.ssb-row-rain) always keeps its own line via
+   flex-basis: 100%, whether or not the badge row is also present. */
+@media (min-width: 600px) {
+  .spot-status-banner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    row-gap: 4px;
+  }
+  .ssb-row { margin-left: 0; }
+  .ssb-row-rain { flex-basis: 100%; }
 }
 
 .ssb-dot {

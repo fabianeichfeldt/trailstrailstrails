@@ -398,7 +398,7 @@ useHead({
 
 <style scoped>
 .trails-page {
-  max-width: 860px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 1em 4em;
   background: #fff;

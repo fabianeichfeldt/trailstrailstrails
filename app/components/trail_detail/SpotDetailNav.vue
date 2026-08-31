@@ -46,8 +46,8 @@ const parkingVisible = computed(() => props.parkingCount > 0)
   min-height: 36px;
   padding: 0 1em;
   border-radius: 999px;
-  background: #f0faf5;
-  color: #1b7a4a;
+  background: #eef1f5;
+  color: #4a5568;
   font-size: 0.82em;
   font-weight: 600;
   text-decoration: none;
@@ -55,7 +55,7 @@ const parkingVisible = computed(() => props.parkingCount > 0)
   transition: background 0.15s, color 0.15s;
 }
 .spot-detail-nav-link:hover {
-  background: #2a9d5c;
+  background: #1a2035;
   color: #fff;
 }
 
