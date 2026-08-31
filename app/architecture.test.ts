@@ -50,6 +50,36 @@ describe('No hardcoded Supabase project URL', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// No dynamic server/api routes (CLAUDE.md: "No live Nitro server in production")
+// ─────────────────────────────────────────────────────────────────────────────
+// A dynamic segment (`[id]`, `[slug]`, ...) under server/api or server/routes
+// only works in production if the `nuxt generate` prerender crawl happens to
+// bake that exact value at build time — any id created or changed since the
+// last deploy 404s silently at runtime, since there's no live Nitro server.
+// This shipped once already: trails/[slug].vue depended on the now-deleted
+// server/api/trail/[id].get.ts, and it broke production while every test
+// passed, because tests/fixtures.ts mocked that route directly instead of
+// ever exercising a real static build. Fetch Supabase REST directly instead
+// (see getTrailById in app/communication/trails.ts for the replacement).
+describe('No dynamic server/api routes', () => {
+  // server/routes/_embed/[token].get.ts is the one legitimate exception:
+  // /_embed/* is served by a separately-deployed Cloudflare Worker (see the
+  // "Embed widget" line in CLAUDE.md's feature table and the CF embed
+  // worker drift note in project memory), not by this Nuxt build's own
+  // (nonexistent-in-prod) Nitro server. Any other addition here needs the
+  // same kind of justification, spelled out in a comment next to it.
+  const EXEMPT = new Set(['server/routes/_embed/[token].get.ts'])
+
+  test('server/api and server/routes contain no unreviewed dynamic-segment routes', () => {
+    const violations = [
+      ...collectTs('server/api'),
+      ...collectTs('server/routes'),
+    ].filter(f => /\[[^\]]+\]/.test(f) && !EXEMPT.has(f))
+    expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Single Responsibility: auth store owns auth only
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Auth store (Single Responsibility)', () => {

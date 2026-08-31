@@ -57,6 +57,8 @@ These facts are not derivable from reading the TypeScript code — get them wron
 
 SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod if the prerender crawler bakes it into `.output/public/api/...` at build time — otherwise `$fetch()` 404s silently (often masked by `default: () => []`). Don't add server/api routes expecting live execution; fetch Supabase REST directly from the client instead (`REST`/`anonHeaders()` in `http.ts`, pattern: `getLatestPhotos` in `trails.ts`).
 
+**Never add a `server/api/**` or `server/routes/**` file with a dynamic segment** (`[id]`, `[slug]`, ...) — it only works for whichever values existed in the DB at the *last* build; anything added or changed since 404s silently in production, with dev (live Nitro) and the mocked test suite both unable to catch it. This shipped once already: `trails/[slug].vue` called `server/api/trail/[id].get.ts`, and production broke while every test stayed green, because `tests/fixtures.ts` mocked that route directly instead of exercising a real static build — see `app/architecture.test.ts`'s "No dynamic server/api routes" test, which now enforces this (fails the build if you add one without an explicit, justified exemption there). `server/routes/_embed/[token].get.ts` is the one existing exception — it's served by a separately-deployed Cloudflare Worker, not this build's own Nitro output.
+
 ---
 
 ## Mandatory rules
@@ -167,11 +169,13 @@ else { ... }
 | `npm test` | unit tests incl. architecture invariant tests |
 | `npm run lint:arch` | Import boundary enforcement via dependency-cruiser |
 | `npm run test:e2e` | Playwright tests covering map, auth, add-spot, search, filters |
+| `npm run verify:static-build` | Real `nuxt generate` build, served as pure static files (no live Nitro), checks a real trail page actually renders — not part of `npm test`/CI (needs real Supabase creds, takes minutes); run manually before/after changes to trail/spot data fetching or before deploying one |
 
 **Test locations:**
 - Unit tests: `app/**/*.test.ts` (picked up by vitest automatically)
 - Architecture tests: `app/architecture.test.ts`
 - E2E tests: `tests/*.spec.ts`
+- Static-build verification: `scripts/verify-static-build.mjs`
 
 ---
 

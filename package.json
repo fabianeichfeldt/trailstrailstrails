@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "verify:static-build": "node scripts/verify-static-build.mjs",
     "lint:arch": "depcruise --config .dependency-cruiser.cjs app"
   },
   "repository": {
