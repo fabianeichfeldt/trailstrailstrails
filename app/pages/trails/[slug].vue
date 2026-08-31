@@ -96,6 +96,7 @@
               loading="lazy"
               title="Trailradar Karte"
             />
+            <NuxtLink to="/map" class="map-all-trails-btn">Alle Trails</NuxtLink>
           </section>
         </div>
       </div>
@@ -542,6 +543,26 @@ useHead({
   background: #e8f0e8;
   display: block;
   isolation: isolate;
+}
+
+.map-all-trails-btn {
+  position: absolute;
+  top: 0.8em;
+  right: 0.8em;
+  z-index: 2;
+  background: #1a2035;
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: 2em;
+  text-decoration: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  transition: background 0.15s, transform 0.15s;
+}
+.map-all-trails-btn:hover {
+  background: #2a3550;
+  transform: translateY(-1px);
 }
 
 /* ── Explore block (Touren/Trails/Parkplätze + map) ──
