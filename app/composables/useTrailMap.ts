@@ -15,6 +15,11 @@ import { isDesktopViewport } from '~/utils/viewport'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 import { registerBackHandler } from '~/utils/nativeBack'
 
+// Zoom level used when flying to a single spot (search result, `?trail=`
+// query param) — matches the level used for the same purpose in the
+// embedded map on app/pages/trails/[slug].vue.
+const FLY_TO_TRAIL_ZOOM = 14
+
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
   const filtersStore = useFiltersStore()
@@ -26,9 +31,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const openTrailFn = ref<((id: string) => void) | null>(null)
   const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
 
-  // Marker/search clicks now do a real router.push instead of opening a
-  // panel on top of the still-live map (spot-detail-real-pages rework), so
-  // this composable can unmount mid-way through its own async setup — even
+  // Marker clicks do a real router.push instead of opening a panel on top
+  // of the still-live map (spot-detail-real-pages rework), so this
+  // composable can unmount mid-way through its own async setup — even
   // before `cleanupFn` below has been assigned (e.g. a marker is clicked
   // before the dynamic `import('leaflet')` resolves). Set directly in
   // onUnmounted(), not only inside cleanupFn, so it's still true for that
@@ -425,11 +430,16 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }
     }
 
-    // Expose trail open + fly-to for search bar
+    // Expose trail open + fly-to for search bar. "Open" a trail from search
+    // or the `?trail=` query param (news-card links, etc.) now only flies
+    // the live map to its coordinates and zooms in — it stays on /map,
+    // matching the marker-click behavior of not auto-navigating away.
+    // Only an actual click on the spot's own marker (see the `marker.on
+    // ('click', ...)` handlers above) opens its detail page.
     openTrailFn.value = (id: string) => {
       const trail = trailsStore.all.find(t => t.id === id)
       if (!trail) return
-      router.push(`/trails/${trail.id}`)
+      mymap.flyTo([trail.latitude, trail.longitude], FLY_TO_TRAIL_ZOOM, { duration: 1.2 })
     }
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
 

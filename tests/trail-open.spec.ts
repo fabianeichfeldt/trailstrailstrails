@@ -1,28 +1,64 @@
 import { test as baseTest } from '@playwright/test';
-import { test, expect, setupAllMocks } from './fixtures';
+import { test, expect, setupAllMocks, MOCK_TRAILS } from './fixtures';
+
+// Decodes an OSM tile request URL (.../{z}/{x}/{y}.png) back to the
+// lat/lng/zoom it covers — lets a test prove the live map actually flew to
+// a given spot without needing to expose the Leaflet instance to the page.
+function decodeTileUrl(url: string): { z: number; lat: number; lng: number } | null {
+  const match = url.match(/\/(\d+)\/(\d+)\/(\d+)\.png/);
+  if (!match) return null;
+  const [, zStr, xStr, yStr] = match;
+  const z = Number(zStr);
+  const n = 2 ** z;
+  const lng = Number(xStr) / n * 360 - 180;
+  const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * Number(yStr) / n))) * 180 / Math.PI;
+  return { z, lat, lng };
+}
+
+function trackTileRequests(page: import('@playwright/test').Page): string[] {
+  const tileUrls: string[] = [];
+  page.on('request', (req) => {
+    if (req.url().includes('tile.openstreetmap.org')) tileUrls.push(req.url());
+  });
+  return tileUrls;
+}
 
 // ── Via ?trail= query param ────────────────────────────────────────────────────
 // The news cards on the landing page link to /map?trail=ID. The map page
-// reads this query param on mount and, since the spot-detail-real-pages
-// rework (marker clicks and other "open this spot" entry points are now
-// real navigations — see useTrailMap.ts's openTrailFn), navigates straight
-// to the spot's own page instead of opening a panel on top of the map.
+// reads this query param on mount and flies the still-live map to that
+// spot's coordinates and zooms in — it stays on /map. Only clicking the
+// spot's own marker (see the "marker click" tests further down) opens its
+// detail page; see useTrailMap.ts's openTrailFn.
 
-baseTest('/map?trail= navigates to the spot\'s own page', async ({ page }) => {
+baseTest('/map?trail= flies the live map to the spot\'s coordinates without navigating', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
-  await page.goto('/map?trail=t1');
+  const tileUrls = trackTileRequests(page);
 
-  await expect(page).toHaveURL(/\/trails\/t1$/);
-  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
+  await page.goto('/map?trail=t1');
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
+
+  await expect(page).toHaveURL(/\/map(\?|$)/);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  // t1's fixture coordinates (tests/fixtures.ts)
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
   assertNoLeaks();
 });
 
 baseTest('/map?trail= works for a bikepark', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
-  await page.goto('/map?trail=b1');
+  const tileUrls = trackTileRequests(page);
 
-  await expect(page).toHaveURL(/\/trails\/b1$/);
-  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
+  await page.goto('/map?trail=b1');
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1500);
+
+  await expect(page).toHaveURL(/\/map(\?|$)/);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  // b1's fixture coordinates (tests/fixtures.ts)
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.68) < 0.05 && Math.abs(t.lng - 11.56) < 0.05)).toBe(true);
   assertNoLeaks();
 });
 
@@ -117,63 +153,86 @@ baseTest('/trails/[slug] refreshes the embedded map location on client-side navi
   assertNoLeaks();
 });
 
-// ── Via search — real navigation, not a panel ────────────────────────────────────
-// Rewritten for the spot-detail-real-pages rework: "open this spot" from
-// /map (marker click, search result, ?trail= query param — all wired
-// through the same openTrailFn/marker click handlers in useTrailMap.ts) is
-// now a real router.push to the spot's own page, not a panel opened on top
-// of the still-live map. This exercises the identical navigation mechanism
-// a marker click uses; see tests/trails-detail-page.spec.ts and
-// tests/spot-panel-*.spec.ts for the resulting page's own section coverage.
+// ── Via search — flies the map, doesn't navigate ─────────────────────────────────
+// Selecting a trail/bikepark search result now flies the still-live map to
+// it and zooms in, exactly like ?trail= above — it stays on /map. Only
+// clicking the spot's own marker (see "marker click" below) opens its
+// detail page.
 
-test('clicking a search result navigates to that trail\'s own page', async ({ page }) => {
+test('selecting a search result flies the map to it without navigating', async ({ page }) => {
+  const tileUrls = trackTileRequests(page);
+
   await page.locator('[data-testid="search-input"]').fill('Flow');
   await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   // Click the result item (not just the text — click the whole row)
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
+  await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
 
-  await expect(page).toHaveURL(/\/trails\/t1$/);
-  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
+  await expect(page).toHaveURL(/\/map$/);
+  // Selecting a result clears the search UI (SearchBar.vue's select() calls clear())
+  await expect(page.locator('[data-testid="search-results"]')).toBeHidden();
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
 });
 
-test('clicking a bikepark in search results navigates to its own page', async ({ page }) => {
+test('selecting a bikepark in search results flies the map to it without navigating', async ({ page }) => {
+  const tileUrls = trackTileRequests(page);
+
   await page.locator('[data-testid="search-input"]').fill('Bikepark');
   await expect(page.locator('[data-testid="search-results"]')).toBeVisible();
 
   await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
+  await page.waitForTimeout(1500);
 
-  await expect(page).toHaveURL(/\/trails\/b1$/);
-  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
+  await expect(page).toHaveURL(/\/map$/);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.68) < 0.05 && Math.abs(t.lng - 11.56) < 0.05)).toBe(true);
 });
 
-// ── Back navigation ───────────────────────────────────────────────────────────
-// New coverage per the spec's testing implications: marker click (here,
-// search — see the comment above) → real navigation → back returns to /map.
+test('selecting a second search result flies to it too, without ever leaving /map', async ({ page }) => {
+  const tileUrls = trackTileRequests(page);
 
-test('going back from a spot\'s page returns to /map', async ({ page }) => {
   await page.locator('[data-testid="search-input"]').fill('Flow');
   await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
+  await page.waitForTimeout(1500);
+  await expect(page).toHaveURL(/\/map$/);
+
+  tileUrls.length = 0; // isolate the second selection's own tile requests
+  await page.locator('[data-testid="search-input"]').fill('Bikepark');
+  await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
+  await page.waitForTimeout(1500);
+
+  await expect(page).toHaveURL(/\/map$/);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.68) < 0.05 && Math.abs(t.lng - 11.56) < 0.05)).toBe(true);
+});
+
+// ── Marker click — the only remaining "open this spot" navigation ───────────────
+// Unlike ?trail= and search, clicking a spot's own marker still does a real
+// router.push to its detail page (useTrailMap.ts's renderMarkers()).
+
+baseTest('clicking a trail marker navigates to its own page, and going back returns to /map', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  // Isolate a single marker so the click target is unambiguous.
+  await page.route('**/rest/v1/trails**',    (route) => route.fulfill({ json: [MOCK_TRAILS[0]] }));
+  await page.route('**/rest/v1/parks**',      (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: [] }));
+
+  await page.goto('/map');
+  await page.waitForLoadState('networkidle');
+
+  await page.locator('.map-pin').click();
+
   await expect(page).toHaveURL(/\/trails\/t1$/);
+  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
 
   await page.goBack();
 
   await expect(page).toHaveURL(/\/map$/);
   await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
-});
-
-test('navigating to a second trail via search lands on that trail\'s own page, not the first one', async ({ page }) => {
-  await page.locator('[data-testid="search-input"]').fill('Flow');
-  await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
-  await expect(page).toHaveURL(/\/trails\/t1$/);
-
-  await page.goBack();
-  await expect(page).toHaveURL(/\/map$/);
-
-  // After landing back on the result the search input is cleared automatically — fill again
-  await page.locator('[data-testid="search-input"]').fill('Bikepark');
-  await page.locator('.search-result-item').filter({ hasText: 'Bikepark Lenggries' }).click();
-
-  await expect(page).toHaveURL(/\/trails\/b1$/);
-  await expect(page.locator('h1')).toContainText('Bikepark Lenggries');
+  assertNoLeaks();
 });

@@ -74,8 +74,9 @@ const trailIdFromQuery = route.query.trail as string | undefined
 // camera on a spot without opening anything on top — replaces the old
 // `?trail=slug` panel-reopen pattern for that one CTA. `?trail=` itself
 // stays wired below for other existing entry points (search, landing-page
-// links) — openTrail() now does a real router.push to the spot's page
-// instead of opening the panel (see useTrailMap.ts).
+// links) — openTrail() flies the map to the spot's coordinates and zooms
+// in, staying on /map; only clicking the spot's own marker navigates to
+// its detail page (see useTrailMap.ts).
 const flyToQuery = route.query.fly as string | undefined
 
 function onMapReady(handlers: {
