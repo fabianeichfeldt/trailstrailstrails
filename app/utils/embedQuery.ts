@@ -3,6 +3,7 @@ export interface EmbedQueryParams {
   lng: number
   zoom: number
   parentHost: string
+  interactive: boolean
 }
 
 const DEFAULT_LAT = 47.8
@@ -16,6 +17,10 @@ export function parseEmbedQuery(search: string): EmbedQueryParams {
     lng: parseFloat(query.get('lng') ?? '') || DEFAULT_LNG,
     zoom: parseInt(query.get('zoom') ?? '') || DEFAULT_ZOOM,
     parentHost: query.get('parentHost') ?? '',
+    // Off by default: third-party iframe embeds must not hijack the host
+    // page's scroll/touch gestures. Only trailradar.org's own /trails/[slug]
+    // page (a same-origin iframe, not a third-party embed) opts in.
+    interactive: query.get('interactive') === '1',
   }
 }
 

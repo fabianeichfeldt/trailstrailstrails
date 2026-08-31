@@ -3,10 +3,14 @@ import { test, expect, MOCK_SESSION, MOCK_USER } from './fixtures';
 // All tests start on /map (via the test fixture) with no logged-in user,
 // same convention as auth.spec.ts / trail-open.spec.ts.
 
-async function openTrailPanel(page: import('@playwright/test').Page) {
-  await page.locator('[data-testid="search-input"]').fill('Flow');
-  await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
-  await expect(page.locator('.spot-panel')).toHaveClass(/open/);
+// Rewritten for the spot-detail-real-pages rework: comments now live on
+// the routed spot-detail page's own "Kommentare" section
+// (<SpotPanelComments> mounted directly by app/pages/trails/[slug].vue,
+// loaded via the page's own onMounted) rather than inside a panel opened
+// from the map via search.
+async function openTrailPage(page: import('@playwright/test').Page) {
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
 }
 
 async function signIn(page: import('@playwright/test').Page) {
@@ -52,7 +56,7 @@ function makeComments(count: number) {
 test('comments section stays expanded by default with 3 or fewer comments', async ({ page }) => {
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: makeComments(3) }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
 
   // No click on .comments-header — the list should already be visible.
   await expect(page.locator('.comments-list')).toBeVisible();
@@ -62,7 +66,7 @@ test('comments section stays expanded by default with 3 or fewer comments', asyn
 test('comments section stays collapsed by default with more than 3 comments', async ({ page }) => {
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: makeComments(4) }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
 
   await expect(page.locator('.comments-list')).toHaveCount(0);
   await page.locator('.comments-header').click();
@@ -73,7 +77,7 @@ test('comments section stays collapsed by default with more than 3 comments', as
 test('anonymous user sees comments but a login prompt instead of a write box', async ({ page }) => {
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: [OTHER_USER_COMMENT] }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with only 1 comment — no need to click .comments-header.
 
   await expect(page.locator('.comment-row')).toContainText('Trail ist top in Schuss!');
@@ -97,7 +101,7 @@ test('logged-in user can post a comment and it appears with a delete control', a
     return route.fulfill({ json: [] });
   });
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with 0 comments — no need to click .comments-header.
   await expect(page.locator('.comments-login-link')).toHaveCount(0);
 
@@ -113,7 +117,7 @@ test('a logged-in user does not see a delete control on someone else\'s comment'
   await signIn(page);
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: [OTHER_USER_COMMENT] }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with only 1 comment — no need to click .comments-header.
 
   const row = page.locator('.comment-row').filter({ hasText: 'Trail ist top in Schuss!' });
@@ -125,7 +129,7 @@ test('deleting a comment asks for confirmation, and cancelling keeps it', async 
   await signIn(page);
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: [OWN_COMMENT] }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with only 1 comment — no need to click .comments-header.
   const row = page.locator('.comment-row').filter({ hasText: 'Mein eigener Kommentar' });
   await expect(row).toBeVisible();
@@ -150,7 +154,7 @@ test('confirming the delete dialog removes the comment', async ({ page }) => {
     return route.fulfill({ json: [OWN_COMMENT] });
   });
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with only 1 comment — no need to click .comments-header.
   const row = page.locator('.comment-row').filter({ hasText: 'Mein eigener Kommentar' });
   await expect(row).toBeVisible();
@@ -166,7 +170,7 @@ test('the "Senden" button stays disabled until text is entered', async ({ page }
   await signIn(page);
   await page.route('**/rest/v1/spot_comments**', (route) => route.fulfill({ json: [] }));
 
-  await openTrailPanel(page);
+  await openTrailPage(page);
   // Section auto-expands with 0 comments — no need to click .comments-header.
 
   await expect(page.locator('.comments-post-btn')).toBeDisabled();

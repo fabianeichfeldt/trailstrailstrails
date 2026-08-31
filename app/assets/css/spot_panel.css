@@ -358,23 +358,27 @@
   text-overflow: ellipsis;
   min-width: 0;
 }
-.spot-item-dl {
+/* .spot-item-name .spot-item-dl (not just .spot-item-dl): needs specificity
+   above the global `.page-layout a { color: var(--color-page-accent) }`
+   rule (layouts/default.vue), which otherwise wins and tints the icon
+   green regardless of what's declared here. */
+.spot-item-name .spot-item-dl {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 13px;
+  min-width: 24px;
+  min-height: 24px;
+  font-size: 10px;
   flex-shrink: 0;
   cursor: pointer;
   border: none;
   background: #e8f0fe;
   padding: 0;
-  color: #2b6cb0;
-  border-radius: 6px;
+  color: #1a1a1a;
+  border-radius: 5px;
   transition: all 0.15s;
 }
-.spot-item-dl:hover {
+.spot-item-name .spot-item-dl:hover {
   background: #2b6cb0;
   color: white;
   transform: scale(1.1);
@@ -399,12 +403,6 @@
   color: #555;
 }
 .spot-item-stats span { white-space: nowrap; }
-
-.direction-tag {
-  font-size: 12px;
-  margin-left: 4px;
-  color: #2b6cb0;
-}
 
 .spot-item-arrow {
   font-size: 16px;
@@ -471,51 +469,20 @@
 }
 .spot-elevation-panel.hidden { display: none; }
 
+/* Inline expansion under the clicked row (app/pages/trails/[slug].vue's
+   Touren/Trails lists) — tinted and bottom-bordered like a .spot-item so it
+   reads as attached to that row rather than floating between rows. */
+.spot-elevation {
+  background: #fafafa;
+  padding: 10px 14px 12px;
+  border-bottom: 1px solid #f2f2f2;
+}
+
 .spot-elevation-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 6px;
-}
-.spot-elevation-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: #333;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.spot-elevation-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-.spot-elevation-download {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 14px;
-  cursor: pointer;
-  border: none;
-  background: #e8f0fe;
-  padding: 0;
-  color: #2b6cb0;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: all 0.15s;
-}
-.spot-elevation-download:hover {
-  background: #2b6cb0;
-  color: white;
-  transform: scale(1.1);
-}
-.spot-elevation-download.hidden {
-  display: none;
 }
 .spot-elevation-close {
   display: inline-flex;
@@ -530,22 +497,13 @@
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .spot-elevation-chart {
   width: 100%;
   display: block;
 }
-
-.spot-elevation-stats {
-  display: flex;
-  gap: 10px;
-  font-size: 11px;
-  color: #555;
-  margin-top: 5px;
-  flex-wrap: wrap;
-}
-.spot-elevation-stats span { white-space: nowrap; }
 
 /* Holds the .trail-status-info card (see marker.css) when the selected
    trail is closed/hinted — empty and invisible otherwise. */
@@ -560,10 +518,6 @@
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   gap: 6px;
 }
-.ssb-open    { background: #f0fff4; }
-.ssb-limited { background: #fffbeb; }
-.ssb-closed  { background: #fff5f5; }
-.ssb-unknown { background: #f8f8f8; }
 
 .ssb-info {
   display: flex;
@@ -574,6 +528,21 @@
 
 .ssb-row {
   margin-left: 18px;
+}
+
+/* Donation/access badge sits on the same line as the status from tablet
+   width up — the rain hint (.ssb-row-rain) always keeps its own line via
+   flex-basis: 100%, whether or not the badge row is also present. */
+@media (min-width: 600px) {
+  .spot-status-banner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    row-gap: 4px;
+  }
+  .ssb-row { margin-left: 0; }
+  .ssb-row-rain { flex-basis: 100%; }
 }
 
 .ssb-dot {

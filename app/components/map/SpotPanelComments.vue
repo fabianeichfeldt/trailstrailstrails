@@ -58,9 +58,11 @@ import { formatDate } from '~/utils/formatDate'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
 
-// Mounted by SpotPanelInfoTab.vue into #spot-comments-section, which
-// decides when to fetch (loadComments()) since it already builds the auth
-// snapshot loadComments() needs.
+// Mounted directly as the "Kommentare" section of the routed spot-detail
+// page (app/pages/trails/[slug].vue), which triggers the fetch
+// (store.loadComments()) itself in onMounted() since it already builds the
+// auth snapshot loadComments() needs — this component only reads/writes
+// store state reactively.
 const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()

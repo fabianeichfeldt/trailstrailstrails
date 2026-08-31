@@ -53,44 +53,25 @@ describe('SpotPanelElevation', () => {
     store = useSpotPanelStore()
   })
 
-  it('renders nothing item-specific when no item is selected', () => {
+  it('renders nothing when no item is selected', () => {
     const wrapper = mountElevation()
-    expect(wrapper.get('.spot-elevation-name').text()).toBe('')
-    expect(wrapper.find('.spot-elevation-stats').exists()).toBe(false)
-    expect(wrapper.find('.spot-elevation-download').exists()).toBe(false)
+    expect(wrapper.find('.spot-elevation-chart svg').exists()).toBe(false)
   })
 
-  it('shows the trail name, stats, direction and an SVG chart for a selected trail', () => {
+  it('shows an SVG chart for a selected trail', () => {
     store.data = spotData()
     store.selectedItemId = 'trail-1'
     store.selectedItemKind = 'trail'
     const wrapper = mountElevation()
 
-    expect(wrapper.get('.spot-elevation-name').text()).toBe('Testtrail')
-    const stats = wrapper.get('.spot-elevation-stats').text()
-    expect(stats).toContain('3 km')
-    expect(stats).toContain('100 m')
-    expect(stats).toContain('300 m')
-    expect(stats).toContain('Nur bergab')
     expect(wrapper.find('.spot-elevation-chart svg').exists()).toBe(true)
   })
 
-  it('shows a GPX download link when the item has one, none otherwise', () => {
-    store.data = spotData({ trails: [baseTrail({ gpx_url: 'https://example.com/t.gpx' })] })
-    store.selectedItemId = 'trail-1'
-    store.selectedItemKind = 'trail'
-    const wrapper = mountElevation()
-    const link = wrapper.get('.spot-elevation-download')
-    expect(link.attributes('href')).toBe('https://example.com/t.gpx')
-    expect(link.attributes('download')).toBe('Testtrail.gpx')
-  })
-
-  it('shows tour stats for a selected tour', () => {
+  it('shows an SVG chart for a selected tour', () => {
     store.data = spotData()
     store.selectedItemId = 'tour-1'
     store.selectedItemKind = 'tour'
     const wrapper = mountElevation()
-    expect(wrapper.get('.spot-elevation-name').text()).toBe('Testtour')
     expect(wrapper.find('.spot-elevation-chart svg').exists()).toBe(true)
   })
 

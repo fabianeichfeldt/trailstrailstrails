@@ -46,70 +46,75 @@
     </template>
 
     <!-- Trail detail page -->
-    <template v-else-if="trail">
-      <section class="trail-hero">
-        <p class="hero-eyebrow">{{ typeLabel }}</p>
-        <h1>{{ trail.name }}</h1>
-        <NuxtLink :to="`/map?trail=${slug}`" class="btn-discover">
-          <IconSend class="btn-icon" />
-          Trailradar-Karte öffnen
-        </NuxtLink>
-      </section>
+    <template v-else-if="trail && trailForStore">
+      <SpotDetailHero :trail="trailForStore" />
 
-      <!-- Map CTA -->
-      <section class="map-section content-section">
-        <iframe
-          v-if="embedSrc"
-          :src="embedSrc"
-          class="trail-map"
-          frameborder="0"
-          loading="lazy"
-          title="Trailradar Karte"
-        />
-        <NuxtLink :to="`/map?trail=${slug}`" class="map-cta-overlay">
-          <div class="map-cta-inner">
-            <IconSend class="btn-icon" />
-            Auf der Karte entdecken
-          </div>
-        </NuxtLink>
-      </section>
+      <SpotDetailStatus :details="details" />
 
-      <section v-if="trail.trail_description || trail.description" class="trail-descr content-section card">
-        <h2>Beschreibung</h2>
-        <p>{{ trail.trail_description || trail.description }}</p>
-      </section>
+      <SpotDetailPhotos
+        :trail="trailForStore"
+        :details="details"
+        @uploaded="refreshDetails"
+      />
 
-      <section v-if="trail.rules && trail.rules.length" class="trail-rules content-section card">
-        <h2>Regeln & Hinweise</h2>
-        <ul class="rules-list">
-          <li v-for="(rule, i) in trail.rules" :key="i">{{ rule }}</li>
-        </ul>
-      </section>
+      <SpotDetailNav :trail="trailForStore" :parking-count="spotPanelStore.parkingLots.length" />
 
-      <section v-if="trail.photos && trail.photos.length" class="trail-photos content-section">
-        <h2 class="section-label">Fotos</h2>
-        <div class="photo-grid">
-          <img v-for="photo in trail.photos" :key="photo.id" :src="photo.url" :alt="trail.name" loading="lazy" />
+      <!-- Touren/Trails/Parkplätze + the embedded map form one "explore"
+           block: stacked list-then-map on mobile, side-by-side (map left,
+           list right) from tablet width up — see .explore-grid below. -->
+      <div class="explore-grid">
+        <div class="explore-list">
+          <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
+            <h2>Touren</h2>
+            <SpotPanelToursTab />
+          </section>
+
+          <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
+            <h2>Trails</h2>
+            <SpotPanelTrailsTab />
+          </section>
+
+          <section v-if="spotPanelStore.parkingLots.length" id="parking" class="content-section card">
+            <h2>Parkplätze</h2>
+            <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" @fly-to="onParkingFlyTo" />
+          </section>
         </div>
+
+        <!-- Embedded map — token-scoped widget, same iframe pattern as
+             before this rework (Decision 9: double-Leaflet-bundle cost
+             accepted), now with panning/zooming enabled (interactive=1)
+             since this is trailradar.org's own page, not a third-party
+             embed. -->
+        <div class="explore-map">
+          <section class="map-section content-section">
+            <iframe
+              v-if="embedSrc"
+              ref="mapIframeEl"
+              :src="embedSrc"
+              class="trail-map"
+              frameborder="0"
+              loading="lazy"
+              title="Trailradar Karte"
+            />
+            <NuxtLink :to="`/map?trail=${trailForStore.id}`" class="map-all-trails-btn">Trailradar Karte</NuxtLink>
+          </section>
+        </div>
+      </div>
+
+      <SpotDetailDescription :trail="trailForStore" :details="details" />
+
+      <section id="comments" class="content-section card">
+        <h2>Kommentare</h2>
+        <SpotPanelComments />
       </section>
 
-      <section class="trail-info content-section card">
-        <h2>Infos</h2>
-        <dl class="info-list">
-          <div v-if="trail.opening_hours">
-            <dt>Öffnungszeiten</dt>
-            <dd>{{ trail.opening_hours }}</dd>
-          </div>
-          <div>
-            <dt>Koordinaten</dt>
-            <dd>{{ trail.latitude?.toFixed(5) }}, {{ trail.longitude?.toFixed(5) }}</dd>
-          </div>
-        </dl>
-      </section>
+      <SpotDetailRules :details="details" />
+
+      <SpotDetailVideo :details="details" />
 
       <section class="bottom-cta content-section">
         <p class="bottom-cta-label">Alle offiziellen MTB-Trails auf einen Blick</p>
-        <NuxtLink :to="`/map?trail=${slug}`" class="btn-bottom-cta">
+        <NuxtLink :to="mapFlyToHref" class="btn-bottom-cta">
           <IconSend class="btn-icon" />
           Auf Trailradar entdecken
         </NuxtLink>
@@ -126,12 +131,29 @@
       </section>
     </template>
 
+    <ReportErrorModal />
   </div>
 </template>
 
 <script setup lang="ts">
 import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
+import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
+import SpotDetailStatus from '~/components/trail_detail/SpotDetailStatus.vue'
+import SpotDetailPhotos from '~/components/trail_detail/SpotDetailPhotos.vue'
+import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
+import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescription.vue'
+import SpotDetailRules from '~/components/trail_detail/SpotDetailRules.vue'
+import SpotDetailVideo from '~/components/trail_detail/SpotDetailVideo.vue'
+import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
+import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
+import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
+import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
+import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
+import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
+import { getTrailDetails } from '~/communication/trails'
+import { TrailDetails } from '~/types/TrailDetails'
+import type { Trail } from '~/types/Trail'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 //const EMBED_BASE = 'https://trailradar.org'
@@ -141,26 +163,21 @@ const slug = route.params.slug as string
 const region = regions[slug as keyof typeof regions] ?? null
 const isRegion = !!region
 
-const { data: trail } = await useAsyncData(`trail-${slug}`, async () => {
+// Trust the SSR-embedded payload for hydration (default getCachedData
+// behavior) instead of forcing a redundant client refetch of identical
+// data: with a forced refetch, Vue's hydration comparison runs against
+// the still-pending state before that promise resolves, producing a
+// spurious hydration mismatch even though the resolved value ends up
+// identical to what the server already rendered. Live/dynamic fields
+// (status, likes, GPX, parking) are already refreshed separately and
+// safely post-mount, via refreshDetails() and spotPanelStore.load() below.
+const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}`, async () => {
   if (isRegion) return null
   try {
     return await $fetch<Record<string, any>>(`/api/trail/${slug}`)
   } catch {
     return null
   }
-}, {
-  // Nuxt 4 always inlines the SSR result into the hydration payload
-  // (payloadExtraction only controls whether it's split into a separate
-  // _payload.json file), so the client no longer refetches after
-  // hydration on its own. Opt out of trusting the SSR value here so a
-  // client-side fetch always follows — cheap for this low-traffic detail
-  // page, and keeps it consistent if the server-rendered result is stale.
-  getCachedData: () => undefined,
-})
-
-const embedSrc = computed(() => {
-  if (!trail.value) return ''
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org`
 })
 
 const regionEmbedSrc = computed(() => {
@@ -176,36 +193,160 @@ const otherRegions = computed(() =>
   ),
 )
 
-const typeLabel = computed(() => {
-  const t = trail.value?.type
-  if (t === 'bikepark') return 'Bikepark'
-  if (t === 'dirtpark') return 'Dirtpark / Pumptrack'
-  return 'Trail'
+// ── Spot-detail data orchestration ──────────────────────────────────────
+// `trailForStore` re-shapes the SSG-baked JSON (base trail fields + the
+// trail_details row + type + photos — see server/api/trail/[id].get.ts)
+// into the Trail-shaped object the (repurposed) spotPanel store and the new
+// section components expect. `bakedDetails` seeds `details` below so the
+// description/rules/photos/opening-hours sections render immediately from
+// the prerendered payload — see app/utils/bakedTrailDetails.ts.
+const trailForStore = computed<Trail | null>(() => (!isRegion && trail.value) ? (trail.value as unknown as Trail) : null)
+const bakedDetails = computed(() => bakedTrailDetails(trail.value))
+
+// "View on map" CTA (Decision 10): navigates to /map and flies/centers the
+// camera on the spot's marker instead of reopening a panel on top —
+// there's no panel any more, this page *is* the detail view now. map.vue
+// reads `fly` and calls the live map's flyToPlace() once it's ready, the
+// same pattern it already uses for `trail` (see onMapReady there).
+const mapFlyToHref = computed(() => {
+  if (!trailForStore.value) return '/map'
+  return `/map?fly=${trailForStore.value.latitude},${trailForStore.value.longitude}`
 })
 
-const statusColor = computed(() => {
-  const s = trail.value?.status
-  if (s === 'open') return 'green'
-  if (s === 'closed') return 'red'
-  if (s === 'limited') return 'orange'
-  return 'gray'
+const spotPanelStore = useSpotPanelStore()
+const authStore = useAuthStore()
+const supabaseUser = useSupabaseUser()
+
+// interactive=1: unlike third-party embeds, this is trailradar.org's own
+// page for this exact spot, so panning/zooming the map here can't hijack a
+// host page's scroll the way a third-party iframe embed could.
+const embedSrc = computed(() => {
+  if (!trail.value) return ''
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
 })
 
-const statusLabel = computed(() => {
-  const s = trail.value?.status
-  if (s === 'open') return 'Geöffnet'
-  if (s === 'closed') return 'Geschlossen'
-  if (s === 'limited') return 'Eingeschränkt'
-  return 'Unbekannt'
+// Clicking a Touren/Trails row (SpotPanelTrailsTab.vue/SpotPanelToursTab.vue)
+// flies the embedded map to that trail instead of the spot's own marker.
+// Center point: midpoint of the GPX track's start and end (not a centroid
+// of every point) — a cheap, good-enough proxy for "where this trail is".
+const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
+  const { selectedItemId, selectedItemKind, data } = spotPanelStore
+  if (!selectedItemId || !selectedItemKind || !data) return null
+  const list = selectedItemKind === 'trail' ? data.trails : data.tours
+  const item = list.find(i => i.id === selectedItemId)
+  const points = item?.gpxPoints
+  if (!points?.length) return null
+  const [startLat, startLng] = points[0]
+  const [endLat, endLng] = points[points.length - 1]
+  return { lat: (startLat + endLat) / 2, lng: (startLng + endLng) / 2 }
 })
 
-const accessLabel = computed(() => {
-  const a = trail.value?.access_type
-  if (a === 'free') return 'Kostenlos'
-  if (a === 'paid') return 'Kostenpflichtig'
-  if (a === 'membership') return 'Mitgliedschaft'
-  return a
+// Reloading the iframe's `src` on every row click would work but reload the
+// whole map (tile flash, lost pan/zoom state) — jarring compared to the
+// live map's flyTo(). Posting a message instead lets the embed page's own
+// Leaflet instance animate to the new view without a reload; see the
+// `message` listener in app/pages/embed/[token].vue. Same-origin postMessage
+// only (EMBED_BASE is a relative, same-origin path), so window.location.origin
+// is a safe target.
+const mapIframeEl = ref<HTMLIFrameElement | null>(null)
+const FLY_TO_TRAIL_ZOOM = 14
+
+function flyMapTo(lat: number, lng: number, zoom: number) {
+  const win = mapIframeEl.value?.contentWindow
+  if (!win) return
+  win.postMessage({ type: 'trailradar:flyTo', lat, lng, zoom }, window.location.origin)
+}
+
+watch(selectedItemFocus, (focus) => {
+  if (focus) {
+    flyMapTo(focus.lat, focus.lng, FLY_TO_TRAIL_ZOOM)
+  } else if (trailForStore.value) {
+    flyMapTo(trailForStore.value.latitude, trailForStore.value.longitude, 11)
+  }
 })
+
+// Clicking a Parkplätze row (SpotPanelParkingTab.vue) flies the embedded
+// map to that lot, same as clicking a Touren/Trails row.
+function onParkingFlyTo(lat: number, lng: number) {
+  flyMapTo(lat, lng, FLY_TO_TRAIL_ZOOM)
+}
+
+// `details` (trail_details row: status/rules/description/photos/videos/
+// likes) is owned here rather than by any single section component, since
+// it now feeds several sibling sections (SpotDetailStatus, SpotDetailPhotos,
+// SpotDetailDescription, SpotDetailRules, SpotDetailVideo) instead of one
+// monolithic card. Seeded from the SSG-baked payload so content renders
+// immediately (SEO-safe, no loading flash); onMounted() below then kicks
+// off a live getTrailDetails() refresh for the genuinely dynamic bits that
+// aren't in the static payload at all: status_hint freshness and likes.
+const details = ref<TrailDetails>(bakedDetails.value)
+
+async function updateLikeButton(d: TrailDetails) {
+  try {
+    const user = { id: supabaseUser.value?.id ?? '' }
+    spotPanelStore.isLiked = !!user.id && !!d.likes?.find(l => l.user_id === user.id)
+  } catch {
+    spotPanelStore.isLiked = false
+  }
+  spotPanelStore.likeVisible = true
+}
+
+async function refreshDetails() {
+  const item = trailForStore.value
+  if (!item) return
+  const id = item.id
+  try {
+    const d = await getTrailDetails(item)
+    if (trailForStore.value?.id !== id) return // spot moved on while the fetch was in flight
+    await updateLikeButton(d)
+    details.value = d
+  } catch (e) {
+    console.warn('Failed to refresh live trail details, keeping prerendered content:', e)
+  }
+}
+
+// spotPanelStore.load()/loadComments() do real network fetches — onMounted
+// never fires during SSR/prerender, so this is inherently client-only (see
+// CLAUDE.md's "No live Nitro server in production"); no extra guard needed.
+function loadLiveSpotData(item: Trail) {
+  spotPanelStore.load(item)
+  spotPanelStore.loadComments(item.id, {
+    userId: supabaseUser.value?.id ?? '',
+    isAdmin: authStore.isAdmin,
+    isTrailcrew: authStore.isTrailcrew,
+  })
+}
+
+onMounted(async () => {
+  // Runs after hydration completes, not during it: safe to let this update
+  // `trail` reactively (a normal post-mount re-render, not a hydration
+  // comparison) even if it resolves to something different than SSR got.
+  // clearNuxtData() is required, not cosmetic: calling refreshTrail() alone
+  // is a silent no-op here — Nuxt still treats the SSR-time promise for
+  // this key as satisfying the request and skips a real refetch unless the
+  // cached entry is explicitly cleared first (confirmed by direct
+  // reproduction against a mocked endpoint).
+  if (!isRegion) {
+    clearNuxtData(`trail-${slug}`)
+    await refreshTrail()
+  }
+  if (trailForStore.value) {
+    loadLiveSpotData(trailForStore.value)
+    refreshDetails()
+  }
+})
+
+// Client-side navigation to a different spot's page (e.g. via search)
+// reuses this page's component instance — reload for the new spot.
+watch(
+  () => trailForStore.value?.id,
+  (id, oldId) => {
+    if (!id || id === oldId || !trailForStore.value) return
+    details.value = bakedDetails.value
+    loadLiveSpotData(trailForStore.value)
+    refreshDetails()
+  },
+)
 
 const pageTitle = isRegion
   ? `Offizielle MTB Trails ${region!.pronom}`
@@ -258,7 +399,7 @@ useHead({
 
 <style scoped>
 .trails-page {
-  max-width: 860px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 1em 4em;
   background: #fff;
@@ -404,41 +545,70 @@ useHead({
   isolation: isolate;
 }
 
-.map-cta-overlay {
+.map-all-trails-btn {
   position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  padding-bottom: 2em;
-  background: linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.52) 100%);
+  top: 0.8em;
+  right: 0.8em;
+  z-index: 2;
+  background: #1a2035;
+  color: #fff;
+  font-size: 0.78em;
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: 2em;
   text-decoration: none;
-  transition: background 0.2s;
-  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  transition: background 0.15s, transform 0.15s;
 }
-.map-cta-overlay:hover {
-  background: linear-gradient(to bottom, transparent 25%, rgba(0,0,0,0.38) 100%);
+.map-all-trails-btn:hover {
+  background: #2a3550;
+  transform: translateY(-1px);
 }
 
-.map-cta-inner {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55em;
-  background: #2a9d5c;
-  color: white;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 0.8em 2em;
-  border-radius: 2em;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
-  transition: transform 0.15s, background 0.15s, box-shadow 0.15s;
-  letter-spacing: 0.01em;
+/* ── Explore block (Touren/Trails/Parkplätze + map) ──
+   Mobile: list sections stacked above the map (Touren → Trails →
+   Parkplätze → Map). From tablet width up: side-by-side, map on the left,
+   list on the right, map pinned while the list scrolls past it. */
+.explore-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
 }
-.map-cta-overlay:hover .map-cta-inner {
-  transform: translateY(-3px);
-  background: #239052;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45);
+.explore-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2em;
+}
+.explore-list .content-section {
+  margin-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .explore-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    grid-template-areas: "map list";
+    align-items: start;
+    gap: 1.4em;
+  }
+  /* Grid tracks default to a min-width based on their content's min-content
+     size, not the fr fraction — the list's nowrap stat/name spans were
+     inflating this column past its 1fr share and squeezing the map column
+     narrower than intended. min-width: 0 lets the fr ratio actually apply;
+     long content wraps instead of forcing the track wider. */
+  .explore-list { grid-area: list; min-width: 0; }
+  .explore-map {
+    grid-area: map;
+    position: sticky;
+    top: 4.6em;
+  }
+  .explore-map .map-section {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .explore-map .trail-map {
+    height: 520px;
+  }
 }
 
 /* ── Cards ── */

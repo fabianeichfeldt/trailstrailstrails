@@ -22,6 +22,7 @@ import {
 } from '~/map/trailTooltip'
 import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
 import { shouldShowGpx } from '~/map/gpxZoomThreshold'
+import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css'
 
 definePageMeta({ layout: 'embed' })
 
@@ -39,7 +40,7 @@ onMounted(async () => {
   // Timing entry instead, which reflects the real requested URL and is
   // never touched by that later History API rewrite.
   const token = useRoute().params.token as string
-  const { lat, lng, zoom, parentHost } = parseEmbedQuery(getRequestedSearch())
+  const { lat, lng, zoom, parentHost, interactive } = parseEmbedQuery(getRequestedSearch())
 
   let trails: EmbedTrail[] = []
 
@@ -67,18 +68,46 @@ onMounted(async () => {
   if (!mapEl.value) return
 
   const L = (await import('leaflet')).default
+  // Registers L.Map's "gestureHandling" option (side effect on L.Map, no
+  // export needed here) — see the interactive:true branch below.
+  await import('leaflet-gesture-handling')
 
   const map = L.map(mapEl.value, {
-    zoomControl: false,
-    dragging: false,
-    scrollWheelZoom: false,
-    doubleClickZoom: false,
-    touchZoom: false,
-    boxZoom: false,
-    keyboard: false,
-  })
+    zoomControl: interactive,
+    dragging: interactive,
+    scrollWheelZoom: interactive,
+    doubleClickZoom: interactive,
+    touchZoom: interactive,
+    boxZoom: interactive,
+    keyboard: interactive,
+    // Only trailradar.org's own /trails/[slug] page opts into `interactive`
+    // (see parseEmbedQuery) — that's the one place this map sits inside a
+    // normally-scrolling page, so a stray wheel-scroll or one-finger touch
+    // over the map must not hijack the page instead of zooming/panning it.
+    // Requires ctrl/cmd+scroll to zoom and two fingers to pan on touch,
+    // showing a translated hint on the blocked gesture; third-party embeds
+    // (interactive:false) already have all of this disabled outright.
+    gestureHandling: interactive,
+  } as any)
   map.setView([lat, lng], zoom)
   map.setMaxZoom(19)
+
+  // Lets the parent page (app/pages/trails/[slug].vue) fly the map to a
+  // trail/tour without reloading this iframe — reloading on every row click
+  // flashes the tiles and loses pan/zoom state, unlike the live map's
+  // flyTo(). Same-origin only: this embed is always loaded from a relative,
+  // same-origin URL (EMBED_BASE in the caller), so requiring
+  // event.source === window.parent is enough to reject any other frame.
+  function onFlyToMessage(event: MessageEvent) {
+    if (event.source !== window.parent) return
+    const data = event.data
+    if (!data || data.type !== 'trailradar:flyTo') return
+    const { lat: flyLat, lng: flyLng, zoom: flyZoom } = data
+    if (typeof flyLat !== 'number' || typeof flyLng !== 'number') return
+    map.flyTo([flyLat, flyLng], typeof flyZoom === 'number' ? flyZoom : map.getZoom(), { duration: 1 })
+  }
+  window.addEventListener('message', onFlyToMessage)
+  onUnmounted(() => window.removeEventListener('message', onFlyToMessage))
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
@@ -157,7 +186,7 @@ onMounted(async () => {
         const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
         addPolylineWithTooltip(
           latlngs,
-          { color: '#555', weight: 3, opacity: 0.6, dashArray: '8, 6' },
+          { color: '#555', weight: 5, opacity: 0.6, dashArray: '8, 6' },
           t.name, null, t.gpx_points, appUrl,
         )
       }
@@ -166,7 +195,7 @@ onMounted(async () => {
         const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
         addPolylineWithTooltip(
           latlngs,
-          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 },
+          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 6, opacity: 0.85 },
           t.name, t.difficulty, t.gpx_points, appUrl,
         )
       }

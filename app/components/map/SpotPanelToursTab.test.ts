@@ -35,7 +35,7 @@ describe('SpotPanelToursTab', () => {
   it('shows an empty-state message when there is no data', () => {
     const wrapper = mount(SpotPanelToursTab)
     expect(wrapper.find('.spot-empty').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Keine Touren')
+    expect(wrapper.text()).toContain('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.')
   })
 
   it('shows an empty-state message when the spot has no tours', () => {
@@ -52,7 +52,8 @@ describe('SpotPanelToursTab', () => {
     const wrapper = mount(SpotPanelToursTab)
     expect(wrapper.text()).toContain('Alpencross')
     expect(wrapper.text()).toContain('3 Trails · 90 min')
-    expect(wrapper.text()).toContain('12.5 km')
+    // 12.5km is over the 10km threshold, so it's shown in km with a german decimal comma.
+    expect(wrapper.text()).toContain('12,5km')
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')
   })
 

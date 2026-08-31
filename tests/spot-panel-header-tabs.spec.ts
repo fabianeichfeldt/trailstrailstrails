@@ -1,18 +1,15 @@
-import { test, expect, MOCK_SESSION, MOCK_USER } from './fixtures';
+import { test as baseTest } from '@playwright/test';
+import { test, expect, setupAllMocks, MOCK_SESSION, MOCK_USER } from './fixtures';
 
-// E2E coverage for the header's like/share buttons and tab-button
-// highlighting (tab-content switching itself has partial incidental
-// coverage in spot-panel-tours-trails.spec.ts / spot-panel-parking.spec.ts).
+// E2E coverage for SpotDetailHero.vue's like/share buttons on the routed
+// spot-detail page (app/pages/trails/[slug].vue). Rewritten for the
+// spot-detail-real-pages rework: the panel/tab-highlight behavior this file
+// used to cover no longer exists (marker clicks and search results now
+// navigate to a real page instead of opening a panel with tabs — see
+// tests/trail-open.spec.ts and tests/trails-detail-page.spec.ts for that
+// navigation coverage, and for the "always-visible sections" coverage that
+// replaces tab-switching).
 
-async function openTrailPanel(page: import('@playwright/test').Page) {
-  await page.locator('[data-testid="search-input"]').fill('Flow');
-  await page.locator('.search-result-item').filter({ hasText: 'Flowtrail Tegernsee' }).click();
-  await expect(page.locator('.spot-panel')).toHaveClass(/open/);
-}
-
-// Mirrors comments.spec.ts's signIn() helper — same mock session/user, same
-// login-form flow. Not imported (each spec file keeps its own copy, matching
-// this repo's existing convention across the spot-panel specs).
 async function signIn(page: import('@playwright/test').Page) {
   await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }));
   await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }));
@@ -24,35 +21,10 @@ async function signIn(page: import('@playwright/test').Page) {
   await expect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
 }
 
-// ── Tabs ─────────────────────────────────────────────────────────────────
-
-test('the Info tab button is highlighted by default and switching tabs moves the highlight', async ({ page }) => {
-  await openTrailPanel(page);
-
-  await expect(page.locator('.spot-tab[data-tab="info"]')).toHaveClass(/active/);
-
-  await page.locator('.spot-tab[data-tab="tours"]').click();
-
-  await expect(page.locator('.spot-tab[data-tab="tours"]')).toHaveClass(/active/);
-  await expect(page.locator('.spot-tab[data-tab="info"]')).not.toHaveClass(/active/);
-  await expect(page.locator('#spot-tours-tab')).not.toHaveClass(/hidden/);
-  await expect(page.locator('#spot-info-tab')).toHaveClass(/hidden/);
-});
-
-test('header and tabs render correctly on a small (mobile) viewport', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 700 });
-  await openTrailPanel(page);
-
-  await expect(page.locator('.spot-panel-title')).toBeVisible();
-  await expect(page.locator('.spot-tab[data-tab="info"]')).toBeVisible();
-
-  await page.locator('.spot-tab[data-tab="trails"]').click();
-  await expect(page.locator('.spot-tab[data-tab="trails"]')).toHaveClass(/active/);
-});
-
 // ── Like button ──────────────────────────────────────────────────────────
 
-test('the like button stays hidden until the Info tab data loads, then reveals unfilled when not liked', async ({ page }) => {
+baseTest('the like button stays hidden until the live details refresh resolves, then reveals unfilled when not liked', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
   let resolveDetails!: () => void;
   const detailsGate = new Promise<void>((resolve) => { resolveDetails = resolve; });
   await page.route('**/functions/v1/**', async (route) => {
@@ -62,26 +34,29 @@ test('the like button stays hidden until the Info tab data loads, then reveals u
     });
   });
 
-  await openTrailPanel(page);
-
+  await page.goto('/trails/t1');
   await expect(page.locator('.spot-like-btn')).toHaveClass(/hidden/);
 
   resolveDetails();
 
   await expect(page.locator('.spot-like-btn')).not.toHaveClass(/hidden/);
   await expect(page.locator('.spot-like-btn .fa-regular.fa-star')).toBeVisible();
+  assertNoLeaks();
 });
 
-test('clicking the like button while signed out opens the sign-in modal', async ({ page }) => {
-  await openTrailPanel(page);
+baseTest('clicking the like button while signed out opens the sign-in modal', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
   await expect(page.locator('.spot-like-btn')).not.toHaveClass(/hidden/);
 
   await page.locator('.spot-like-btn').click();
 
   await expect(page.locator('.auth-card')).toBeVisible();
+  assertNoLeaks();
 });
 
-test('a logged-in user can like and unlike a trail from the header', async ({ page }) => {
+test('a logged-in user can like and unlike a trail from the hero', async ({ page }) => {
   await signIn(page);
   let liked = false;
   await page.route('**/rest/v1/trail_favorites**', (route) => {
@@ -97,7 +72,8 @@ test('a logged-in user can like and unlike a trail from the header', async ({ pa
     return route.fulfill({ json: [] });
   });
 
-  await openTrailPanel(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
   const likeBtn = page.locator('.spot-like-btn');
   await expect(likeBtn).not.toHaveClass(/hidden/);
   await expect(likeBtn.locator('.fa-regular.fa-star')).toBeVisible();
@@ -116,9 +92,11 @@ test('a logged-in user can like and unlike a trail from the header', async ({ pa
 // clipboard-fallback path (Firefox desktop, no Web Share API), same logic
 // already unit-tested in spotPanelShare.test.ts.
 
-test('share button falls back to copying the link and shows a toast when native share is unavailable', async ({ page }) => {
-  await openTrailPanel(page);
+baseTest('share button falls back to copying the link and shows a toast when native share is unavailable', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
   await page.route('**trailradar.org/api/share**', (route) => route.fulfill({ json: {} }));
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
   await page.evaluate(() => {
     Object.defineProperty(navigator, 'share', { value: undefined, configurable: true });
     Object.defineProperty(navigator, 'clipboard', { value: { writeText: async () => {} }, configurable: true });
@@ -129,4 +107,5 @@ test('share button falls back to copying the link and shows a toast when native 
   const toast = page.locator('.spot-share-toast');
   await expect(toast).toHaveClass(/show/);
   await expect(toast).toContainText('Link kopiert!');
+  assertNoLeaks();
 });

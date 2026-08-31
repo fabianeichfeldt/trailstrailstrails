@@ -26,11 +26,8 @@ export interface CommentsAuthInfo {
 
 export const useSpotPanelStore = defineStore('spotPanel', () => {
   const currentItem = ref<Trail | null>(null)
-  const isOpen = ref(false)
 
   const parkingLots = ref<SpotParkingLot[]>([])
-  const highlightedParkingLotId = ref<string | null>(null)
-  const parkingTabForceVisible = ref(false)
 
   async function loadParking(spotId: string) {
     try {
@@ -102,9 +99,9 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   }
 
   // `data` is the spot's tours+trails list (GPX-derived). `selectedItemId`/
-  // `selectedItemKind` is which row is selected — drives the elevation
-  // panel's visibility/content directly, and useTrailMap.ts watches these
-  // two fields to restyle Leaflet polylines and draw tour-segment layers.
+  // `selectedItemKind` is which row is selected — drives which section
+  // (Touren/Trails) renders <SpotPanelElevation> inline on the spot-detail
+  // page (app/pages/trails/[slug].vue).
   const data = ref<SpotMtbData | null>(null)
   const selectedItemId = ref<string | null>(null)
   const selectedItemKind = ref<'tour' | 'trail' | null>(null)
@@ -125,38 +122,31 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     selectedItemKind.value = kind
   }
 
-  // Closes the elevation panel (its visibility derives reactively from
-  // selectedItemId/selectedItemKind being non-null) and lets
-  // useTrailMap.ts's watcher on these two fields restore Leaflet polyline
-  // styling / clear tour-segment layers.
+  // Closes the elevation panel — its visibility on the spot-detail page
+  // derives reactively from selectedItemId/selectedItemKind being non-null
+  // (see the Touren/Trails sections in app/pages/trails/[slug].vue).
   function clearSelection() {
     selectedItemId.value = null
     selectedItemKind.value = null
   }
 
-  // isLiked/likeVisible back the header's like button. Populated by
-  // SpotPanelInfoTab.vue's fetch, not independently — the like button stays
-  // hidden until that fetch resolves.
+  // isLiked/likeVisible back the hero's like button (SpotDetailHero.vue).
+  // Populated by SpotDetailInfo.vue's live-details refresh, not
+  // independently — the like button stays hidden until that resolves.
   const isLiked = ref(false)
   const likeVisible = ref(false)
-  const activeTab = ref<'info' | 'tours' | 'trails' | 'parking'>('info')
 
-  // Only clears the selection when the tab actually changes — switching to
-  // the already-active tab must not close an open elevation panel.
-  function setActiveTab(tab: typeof activeTab.value) {
-    if (activeTab.value !== tab) clearSelection()
-    activeTab.value = tab
-  }
-
-  // Leaflet-touching side effects (polyline restyle, tour layers, hover
-  // marker, fitBounds) live in useTrailMap.ts as watch()es on
-  // isOpen/data/selectedItemId/selectedItemKind, not here.
-  function openInternal(item: Trail, initialTab: typeof activeTab.value) {
+  /**
+   * Loads `item` for the routed spot-detail page
+   * (app/pages/trails/[slug].vue) — every section on that page is always
+   * present in its long scroll, just populated once the per-spot fetches
+   * this kicks off resolve. loadSpotData() only applies to trail-type
+   * spots (bikeparks/dirtparks have no GPX tours/trails); loadParking()
+   * runs for every spot type.
+   */
+  function load(item: Trail) {
     currentItem.value = item
-    isOpen.value = true
     parkingLots.value = []
-    parkingTabForceVisible.value = initialTab === 'parking'
-    if (initialTab !== 'parking') highlightedParkingLotId.value = null
     comments.value = []
     commentsExpanded.value = false
     commentsHasMore.value = false
@@ -165,56 +155,15 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     likeVisible.value = false
     data.value = null
     clearSelection()
-    activeTab.value = initialTab
-
-    // Fire-and-forget. loadSpotData() only applies to trail-type spots
-    // (bikeparks/dirtparks have no GPX tours/trails); loadParking() runs
-    // for every spot type.
     if (item.type === 'trail') {
       loadSpotData(item.id)
     }
     loadParking(item.id)
   }
 
-  /** Opens the panel for `item`, defaulting to the Info tab. */
-  function openSpot(item: Trail) {
-    openInternal(item, 'info')
-  }
-
-  /**
-   * Opens the panel for the spot owning `parkingLot`, jumping straight to
-   * the Parking tab with that lot highlighted — instead of defaulting to
-   * Info like a normal spot-marker click.
-   */
-  function openParkingLot(item: Trail, parkingLot: SpotParkingLot) {
-    highlightedParkingLotId.value = parkingLot.id
-    openInternal(item, 'parking')
-  }
-
-  function close() {
-    isOpen.value = false
-    currentItem.value = null
-    parkingLots.value = []
-    highlightedParkingLotId.value = null
-    parkingTabForceVisible.value = false
-    comments.value = []
-    commentsExpanded.value = false
-    commentsHasMore.value = false
-    commentsLoaded.value = false
-    isLiked.value = false
-    likeVisible.value = false
-    data.value = null
-    clearSelection()
-    // activeTab is deliberately not reset — the next openSpot()/
-    // openParkingLot() call always sets it via openInternal().
-  }
-
   return {
     currentItem,
-    isOpen,
     parkingLots,
-    highlightedParkingLotId,
-    parkingTabForceVisible,
     loadParking,
     comments,
     commentsExpanded,
@@ -235,10 +184,6 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     clearSelection,
     isLiked,
     likeVisible,
-    activeTab,
-    setActiveTab,
-    openSpot,
-    openParkingLot,
-    close,
+    load,
   }
 })

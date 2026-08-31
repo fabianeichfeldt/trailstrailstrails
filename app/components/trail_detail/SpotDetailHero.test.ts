@@ -4,9 +4,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useSpotPanelStore } from '~/stores/spotPanel'
 import type { Trail } from '~/types/Trail'
 
-// SpotPanelHeader.vue relies on Nuxt's implicit auto-imports for the Pinia
-// stores it reads (useSpotPanelStore/useAuthStore/useMapStore) — see
-// vitest.setup.ts and SpotPanelComments.test.ts for the same pattern.
+// Ported from SpotPanelHeader.test.ts as part of the spot-detail-real-pages
+// rework — SpotDetailHero.vue takes `trail` as a prop (the page's SSG-
+// fetched spot) instead of reading store.currentItem, and has no close
+// button (this is a real page, not a dismissible panel).
 let fakeAuthStore: {
   isLoggedIn: boolean
   userId: string
@@ -29,7 +30,7 @@ vi.mock('~/utils/clipboard', () => ({ copyToClipboard: vi.fn() }))
 import { likeTrail, dislikeTrail } from '~/communication/trails'
 import { share } from '~/communication/share'
 import { copyToClipboard } from '~/utils/clipboard'
-import SpotPanelHeader from './SpotPanelHeader.vue'
+import SpotDetailHero from './SpotDetailHero.vue'
 
 function trail(overrides: Partial<Trail> = {}): Trail {
   return {
@@ -40,7 +41,7 @@ function trail(overrides: Partial<Trail> = {}): Trail {
   } as Trail
 }
 
-describe('SpotPanelHeader', () => {
+describe('SpotDetailHero', () => {
   let store: ReturnType<typeof useSpotPanelStore>
 
   beforeEach(() => {
@@ -61,66 +62,56 @@ describe('SpotPanelHeader', () => {
     vi.useRealTimers()
   })
 
-  it('renders the current item name as the title', () => {
-    store.currentItem = trail({ name: 'Waldkopf Trail' })
-    const wrapper = mount(SpotPanelHeader)
-    expect(wrapper.get('.spot-panel-title').text()).toBe('Waldkopf Trail')
+  it('renders the trail name as the title', () => {
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail({ name: 'Waldkopf Trail' }) } })
+    expect(wrapper.get('h1').text()).toBe('Waldkopf Trail')
   })
 
-  it('shows the org link with its href when the item has a url', () => {
-    store.currentItem = trail({ url: 'https://trailcrew.example.com' })
-    const wrapper = mount(SpotPanelHeader)
+  it('shows the org link with its href when the trail has a url', () => {
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail({ url: 'https://trailcrew.example.com' }) } })
     const link = wrapper.get('.spot-panel-org-link')
-    expect(link.classes()).not.toContain('hidden')
     expect(link.attributes('href')).toBe('https://trailcrew.example.com')
   })
 
-  it('hides the org link when the item has no url', () => {
-    store.currentItem = trail({ url: '' })
-    const wrapper = mount(SpotPanelHeader)
-    expect(wrapper.get('.spot-panel-org-link').classes()).toContain('hidden')
+  it('renders no org link when the trail has no url', () => {
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail({ url: '' }) } })
+    expect(wrapper.find('.spot-panel-org-link').exists()).toBe(false)
   })
 
   it('shows the share button for an approved spot and hides it for an unapproved one', () => {
-    store.currentItem = trail({ approved: true })
-    let wrapper = mount(SpotPanelHeader)
+    let wrapper = mount(SpotDetailHero, { props: { trail: trail({ approved: true }) } })
     expect(wrapper.get('.spot-share-btn').classes()).not.toContain('hidden')
 
-    store.currentItem = trail({ approved: false })
-    wrapper = mount(SpotPanelHeader)
+    wrapper = mount(SpotDetailHero, { props: { trail: trail({ approved: false }) } })
     expect(wrapper.get('.spot-share-btn').classes()).toContain('hidden')
   })
 
-  it('hides the like button until likeVisible is set (preserves the Info-tab-load coupling)', () => {
-    store.currentItem = trail()
+  it('hides the like button until likeVisible is set', () => {
     store.likeVisible = false
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
     expect(wrapper.get('.spot-like-btn').classes()).toContain('hidden')
   })
 
   it('shows the like button once likeVisible is true, with an outline star when not liked', () => {
-    store.currentItem = trail()
     store.likeVisible = true
     store.isLiked = false
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
     const likeBtn = wrapper.get('.spot-like-btn')
     expect(likeBtn.classes()).not.toContain('hidden')
     expect(likeBtn.find('.fa-regular.fa-star').exists()).toBe(true)
   })
 
   it('shows a filled star when liked', () => {
-    store.currentItem = trail()
     store.likeVisible = true
     store.isLiked = true
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
     expect(wrapper.get('.spot-like-btn').text()).toContain('⭐')
   })
 
   it('clicking like while signed out opens the sign-in modal instead of calling the API', async () => {
-    store.currentItem = trail()
     store.likeVisible = true
     fakeAuthStore.isLoggedIn = false
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
 
     await wrapper.get('.spot-like-btn').trigger('click')
 
@@ -129,12 +120,11 @@ describe('SpotPanelHeader', () => {
   })
 
   it('clicking like while signed in calls likeTrail and flips isLiked', async () => {
-    store.currentItem = trail()
     store.likeVisible = true
     store.isLiked = false
     fakeAuthStore.isLoggedIn = true
     vi.mocked(likeTrail).mockResolvedValue(undefined as any)
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
 
     await wrapper.get('.spot-like-btn').trigger('click')
 
@@ -143,12 +133,11 @@ describe('SpotPanelHeader', () => {
   })
 
   it('clicking like again while already liked calls dislikeTrail and flips isLiked back', async () => {
-    store.currentItem = trail()
     store.likeVisible = true
     store.isLiked = true
     fakeAuthStore.isLoggedIn = true
     vi.mocked(dislikeTrail).mockResolvedValue(undefined as any)
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
 
     await wrapper.get('.spot-like-btn').trigger('click')
 
@@ -156,23 +145,11 @@ describe('SpotPanelHeader', () => {
     expect(store.isLiked).toBe(false)
   })
 
-  it('clicking close calls store.close()', async () => {
-    store.currentItem = trail()
-    store.isOpen = true
-    const wrapper = mount(SpotPanelHeader)
-
-    await wrapper.get('.spot-panel-close').trigger('click')
-
-    expect(store.isOpen).toBe(false)
-    expect(store.currentItem).toBeNull()
-  })
-
   it('falls back to clipboard copy and shows a toast when native share is unavailable', async () => {
-    store.currentItem = trail()
     vi.stubGlobal('navigator', { share: undefined, clipboard: { writeText: vi.fn() } })
     vi.mocked(copyToClipboard).mockResolvedValue(true)
     vi.mocked(share).mockResolvedValue(undefined as any)
-    const wrapper = mount(SpotPanelHeader)
+    const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
 
     await wrapper.get('.spot-share-btn').trigger('click')
     await Promise.resolve()

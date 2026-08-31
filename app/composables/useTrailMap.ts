@@ -1,7 +1,6 @@
 import type { Ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import type { Trail } from '~/types/Trail'
-import type { MtbTour, MtbTrail } from '~/types/MtbTypes'
 import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
 import {
   DIFF_COLOR,
@@ -12,33 +11,53 @@ import { GpxRenderGuard } from '~/map/gpxRenderGuard'
 import { GPX_ZOOM_THRESHOLD } from '~/map/gpxZoomThreshold'
 import { fetchMultipleSpotGpx, fetchMultipleSpotParking, type SpotParkingLot } from '~/communication/trails'
 import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
-import { isDesktopViewport } from '~/map/spot_panel/dragHandle'
+import { isDesktopViewport } from '~/utils/viewport'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
-import { IMBA } from '~/map/spot_panel/elevationSvg'
-import { drawTrailPolylines, addSegmentLabel } from '~/map/spot_panel/spotPanelPolylines'
 import { registerBackHandler } from '~/utils/nativeBack'
+
+// Zoom level used when flying to a single spot (search result, `?trail=`
+// query param) — matches the level used for the same purpose in the
+// embedded map on app/pages/trails/[slug].vue.
+const FLY_TO_TRAIL_ZOOM = 14
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
   const filtersStore = useFiltersStore()
   const mapStore = useMapStore()
-  const spotPanelStore = useSpotPanelStore()
+  const router = useRouter()
 
   // Exposed for search bar
   const mapInstance = shallowRef<any>(null)
   const openTrailFn = ref<((id: string) => void) | null>(null)
   const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
+  // True once openTrailFn/flyToFn are actually callable — MapView.vue emits
+  // 'ready' off this instead of its own onMounted, which otherwise fires
+  // before the awaited leaflet imports/setup below reach the assignments
+  // further down. On a first-ever page load that race is invisible (the
+  // `?trail=` handler in app/pages/map.vue falls back to watching
+  // trailsStore.all, which only populates well after these are assigned),
+  // but on any later navigation back to /map — trailsStore.all is a Pinia
+  // store and stays populated across route changes — that handler takes
+  // its immediate-call branch instead, right as 'ready' fires, and would
+  // silently call a still-null openTrailFn.
+  const mapReady = ref(false)
 
-  // Hover bridge for SpotPanelElevation.vue, threaded via MapView.vue's
-  // `ready` event -> map.vue -> SpotPanel.vue. Assigned in onMounted() once
-  // the Leaflet-side hover marker closures exist, same pattern as
-  // openTrailFn/flyToFn above.
-  const elevationHoverFn = ref<((latlng: [number, number], color: string) => void) | null>(null)
-  const elevationHoverEndFn = ref<(() => void) | null>(null)
-
+  // Marker clicks do a real router.push instead of opening a panel on top
+  // of the still-live map (spot-detail-real-pages rework), so this
+  // composable can unmount mid-way through its own async setup — even
+  // before `cleanupFn` below has been assigned (e.g. a marker is clicked
+  // before the dynamic `import('leaflet')` resolves). Set directly in
+  // onUnmounted(), not only inside cleanupFn, so it's still true for that
+  // early-unmount case. Checked after every `await` inside onMounted()
+  // below so a resumed continuation never touches a Leaflet map that's
+  // already been torn down (or never even creates one).
+  let destroyed = false
   // Cleanup registered synchronously — can't call onUnmounted after await
   let cleanupFn: (() => void) | null = null
-  onUnmounted(() => cleanupFn?.())
+  onUnmounted(() => {
+    destroyed = true
+    cleanupFn?.()
+  })
 
   // Nearby conflict state (replaces DOM-based modal)
   const nearbyConflict = ref<{
@@ -51,8 +70,24 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
   function openTrail(id: string) { openTrailFn.value?.(id) }
   function flyToPlace(lat: number, lon: number) { flyToFn.value?.(lat, lon) }
-  function onElevationHover(latlng: [number, number], color: string) { elevationHoverFn.value?.(latlng, color) }
-  function onElevationHoverEnd() { elevationHoverEndFn.value?.() }
+
+  // Every "open this spot" click on the map (marker, GPX line/tooltip,
+  // parking pin) navigates away to /trails/[id] — so browser back would
+  // otherwise land on a bare /map, losing the spot the user was just
+  // looking at. router.push() always rewrites the *current* history entry
+  // from vue-router's own remembered URL before pushing the new one (see
+  // useHistoryStateNavigation in vue-router's html5 history: push() calls
+  // changeLocation(currentState.current, ...) first) — so a raw
+  // history.replaceState() here gets silently clobbered back to plain
+  // /map the moment push() runs. Awaiting router.replace() first updates
+  // vue-router's own bookkeeping (not just the visible URL), so the
+  // subsequent push() preserves /map?trail=id as the entry browser back
+  // returns to. Same route/component, query-only change, so this doesn't
+  // remount /map or re-run its one-time onMapReady() flyTo logic.
+  async function navigateToSpot(id: string, hash = '') {
+    await router.replace({ path: '/map', query: { trail: id } })
+    router.push(`/trails/${id}${hash}`)
+  }
 
   onMounted(async () => {
     if (!mapEl.value) return
@@ -60,6 +95,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Dynamic imports — all Leaflet code runs client-only
     const L = (await import('leaflet')).default
     await import('leaflet.markercluster')
+    if (destroyed) return
 
     const mymap = L.map(mapEl.value, {
       zoomControl: false,
@@ -106,147 +142,15 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       return L.divIcon(markerIconOptions(trail.type, trail.approved))
     }
 
-    // ── Spot panel — Leaflet-side state ──────────────────────────────────────
-    // Kept separate from gpxLayers/gpxSpotLines above rather than reused:
-    // those serve the GPX *overview* mode (every visible spot, cleared/
-    // rebuilt on every pan/zoom); this is for the single currently-open
-    // spot (select-highlight styling, fitBounds, tour-segment layers),
-    // independent of view mode and never torn down by renderGpxView().
-    // Merging them would couple two independently-changing rendering paths.
-    const spotOverlayLayer = L.layerGroup().addTo(mymap)
-    let spotTourLayers: L.Layer[] = []
-    const spotPolylineMap = new Map<string, L.Polyline>()
-    let spotHoverMarker: L.CircleMarker | null = null
-    let spotActiveId: string | null = null
-
-    function clearSpotTourLayers() {
-      spotTourLayers.forEach(l => mymap.removeLayer(l))
-      spotTourLayers = []
-    }
-
-    function removeSpotHoverMarker() {
-      if (spotHoverMarker) {
-        spotOverlayLayer.removeLayer(spotHoverMarker)
-        spotHoverMarker = null
-      }
-    }
-
-    function selectSpotTrail(trail: MtbTrail) {
-      // Restore individual trail view, highlight selected
-      clearSpotTourLayers()
-      spotPolylineMap.forEach((pl, id) => {
-        pl.setStyle(id === trail.id ? { weight: 6, opacity: 1 } : { weight: 2, opacity: 0.7 })
-      })
-      const pl = spotPolylineMap.get(trail.id)
-      if (pl) mymap.fitBounds(pl.getBounds(), { padding: [60, 60], maxZoom: 15, animate: true })
-      spotActiveId = trail.id
-      removeSpotHoverMarker()
-    }
-
-    function selectSpotTour(tour: MtbTour) {
-      clearSpotTourLayers()
-
-      // Collect trail IDs that are part of this tour
-      const tourTrailIds = new Set(tour.segments
-        .filter(s => s.type === 'trail' && s.trailId)
-        .map(s => s.trailId!))
-
-      // Set trail visibility: highlight tour trails, fade/dash others
-      spotPolylineMap.forEach((pl, trailId) => {
-        if (tourTrailIds.has(trailId)) {
-          pl.setStyle({ weight: 3, opacity: 0.65 })
-        } else {
-          pl.setStyle({ weight: 2, opacity: 0.65 })
-        }
-      })
-
-      const fullRoute = tour.gpxPoints.map(p => [p[0], p[1]] as [number, number])
-
-      // 1. Full route as single dark gray base line (added first = renders below)
-      if (fullRoute.length) {
-        const base = L.polyline(fullRoute, { color: '#333', weight: 5, opacity: 0.85 }).addTo(mymap)
-        spotTourLayers.push(base)
-      }
-
-      // 2. Trail segments in IMBA colors on top (added after = renders above)
-      for (const seg of tour.segments) {
-        if (seg.type !== 'trail' || !seg.difficulty) continue
-        const latlngs = seg.gpxPoints.map(p => [p[0], p[1]] as [number, number])
-        const pl = L.polyline(latlngs, { color: IMBA[seg.difficulty].hex, weight: 5, opacity: 1 }).addTo(mymap)
-        spotTourLayers.push(pl)
-        addSegmentLabel(seg, latlngs, mymap, spotTourLayers)
-      }
-
-      if (fullRoute.length)
-        mymap.fitBounds(L.latLngBounds(fullRoute), { padding: [50, 50], maxZoom: 14, animate: true })
-
-      spotActiveId = tour.id
-      removeSpotHoverMarker()
-    }
-
-    function restoreSpotPolylines() {
-      clearSpotTourLayers()
-      spotPolylineMap.forEach(pl => pl.setStyle({ weight: 3, opacity: 0.65 }))
-      spotActiveId = null
-    }
-
-    function handleElevationHover(latlng: [number, number], color: string) {
-      if (!spotHoverMarker) {
-        spotHoverMarker = L.circleMarker(latlng, {
-          radius: 7, color, weight: 2.5,
-          fillColor: '#fff', fillOpacity: 1,
-          interactive: false,
-        }).addTo(spotOverlayLayer)
-      } else {
-        spotHoverMarker.setLatLng(latlng)
-        spotHoverMarker.setStyle({ color })
-      }
-    }
-
-    elevationHoverFn.value = handleElevationHover
-    elevationHoverEndFn.value = removeSpotHoverMarker
-
-    // Draws the individual trail polylines once GPX data arrives for the
-    // currently open spot.
-    watch(() => spotPanelStore.data, (data) => {
-      if (!data) return
-      drawTrailPolylines(data, spotOverlayLayer, spotPolylineMap)
-    })
-
-    // Reacts to a tour/trail row being selected (SpotPanelToursTab.vue/
-    // SpotPanelTrailsTab.vue) or cleared (SpotPanelElevation.vue's close
-    // button, a tab switch, or a panel close).
-    watch(
-      () => [spotPanelStore.selectedItemId, spotPanelStore.selectedItemKind] as const,
-      ([id, kind]) => {
-        if (id && kind) {
-          const data = spotPanelStore.data
-          if (!data) return
-          if (kind === 'tour') {
-            const tour = data.tours.find(t => t.id === id)
-            if (tour) selectSpotTour(tour)
-          } else {
-            const trail = data.trails.find(t => t.id === id)
-            if (trail) selectSpotTrail(trail)
-          }
-        } else {
-          removeSpotHoverMarker()
-          if (spotActiveId) restoreSpotPolylines()
-        }
-      },
-    )
-
-    // Panel closed — tear down all spot-panel Leaflet layers.
-    watch(() => spotPanelStore.isOpen, (open) => {
-      if (!open) {
-        spotOverlayLayer.clearLayers()
-        clearSpotTourLayers()
-        spotPolylineMap.clear()
-        spotActiveId = null
-      }
-    })
-
     function renderMarkers() {
+      // Guards the same teardown race as GpxRenderGuard.destroy() (see its
+      // comment), for the one Leaflet-touching entry point that isn't
+      // gated by that guard: the trailsStore/filtersStore watch() below
+      // can still fire after this composable unmounts (Vue doesn't
+      // reliably tie a watcher created after an `await` inside onMounted
+      // to the component's effect scope), calling straight into here with
+      // no async gap of its own to check `destroyed` at.
+      if (destroyed) return
       // Swap cluster/plain layer without remove+re-add (re-add breaks _leaflet_pos)
       if (filtersStore.useCluster) {
         if (!mymap.hasLayer(clusterGroup)) mymap.addLayer(clusterGroup)
@@ -271,14 +175,14 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }).addTo(currentLayer() as any)
 
         marker.on('click', () => {
-          mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.0 })
-          spotPanelStore.openSpot(trail as any)
+          navigateToSpot(trail.id)
         })
       }
     }
 
     // ── GPX view — shown when zoom >= GPX_ZOOM_THRESHOLD ────────────────────
     async function renderGpxView() {
+      if (destroyed) return
       const gen = renderGuard.beginRender()
 
       // Hide marker layers while in GPX mode
@@ -332,8 +236,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       let lastTapId   = ''
 
       function openPanel(trail: Trail) {
-        spotPanelStore.openSpot(trail as any)
         tooltipEl.style.display = 'none'
+        navigateToSpot(trail.id)
       }
 
       function showTooltip(
@@ -493,7 +397,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: createCustomIcon(trail),
           }).addTo(fallbackLayer)
           marker.on('click', () => {
-            spotPanelStore.openSpot(trail as any)
+            navigateToSpot(trail.id)
           })
           continue
         }
@@ -526,7 +430,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: L.divIcon(parkingIconOptions()),
           }).addTo(mymap)
           marker.on('click', () => {
-            spotPanelStore.openParkingLot(trail as any, lot)
+            // No deep-linking to a specific lot selection (YAGNI per the
+            // spot-detail-real-pages spec) — jump straight to the spot
+            // page's Parkplätze section instead of highlighting one lot.
+            navigateToSpot(trail.id, '#parking')
           })
           parkingLayers.push(marker)
         }
@@ -552,26 +459,36 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }
     }
 
-    // Expose trail open + fly-to for search bar
+    // Expose trail open + fly-to for search bar. "Open" a trail from search
+    // or the `?trail=` query param (news-card links, etc.) now only flies
+    // the live map to its coordinates and zooms in — it stays on /map,
+    // matching the marker-click behavior of not auto-navigating away.
+    // Only an actual click on the spot's own marker (see the `marker.on
+    // ('click', ...)` handlers above) opens its detail page.
     openTrailFn.value = (id: string) => {
       const trail = trailsStore.all.find(t => t.id === id)
       if (!trail) return
-      mymap.flyTo([trail.latitude, trail.longitude], GPX_ZOOM_THRESHOLD, { duration: 1.2 })
-      spotPanelStore.openSpot(trail as any)
+      mymap.flyTo([trail.latitude, trail.longitude], FLY_TO_TRAIL_ZOOM, { duration: 1.2 })
     }
     flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
 
     // Initial location
     const { getApproxLocation } = await import('~/communication/location')
     const loc = await getApproxLocation()
+    if (destroyed) return
     if (loc.lat !== 0 || loc.lng !== 0) {
       mymap.setView([loc.lat, loc.lng], 9)
     } else {
       mymap.setView([51.163, 10.447], 6)
     }
+    // Only now is the map's own flyTo()/getCenter() safe to call (Leaflet
+    // throws "Set map center and zoom first" otherwise) — mapReady must
+    // wait for setView() above, not just for openTrailFn/flyToFn to exist.
+    mapReady.value = true
 
     // Load data and do initial render
     await trailsStore.fetchAll()
+    if (destroyed) return
     switchView()
 
     // React to filter / data changes in whichever view is active
@@ -669,7 +586,6 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     mymap.on('click', async (e: any) => {
       if (!addMode) {
-        if (spotPanelStore.isOpen) spotPanelStore.close()
         if (statusSheet.isOpen) statusSheet.close()
         return
       }
@@ -698,7 +614,6 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     let unregisterBackHandler: (() => void) | null = null
     if (Capacitor.isNativePlatform()) {
       unregisterBackHandler = registerBackHandler(() => {
-        if (spotPanelStore.isOpen) { spotPanelStore.close(); return true }
         if (statusSheet.isOpen) { statusSheet.close(); return true }
         if (addMode) { cancelAddMode(); return true }
         return false
@@ -706,11 +621,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
 
     cleanupFn = () => {
+      renderGuard.destroy()
       if (watchId !== null) navigator.geolocation.clearWatch(watchId)
       unregisterBackHandler?.()
       mymap.remove()
     }
   })
 
-  return { openTrail, flyToPlace, nearbyConflict, addSpotPicked, onElevationHover, onElevationHoverEnd }
+  return { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady }
 }

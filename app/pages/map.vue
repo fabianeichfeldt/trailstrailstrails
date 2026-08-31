@@ -37,7 +37,6 @@
         :initial-type="addSpotModal.type"
         @close="addSpotModal.open = false"
       />
-      <SpotPanel :on-hover="handleElevationHover" :on-hover-end="handleElevationHoverEnd" />
     </ClientOnly>
 
     <AuthModal />
@@ -66,23 +65,26 @@ const route = useRoute()
 
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
-let onElevationHover = (_latlng: [number, number], _color: string) => {}
-let onElevationHoverEnd = () => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
 const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
 const trailIdFromQuery = route.query.trail as string | undefined
+// "View on map" CTA (app/pages/trails/[slug].vue's bottom-cta, Decision 10
+// of the spot-detail-real-pages spec): `?fly=lat,lng` flies/centers the
+// camera on a spot without opening anything on top — replaces the old
+// `?trail=slug` panel-reopen pattern for that one CTA. `?trail=` itself
+// stays wired below for other existing entry points (search, landing-page
+// links) — openTrail() flies the map to the spot's coordinates and zooms
+// in, staying on /map; only clicking the spot's own marker navigates to
+// its detail page (see useTrailMap.ts).
+const flyToQuery = route.query.fly as string | undefined
 
 function onMapReady(handlers: {
   openTrail: (id: string) => void
   flyToPlace: (lat: number, lon: number) => void
-  onElevationHover: (latlng: [number, number], color: string) => void
-  onElevationHoverEnd: () => void
 }) {
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
-  onElevationHover = handlers.onElevationHover
-  onElevationHoverEnd = handlers.onElevationHoverEnd
 
   // Open trail from query param — only after map is ready so openTrail is the real function
   if (trailIdFromQuery) {
@@ -95,16 +97,17 @@ function onMapReady(handlers: {
       })
     }
   }
+
+  if (flyToQuery) {
+    const [latStr, lngStr] = flyToQuery.split(',')
+    const lat = parseFloat(latStr)
+    const lng = parseFloat(lngStr)
+    if (!Number.isNaN(lat) && !Number.isNaN(lng)) flyToPlace(lat, lng)
+  }
 }
 
 function handleOpenTrail(id: string) { openTrail(id) }
 function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
-// SpotPanel.vue -> SpotPanelElevation.vue's hover bridge props — thin
-// wrappers so SpotPanel always calls the CURRENT closure (onElevationHover
-// is reassigned once MapView's `ready` event fires), same pattern as
-// handleOpenTrail/handleFlyTo above.
-function handleElevationHover(latlng: [number, number], color: string) { onElevationHover(latlng, color) }
-function handleElevationHoverEnd() { onElevationHoverEnd() }
 
 function onSpotPicked(pick: { lat: number; lng: number; type: string }) {
   addSpotModal.lat = pick.lat
