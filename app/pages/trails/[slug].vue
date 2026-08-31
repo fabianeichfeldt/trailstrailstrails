@@ -96,7 +96,7 @@
               loading="lazy"
               title="Trailradar Karte"
             />
-            <NuxtLink to="/map" class="map-all-trails-btn">Alle Trails</NuxtLink>
+            <NuxtLink :to="`/map?trail=${trailForStore.id}`" class="map-all-trails-btn">Alle Trails</NuxtLink>
           </section>
         </div>
       </div>

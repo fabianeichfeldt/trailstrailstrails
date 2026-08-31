@@ -27,6 +27,16 @@ baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot
   assertNoLeaks();
 });
 
+baseTest('the "Alle Trails" map button links to /map?trail=id for a smooth fly-to', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('a.map-all-trails-btn')).toHaveAttribute('href', '/map?trail=t1');
+
+  assertNoLeaks();
+});
+
 baseTest('the jump-nav links target the page\'s own sections', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
