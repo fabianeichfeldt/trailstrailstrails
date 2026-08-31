@@ -30,6 +30,17 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const mapInstance = shallowRef<any>(null)
   const openTrailFn = ref<((id: string) => void) | null>(null)
   const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
+  // True once openTrailFn/flyToFn are actually callable — MapView.vue emits
+  // 'ready' off this instead of its own onMounted, which otherwise fires
+  // before the awaited leaflet imports/setup below reach the assignments
+  // further down. On a first-ever page load that race is invisible (the
+  // `?trail=` handler in app/pages/map.vue falls back to watching
+  // trailsStore.all, which only populates well after these are assigned),
+  // but on any later navigation back to /map — trailsStore.all is a Pinia
+  // store and stays populated across route changes — that handler takes
+  // its immediate-call branch instead, right as 'ready' fires, and would
+  // silently call a still-null openTrailFn.
+  const mapReady = ref(false)
 
   // Marker clicks do a real router.push instead of opening a panel on top
   // of the still-live map (spot-detail-real-pages rework), so this
@@ -59,6 +70,24 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
   function openTrail(id: string) { openTrailFn.value?.(id) }
   function flyToPlace(lat: number, lon: number) { flyToFn.value?.(lat, lon) }
+
+  // Every "open this spot" click on the map (marker, GPX line/tooltip,
+  // parking pin) navigates away to /trails/[id] — so browser back would
+  // otherwise land on a bare /map, losing the spot the user was just
+  // looking at. router.push() always rewrites the *current* history entry
+  // from vue-router's own remembered URL before pushing the new one (see
+  // useHistoryStateNavigation in vue-router's html5 history: push() calls
+  // changeLocation(currentState.current, ...) first) — so a raw
+  // history.replaceState() here gets silently clobbered back to plain
+  // /map the moment push() runs. Awaiting router.replace() first updates
+  // vue-router's own bookkeeping (not just the visible URL), so the
+  // subsequent push() preserves /map?trail=id as the entry browser back
+  // returns to. Same route/component, query-only change, so this doesn't
+  // remount /map or re-run its one-time onMapReady() flyTo logic.
+  async function navigateToSpot(id: string, hash = '') {
+    await router.replace({ path: '/map', query: { trail: id } })
+    router.push(`/trails/${id}${hash}`)
+  }
 
   onMounted(async () => {
     if (!mapEl.value) return
@@ -146,7 +175,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }).addTo(currentLayer() as any)
 
         marker.on('click', () => {
-          router.push(`/trails/${trail.id}`)
+          navigateToSpot(trail.id)
         })
       }
     }
@@ -208,7 +237,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
       function openPanel(trail: Trail) {
         tooltipEl.style.display = 'none'
-        router.push(`/trails/${trail.id}`)
+        navigateToSpot(trail.id)
       }
 
       function showTooltip(
@@ -368,7 +397,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: createCustomIcon(trail),
           }).addTo(fallbackLayer)
           marker.on('click', () => {
-            router.push(`/trails/${trail.id}`)
+            navigateToSpot(trail.id)
           })
           continue
         }
@@ -404,7 +433,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             // No deep-linking to a specific lot selection (YAGNI per the
             // spot-detail-real-pages spec) — jump straight to the spot
             // page's Parkplätze section instead of highlighting one lot.
-            router.push(`/trails/${trail.id}#parkplaetze`)
+            navigateToSpot(trail.id, '#parkplaetze')
           })
           parkingLayers.push(marker)
         }
@@ -452,6 +481,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     } else {
       mymap.setView([51.163, 10.447], 6)
     }
+    // Only now is the map's own flyTo()/getCenter() safe to call (Leaflet
+    // throws "Set map center and zoom first" otherwise) — mapReady must
+    // wait for setView() above, not just for openTrailFn/flyToFn to exist.
+    mapReady.value = true
 
     // Load data and do initial render
     await trailsStore.fetchAll()
@@ -595,5 +628,5 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     }
   })
 
-  return { openTrail, flyToPlace, nearbyConflict, addSpotPicked }
+  return { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady }
 }

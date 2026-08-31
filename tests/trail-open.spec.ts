@@ -213,9 +213,14 @@ test('selecting a second search result flies to it too, without ever leaving /ma
 
 // ── Marker click — the only remaining "open this spot" navigation ───────────────
 // Unlike ?trail= and search, clicking a spot's own marker still does a real
-// router.push to its detail page (useTrailMap.ts's renderMarkers()).
+// router.push to its detail page (useTrailMap.ts's renderMarkers()). Going
+// back from there lands on /map?trail=id, not a bare /map — navigateToSpot()
+// rewrites the current history entry (via router.replace, awaited so it
+// isn't clobbered by the immediately-following router.push — see its
+// comment in useTrailMap.ts) before pushing, so browser back re-enters /map
+// with the spot's own ?trail= breadcrumb and flies back to it.
 
-baseTest('clicking a trail marker navigates to its own page, and going back returns to /map', async ({ page }) => {
+baseTest('clicking a trail marker navigates to its own page, and going back returns to /map?trail=id and flies there', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   // Isolate a single marker so the click target is unambiguous.
   await page.route('**/rest/v1/trails**',    (route) => route.fulfill({ json: [MOCK_TRAILS[0]] }));
@@ -230,9 +235,15 @@ baseTest('clicking a trail marker navigates to its own page, and going back retu
   await expect(page).toHaveURL(/\/trails\/t1$/);
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
 
+  const tileUrls = trackTileRequests(page);
   await page.goBack();
 
-  await expect(page).toHaveURL(/\/map$/);
+  await expect(page).toHaveURL(/\/map\?trail=t1$/);
   await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
+  await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 14);
+  expect(flownTiles.length).toBeGreaterThan(0);
+  // t1's fixture coordinates (tests/fixtures.ts)
+  expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
   assertNoLeaks();
 });

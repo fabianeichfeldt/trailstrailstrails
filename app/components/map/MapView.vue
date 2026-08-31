@@ -18,7 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
-const { openTrail, flyToPlace, nearbyConflict, addSpotPicked } = useTrailMap(mapEl)
+const { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady } = useTrailMap(mapEl)
 
 watch(nearbyConflict, (v) => {
   if (v) emit('nearbyConflict', v)
@@ -31,8 +31,11 @@ watch(addSpotPicked, (v) => {
   }
 })
 
-onMounted(() => {
-  emit('ready', { openTrail, flyToPlace })
+// Emitted off mapReady (true once useTrailMap's openTrail/flyToPlace are
+// actually callable), not a plain onMounted — see mapReady's comment in
+// useTrailMap.ts for the race that would otherwise cause.
+watch(mapReady, (ready) => {
+  if (ready) emit('ready', { openTrail, flyToPlace })
 })
 </script>
 
