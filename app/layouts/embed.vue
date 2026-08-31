@@ -47,4 +47,13 @@ useHead({
   margin: 0;
   padding: 0;
 }
+
+/* leaflet-gesture-handling's "use ctrl+scroll"/"use two fingers" hint
+   (app/pages/embed/[token].vue) is a ::after on .leaflet-container, caught
+   by the blanket *::after reset above just like the trail-hover tooltip —
+   restore its own padding so the hint text isn't flush against the map edge. */
+.embed-layout-page .embed-root .leaflet-container.leaflet-gesture-handling-touch-warning::after,
+.embed-layout-page .embed-root .leaflet-container.leaflet-gesture-handling-scroll-warning::after {
+  padding: 15px;
+}
 </style>

@@ -22,6 +22,7 @@ import {
 } from '~/map/trailTooltip'
 import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
 import { shouldShowGpx } from '~/map/gpxZoomThreshold'
+import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css'
 
 definePageMeta({ layout: 'embed' })
 
@@ -67,6 +68,9 @@ onMounted(async () => {
   if (!mapEl.value) return
 
   const L = (await import('leaflet')).default
+  // Registers L.Map's "gestureHandling" option (side effect on L.Map, no
+  // export needed here) — see the interactive:true branch below.
+  await import('leaflet-gesture-handling')
 
   const map = L.map(mapEl.value, {
     zoomControl: interactive,
@@ -76,7 +80,15 @@ onMounted(async () => {
     touchZoom: interactive,
     boxZoom: interactive,
     keyboard: interactive,
-  })
+    // Only trailradar.org's own /trails/[slug] page opts into `interactive`
+    // (see parseEmbedQuery) — that's the one place this map sits inside a
+    // normally-scrolling page, so a stray wheel-scroll or one-finger touch
+    // over the map must not hijack the page instead of zooming/panning it.
+    // Requires ctrl/cmd+scroll to zoom and two fingers to pan on touch,
+    // showing a translated hint on the blocked gesture; third-party embeds
+    // (interactive:false) already have all of this disabled outright.
+    gestureHandling: interactive,
+  } as any)
   map.setView([lat, lng], zoom)
   map.setMaxZoom(19)
 
