@@ -1,31 +1,17 @@
 <template>
-  <div class="spot-elevation-header">
-    <span class="spot-elevation-name">{{ item?.name }}</span>
-    <div class="spot-elevation-actions">
-      <a
-        v-if="item?.gpx_url"
-        class="spot-elevation-download"
-        :href="item.gpx_url"
-        :download="`${item.name}.gpx`"
-        aria-label="GPX herunterladen"
-      ><i class="fas fa-download"></i></a>
+  <div class="spot-elevation">
+    <div class="spot-elevation-header">
       <button class="spot-elevation-close" aria-label="Höhenprofil schließen" @click="store.clearSelection()">✕</button>
     </div>
+    <div ref="chartEl" class="spot-elevation-chart" v-html="elevationSvgHtml"></div>
+    <div ref="statusEl" class="spot-elevation-status"></div>
   </div>
-  <div ref="chartEl" class="spot-elevation-chart" v-html="elevationSvgHtml"></div>
-  <div v-if="item" class="spot-elevation-stats">
-    <span>📍 {{ item.distance_km }} km</span>
-    <span>↑ {{ item.elevation_gain }} m</span>
-    <span>↓ {{ item.elevation_loss }} m</span>
-    <span>{{ DIR_LABEL[item.direction] }}</span>
-  </div>
-  <div ref="statusEl" class="spot-elevation-status"></div>
 </template>
 
 <script setup lang="ts">
 import type { MtbTour, TourSegment } from '~/types/MtbTypes'
 import { elevationSVG, bindElevationHover, type AnyItem } from '~/map/spot_panel/elevationSvg'
-import { DIR_LABEL, trailStatusCardFor } from '~/map/spot_panel/spotPanelHtml'
+import { trailStatusCardFor } from '~/map/spot_panel/spotPanelHtml'
 
 // onHover/onHoverEnd are callback props, not store state — kept that way
 // even though the routed spot-detail page (app/pages/trails/[slug].vue)

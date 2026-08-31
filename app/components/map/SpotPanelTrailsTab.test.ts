@@ -36,18 +36,17 @@ describe('SpotPanelTrailsTab', () => {
     expect(wrapper.text()).toContain('Keine Trails')
   })
 
-  it('renders the trail name, difficulty, GPX link, direction and stats', () => {
+  it('renders the trail name, difficulty, GPX link and stats', () => {
     store.data = spotData([baseTrail({
       id: 't1', name: 'Flowtrail', gpx_url: 'https://example.com/t1.gpx',
       distance_km: 4.2, elevation_gain: 150, elevation_loss: 600, direction: 'one-way-down',
     })])
     const wrapper = mount(SpotPanelTrailsTab)
     expect(wrapper.text()).toContain('Flowtrail')
-    expect(wrapper.text()).toContain('4.2 km')
-    // Direction is shown as an icon-only glyph (§Phase 2 list-density), with
-    // the full German label kept as the accessible/tooltip title.
-    expect(wrapper.get('.direction-tag').text()).toBe('⤵')
-    expect(wrapper.get('.direction-tag').attributes('title')).toBe('⤵ Nur bergab')
+    // Distance is always shown in meters, not km.
+    expect(wrapper.text()).toContain('4200 m')
+    // The per-trail direction glyph was dropped as visual noise.
+    expect(wrapper.find('.direction-tag').exists()).toBe(false)
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')
   })
 

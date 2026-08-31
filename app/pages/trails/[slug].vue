@@ -540,7 +540,12 @@ useHead({
     align-items: start;
     gap: 1.4em;
   }
-  .explore-list { grid-area: list; }
+  /* Grid tracks default to a min-width based on their content's min-content
+     size, not the fr fraction — the list's nowrap stat/name spans were
+     inflating this column past its 1fr share and squeezing the map column
+     narrower than intended. min-width: 0 lets the fr ratio actually apply;
+     long content wraps instead of forcing the track wider. */
+  .explore-list { grid-area: list; min-width: 0; }
   .explore-map {
     grid-area: map;
     position: sticky;

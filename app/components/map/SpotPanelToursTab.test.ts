@@ -52,7 +52,7 @@ describe('SpotPanelToursTab', () => {
     const wrapper = mount(SpotPanelToursTab)
     expect(wrapper.text()).toContain('Alpencross')
     expect(wrapper.text()).toContain('3 Trails · 90 min')
-    expect(wrapper.text()).toContain('12.5 km')
+    expect(wrapper.text()).toContain('12500 m')
     expect(wrapper.get('.spot-item-dl').attributes('href')).toBe('https://example.com/t1.gpx')
   })
 
