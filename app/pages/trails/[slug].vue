@@ -151,7 +151,7 @@ import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
 import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
-import { getTrailDetails } from '~/communication/trails'
+import { getTrailById, getTrailDetails } from '~/communication/trails'
 import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
 
@@ -174,7 +174,7 @@ const isRegion = !!region
 const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}`, async () => {
   if (isRegion) return null
   try {
-    return await $fetch<Record<string, any>>(`/api/trail/${slug}`)
+    return await getTrailById(slug)
   } catch {
     return null
   }
@@ -194,12 +194,13 @@ const otherRegions = computed(() =>
 )
 
 // ── Spot-detail data orchestration ──────────────────────────────────────
-// `trailForStore` re-shapes the SSG-baked JSON (base trail fields + the
-// trail_details row + type + photos — see server/api/trail/[id].get.ts)
-// into the Trail-shaped object the (repurposed) spotPanel store and the new
-// section components expect. `bakedDetails` seeds `details` below so the
-// description/rules/photos/opening-hours sections render immediately from
-// the prerendered payload — see app/utils/bakedTrailDetails.ts.
+// `trailForStore` re-shapes the fetched JSON (base trail fields + the
+// trail_details row + type + photos — see getTrailById in
+// ~/communication/trails.ts) into the Trail-shaped object the (repurposed)
+// spotPanel store and the new section components expect. `bakedDetails`
+// seeds `details` below so the description/rules/photos/opening-hours
+// sections render immediately from the SSR-fetched payload — see
+// app/utils/bakedTrailDetails.ts.
 const trailForStore = computed<Trail | null>(() => (!isRegion && trail.value) ? (trail.value as unknown as Trail) : null)
 const bakedDetails = computed(() => bakedTrailDetails(trail.value))
 

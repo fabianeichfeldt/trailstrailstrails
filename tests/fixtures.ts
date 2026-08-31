@@ -118,13 +118,6 @@ export async function applySafetyNet(page: Page): Promise<() => void> {
 export async function setupApiMocks(page: Page) {
   // Nuxt server API routes
   await page.route('**/api/activity',              (route) => route.fulfill({ json: MOCK_ACTIVITY }));
-  await page.route('**/api/trail/**',              (route) => {
-    const url = route.request().url()
-    const id  = url.split('/api/trail/')[1]?.split('?')[0]
-    const all = [...MOCK_TRAILS, ...MOCK_BIKEPARKS, ...MOCK_DIRTPARKS]
-    const found = all.find(t => t.id === id) ?? null
-    route.fulfill({ json: found, status: found ? 200 : 404 })
-  });
   // Supabase REST API
   await page.route('**/rest/v1/trails**',          (route) => route.fulfill({ json: MOCK_TRAILS }));
   await page.route('**/rest/v1/parks**',            (route) => route.fulfill({ json: MOCK_BIKEPARKS }));

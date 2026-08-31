@@ -57,6 +57,49 @@ export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
   ]
 }
 
+// Fetches a single spot's full detail payload directly from Supabase REST —
+// replaces the former server/api/trail/[id].get.ts. That route only worked
+// in production if the nuxt generate prerender crawl happened to bake it
+// for this exact id at build time (see "No live Nitro server in production"
+// in CLAUDE.md); any trail created/changed after the last deploy 404'd,
+// which trails/[slug].vue's onMounted refetch then silently turned into a
+// "Nicht gefunden" page. A direct REST call works identically at SSR/build
+// time and in the browser afterwards, with no staleness window.
+export async function getTrailById(id: string): Promise<Record<string, any> | null> {
+  const [trailsRes, parksRes, dirtRes, detailsRes, photosRes] = await Promise.all([
+    fetch(`${REST}/trails?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+  ])
+
+  const [trails, parks, dirtParks, details, photos] = await Promise.all([
+    trailsRes.ok ? trailsRes.json() : [],
+    parksRes.ok ? parksRes.json() : [],
+    dirtRes.ok ? dirtRes.json() : [],
+    detailsRes.ok ? detailsRes.json() : [],
+    photosRes.ok ? photosRes.json() : [],
+  ])
+
+  // REST filters (?id=eq.<id>) already narrow real Supabase responses to at
+  // most one row — the .find() is only load-bearing against test mocks that
+  // fulfill these routes with the full unfiltered fixture array.
+  let base: Record<string, any> | undefined
+  let type: Trail['type'] = 'trail'
+  if ((base = (trails as Array<Record<string, any>>).find(t => t.id === id))) {
+    type = 'trail'
+  } else if ((base = (parks as Array<Record<string, any>>).find(t => t.id === id))) {
+    type = 'bikepark'
+  } else if ((base = (dirtParks as Array<Record<string, any>>).find(t => t.id === id))) {
+    type = 'dirtpark'
+  }
+  if (!base) return null
+
+  const detail = (details as Array<Record<string, any>>).find(d => d.trail_id === id)
+  return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
+}
+
 export interface PhotoResponse {
   url: string
   created_at: string
