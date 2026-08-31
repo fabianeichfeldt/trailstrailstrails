@@ -33,7 +33,7 @@ describe('SpotPanelTrailsTab', () => {
   it('shows an empty-state message when there is no data', () => {
     const wrapper = mount(SpotPanelTrailsTab)
     expect(wrapper.find('.spot-empty').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Keine Trails')
+    expect(wrapper.text()).toContain('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.')
   })
 
   it('renders the trail name, difficulty, GPX link and stats', () => {

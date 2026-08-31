@@ -35,7 +35,7 @@ describe('SpotPanelToursTab', () => {
   it('shows an empty-state message when there is no data', () => {
     const wrapper = mount(SpotPanelToursTab)
     expect(wrapper.find('.spot-empty').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Keine Touren')
+    expect(wrapper.text()).toContain('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.')
   })
 
   it('shows an empty-state message when the spot has no tours', () => {

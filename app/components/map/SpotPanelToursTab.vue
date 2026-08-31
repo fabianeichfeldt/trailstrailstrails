@@ -1,5 +1,5 @@
 <template>
-  <p v-if="!tours.length" class="spot-empty">Keine Touren für diesen Spot.</p>
+  <SpotPanelGpxMissingNotice v-if="!tours.length" />
   <template v-else>
     <template v-for="t in tours" :key="t.id">
       <div
@@ -60,6 +60,7 @@ import type { ImbaColor, MtbTour } from '~/types/MtbTypes'
 import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { formatDistance } from '~/utils/formatDistance'
 import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
+import SpotPanelGpxMissingNotice from '~/components/map/SpotPanelGpxMissingNotice.vue'
 
 // Row selection writes straight to the store; useTrailMap.ts watches
 // selectedItemId/selectedItemKind to drive Leaflet polyline/tour-segment

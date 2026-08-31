@@ -88,8 +88,8 @@ baseTest('the Touren/Trails sections show the empty-state message for a spot wit
   await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
   await openTrailPage(page);
 
-  await expect(page.locator('#touren')).toContainText('Keine Touren für diesen Spot.');
-  await expect(page.locator('#trails')).toContainText('Keine Trails für diesen Spot.');
+  await expect(page.locator('#touren')).toContainText('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.');
+  await expect(page.locator('#trails')).toContainText('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.');
   assertNoLeaks();
 });
 

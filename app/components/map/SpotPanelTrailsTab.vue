@@ -1,5 +1,5 @@
 <template>
-  <p v-if="!trails.length" class="spot-empty">Keine Trails für diesen Spot.</p>
+  <SpotPanelGpxMissingNotice v-if="!trails.length" />
   <template v-else>
     <template v-for="t in trails" :key="t.id">
       <div
@@ -58,6 +58,7 @@ import { IMBA } from '~/map/spot_panel/elevationSvg'
 import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
 import { formatDistance } from '~/utils/formatDistance'
 import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
+import SpotPanelGpxMissingNotice from '~/components/map/SpotPanelGpxMissingNotice.vue'
 
 // Elevation-hover-highlights-map-marker is dropped on the routed spot-detail
 // page (app/pages/trails/[slug].vue) — there's no live interactive map here
