@@ -27,7 +27,7 @@ baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot
   assertNoLeaks();
 });
 
-baseTest('the "Alle Trails" map button links to /map?trail=id for a smooth fly-to', async ({ page }) => {
+baseTest('the "Trailradar Karte" map button links to /map?trail=id for a smooth fly-to', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
