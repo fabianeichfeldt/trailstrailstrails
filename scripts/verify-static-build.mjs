@@ -1,19 +1,21 @@
 #!/usr/bin/env node
-// Builds the site exactly as production does (`nuxt generate`) and verifies
-// a real trail page renders correctly served as pure static files — no live
-// Nitro server, matching the actual production configuration (GitHub Pages +
-// Cloudflare Worker). Catches the class of bug where a page depends on
-// something (like a server/api route) that only works with a live server:
-// see CLAUDE.md's "No live Nitro server in production" and the
+// Verifies a real trail page renders correctly served as pure static files —
+// no live Nitro server, matching the actual production configuration
+// (GitHub Pages + Cloudflare Worker). Catches the class of bug where a page
+// depends on something (like a server/api route) that only works with a
+// live server: see CLAUDE.md's "No live Nitro server in production" and the
 // app/architecture.test.ts "No dynamic server/api routes" test, both added
 // after this exact failure mode broke production once already.
 //
-// NOT part of `npm test` or CI on every commit: needs real Supabase
-// credentials (.env.local) and takes a few minutes for a full build. Run it
-// manually before/after changes to how trail/spot data is fetched, or
-// before a production deploy of such a change.
+// Runs in CI as part of the `build` job in .github/workflows/deploy.yml,
+// right after `nuxt generate` and before the static output is uploaded for
+// deploy — a failure here blocks the deploy. Needs real Supabase credentials
+// (committed .env.local — the anon key is meant to be public, see CLAUDE.md's
+// Supabase rules) to find a real, actually-prerendered trail id to check.
 //
-// Usage: node scripts/verify-static-build.mjs
+// Usage:
+//   node scripts/verify-static-build.mjs               # build then verify (local, one-shot)
+//   node scripts/verify-static-build.mjs --skip-build   # verify an already-built .output/public (CI)
 
 import { spawn, spawnSync } from 'node:child_process'
 import { readdirSync, rmSync, existsSync } from 'node:fs'
@@ -22,6 +24,7 @@ import { setTimeout as sleep } from 'node:timers/promises'
 
 const PORT = 4173
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
+const skipBuild = process.argv.includes('--skip-build')
 
 function run(cmd, args) {
   const result = spawnSync(cmd, args, { cwd: ROOT, stdio: 'inherit' })
@@ -31,8 +34,10 @@ function run(cmd, args) {
   }
 }
 
-console.log('→ Building static site (nuxt generate)...')
-run('npm', ['run', 'generate'])
+if (!skipBuild) {
+  console.log('→ Building static site (nuxt generate)...')
+  run('npm', ['run', 'generate'])
+}
 
 const trailsDir = `${ROOT}.output/public/trails`
 const ids = existsSync(trailsDir) ? readdirSync(trailsDir).filter(f => !f.includes('.')) : []
@@ -65,6 +70,8 @@ try {
   }
 } finally {
   server.kill()
-  rmSync(`${ROOT}.output`, { recursive: true, force: true })
+  // Only clean up .output when this script built it itself (local, one-shot
+  // usage) — in CI it must survive for the upload-pages-artifact step.
+  if (!skipBuild) rmSync(`${ROOT}.output`, { recursive: true, force: true })
 }
 process.exit(exitCode)

@@ -169,7 +169,7 @@ else { ... }
 | `npm test` | unit tests incl. architecture invariant tests |
 | `npm run lint:arch` | Import boundary enforcement via dependency-cruiser |
 | `npm run test:e2e` | Playwright tests covering map, auth, add-spot, search, filters |
-| `npm run verify:static-build` | Real `nuxt generate` build, served as pure static files (no live Nitro), checks a real trail page actually renders — not part of `npm test`/CI (needs real Supabase creds, takes minutes); run manually before/after changes to trail/spot data fetching or before deploying one |
+| `npm run verify:static-build` | Real `nuxt generate` build, served as pure static files (no live Nitro), checks a real trail page actually renders. Runs in CI as a step in the `build` job (`.github/workflows/deploy.yml`), right after `generate` and before the deploy artifact is uploaded — a failure blocks the deploy. Not part of `npm test` (needs real Supabase creds, takes minutes) — run it manually too before/after changes to trail/spot data fetching |
 
 **Test locations:**
 - Unit tests: `app/**/*.test.ts` (picked up by vitest automatically)
