@@ -5,9 +5,10 @@ import { expect, setupAllMocks } from './fixtures';
 // the routed spot-detail page (app/pages/trails/[slug].vue). Rewritten for
 // the spot-detail-real-pages rework: Touren/Trails are always-visible
 // sections (not switched-to tabs — see SpotDetailNav.vue), and the
-// elevation view is a separate component mounted inline right under
-// whichever section has an active selection (v-if on
-// selectedItemKind), not a CSS-toggled overlay inside a fixed panel shell.
+// elevation view is mounted inline directly after whichever row is
+// selected (SpotPanelTrailsTab.vue/SpotPanelToursTab.vue each render it
+// inside their own v-for, right after the matching row) — not after the
+// whole list, and not a CSS-toggled overlay inside a fixed panel shell.
 // Sheet-mechanics coverage this file used to carry (drag-to-snap, tap-to-
 // cycle peek/half/full, the mobile drill-in height check) is dropped
 // entirely — that behavior belonged to SpotPanel.vue's bottom-sheet, which
@@ -92,7 +93,7 @@ baseTest('the Touren/Trails sections show the empty-state message for a spot wit
   assertNoLeaks();
 });
 
-baseTest('clicking a trail row shows the elevation panel with stats, direction and a GPX link, and marks the row active', async ({ page }) => {
+baseTest('clicking a trail row shows the elevation panel with a chart, and marks the row active', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await mockGpxData(page);
   await openTrailPage(page);
@@ -101,18 +102,59 @@ baseTest('clicking a trail row shows the elevation panel with stats, direction a
   await row.click();
 
   await expect(row).toHaveClass(/active/);
-  await expect(page.locator('#trails .spot-elevation-name')).toHaveText('Talabfahrt');
-  const stats = page.locator('#trails .spot-elevation-stats');
-  await expect(stats).toContainText('3.2 km');
-  await expect(stats).toContainText('50 m');
-  await expect(stats).toContainText('420 m');
-  await expect(stats).toContainText('Nur bergab');
-  await expect(page.locator('#trails .spot-elevation-download')).toHaveAttribute('href', 'https://example.com/gt1.gpx');
   await expect(page.locator('#trails .spot-elevation-chart svg')).toBeVisible();
+  // Distance/elevation/direction stats and the redundant GPX download button
+  // (the row itself already has one) were dropped from this panel as noise.
+  await expect(page.locator('#trails .spot-elevation-stats')).toHaveCount(0);
+  await expect(page.locator('#trails .spot-elevation-download')).toHaveCount(0);
   assertNoLeaks();
 });
 
-baseTest('clicking a tour row shows the elevation panel with the tour\'s own stats', async ({ page }) => {
+baseTest('clicking a trail row inserts the elevation panel directly after that row, not at the end of the list', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await mockGpxData(page);
+  await openTrailPage(page);
+
+  await page.locator('#trails .spot-item[data-id="gt1"]').click();
+
+  const children = page.locator('#trails > *');
+  await expect(children.nth(1)).toHaveAttribute('data-id', 'gt1');
+  await expect(children.nth(2)).toHaveClass(/spot-elevation/);
+  await expect(children.nth(3)).toHaveAttribute('data-id', 'gt2');
+  assertNoLeaks();
+});
+
+baseTest('clicking a trail row flies the embedded map to that trail\'s midpoint at zoom 14, without reloading the iframe', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await mockGpxData(page);
+  await openTrailPage(page);
+
+  const iframeEl = page.locator('iframe.trail-map');
+  const srcBefore = await iframeEl.getAttribute('src');
+
+  // Listen for the raw postMessage inside the iframe's own window — this
+  // is the contract between the parent page and app/pages/embed/[token].vue,
+  // independent of whether the embed's own data fetch succeeds. Locator's
+  // own contentFrame() returns a FrameLocator (no evaluate()) — the actual
+  // Frame, which does, comes from the underlying ElementHandle instead.
+  const frame = await (await iframeEl.elementHandle())!.contentFrame();
+  const messagePromise = frame!.evaluate(() => new Promise((resolve) => {
+    window.addEventListener('message', (e) => resolve(e.data), { once: true });
+  }));
+
+  await page.locator('#trails .spot-item[data-id="gt1"]').click();
+
+  // gt1's gpx_points run from [47.710, 11.760] to [47.716, 11.766] — the
+  // midpoint of start and end, not a centroid of every point.
+  await expect(messagePromise).resolves.toEqual({ type: 'trailradar:flyTo', lat: 47.713, lng: 11.763, zoom: 14 });
+
+  // The iframe itself never reloaded — src is unchanged (flyTo happens via
+  // the message above, not by swapping the iframe's src).
+  await expect(iframeEl).toHaveAttribute('src', srcBefore!);
+  assertNoLeaks();
+});
+
+baseTest('clicking a tour row shows the elevation panel with a chart', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await mockGpxData(page);
   await openTrailPage(page);
@@ -121,11 +163,6 @@ baseTest('clicking a tour row shows the elevation panel with the tour\'s own sta
   await row.click();
 
   await expect(row).toHaveClass(/active/);
-  await expect(page.locator('#touren .spot-elevation-name')).toHaveText('Rundtour');
-  const stats = page.locator('#touren .spot-elevation-stats');
-  await expect(stats).toContainText('5.5 km');
-  await expect(stats).toContainText('80 m');
-  await expect(stats).toContainText('720 m');
   await expect(page.locator('#touren .spot-elevation-chart svg')).toBeVisible();
   assertNoLeaks();
 });
@@ -154,10 +191,10 @@ baseTest('closing the elevation panel hides it and clears the active row', async
 
   const row = page.locator('#trails .spot-item[data-id="gt1"]');
   await row.click();
-  await expect(page.locator('#trails .spot-elevation-name')).toBeVisible();
+  await expect(page.locator('#trails .spot-elevation')).toBeVisible();
 
   await page.locator('#trails .spot-elevation-close').click();
-  await expect(page.locator('#trails .spot-elevation-name')).toHaveCount(0);
+  await expect(page.locator('#trails .spot-elevation')).toHaveCount(0);
   await expect(row).not.toHaveClass(/active/);
   assertNoLeaks();
 });
@@ -168,10 +205,14 @@ baseTest('selecting a different trail row switches the elevation panel to it', a
   await openTrailPage(page);
 
   await page.locator('#trails .spot-item[data-id="gt1"]').click();
-  await expect(page.locator('#trails .spot-elevation-name')).toHaveText('Talabfahrt');
+  await expect(page.locator('#trails .spot-elevation')).toHaveCount(1);
 
   await page.locator('#trails .spot-item[data-id="gt2"]').click();
-  await expect(page.locator('#trails .spot-elevation-name')).toHaveText('Gesperrter Trail');
+  // Only one panel at a time, and it now sits after gt2 (the last row),
+  // not after gt1 any more.
+  await expect(page.locator('#trails .spot-elevation')).toHaveCount(1);
+  const children = page.locator('#trails > *');
+  await expect(children.last()).toHaveClass(/spot-elevation/);
   await expect(page.locator('#trails .spot-item[data-id="gt1"]')).not.toHaveClass(/active/);
   await expect(page.locator('#trails .spot-item[data-id="gt2"]')).toHaveClass(/active/);
   assertNoLeaks();
@@ -193,7 +234,7 @@ baseTest('hovering over the elevation chart does not throw and the chart stays i
   // is intentionally dropped on this page (no live map to target, see the
   // spec's "Known behavior changes"); only the SVG scrubber itself is
   // asserted here.
-  await expect(page.locator('#trails .spot-elevation-name')).toBeVisible();
+  await expect(page.locator('#trails .spot-elevation')).toBeVisible();
   assertNoLeaks();
 });
 
@@ -211,7 +252,6 @@ baseTest('Touren/Trails sections and the elevation panel render correctly on a s
   // (.spot-item-dl, which stops propagation) instead of selecting the row.
   await row.locator('strong').click();
 
-  await expect(page.locator('#trails .spot-elevation-name')).toBeVisible();
-  await expect(page.locator('#trails .spot-elevation-name')).toHaveText('Talabfahrt');
+  await expect(page.locator('#trails .spot-elevation-chart svg')).toBeVisible();
   assertNoLeaks();
 });

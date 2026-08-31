@@ -67,26 +67,16 @@
           <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
             <h2>Touren</h2>
             <SpotPanelToursTab />
-            <SpotPanelElevation
-              v-if="spotPanelStore.selectedItemKind === 'tour'"
-              :on-hover="noop"
-              :on-hover-end="noop"
-            />
           </section>
 
           <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
             <h2>Trails</h2>
             <SpotPanelTrailsTab />
-            <SpotPanelElevation
-              v-if="spotPanelStore.selectedItemKind === 'trail'"
-              :on-hover="noop"
-              :on-hover-end="noop"
-            />
           </section>
 
           <section v-if="spotPanelStore.parkingLots.length" id="parkplaetze" class="content-section card">
             <h2>Parkplätze</h2>
-            <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" />
+            <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" @fly-to="onParkingFlyTo" />
           </section>
         </div>
 
@@ -99,6 +89,7 @@
           <section class="map-section content-section">
             <iframe
               v-if="embedSrc"
+              ref="mapIframeEl"
               :src="embedSrc"
               class="trail-map"
               frameborder="0"
@@ -156,7 +147,6 @@ import SpotDetailVideo from '~/components/trail_detail/SpotDetailVideo.vue'
 import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
 import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
-import SpotPanelElevation from '~/components/map/SpotPanelElevation.vue'
 import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
@@ -187,14 +177,6 @@ const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}
   } catch {
     return null
   }
-})
-
-// interactive=1: unlike third-party embeds, this is trailradar.org's own
-// page for this exact spot, so panning/zooming the map here can't hijack a
-// host page's scroll the way a third-party iframe embed could.
-const embedSrc = computed(() => {
-  if (!trail.value) return ''
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
 })
 
 const regionEmbedSrc = computed(() => {
@@ -234,11 +216,59 @@ const spotPanelStore = useSpotPanelStore()
 const authStore = useAuthStore()
 const supabaseUser = useSupabaseUser()
 
-// Elevation-hover-highlights-map-marker is dropped on this page — there's
-// no live interactive map here to target, only the read-only embed iframe
-// (see the spec's "Known behavior changes"). The tour-segment SVG coloring
-// remains as the visual aid that stays.
-function noop() {}
+// interactive=1: unlike third-party embeds, this is trailradar.org's own
+// page for this exact spot, so panning/zooming the map here can't hijack a
+// host page's scroll the way a third-party iframe embed could.
+const embedSrc = computed(() => {
+  if (!trail.value) return ''
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
+})
+
+// Clicking a Touren/Trails row (SpotPanelTrailsTab.vue/SpotPanelToursTab.vue)
+// flies the embedded map to that trail instead of the spot's own marker.
+// Center point: midpoint of the GPX track's start and end (not a centroid
+// of every point) — a cheap, good-enough proxy for "where this trail is".
+const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
+  const { selectedItemId, selectedItemKind, data } = spotPanelStore
+  if (!selectedItemId || !selectedItemKind || !data) return null
+  const list = selectedItemKind === 'trail' ? data.trails : data.tours
+  const item = list.find(i => i.id === selectedItemId)
+  const points = item?.gpxPoints
+  if (!points?.length) return null
+  const [startLat, startLng] = points[0]
+  const [endLat, endLng] = points[points.length - 1]
+  return { lat: (startLat + endLat) / 2, lng: (startLng + endLng) / 2 }
+})
+
+// Reloading the iframe's `src` on every row click would work but reload the
+// whole map (tile flash, lost pan/zoom state) — jarring compared to the
+// live map's flyTo(). Posting a message instead lets the embed page's own
+// Leaflet instance animate to the new view without a reload; see the
+// `message` listener in app/pages/embed/[token].vue. Same-origin postMessage
+// only (EMBED_BASE is a relative, same-origin path), so window.location.origin
+// is a safe target.
+const mapIframeEl = ref<HTMLIFrameElement | null>(null)
+const FLY_TO_TRAIL_ZOOM = 14
+
+function flyMapTo(lat: number, lng: number, zoom: number) {
+  const win = mapIframeEl.value?.contentWindow
+  if (!win) return
+  win.postMessage({ type: 'trailradar:flyTo', lat, lng, zoom }, window.location.origin)
+}
+
+watch(selectedItemFocus, (focus) => {
+  if (focus) {
+    flyMapTo(focus.lat, focus.lng, FLY_TO_TRAIL_ZOOM)
+  } else if (trailForStore.value) {
+    flyMapTo(trailForStore.value.latitude, trailForStore.value.longitude, 11)
+  }
+})
+
+// Clicking a Parkplätze row (SpotPanelParkingTab.vue) flies the embedded
+// map to that lot, same as clicking a Touren/Trails row.
+function onParkingFlyTo(lat: number, lng: number) {
+  flyMapTo(lat, lng, FLY_TO_TRAIL_ZOOM)
+}
 
 // `details` (trail_details row: status/rules/description/photos/videos/
 // likes) is owned here rather than by any single section component, since

@@ -80,6 +80,23 @@ onMounted(async () => {
   map.setView([lat, lng], zoom)
   map.setMaxZoom(19)
 
+  // Lets the parent page (app/pages/trails/[slug].vue) fly the map to a
+  // trail/tour without reloading this iframe — reloading on every row click
+  // flashes the tiles and loses pan/zoom state, unlike the live map's
+  // flyTo(). Same-origin only: this embed is always loaded from a relative,
+  // same-origin URL (EMBED_BASE in the caller), so requiring
+  // event.source === window.parent is enough to reject any other frame.
+  function onFlyToMessage(event: MessageEvent) {
+    if (event.source !== window.parent) return
+    const data = event.data
+    if (!data || data.type !== 'trailradar:flyTo') return
+    const { lat: flyLat, lng: flyLng, zoom: flyZoom } = data
+    if (typeof flyLat !== 'number' || typeof flyLng !== 'number') return
+    map.flyTo([flyLat, flyLng], typeof flyZoom === 'number' ? flyZoom : map.getZoom(), { duration: 1 })
+  }
+  window.addEventListener('message', onFlyToMessage)
+  onUnmounted(() => window.removeEventListener('message', onFlyToMessage))
+
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -157,7 +174,7 @@ onMounted(async () => {
         const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
         addPolylineWithTooltip(
           latlngs,
-          { color: '#555', weight: 3, opacity: 0.6, dashArray: '8, 6' },
+          { color: '#555', weight: 5, opacity: 0.6, dashArray: '8, 6' },
           t.name, null, t.gpx_points, appUrl,
         )
       }
@@ -166,7 +183,7 @@ onMounted(async () => {
         const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
         addPolylineWithTooltip(
           latlngs,
-          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 4, opacity: 0.85 },
+          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 6, opacity: 0.85 },
           t.name, t.difficulty, t.gpx_points, appUrl,
         )
       }

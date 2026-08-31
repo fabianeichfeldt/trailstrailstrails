@@ -60,4 +60,18 @@ describe('SpotPanelParkingTab', () => {
     const wrapper = mount(SpotPanelParkingTab, { props: { lots } })
     expect(wrapper.get('[data-id="p1"]').classes()).not.toContain('active')
   })
+
+  it('clicking a lot emits flyTo with its coordinates and marks it active', async () => {
+    const lots: SpotParkingLot[] = [
+      { id: 'p1', name: 'Lot A', lat: 47.71, lng: 11.76 },
+      { id: 'p2', name: 'Lot B', lat: 47.72, lng: 11.77 },
+    ]
+    const wrapper = mount(SpotPanelParkingTab, { props: { lots } })
+
+    await wrapper.get('[data-id="p2"]').trigger('click')
+
+    expect(wrapper.emitted('flyTo')).toEqual([[47.72, 11.77]])
+    expect(wrapper.get('[data-id="p1"]').classes()).not.toContain('active')
+    expect(wrapper.get('[data-id="p2"]').classes()).toContain('active')
+  })
 })
