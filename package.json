@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "verify:static-build": "node scripts/verify-static-build.mjs",
     "lint:arch": "depcruise --config .dependency-cruiser.cjs app"
   },
   "repository": {
@@ -33,6 +34,7 @@
     "@vue/test-utils": "^2.4.11",
     "dependency-cruiser": "^18.2.0",
     "happy-dom": "^20.9.0",
+    "serve": "^14.2.6",
     "supabase": "^2.98.2",
     "typescript": "^6.0.3",
     "vite-svg-loader": "^5.1.1",
