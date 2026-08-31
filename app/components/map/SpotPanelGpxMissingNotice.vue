@@ -18,7 +18,8 @@
   margin-bottom: 0;
 }
 .spot-empty-gpx-missing a {
-  color: inherit;
+  color: #1a2035;
+  font-weight: 700;
   text-decoration: underline;
 }
 </style>
