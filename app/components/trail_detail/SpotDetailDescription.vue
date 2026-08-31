@@ -10,17 +10,15 @@
     </div>
 
     <!-- Dirtpark badges -->
-    <div v-if="trail && isDirtPark(trail)" class="popup-section">
-      <div class="multi-select">
-        <label class="multi-option">
-          <input type="checkbox" :checked="trail.pumptrack" disabled />
-          <span class="multi-btn">{{ trail.pumptrack ? '✅' : '❌' }} Pumptrack</span>
-        </label>
-        <label class="multi-option">
-          <input type="checkbox" :checked="trail.dirtpark" disabled />
-          <span class="multi-btn">{{ trail.dirtpark ? '✅' : '❌' }} Dirtpark</span>
-        </label>
-      </div>
+    <div v-if="trail && isDirtPark(trail)" class="popup-section feature-badges">
+      <span class="feature-badge" :class="trail.pumptrack ? 'feature-badge-yes' : 'feature-badge-no'">
+        <i class="fa-solid" :class="trail.pumptrack ? 'fa-circle-check' : 'fa-circle-minus'"></i>
+        Pumptrack
+      </span>
+      <span class="feature-badge" :class="trail.dirtpark ? 'feature-badge-yes' : 'feature-badge-no'">
+        <i class="fa-solid" :class="trail.dirtpark ? 'fa-circle-check' : 'fa-circle-minus'"></i>
+        Dirtpark
+      </span>
     </div>
 
     <!-- Opening hours -->
@@ -97,6 +95,31 @@ function onReportError() {
 </script>
 
 <style scoped>
+.feature-badges {
+  display: flex;
+  gap: 0.5em;
+  flex-wrap: wrap;
+}
+.feature-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.4em 0.9em;
+  border-radius: 999px;
+  font-size: 0.82em;
+  font-weight: 600;
+}
+.feature-badge-yes {
+  background: #f0faf5;
+  color: #1b7a4a;
+}
+.feature-badge-yes i { color: #2a9d5c; }
+.feature-badge-no {
+  background: #f4f5f7;
+  color: #8a96a8;
+}
+.feature-badge-no i { color: #c3cad4; }
+
 .spot-detail-block {
   margin: 1.2em 0;
 }

@@ -72,6 +72,26 @@ describe('SpotDetailDescription', () => {
     expect(downVote).toHaveBeenCalledWith('t1', expect.any(HTMLElement))
   })
 
+  it('shows feature badges for a dirtpark, styled by whether each amenity is present', () => {
+    const wrapper = mount(SpotDetailDescription, {
+      props: {
+        trail: trail({ type: 'dirtpark', pumptrack: true, dirtpark: false } as Partial<Trail>),
+        details: details(),
+      },
+    })
+    const badges = wrapper.findAll('.feature-badge')
+    expect(badges).toHaveLength(2)
+    expect(badges[0].classes()).toContain('feature-badge-yes')
+    expect(badges[0].text()).toContain('Pumptrack')
+    expect(badges[1].classes()).toContain('feature-badge-no')
+    expect(badges[1].text()).toContain('Dirtpark')
+  })
+
+  it('does not show feature badges for a plain trail', () => {
+    const wrapper = mount(SpotDetailDescription, { props: { trail: trail(), details: details() } })
+    expect(wrapper.find('.feature-badge').exists()).toBe(false)
+  })
+
   it('opens the report modal with the current trail id/name', async () => {
     const wrapper = mount(SpotDetailDescription, { props: { trail: trail(), details: details() } })
 
