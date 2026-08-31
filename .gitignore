@@ -21,3 +21,6 @@ ios/App/App.xcworkspace/xcuserdata/
 
 # Generated Supabase types (regenerate locally, see CLAUDE.md)
 app/types/database.types.ts
+
+# Generated every build by the nitro:config hook (see build/nearby.ts)
+public/nearby.json

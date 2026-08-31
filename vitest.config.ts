@@ -9,6 +9,8 @@ export default defineConfig({
       // Mirrors Nuxt's `~/` -> `srcDir` alias (see nuxt.config.ts `srcDir: 'app'`)
       // so component/test files that import via `~/...` resolve under vitest too.
       '~': fileURLToPath(new URL('./app', import.meta.url)),
+      // Nuxt's `@@/` -> project root alias, used e.g. by `@@/build/nearby`.
+      '@@': fileURLToPath(new URL('.', import.meta.url)),
     },
   },
   define: {
@@ -17,7 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['app/**/*.test.ts', 'server/**/*.test.ts'],
+    include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'build/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });

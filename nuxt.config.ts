@@ -1,5 +1,6 @@
 import { readFileSync, existsSync, writeFileSync } from 'node:fs'
 import { regions } from './build/region'
+import { computeNearbyMap } from './build/nearby'
 import svgLoader from 'vite-svg-loader'
 
 // Load .env.local explicitly — c12 loads it after config evaluation, so
@@ -222,6 +223,20 @@ export default defineNuxtConfig({
           },
         },
         {
+          // Build-time "Nearby Spots" index (public/nearby.json). Not in
+          // globPatterns on purpose — adding `json` there would precache
+          // every per-route _payload.json too. StaleWhileRevalidate so it
+          // works offline after the first online load and refreshes in the
+          // background on later visits.
+          urlPattern: /\/nearby\.json$/i,
+          handler: 'StaleWhileRevalidate',
+          options: {
+            cacheName: 'nearby-index',
+            expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
           urlPattern: /^https:\/\/.*\.supabase\.co\/storage\/v1\/object\/public\/trail-photos\/.*/i,
           handler: 'CacheFirst',
           options: {
@@ -285,17 +300,43 @@ export default defineNuxtConfig({
       if (!url || !key) return
       try {
         const h = { apikey: key, Authorization: `Bearer ${key}` }
-        const [r1, r2, r3] = await Promise.all([
-          fetch(`${url}/rest/v1/trails?select=id`, { headers: h }),
-          fetch(`${url}/rest/v1/parks?select=id`, { headers: h }),
-          fetch(`${url}/rest/v1/dirt_parks?select=id`, { headers: h }),
+        // Widened from `select=id` to also carry name/coords/approved so the
+        // same fetch feeds the build-time "Nearby Spots" computation
+        // (public/nearby.json) — see build/nearby.ts. Each array is tagged
+        // with its spot `type` the same way server/api/trails.get.ts does.
+        const spotFields = 'id,name,latitude,longitude,approved'
+        const [r1, r2, r3, r4] = await Promise.all([
+          fetch(`${url}/rest/v1/trails?select=${spotFields}`, { headers: h }),
+          fetch(`${url}/rest/v1/parks?select=${spotFields}`, { headers: h }),
+          fetch(`${url}/rest/v1/dirt_parks?select=${spotFields}`, { headers: h }),
+          fetch(`${url}/rest/v1/trail_photos?select=trail_id,url&order=created_at.asc`, { headers: h }),
         ])
-        const [trails, parks, dirtParks] = await Promise.all([
-          r1.json() as Promise<{ id: string }[]>,
-          r2.json() as Promise<{ id: string }[]>,
-          r3.json() as Promise<{ id: string }[]>,
+        type SpotRow = { id: string; name: string; latitude: number; longitude: number; approved: boolean }
+        const [trails, parks, dirtParks, photos] = await Promise.all([
+          r1.json() as Promise<SpotRow[]>,
+          r2.json() as Promise<SpotRow[]>,
+          r3.json() as Promise<SpotRow[]>,
+          r4.json() as Promise<{ trail_id: string; url: string }[]>,
         ])
-        const all = [...trails, ...parks, ...dirtParks]
+        const all = [
+          ...trails.map(t => ({ ...t, type: 'trail' as const })),
+          ...parks.map(p => ({ ...p, type: 'bikepark' as const })),
+          ...dirtParks.map(d => ({ ...d, type: 'dirtpark' as const })),
+        ]
+
+        // First photo (rows already ordered created_at.asc) per spot.
+        const photoBySpotId: Record<string, string> = {}
+        for (const p of Array.isArray(photos) ? photos : []) {
+          if (p && p.trail_id && p.url && !photoBySpotId[p.trail_id]) {
+            photoBySpotId[p.trail_id] = p.url
+          }
+        }
+        writeFileSync(
+          'public/nearby.json',
+          JSON.stringify(computeNearbyMap(all, { maxKm: 100, photoBySpotId })),
+        )
+        console.log(`  ✓ Generated nearby.json for ${all.length} spots`)
+
         nitroConfig.prerender ||= {}
         nitroConfig.prerender.routes ||= []
         for (const t of all) {
