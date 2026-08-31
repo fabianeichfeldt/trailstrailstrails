@@ -433,7 +433,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             // No deep-linking to a specific lot selection (YAGNI per the
             // spot-detail-real-pages spec) — jump straight to the spot
             // page's Parkplätze section instead of highlighting one lot.
-            navigateToSpot(trail.id, '#parkplaetze')
+            navigateToSpot(trail.id, '#parking')
           })
           parkingLayers.push(marker)
         }

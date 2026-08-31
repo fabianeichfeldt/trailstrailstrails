@@ -21,12 +21,12 @@ baseTest('the Parkplätze section shows the lot name and info lines when the spo
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  const content = page.locator('#parkplaetze');
+  const content = page.locator('#parking');
   await expect(content).toBeVisible();
   await expect(content).toContainText('Talstation Parkplatz');
   await expect(content).toContainText('Gewichtsbeschränkung: 3.5t');
   await expect(content).toContainText('Kostenlos');
-  await expect(page.locator('a[href="#parkplaetze"]')).toBeVisible();
+  await expect(page.locator('a[href="#parking"]')).toBeVisible();
 
   assertNoLeaks();
 });
@@ -48,7 +48,7 @@ baseTest('clicking a parking lot flies the embedded map to it and marks the row 
     window.addEventListener('message', (e) => resolve(e.data), { once: true });
   }));
 
-  const row = page.locator('#parkplaetze .spot-item[data-id="p1"]');
+  const row = page.locator('#parking .spot-item[data-id="p1"]');
   await row.click();
 
   await expect(messagePromise).resolves.toEqual({ type: 'trailradar:flyTo', lat: 47.709, lng: 11.758, zoom: 14 });
@@ -66,8 +66,8 @@ baseTest('the Parkplätze section and its jump-link stay absent when the spot ha
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  await expect(page.locator('#parkplaetze')).toHaveCount(0);
-  await expect(page.locator('a[href="#parkplaetze"]')).toHaveCount(0);
+  await expect(page.locator('#parking')).toHaveCount(0);
+  await expect(page.locator('a[href="#parking"]')).toHaveCount(0);
 
   assertNoLeaks();
 });
@@ -103,8 +103,8 @@ baseTest('clicking a parking marker on the map navigates to the spot\'s Parkplä
   await expect(marker).toBeVisible({ timeout: 15000 });
   await marker.click();
 
-  await expect(page).toHaveURL(/\/trails\/t1#parkplaetze$/);
-  await expect(page.locator('#parkplaetze')).toContainText('Talstation Parkplatz');
+  await expect(page).toHaveURL(/\/trails\/t1#parking$/);
+  await expect(page.locator('#parking')).toContainText('Talstation Parkplatz');
 
   assertNoLeaks();
 });
@@ -117,7 +117,7 @@ baseTest('Parkplätze section renders correctly on a small (mobile) viewport', a
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  const content = page.locator('#parkplaetze');
+  const content = page.locator('#parking');
   await expect(content).toBeVisible();
   await expect(content).toContainText('Talstation Parkplatz');
 

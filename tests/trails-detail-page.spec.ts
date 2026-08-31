@@ -19,10 +19,10 @@ baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
   await expect(page.locator('iframe.trail-map')).toBeVisible();
   await expect(page.locator('.spot-detail-nav')).toBeVisible();
-  await expect(page.locator('#beschreibung')).toBeVisible();
+  await expect(page.locator('#description')).toBeVisible();
   await expect(page.locator('#touren')).toBeVisible();
   await expect(page.locator('#trails')).toBeVisible();
-  await expect(page.locator('#kommentare')).toBeVisible();
+  await expect(page.locator('#comments')).toBeVisible();
 
   assertNoLeaks();
 });
@@ -42,13 +42,13 @@ baseTest('the jump-nav links target the page\'s own sections', async ({ page }) 
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  await expect(page.locator('a[href="#beschreibung"]')).toBeVisible();
+  await expect(page.locator('a[href="#description"]')).toBeVisible();
   await expect(page.locator('a[href="#touren"]')).toBeVisible();
   await expect(page.locator('a[href="#trails"]')).toBeVisible();
-  await expect(page.locator('a[href="#kommentare"]')).toBeVisible();
+  await expect(page.locator('a[href="#comments"]')).toBeVisible();
   // No parking lots mocked for t1 — the link stays hidden rather than
   // pointing at an empty section.
-  await expect(page.locator('a[href="#parkplaetze"]')).toHaveCount(0);
+  await expect(page.locator('a[href="#parking"]')).toHaveCount(0);
 
   assertNoLeaks();
 });
@@ -88,12 +88,12 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
 
   const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;
   const tourenY = (await page.locator('#touren').boundingBox())!.y;
-  const beschreibungY = (await page.locator('#beschreibung').boundingBox())!.y;
-  const kommentareY = (await page.locator('#kommentare').boundingBox())!.y;
+  const descriptionY = (await page.locator('#description').boundingBox())!.y;
+  const commentsY = (await page.locator('#comments').boundingBox())!.y;
 
   expect(photosY).toBeLessThan(tourenY);
-  expect(tourenY).toBeLessThan(beschreibungY);
-  expect(beschreibungY).toBeLessThan(kommentareY);
+  expect(tourenY).toBeLessThan(descriptionY);
+  expect(descriptionY).toBeLessThan(commentsY);
 
   assertNoLeaks();
 });
@@ -127,7 +127,7 @@ baseTest('layout stays usable on a small (mobile) viewport', async ({ page }) =>
   expect(hasHorizontalOverflow).toBe(false);
 
   // Jump-nav links and the like/share buttons stay real touch targets.
-  const infoLink = page.locator('a[href="#beschreibung"]');
+  const infoLink = page.locator('a[href="#description"]');
   const linkBox = await infoLink.boundingBox();
   expect(linkBox?.height).toBeGreaterThanOrEqual(36);
 

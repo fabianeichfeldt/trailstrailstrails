@@ -21,12 +21,12 @@ function trail(overrides: Partial<Trail> = {}): Trail {
 describe('SpotDetailNav', () => {
   it('always shows the Info link', () => {
     const wrapper = mount(SpotDetailNav, { props: { trail: trail(), parkingCount: 0 } })
-    expect(wrapper.find('a[href="#beschreibung"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="#description"]').exists()).toBe(true)
   })
 
   it('always shows the Kommentare link', () => {
     const wrapper = mount(SpotDetailNav, { props: { trail: trail(), parkingCount: 0 } })
-    expect(wrapper.find('a[href="#kommentare"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="#comments"]').exists()).toBe(true)
   })
 
   it('shows Touren/Trails links for a trail spot', () => {
@@ -43,11 +43,11 @@ describe('SpotDetailNav', () => {
 
   it('hides the Parkplätze link when the spot has no parking lots', () => {
     const wrapper = mount(SpotDetailNav, { props: { trail: trail(), parkingCount: 0 } })
-    expect(wrapper.find('a[href="#parkplaetze"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="#parking"]').exists()).toBe(false)
   })
 
   it('shows the Parkplätze link when the spot has parking lots', () => {
     const wrapper = mount(SpotDetailNav, { props: { trail: trail(), parkingCount: 2 } })
-    expect(wrapper.find('a[href="#parkplaetze"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="#parking"]').exists()).toBe(true)
   })
 })

@@ -1,5 +1,5 @@
 <template>
-  <section id="beschreibung" class="content-section card spot-detail-description">
+  <section id="description" class="content-section card spot-detail-description">
     <h2>Beschreibung</h2>
 
     <!-- Spotcheck badge -->
@@ -66,7 +66,7 @@ import type { TrailDetails } from '~/types/TrailDetails'
 // badges) plus the helpfulness-feedback block — the remainder of the
 // former monolithic SpotDetailInfo.vue after photos, the status banner, the
 // rules list and the video moved out into their own top-level sections.
-// Keeps id="beschreibung" since SpotDetailNav's "Info" link and the
+// Keeps id="description" since SpotDetailNav's "Info" link and the
 // trails-detail-page e2e spec both target it.
 const props = defineProps<{ trail: Trail; details: TrailDetails }>()
 

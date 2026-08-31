@@ -74,7 +74,7 @@
             <SpotPanelTrailsTab />
           </section>
 
-          <section v-if="spotPanelStore.parkingLots.length" id="parkplaetze" class="content-section card">
+          <section v-if="spotPanelStore.parkingLots.length" id="parking" class="content-section card">
             <h2>Parkplätze</h2>
             <SpotPanelParkingTab :lots="spotPanelStore.parkingLots" @fly-to="onParkingFlyTo" />
           </section>
@@ -103,7 +103,7 @@
 
       <SpotDetailDescription :trail="trailForStore" :details="details" />
 
-      <section id="kommentare" class="content-section card">
+      <section id="comments" class="content-section card">
         <h2>Kommentare</h2>
         <SpotPanelComments />
       </section>

@@ -5,7 +5,7 @@ import { TrailDetails } from '~/types/TrailDetails'
 
 // Split out of SpotDetailInfo.test.ts as part of splitting the former
 // monolithic SpotDetailInfo.vue into per-section components: this one keeps
-// id="beschreibung" (opening hours, general description, spotcheck/dirtpark
+// id="description" (opening hours, general description, spotcheck/dirtpark
 // badges, and the helpfulness-feedback block).
 let fakeMapStore: { reportModalOpen: boolean; reportModalTrailId: string | null; reportModalTrailName: string | null }
 
