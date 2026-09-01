@@ -30,6 +30,13 @@ const mapEl  = ref<HTMLElement | null>(null)
 const error  = ref(false)
 const errorMessage = ref('Dieser Embed ist für diese Domain nicht autorisiert.')
 
+// Everything below is set up inside an async onMounted (after awaits for the
+// _embed fetch and the Leaflet dynamic import), where the component instance
+// is no longer active — so onUnmounted can't be registered there. Own the
+// teardown from synchronous setup instead and hand listeners its signal.
+const teardown = new AbortController()
+onUnmounted(() => teardown.abort())
+
 onMounted(async () => {
   // /embed/[token] is a prerendered dynamic route. Once Nuxt's client-side
   // router takes over, it rewrites window.location to its own canonical
@@ -106,8 +113,7 @@ onMounted(async () => {
     if (typeof flyLat !== 'number' || typeof flyLng !== 'number') return
     map.flyTo([flyLat, flyLng], typeof flyZoom === 'number' ? flyZoom : map.getZoom(), { duration: 1 })
   }
-  window.addEventListener('message', onFlyToMessage)
-  onUnmounted(() => window.removeEventListener('message', onFlyToMessage))
+  window.addEventListener('message', onFlyToMessage, { signal: teardown.signal })
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19,
