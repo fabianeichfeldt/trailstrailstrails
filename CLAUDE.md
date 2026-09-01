@@ -81,7 +81,7 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
 ### Git commits
-- **Never commit to `main` directly.** All commits must go to a working branch (feature branch, etc., highly prefer feature branch. if on main, ask for creating a feature branch).
+- **Never commit to `main` directly** unless the user explicitly says to in that request. Default: all commits go to a working branch (highly prefer a feature branch; if on main, ask about creating one). An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
 - Committing to a working branch at logical checkpoints is encouraged — it lets you review progress and keeps the work recoverable.
 - The user merges working branches into `main` themselves.
 
