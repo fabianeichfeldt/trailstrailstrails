@@ -387,32 +387,50 @@ watch(
   },
 )
 
-const pageTitle = isRegion
+// Reactive getters, not plain consts: when the page is prerendered or opened
+// via client-side nav, the SSR-time useAsyncData payload can still be null
+// (trail created/changed since the last deploy), and onMounted's
+// refreshTrail() fills `trail` in only afterwards. Non-reactive meta would
+// stay stuck on the "Trail" fallback — the generic title this replaces.
+const pageName = computed(() => isRegion
   ? `Offizielle MTB Trails ${region!.pronom}`
-  : trail.value
-    ? trail.value.name
-    : 'Trail'
+  : trail.value?.name || 'Trail')
 
-const pageDescription = isRegion
+// Spot name first, brand after — used verbatim for <title> (titleTemplate is
+// disabled for this page below) and for og:/twitter: titles, which never get
+// a template applied. Keeps the spot name at the front of the SERP entry and
+// social card instead of a bare "Trail | Trailradar".
+const metaTitle = computed(() => `${pageName.value} - Trailradar`)
+
+const pageDescription = computed(() => isRegion
   ? `Finde offizielle Mountainbike Trails ${region!.pronom}. Community-basiert und aktuell.`
   : trail.value?.trail_description
-    || (trail.value ? `${trail.value.name} – offizieller MTB-Trail auf Trailradar.` : '')
+    || (trail.value ? `${trail.value.name} – offizieller MTB-Trail auf Trailradar.` : ''))
 
-const ogImage = trail.value?.photos?.[0]?.url ?? 'https://trailradar.org/assets/hero-desktop.webp'
+const metaImage = computed(() => isRegion
+  ? 'https://trailradar.org/assets/hero-desktop.webp'
+  : trail.value?.photos?.[0]?.url ?? 'https://trailradar.org/assets/hero-desktop.webp')
 
 useSeoMeta({
-  title: pageTitle,
-  description: pageDescription,
+  title: () => metaTitle.value,
+  description: () => pageDescription.value,
+  ogTitle: () => metaTitle.value,
+  ogDescription: () => pageDescription.value,
   ogUrl: `https://trailradar.org/trails/${slug}/`,
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
   ogType: 'website',
-  ogImage: isRegion ? 'https://trailradar.org/assets/hero-desktop.webp' : ogImage,
+  ogImage: () => metaImage.value,
+  twitterCard: 'summary_large_image',
+  twitterTitle: () => metaTitle.value,
+  twitterDescription: () => pageDescription.value,
+  twitterImage: () => metaImage.value,
 })
 
 useHead({
+  titleTemplate: '%s',
   link: [{ rel: 'canonical', href: `https://trailradar.org/trails/${slug}/` }],
-  script: trail.value && !isRegion
+  script: () => (trail.value && !isRegion
     ? [
         {
           type: 'application/ld+json',
@@ -420,7 +438,7 @@ useHead({
             '@context': 'https://schema.org',
             '@type': 'SportsActivityLocation',
             name: trail.value.name,
-            description: pageDescription,
+            description: pageDescription.value,
             sport: 'Mountainbiking',
             geo: {
               '@type': 'GeoCoordinates',
@@ -432,7 +450,7 @@ useHead({
           }),
         },
       ]
-    : [],
+    : []),
 })
 </script>
 

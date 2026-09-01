@@ -27,6 +27,22 @@ baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot
   assertNoLeaks();
 });
 
+baseTest('puts the spot name at the front of the document title and social meta', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page).toHaveTitle('Flowtrail Tegernsee - Trailradar');
+  await expect(page.locator('head meta[property="og:title"]')).toHaveAttribute(
+    'content', 'Flowtrail Tegernsee - Trailradar',
+  );
+  await expect(page.locator('head meta[name="twitter:title"]')).toHaveAttribute(
+    'content', 'Flowtrail Tegernsee - Trailradar',
+  );
+
+  assertNoLeaks();
+});
+
 baseTest('the "Trailradar Karte" map button links to /map?trail=id for a smooth fly-to', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
