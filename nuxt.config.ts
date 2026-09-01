@@ -107,6 +107,14 @@ export default defineNuxtConfig({
 
   pwa: {
     registerType: 'autoUpdate',
+    client: {
+      // Poll for a new service worker hourly (fetch is sent with
+      // `cache: 'no-store'`, so it bypasses any CDN/browser cache on
+      // /sw.js). Without this, a long-lived tab only checks for an update
+      // on navigation, and a CDN-cached /sw.js can keep it on an old
+      // worker for hours.
+      periodicSyncForUpdates: 60 * 60,
+    },
     manifest: {
       name: 'Trailradar - Offizielle MTB Trails',
       short_name: 'Trailradar',
@@ -131,25 +139,38 @@ export default defineNuxtConfig({
     workbox: {
       cleanupOutdatedCaches: true,
       maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff,woff2}'],
-      globIgnores: ['trails/????????-????-????-????-????????????/index.html'],
+      // HTML is deliberately NOT precached. Precached HTML is served
+      // cache-first and only replaced when a *new service worker* installs
+      // and activates — so if the /sw.js update check is delayed (a
+      // CDN-cached service worker script, an offline tab), a returning
+      // visitor is pinned to whatever HTML the worker cached on their last
+      // visit, for as long as that worker stays in control. Precaching only
+      // the content-hashed build assets (which are safe to keep forever)
+      // and serving every navigation network-first (below) means a content
+      // deploy shows up on the next online visit regardless of the worker's
+      // own update timing.
+      globPatterns: ['**/*.{js,css,ico,png,svg,webp,woff,woff2}'],
       // @vite-pwa/nuxt defaults navigateFallback to '/', which registers a
       // NavigationRoute *before* the runtimeCaching rules below and wins the
       // routing race for any URL that isn't an exact string match in the
       // precache manifest — silently serving the cached homepage instead.
       // This site is fully SSG (every real route has real generated HTML),
-      // so there's no app-shell to fall back to; disable it and let
-      // precache + the runtimeCaching rules below (or a normal network
-      // request) handle every route on its own terms.
+      // so there's no app-shell to fall back to; disable it and let the
+      // runtimeCaching rules below (or a normal network request) handle
+      // every route on its own terms.
       navigateFallback: null,
       runtimeCaching: [
         {
-          // Individual trail pages: cache on first visit, not on SW install.
-          urlPattern: /\/trails\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(\/|$)/i,
-          handler: 'StaleWhileRevalidate',
+          // Every page navigation (the homepage, /map, region pages, every
+          // /trails/* spot page): network-first with a short timeout, so a
+          // returning online visitor always gets the freshly deployed HTML,
+          // and an offline/slow one still falls back to the last copy seen.
+          urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+          handler: 'NetworkFirst',
           options: {
-            cacheName: 'trail-pages',
-            expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheName: 'pages',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 30 },
             cacheableResponse: { statuses: [0, 200] },
           },
         },

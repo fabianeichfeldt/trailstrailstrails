@@ -27,3 +27,31 @@ describe('PWA service worker does not shadow navigation with a homepage fallback
     expect(workboxBlock![0]).toMatch(/navigateFallback:\s*null/)
   })
 })
+
+// Regression test for a second real production bug: HTML was precached
+// (globPatterns included `html`), so workbox served it cache-first and only
+// swapped it when a *new service worker* installed and activated. When the
+// /sw.js update check was delayed — a CDN-cached service-worker script, an
+// offline tab — returning visitors stayed pinned to the HTML their worker
+// cached on a previous visit, for days. The fix: precache only
+// content-hashed assets, and serve every navigation network-first so a
+// content deploy lands on the next online visit no matter what the worker
+// is doing.
+describe('PWA content stays fresh independently of the service-worker update cycle', () => {
+  const workboxBlock = nuxtConfig.match(/workbox:\s*{[\s\S]*?\n {4}}/)![0]
+
+  test('HTML is not precached', () => {
+    const globPatterns = workboxBlock.match(/globPatterns:\s*\[[^\]]*\]/)![0]
+    expect(globPatterns).not.toMatch(/\bhtml\b/)
+  })
+
+  test('navigations are handled network-first', () => {
+    expect(workboxBlock).toMatch(/request\.mode === 'navigate'/)
+    const navRuleTail = workboxBlock.slice(workboxBlock.indexOf("request.mode === 'navigate'"))
+    expect(navRuleTail).toMatch(/handler:\s*'NetworkFirst'/)
+  })
+
+  test('a periodic update check is configured so long-lived tabs pick up new workers', () => {
+    expect(nuxtConfig).toMatch(/periodicSyncForUpdates:\s*\d/)
+  })
+})
