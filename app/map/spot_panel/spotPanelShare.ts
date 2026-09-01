@@ -17,7 +17,10 @@ export interface ShareDeps {
 }
 
 export function trailShareUrl(id: string): string {
-  return `https://trailradar.org/trails/${id}`;
+  // Trailing slash = the page's canonical URL. Without it the request 301s,
+  // and link-preview crawlers that read tags off the first response (not the
+  // redirect target) get nothing.
+  return `https://trailradar.org/trails/${id}/`;
 }
 
 // Firefox desktop does not implement navigator.share at all (Android-only,

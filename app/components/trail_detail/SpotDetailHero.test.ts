@@ -155,7 +155,7 @@ describe('SpotDetailHero', () => {
     await Promise.resolve()
     await Promise.resolve()
 
-    expect(copyToClipboard).toHaveBeenCalledWith('https://trailradar.org/trails/t1')
+    expect(copyToClipboard).toHaveBeenCalledWith('https://trailradar.org/trails/t1/')
     expect(wrapper.find('.spot-share-toast').exists()).toBe(true)
     expect(wrapper.get('.spot-share-toast').text()).toBe('Link kopiert!')
   })

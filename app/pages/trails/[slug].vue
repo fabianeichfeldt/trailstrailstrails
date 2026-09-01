@@ -160,6 +160,7 @@ import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
 import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
+import { toSocialImage, OG_FALLBACK_IMAGE } from '~/utils/socialImage'
 import { getTrailById, getTrailDetails } from '~/communication/trails'
 import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
@@ -402,28 +403,42 @@ const pageName = computed(() => isRegion
 // social card instead of a bare "Trail | Trailradar".
 const metaTitle = computed(() => `${pageName.value} - Trailradar`)
 
+// Full text — feeds the JSON-LD below. The meta/og/twitter descriptions get
+// the trimmed version: search snippets and social cards cut off around
+// 160–200 chars anyway, and WhatsApp shows the raw truncation.
 const pageDescription = computed(() => isRegion
   ? `Finde offizielle Mountainbike Trails ${region!.pronom}. Community-basiert und aktuell.`
   : trail.value?.trail_description
     || (trail.value ? `${trail.value.name} – offizieller MTB-Trail auf Trailradar.` : ''))
 
+const metaDescription = computed(() => {
+  const full = pageDescription.value
+  return full.length <= 200 ? full : `${full.slice(0, 199).replace(/\s+\S*$/, '')}…`
+})
+
+// Both paths (rendered photo / static card) resolve to a 1200x630 image/jpeg,
+// so the og:image:* hints below hold for either. See ~/utils/socialImage.
 const metaImage = computed(() => isRegion
-  ? 'https://trailradar.org/assets/hero-desktop.webp'
-  : trail.value?.photos?.[0]?.url ?? 'https://trailradar.org/assets/hero-desktop.webp')
+  ? OG_FALLBACK_IMAGE
+  : toSocialImage(trail.value?.photos?.[0]?.url))
 
 useSeoMeta({
   title: () => metaTitle.value,
-  description: () => pageDescription.value,
+  description: () => metaDescription.value,
   ogTitle: () => metaTitle.value,
-  ogDescription: () => pageDescription.value,
+  ogDescription: () => metaDescription.value,
   ogUrl: `https://trailradar.org/trails/${slug}/`,
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
   ogType: 'website',
   ogImage: () => metaImage.value,
+  ogImageWidth: '1200',
+  ogImageHeight: '630',
+  ogImageType: 'image/jpeg',
+  ogImageAlt: () => pageName.value,
   twitterCard: 'summary_large_image',
   twitterTitle: () => metaTitle.value,
-  twitterDescription: () => pageDescription.value,
+  twitterDescription: () => metaDescription.value,
   twitterImage: () => metaImage.value,
 })
 

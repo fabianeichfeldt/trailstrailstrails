@@ -40,6 +40,31 @@ baseTest('puts the spot name at the front of the document title and social meta'
     'content', 'Flowtrail Tegernsee - Trailradar',
   );
 
+  // og:image must be a JPEG (WhatsApp won't render WebP) with the size hints
+  // crawlers need. t1 has no photos in the mock, so it's the static card.
+  await expect(page.locator('head meta[property="og:image"]')).toHaveAttribute(
+    'content', 'https://trailradar.org/assets/og-default.jpg',
+  );
+  await expect(page.locator('head meta[property="og:image:type"]')).toHaveAttribute('content', 'image/jpeg');
+  await expect(page.locator('head meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
+
+  assertNoLeaks();
+});
+
+baseTest('the discovery-critical head tags land before the inlined <style> blocks', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await page.waitForLoadState('networkidle');
+
+  // WhatsApp's preview crawler only reads the first slice of <head>; the
+  // hoist-seo-head Nitro plugin must keep og:*/description ahead of the CSS.
+  const headHtml = await page.evaluate(() => document.head.innerHTML);
+  const firstStyle = headHtml.indexOf('<style');
+  for (const tag of ['<title', 'meta property="og:title"', 'meta property="og:image"', 'meta name="description"']) {
+    expect(headHtml.indexOf(tag), tag).toBeGreaterThan(-1);
+    expect(headHtml.indexOf(tag), `${tag} before <style>`).toBeLessThan(firstStyle);
+  }
+
   assertNoLeaks();
 });
 

@@ -16,7 +16,7 @@ function makeDeps(overrides: Partial<ShareDeps> = {}): ShareDeps {
 
 describe('trailShareUrl', () => {
   it('builds the public trail URL from the id', () => {
-    expect(trailShareUrl('abc-123')).toBe('https://trailradar.org/trails/abc-123')
+    expect(trailShareUrl('abc-123')).toBe('https://trailradar.org/trails/abc-123/')
   })
 })
 
@@ -27,7 +27,7 @@ describe('shareTrail', () => {
 
     expect(deps.nativeShare).toHaveBeenCalledWith({
       title: `Offizieller MTB Trail '${item.name}' auf Trailradar`,
-      url: 'https://trailradar.org/trails/trail-1',
+      url: 'https://trailradar.org/trails/trail-1/',
     })
     expect(deps.copyToClipboard).not.toHaveBeenCalled()
     expect(deps.showToast).not.toHaveBeenCalled()
@@ -48,7 +48,7 @@ describe('shareTrail', () => {
     await shareTrail(item, deps)
 
     expect(deps.nativeShare).not.toHaveBeenCalled()
-    expect(deps.copyToClipboard).toHaveBeenCalledWith('https://trailradar.org/trails/trail-1')
+    expect(deps.copyToClipboard).toHaveBeenCalledWith('https://trailradar.org/trails/trail-1/')
     expect(deps.showToast).toHaveBeenCalledWith('Link kopiert!')
     expect(deps.reportShare).toHaveBeenCalledWith('trail-1')
   })
