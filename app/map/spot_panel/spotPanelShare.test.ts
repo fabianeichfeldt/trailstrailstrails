@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { shareTrail, trailShareUrl, type ShareDeps } from './spotPanelShare'
 
-const item = { id: 'trail-1', name: 'Testtrail' }
+const item = { id: 'trail-1', slug: 'trail-1', name: 'Testtrail' }
 
 function makeDeps(overrides: Partial<ShareDeps> = {}): ShareDeps {
   return {

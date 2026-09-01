@@ -84,9 +84,11 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   // subsequent push() preserves /map?trail=id as the entry browser back
   // returns to. Same route/component, query-only change, so this doesn't
   // remount /map or re-run its one-time onMapReady() flyTo logic.
-  async function navigateToSpot(id: string, hash = '') {
-    await router.replace({ path: '/map', query: { trail: id } })
-    router.push(`/trails/${id}${hash}`)
+  async function navigateToSpot(trail: Trail, hash = '') {
+    // ?trail= stays the spot id (map deep-link, resolved by openTrailFn); the
+    // detail page path is the name-slug.
+    await router.replace({ path: '/map', query: { trail: trail.id } })
+    router.push(`/trails/${trail.slug}${hash}`)
   }
 
   onMounted(async () => {
@@ -175,7 +177,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         }).addTo(currentLayer() as any)
 
         marker.on('click', () => {
-          navigateToSpot(trail.id)
+          navigateToSpot(trail)
         })
       }
     }
@@ -237,7 +239,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
       function openPanel(trail: Trail) {
         tooltipEl.style.display = 'none'
-        navigateToSpot(trail.id)
+        navigateToSpot(trail)
       }
 
       function showTooltip(
@@ -397,7 +399,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             icon: createCustomIcon(trail),
           }).addTo(fallbackLayer)
           marker.on('click', () => {
-            navigateToSpot(trail.id)
+            navigateToSpot(trail)
           })
           continue
         }
@@ -433,7 +435,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
             // No deep-linking to a specific lot selection (YAGNI per the
             // spot-detail-real-pages spec) — jump straight to the spot
             // page's Parkplätze section instead of highlighting one lot.
-            navigateToSpot(trail.id, '#parking')
+            navigateToSpot(trail, '#parking')
           })
           parkingLayers.push(marker)
         }

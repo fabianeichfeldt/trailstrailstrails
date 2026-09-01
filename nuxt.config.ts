@@ -325,14 +325,14 @@ export default defineNuxtConfig({
         // same fetch feeds the build-time "Nearby Spots" computation
         // (public/nearby.json) — see build/nearby.ts. Each array is tagged
         // with its spot `type` the same way server/api/trails.get.ts does.
-        const spotFields = 'id,name,latitude,longitude,approved'
+        const spotFields = 'id,slug,name,latitude,longitude,approved'
         const [r1, r2, r3, r4] = await Promise.all([
           fetch(`${url}/rest/v1/trails?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/dirt_parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/trail_photos?select=trail_id,url&order=created_at.asc`, { headers: h }),
         ])
-        type SpotRow = { id: string; name: string; latitude: number; longitude: number; approved: boolean }
+        type SpotRow = { id: string; slug: string; name: string; latitude: number; longitude: number; approved: boolean }
         const [trails, parks, dirtParks, photos] = await Promise.all([
           r1.json() as Promise<SpotRow[]>,
           r2.json() as Promise<SpotRow[]>,
@@ -361,7 +361,7 @@ export default defineNuxtConfig({
         nitroConfig.prerender ||= {}
         nitroConfig.prerender.routes ||= []
         for (const t of all) {
-          (nitroConfig.prerender.routes as string[]).push(`/trails/${t.id}`)
+          (nitroConfig.prerender.routes as string[]).push(`/trails/${t.slug || t.id}`)
         }
         console.log(`  ✓ Added ${all.length} trail routes for prerender (${trails.length} trails, ${parks.length} parks, ${dirtParks.length} dirtparks)`)
 
@@ -389,7 +389,7 @@ export default defineNuxtConfig({
         const sitemapEntries = [
           ...staticPages.map(p => urlXml(`https://trailradar.org${p.path}`, p.priority, p.changefreq)),
           ...Object.keys(regions).map(slug => urlXml(`https://trailradar.org/trails/${slug}`, '0.8', 'weekly')),
-          ...all.map(t => urlXml(`https://trailradar.org/trails/${t.id}`, '0.6', 'weekly')),
+          ...all.map(t => urlXml(`https://trailradar.org/trails/${t.slug || t.id}`, '0.6', 'weekly')),
         ]
         const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
         writeFileSync('public/sitemap.xml', sitemapXml)

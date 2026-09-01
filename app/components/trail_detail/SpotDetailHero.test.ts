@@ -34,7 +34,7 @@ import SpotDetailHero from './SpotDetailHero.vue'
 
 function trail(overrides: Partial<Trail> = {}): Trail {
   return {
-    id: 't1', name: 'Flowtrail Tegernsee', type: 'trail',
+    id: 't1', slug: 't1', name: 'Flowtrail Tegernsee', type: 'trail',
     latitude: 1, longitude: 1, approved: true, url: '',
     creator: '', instagram: '', spotcheck: '', created_at: '',
     ...overrides,

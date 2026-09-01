@@ -1,6 +1,7 @@
 export class BaseTrail {
     name: string = "";
     id: string = "";
+    slug: string = "";
     creator: string = "";
     url: string = "";
     instagram: string = "";

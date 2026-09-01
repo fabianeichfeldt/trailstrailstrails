@@ -11,6 +11,7 @@ export type SpotType = 'trail' | 'bikepark' | 'dirtpark'
 
 export interface SpotLite {
   id: string
+  slug: string
   name: string
   latitude: number
   longitude: number
@@ -20,6 +21,7 @@ export interface SpotLite {
 
 export interface NearbySpot {
   id: string
+  slug: string
   name: string
   type: SpotType
   km: number
@@ -95,6 +97,7 @@ export function computeNearbyMap(
           .map(({ spot: c, km }) => {
             const entry: NearbySpot = {
               id: c.id,
+              slug: c.slug,
               name: c.name,
               type: c.type,
               km: Math.round(km * 10) / 10,
@@ -105,7 +108,10 @@ export function computeNearbyMap(
           })
       : []
 
-    result[spot.id] = neighbours
+    // Keyed by slug — the trails/[slug] page looks this up by its route param,
+    // which is now the name-slug. Falls back to id during the window before
+    // slug is NOT NULL on every row.
+    result[spot.slug || spot.id] = neighbours
   }
 
   return result
