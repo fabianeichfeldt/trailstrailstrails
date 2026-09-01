@@ -4,8 +4,17 @@
       <img src="/assets/hero-mobile.webp" alt="" class="no-photos-bg" />
       <div class="no-photos-overlay">
         <p class="no-photos-text"><strong>Leider gibt es noch keine Fotos zu diesem Spot.</strong><br>Sei der Erste und lade ein Foto hoch.</p>
-        <button v-if="authStore.isLoggedIn" class="photo-upload-btn" @click="triggerUpload">➕ Foto hochladen</button>
-        <span v-else class="photo-login-link" @click="mapStore.authModalOpen = true">Einloggen zum Hochladen</span>
+        <!-- auth state is unknown during SSG prerender — render the login
+             prompt as the stable server/fallback markup and only swap in the
+             upload button on the client once the session is restored, so
+             hydration sees identical DOM. -->
+        <ClientOnly>
+          <button v-if="authStore.isLoggedIn" class="photo-upload-btn" @click="triggerUpload">➕ Foto hochladen</button>
+          <span v-else class="photo-login-link" @click="mapStore.authModalOpen = true">Einloggen zum Hochladen</span>
+          <template #fallback>
+            <span class="photo-login-link" @click="mapStore.authModalOpen = true">Einloggen zum Hochladen</span>
+          </template>
+        </ClientOnly>
       </div>
     </div>
     <div v-else class="photo-container" ref="photosContainer">
@@ -24,7 +33,9 @@
           </div>
         </div>
       </div>
-      <button v-if="authStore.isLoggedIn" class="photo-fab" title="Foto hinzufügen" @click="triggerUpload">➕</button>
+      <ClientOnly>
+        <button v-if="authStore.isLoggedIn" class="photo-fab" title="Foto hinzufügen" @click="triggerUpload">➕</button>
+      </ClientOnly>
       <div class="carousel-dots">
         <span v-for="(p, i) in details.photos" :key="p.id" class="dot" :class="{ active: i === activePhoto }"></span>
       </div>
