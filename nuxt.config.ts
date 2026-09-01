@@ -1,7 +1,31 @@
-import { readFileSync, existsSync, writeFileSync } from 'node:fs'
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { regions } from './build/region'
 import { computeNearbyMap } from './build/nearby'
 import svgLoader from 'vite-svg-loader'
+
+// Legacy /trails/<id>/ URLs (and slugs retired by a rename) → 301-equivalent
+// redirect stubs written into the static output by the prerender:done hook
+// below. Populated in the nitro:config hook from the same Supabase fetch that
+// drives prerender/sitemap. See
+// docs/superpowers/specs/2026-09-01-trail-slug-urls-design.md.
+const redirectStubs: { from: string; to: string }[] = []
+
+function redirectStubHtml(targetPath: string): string {
+  const abs = `https://trailradar.org${targetPath}`
+  return `<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, follow">
+<title>Weiterleitung – Trailradar</title>
+<link rel="canonical" href="${abs}">
+<meta http-equiv="refresh" content="0; url=${targetPath}">
+<script>location.replace(${JSON.stringify(targetPath)})</script>
+</head>
+<body><p>Diese Seite ist umgezogen: <a href="${targetPath}">${targetPath}</a></p></body>
+</html>
+`
+}
 
 // Load .env.local explicitly — c12 loads it after config evaluation, so
 // process.env is empty for VITE_* / NUXT_PUBLIC_* vars at config parse time.
@@ -394,6 +418,28 @@ export default defineNuxtConfig({
         const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
         writeFileSync('public/sitemap.xml', sitemapXml)
         console.log(`  ✓ Generated sitemap.xml with ${sitemapEntries.length} URLs`)
+
+        // Legacy-URL redirect stubs (written to the static output by the
+        // prerender:done hook). Two sources:
+        //   1. every spot's id → its current slug (old /trails/<uuid>/ links)
+        //   2. every retired slug in spot_slugs → the spot's current slug
+        //      (a slug freed by a rename)
+        const currentSlugById = new Map(all.map(t => [t.id, t.slug || t.id]))
+        redirectStubs.length = 0
+        for (const t of all) {
+          if (t.slug && t.slug !== t.id) redirectStubs.push({ from: t.id, to: t.slug })
+        }
+        try {
+          const retiredRes = await fetch(`${url}/rest/v1/spot_slugs?is_current=eq.false&select=slug,spot_id`, { headers: h })
+          const retired = retiredRes.ok ? await retiredRes.json() as { slug: string; spot_id: string }[] : []
+          for (const r of Array.isArray(retired) ? retired : []) {
+            const to = currentSlugById.get(r.spot_id)
+            if (to && to !== r.slug) redirectStubs.push({ from: r.slug, to })
+          }
+        } catch (e) {
+          console.warn('  ⚠ Could not fetch retired slugs for redirect stubs:', e)
+        }
+        console.log(`  ✓ Prepared ${redirectStubs.length} legacy-URL redirect stubs`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)
       }
@@ -416,6 +462,28 @@ export default defineNuxtConfig({
       } catch (e) {
         console.warn('  ⚠ Could not fetch embed token routes for prerender:', e)
       }
+    },
+
+    // Write the legacy-URL redirect stubs into the static output once
+    // prerendering has finished (so the real /trails/<slug>/index.html pages
+    // already exist and are never clobbered). Each stub is a 200 response with
+    // a canonical + instant meta-refresh to the slug URL — Google consolidates
+    // it like a permanent redirect, and GitHub Pages can't serve a real 301.
+    'nitro:init'(nitro) {
+      nitro.hooks.hook('prerender:done', () => {
+        if (!redirectStubs.length) return
+        const publicDir = nitro.options.output.publicDir
+        let written = 0
+        for (const { from, to } of redirectStubs) {
+          if (!from || from.includes('/') || from.includes('\\') || from.includes('..')) continue
+          const file = `${publicDir}/trails/${from}/index.html`
+          if (existsSync(file)) continue // a real prerendered page — never overwrite
+          mkdirSync(`${publicDir}/trails/${from}`, { recursive: true })
+          writeFileSync(file, redirectStubHtml(`/trails/${to}/`))
+          written++
+        }
+        console.log(`  ✓ Wrote ${written} legacy-URL redirect stubs into ${publicDir}/trails/`)
+      })
     },
   },
 
