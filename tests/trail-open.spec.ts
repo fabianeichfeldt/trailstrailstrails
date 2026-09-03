@@ -35,7 +35,7 @@ baseTest('/map?trail= flies the live map to the spot\'s coordinates without navi
   const tileUrls = trackTileRequests(page);
 
   await page.goto('/map?trail=t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
   await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
 
   await expect(page).toHaveURL(/\/map(\?|$)/);
@@ -51,7 +51,7 @@ baseTest('/map?trail= works for a bikepark', async ({ page }) => {
   const tileUrls = trackTileRequests(page);
 
   await page.goto('/map?trail=b1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
   await page.waitForTimeout(1500);
 
   await expect(page).toHaveURL(/\/map(\?|$)/);
@@ -72,7 +72,6 @@ baseTest('/map?trail= works for a bikepark', async ({ page }) => {
 baseTest('/trails/[id] shows the trail name and a "View on map" link that flies to its coordinates', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
   await expect(page.locator('a[href="/map?fly=47.71,11.76"]').first()).toBeVisible();
@@ -114,7 +113,7 @@ baseTest('/trails/<id> for a spot whose slug differs redirects to the slug URL',
 baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, not the embed-query default', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
 
   const src = await page.locator('iframe.trail-map').getAttribute('src');
   expect(src).toBeTruthy();
@@ -137,9 +136,9 @@ baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, no
 baseTest('/trails/[region] embeds a map centered on that region, not the embed-query default', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/allgaeu');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toHaveText('Trails im Allgäu');
+  await expect(page.locator('iframe.region-map')).toBeVisible();
   const src = await page.locator('iframe.region-map').getAttribute('src');
   expect(src).toBeTruthy();
   // build/region.ts: allgaeu = { lat: 47.60, lng: 10.30 }
@@ -158,7 +157,6 @@ baseTest('/trails/[region] embeds a map centered on that region, not the embed-q
 baseTest('/trails/[slug] refreshes the embedded map location on client-side navigation between pages', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/allgaeu');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toHaveText('Trails im Allgäu');
   await expect(page.locator('iframe.region-map')).toHaveAttribute('src', /lat=47\.6&lng=10\.3(&|$)/);
@@ -166,7 +164,6 @@ baseTest('/trails/[slug] refreshes the embedded map location on client-side navi
   // Client-side navigation to another region page matched by the SAME
   // [slug].vue component — no full page reload happens here.
   await page.locator('a[href="/trails/berlin"]').click();
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toHaveText('Trails in Berlin');
   await expect(page.locator('iframe.region-map')).toHaveAttribute('src', /lat=52\.5&lng=13\.4(&|$)/);
@@ -249,7 +246,7 @@ baseTest('clicking a trail marker navigates to its own page, and going back retu
   await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: [] }));
 
   await page.goto('/map');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('.map-pin')).toBeVisible();
 
   await page.locator('.map-pin').click();
 

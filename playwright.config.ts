@@ -18,7 +18,15 @@ const supabaseKey = process.env.TEST_SUPABASE_KEY || process.env.NUXT_PUBLIC_SUP
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 15000,
+  // CI boots a cold `nuxt dev` (reuseExistingServer is false there) and Vite
+  // compiles each route on first request — the trail-detail page plus its
+  // embedded /embed/[token] iframe is the heaviest pair in the suite and a
+  // cold compile on a 2-core runner routinely blew the old 15s budget.
+  // globalSetup below pre-compiles the hot routes so no timed test pays that
+  // toll; this stays generous for the odd slow navigation regardless.
+  timeout: 30000,
+  expect: { timeout: 15000 },
+  globalSetup: './tests/global-setup.ts',
   use: {
     baseURL: 'http://localhost:3000',
     browserName: 'chromium',
@@ -27,7 +35,9 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:3000',
     reuseExistingServer: !process.env.CI,
-    timeout: 30000,
+    // First cold `nuxt dev` boot on CI (install already done) can crawl past
+    // 30s before it serves; give it room.
+    timeout: 120000,
     // Forward Supabase config to the dev server process so it connects to the
     // right instance (local or production) without mutating .env.local.
     env: {

@@ -14,7 +14,6 @@ import { expect, setupAllMocks } from './fixtures';
 baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
   await expect(page.locator('iframe.trail-map')).toBeVisible();
@@ -30,7 +29,7 @@ baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot
 baseTest('puts the spot name at the front of the document title and social meta', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
   await expect(page).toHaveTitle('Flowtrail Tegernsee - Trailradar');
   await expect(page.locator('head meta[property="og:title"]')).toHaveAttribute(
@@ -62,7 +61,7 @@ baseTest('puts the spot name at the front of the document title and social meta'
 baseTest('the discovery-critical head tags land before the inlined <style> blocks', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
   // WhatsApp's preview crawler only reads the first slice of <head>; the
   // hoist-seo-head Nitro plugin must keep og:*/description ahead of the CSS.
@@ -79,7 +78,6 @@ baseTest('the discovery-critical head tags land before the inlined <style> block
 baseTest('the "Trailradar Karte" map button links to /map?trail=id for a smooth fly-to', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('a.map-all-trails-btn')).toHaveAttribute('href', '/map?trail=t1');
 
@@ -89,7 +87,6 @@ baseTest('the "Trailradar Karte" map button links to /map?trail=id for a smooth 
 baseTest('the jump-nav links target the page\'s own sections', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('a[href="#description"]')).toBeVisible();
   await expect(page.locator('a[href="#touren"]')).toBeVisible();
@@ -105,7 +102,6 @@ baseTest('the jump-nav links target the page\'s own sections', async ({ page }) 
 baseTest('hides the Touren/Trails jump-links and sections for a bikepark spot', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/b1');
-  await page.waitForLoadState('networkidle');
 
   await expect(page.locator('h1')).toHaveText('Bikepark Lenggries');
   await expect(page.locator('a[href="#touren"]')).toHaveCount(0);
@@ -119,7 +115,7 @@ baseTest('hides the Touren/Trails jump-links and sections for a bikepark spot', 
 baseTest('renders the empty-photos prompt once the live details fetch resolves (no status field in the mock, so no banner)', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
   await expect(page.locator('.no-photos-visual')).toBeVisible();
   await expect(page.locator('.spot-status-banner')).toHaveCount(0);
@@ -133,7 +129,8 @@ baseTest('renders the empty-photos prompt once the live details fetch resolves (
 baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Kommentare', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
+  await expect(page.locator('#comments')).toBeVisible();
 
   const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;
   const tourenY = (await page.locator('#touren').boundingBox())!.y;
@@ -152,7 +149,7 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
 baseTest('embeds an interactive map (drag/zoom enabled), unlike a third-party embed', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('iframe.trail-map')).toBeVisible();
 
   const src = await page.locator('iframe.trail-map').getAttribute('src');
   expect(src).toContain('interactive=1');
@@ -164,7 +161,7 @@ baseTest('layout stays usable on a small (mobile) viewport', async ({ page }) =>
   await page.setViewportSize({ width: 375, height: 812 });
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await page.waitForLoadState('networkidle');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
   await expect(page.locator('h1')).toBeVisible();
   await expect(page.locator('.spot-detail-nav')).toBeVisible();
