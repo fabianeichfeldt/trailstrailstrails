@@ -173,6 +173,21 @@ describe('getTrailBySlug', () => {
     await getTrailBySlug('a b/c')
     expect(String(fetch.mock.calls[0][0])).toContain('slug=eq.a%20b%2Fc')
   })
+
+  it('fetches only the baked trail_details columns, not select=*', async () => {
+    const fetch = routeFetch({
+      trails: [{ id: 't-uuid', slug: 'flowtrail', name: 'Flow', latitude: 50, longitude: 8 }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    await getTrailBySlug('flowtrail')
+
+    const detailsUrl = fetch.mock.calls.map(c => String(c[0])).find(u => u.includes('/trail_details'))!
+    expect(detailsUrl).not.toContain('select=*')
+    // the fields bakedTrailDetails() reads must all be requested
+    for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
+      expect(detailsUrl).toContain(col)
+    }
+  })
 })
 
 // ── toElevationProfile ───────────────────────────────────────────────────────

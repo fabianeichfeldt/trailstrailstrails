@@ -96,6 +96,14 @@ The remaining payload is small in absolute terms (a few hundred spots × 6 small
 columns). Combined with a change-detection gate (P2-1) this stops being a
 concern; the GPX calls are where the volume is.
 
+**Status: done** — `perf/gpx-fetch-filter` branch. `SPOT_LIST_COLUMNS` /
+`DIRTPARK_LIST_COLUMNS` constants in `app/stores/trails.ts`; `fetchAll()` and
+`warmSwCaches()` both use them (the latter via a `restUrl()` helper that
+serializes the query the same way `@supabase/postgrest-js` does, so the warm
+cache key byte-matches the runtime request). Store rows are now partial and
+double-cast to the full type with a comment — every map/search/filter consumer
+was verified to read only the fetched columns.
+
 ### P0-3 — split `gpx_points` out of the map GPX overview
 
 Even after P0-1, the overview pulls full 3D point arrays for every visible spot
@@ -133,30 +141,49 @@ cleaner call.
 (the landing hit uses the SSR payload, no refetch): 3× `select=*` by slug +
 `trail_details?select=*` + `trail_photos?select=id,url`.
 
-- 3-table slug probe: 1 row each, cheap — trim to
-  `id,slug,name,latitude,longitude,approved` (+ dirt cols) anyway.
-- `trail_details?select=*`: list the columns the panel renders instead of `*`.
-- `getTrailById` (`trails.ts:68`) is the legacy-numeric-id fallback only — rare,
-  leave for now but same column trim applies.
+- 3-table slug probe: **left at `select=*`** — 1 row each, and the three spot
+  tables differ (`spotcheck` only on `trails`; `parks` has no `pumptrack` etc.),
+  so an explicit list means three different strings and a PostgREST 400 the
+  moment one drifts, all for a few hundred bytes. Not worth it.
+- `trail_details?select=*`: **done.** `TRAIL_DETAILS_BAKED_COLUMNS` in
+  `trails.ts` — exactly the 12 columns `bakedTrailDetails()` reads, with a
+  comment tying the two together. Drops `opening_hours_text`,
+  `affected_trail_ids`, `rain_window_*`, `night_*` (all SpotManager-only, never
+  rendered on the detail page; the live `getTrailDetails()` refresh is the
+  safety net anyway). Applied in both `getTrailBySlug` and `getTrailById`.
+
+**Status: done** — `perf/gpx-fetch-filter` branch, `trail_details` trim only.
+New test in `trails.test.ts`: `getTrailBySlug` "fetches only the baked
+trail_details columns, not select=\*".
 
 ### P1-2 — `getSpotGpxData` column trim
 
-`trails.ts:252` — `spot_gpx_trails?select=*` / `spot_gpx_tours?select=*` filtered
-to one `spot_id`. Bounded (one spot) so lower priority, but `select=*` pulls
-`filename` and (for trails) `duration_minutes` which the mapper never reads.
-List explicit columns.
+`trails.ts` `getSpotGpxData` — `spot_gpx_trails?select=*` / `spot_gpx_tours?select=*`
+filtered to one `spot_id`. Bounded (one spot) so lower priority, but `select=*`
+pulls `filename` and (for trails) `duration_minutes` which the mapper never
+reads. List explicit columns.
+
+**Deferred** to PR 2 — it touches the same `spot_gpx_*` read path as P0-3's
+`overview_points` work, so trim it there in one pass rather than twice.
 
 ### P1-3 — delete dead `select=*` code
 
-Only referenced by their own tests — no runtime callers:
+No runtime callers (no tests either — they were untested):
 
-- `getTrails()` — `trails.ts:22`, `trails?select=*`
-- `getTrailsByUserId()` — `trails.ts:42`
-- `getFavoriteTrails()` — `trails.ts:33`, `trail_favorites?select=*,trails(*)`
-- `getPhotosByUserId()` — `trails.ts:155`, `trail_photos?select=*,trails(name)`
+- `getTrails()` — `trails?select=*`
+- `getTrailsByUserId()` — `trails?select=*&creator_id=eq…`
+- `getFavoriteTrails()` — `trail_favorites?select=*,trails(*)`
+- `getPhotosByUserId()` + `PhotoResponse` — `trail_photos?select=*,trails(name)`
 
-Removing them + their tests cuts no live egress but removes `select=*` liability
-and keeps the audit surface small.
+The only reference anywhere is `scripts/geo.js`, a standalone one-off script in
+the detached `scripts/` sub-project that imports from `../js/communication/…` —
+a path that has not existed since the Nuxt migration, so it is already broken
+independently of this change. `scripts/` is out of scope for the app
+build/test/lint and is left untouched.
+
+**Status: done** — `perf/gpx-fetch-filter` branch. Functions + `PhotoResponse`
+removed; unused `BaseTrail`/`BikePark`/`DirtPark`/`SingleTrail`/`isBikePark`/
+`isDirtPark` imports cleaned from `trails.ts`.
 
 ### P2-1 — cheap change-detection instead of unconditional refetch
 
@@ -214,15 +241,18 @@ returning `gpx_points` or full photo rows.
 
 ## Suggested order
 
-**PR 1 — small, safe, high impact (each change gets a test per the repo mandate):**
+**PR 1 — small, safe, high impact (`perf/gpx-fetch-filter`) — ✅ done:**
 
-| # | Change | Effort | Egress impact |
-|---|---|---|---|
-| 1 | P0-1 filter `fetchMultipleSpotGpx` by `spot_id` | XS | very high |
-| 2 | P0-1 same fix in `_embed/[token]` wildcard path (`:97`) | XS | high (embed traffic) |
-| 3 | P1-3 delete dead `select=*` functions + their tests | XS | none (hygiene) |
-| 4 | P0-2 explicit columns in `fetchAll` (+ `warmSwCaches` / SW keys) | S | medium |
-| 5 | P1-1 / P1-2 column trims on detail + panel fetches | S | low–medium |
+| # | Change | Effort | Egress impact | Status |
+|---|---|---|---|---|
+| 1 | P0-1 filter `fetchMultipleSpotGpx` by `spot_id` | XS | very high | ✅ |
+| 2 | P0-2 explicit columns in `fetchAll` (+ `warmSwCaches` / SW keys) | S | medium | ✅ |
+| 3 | P1-3 delete dead `select=*` functions | XS | none (hygiene) | ✅ |
+| 4 | P1-1 `trail_details` column trim (`getTrailBySlug`/`getTrailById`) | S | low | ✅ |
+
+Not in PR 1: the `_embed/[token]` wildcard GPX fetch (behaves as designed →
+PR 2 with `overview_points`), the base-row slug probes (three-way asymmetric,
+sub-KB payoff → skipped), `getSpotGpxData` column trim (P1-2 → folded into PR 2).
 
 **PR 2 — thinned geometry (needs a design pass + migration):**
 
