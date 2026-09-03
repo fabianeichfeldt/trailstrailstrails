@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest'
 import { haversineKm, computeNearbyMap, type SpotLite } from './nearby'
 
 function spot(overrides: Partial<SpotLite> = {}): SpotLite {
+  const id = overrides.id ?? 'x'
   return {
-    id: 'x',
+    id,
+    slug: id,
     name: 'Spot',
     latitude: 48,
     longitude: 11,
@@ -40,6 +42,16 @@ describe('computeNearbyMap', () => {
     const spots = [...base, spot({ id: 'z', name: 'Zulu', approved: false })]
     const map = computeNearbyMap(spots)
     expect(Object.keys(map).sort()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'z'])
+  })
+
+  it('keys the map by slug (the trails/[slug] route param), and neighbour entries carry slug', () => {
+    const spots = [
+      spot({ id: 'a', slug: 'alpha-flow', name: 'Alpha', latitude: 48.0, longitude: 11.0 }),
+      spot({ id: 'b', slug: 'bravo-line', name: 'Bravo', latitude: 48.05, longitude: 11.0 }),
+    ]
+    const map = computeNearbyMap(spots)
+    expect(Object.keys(map).sort()).toEqual(['alpha-flow', 'bravo-line'])
+    expect(map['alpha-flow'][0].slug).toBe('bravo-line')
   })
 
   it('returns at most `count` neighbours (default 5)', () => {

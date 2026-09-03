@@ -5,7 +5,7 @@ export default defineEventHandler(async () => {
   if (!url || !key) return []
 
   const headers = { apikey: key, Authorization: `Bearer ${key}` }
-  const fields = 'id,name,latitude,longitude,approved'
+  const fields = 'id,slug,name,latitude,longitude,approved'
 
   const [trailsRes, parksRes, dirtRes] = await Promise.all([
     fetch(`${url}/rest/v1/trails?select=${fields}`, { headers }),

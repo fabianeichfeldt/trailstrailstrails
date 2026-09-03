@@ -13,8 +13,8 @@
       </button>
 
       <ul ref="trackEl" class="nearby-track" @scroll="updateArrows">
-        <li v-for="s in spots" :key="s.id" class="nearby-item">
-          <NuxtLink :to="`/trails/${s.id}`" class="nearby-card">
+        <li v-for="s in spots" :key="s.slug" class="nearby-item">
+          <NuxtLink :to="`/trails/${s.slug}`" class="nearby-card">
             <img
               :src="s.photo || FALLBACK_IMG"
               loading="lazy"

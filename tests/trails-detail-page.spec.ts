@@ -48,6 +48,14 @@ baseTest('puts the spot name at the front of the document title and social meta'
   await expect(page.locator('head meta[property="og:image:type"]')).toHaveAttribute('content', 'image/jpeg');
   await expect(page.locator('head meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
 
+  // Canonical + og:url point at the name-slug path (t1's fixture slug === its id).
+  await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute(
+    'href', 'https://trailradar.org/trails/t1/',
+  );
+  await expect(page.locator('head meta[property="og:url"]')).toHaveAttribute(
+    'content', 'https://trailradar.org/trails/t1/',
+  );
+
   assertNoLeaks();
 });
 

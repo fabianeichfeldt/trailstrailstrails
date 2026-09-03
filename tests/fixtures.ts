@@ -1,17 +1,19 @@
 import { test as base, Page } from '@playwright/test';
 
+// slug === id in the fixtures so tests can keep navigating to /trails/t1 and
+// have it resolve straight through getTrailBySlug().
 export const MOCK_TRAILS = [
-  { id: 't1', name: 'Flowtrail Tegernsee', type: 'trail', latitude: 47.71, longitude: 11.76, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01' },
-  { id: 't2', name: 'Waldpfad Ingolstadt',  type: 'trail', latitude: 48.76, longitude: 11.42, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-02' },
-  { id: 't3', name: 'Schotterpiste',         type: 'trail', latitude: 48.10, longitude: 11.60, approved: false, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-03' },
+  { id: 't1', slug: 't1', name: 'Flowtrail Tegernsee', type: 'trail', latitude: 47.71, longitude: 11.76, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01' },
+  { id: 't2', slug: 't2', name: 'Waldpfad Ingolstadt',  type: 'trail', latitude: 48.76, longitude: 11.42, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-02' },
+  { id: 't3', slug: 't3', name: 'Schotterpiste',         type: 'trail', latitude: 48.10, longitude: 11.60, approved: false, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-03' },
 ];
 
 export const MOCK_BIKEPARKS = [
-  { id: 'b1', name: 'Bikepark Lenggries', type: 'bikepark', latitude: 47.68, longitude: 11.56, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01' },
+  { id: 'b1', slug: 'b1', name: 'Bikepark Lenggries', type: 'bikepark', latitude: 47.68, longitude: 11.56, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01' },
 ];
 
 export const MOCK_DIRTPARKS = [
-  { id: 'd1', name: 'Pumptrack München', type: 'dirtpark', latitude: 48.14, longitude: 11.57, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01', pumptrack: true, dirtpark: false },
+  { id: 'd1', slug: 'd1', name: 'Pumptrack München', type: 'dirtpark', latitude: 48.14, longitude: 11.57, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01', pumptrack: true, dirtpark: false },
 ];
 
 /** Fake authenticated user returned by all auth mocks in logged-in state. */

@@ -161,7 +161,7 @@ import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
 import { toSocialImage, OG_FALLBACK_IMAGE } from '~/utils/socialImage'
-import { getTrailById, getTrailDetails } from '~/communication/trails'
+import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
 import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
 import type { NearbySpot } from '@@/build/nearby'
@@ -186,7 +186,18 @@ const isRegion = !!region
 const { data: trail, refresh: refreshTrail } = await useAsyncData(`trail-${slug}`, async () => {
   if (isRegion) return null
   try {
-    return await getTrailById(slug)
+    const bySlug = await getTrailBySlug(slug)
+    if (bySlug) return bySlug
+
+    // Legacy /trails/<id>/ URL (pre-slug links, old sitemap entries, shares):
+    // resolve by id and 301 to the canonical slug path. The edge redirect
+    // stubs handle this for crawlers; this covers ids too new to have a stub
+    // and any direct in-app navigation.
+    const byId = await getTrailById(slug)
+    if (byId?.slug && byId.slug !== slug) {
+      await navigateTo(`/trails/${byId.slug}/`, { redirectCode: 301, replace: true })
+    }
+    return byId
   } catch {
     return null
   }
@@ -397,6 +408,12 @@ const pageName = computed(() => isRegion
   ? `Offizielle MTB Trails ${region!.pronom}`
   : trail.value?.name || 'Trail')
 
+// The slug the page canonicalises to: the route param for regions, otherwise
+// the resolved spot's own slug (so a legacy /trails/<id>/ URL still emits a
+// canonical + og:url pointing at /trails/<slug>/, not the id).
+const canonicalSlug = computed(() => isRegion ? slug : (trail.value?.slug || slug))
+const canonicalUrl = computed(() => `https://trailradar.org/trails/${canonicalSlug.value}/`)
+
 // Spot name first, brand after — used verbatim for <title> (titleTemplate is
 // disabled for this page below) and for og:/twitter: titles, which never get
 // a template applied. Keeps the spot name at the front of the SERP entry and
@@ -427,7 +444,7 @@ useSeoMeta({
   description: () => metaDescription.value,
   ogTitle: () => metaTitle.value,
   ogDescription: () => metaDescription.value,
-  ogUrl: `https://trailradar.org/trails/${slug}/`,
+  ogUrl: () => canonicalUrl.value,
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
   ogType: 'website',
@@ -444,7 +461,7 @@ useSeoMeta({
 
 useHead({
   titleTemplate: '%s',
-  link: [{ rel: 'canonical', href: `https://trailradar.org/trails/${slug}/` }],
+  link: () => [{ rel: 'canonical', href: canonicalUrl.value }],
   script: () => (trail.value && !isRegion
     ? [
         {
@@ -460,7 +477,7 @@ useHead({
               latitude: trail.value.latitude,
               longitude: trail.value.longitude,
             },
-            url: `https://trailradar.org/trails/${slug}/`,
+            url: canonicalUrl.value,
             ...(trail.value.photos?.[0]?.url ? { image: trail.value.photos[0].url } : {}),
           }),
         },

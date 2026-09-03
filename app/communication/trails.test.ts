@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotParking, toElevationProfile } from './trails'
+import { fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -57,6 +57,57 @@ describe('fetchMultipleSpotParking', () => {
   it('throws when the request fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'server error')))
     await expect(fetchMultipleSpotParking(['s1'])).rejects.toThrow('parking fetch failed')
+  })
+})
+
+// ── getTrailBySlug ───────────────────────────────────────────────────────────
+
+describe('getTrailBySlug', () => {
+  function routeFetch(tables: {
+    trails?: unknown[]; parks?: unknown[]; dirt_parks?: unknown[]
+    trail_details?: unknown[]; trail_photos?: unknown[]
+  }) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      return ok((tables as Record<string, unknown[]>)[table] ?? [])
+    })
+  }
+
+  it('resolves a trail by its slug and merges details + photos', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      trails: [{ id: 't-uuid', slug: 'flowtrail-kelkheim', name: 'Flowtrail Kelkheim', latitude: 50.1, longitude: 8.4 }],
+      trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
+      trail_photos: [{ id: 'ph1', url: 'https://x/1.jpg' }],
+    }))
+
+    const res = await getTrailBySlug('flowtrail-kelkheim')
+    expect(res).toMatchObject({
+      id: 't-uuid',
+      slug: 'flowtrail-kelkheim',
+      type: 'trail',
+      trail_description: 'Nice',
+    })
+    expect(res!.photos).toHaveLength(1)
+  })
+
+  it('falls through the three spot tables and tags the type', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      dirt_parks: [{ id: 'd-uuid', slug: 'pumptrack-muc', name: 'Pumptrack', latitude: 48, longitude: 11 }],
+    }))
+    const res = await getTrailBySlug('pumptrack-muc')
+    expect(res).toMatchObject({ id: 'd-uuid', type: 'dirtpark' })
+  })
+
+  it('returns null when no spot owns the slug', async () => {
+    vi.stubGlobal('fetch', routeFetch({}))
+    expect(await getTrailBySlug('does-not-exist')).toBeNull()
+  })
+
+  it('URL-encodes the slug in the query', async () => {
+    const fetch = routeFetch({})
+    vi.stubGlobal('fetch', fetch)
+    await getTrailBySlug('a b/c')
+    expect(String(fetch.mock.calls[0][0])).toContain('slug=eq.a%20b%2Fc')
   })
 })
 

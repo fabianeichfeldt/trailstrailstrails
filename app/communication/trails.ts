@@ -100,6 +100,51 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
   return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
 }
 
+// Slug-based counterpart of getTrailById — the primary resolver for
+// /trails/[slug] now that spot pages are addressed by name-slug (see
+// docs/superpowers/specs/2026-09-01-trail-slug-urls-design.md). Two phases:
+// resolve the base spot row + type by slug across the three spot tables, then
+// fetch its details + photos by the resolved id (those tables key on the spot
+// id, not the slug). Returns null when no spot owns this slug — the caller
+// then falls back to getTrailById() to 301 a legacy id URL to its slug.
+export async function getTrailBySlug(slug: string): Promise<Record<string, any> | null> {
+  const [trailsRes, parksRes, dirtRes] = await Promise.all([
+    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/dirt_parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+  ])
+
+  const [trails, parks, dirtParks] = await Promise.all([
+    trailsRes.ok ? trailsRes.json() : [],
+    parksRes.ok ? parksRes.json() : [],
+    dirtRes.ok ? dirtRes.json() : [],
+  ])
+
+  let base: Record<string, any> | undefined
+  let type: Trail['type'] = 'trail'
+  if ((base = (trails as Array<Record<string, any>>).find(t => t.slug === slug))) {
+    type = 'trail'
+  } else if ((base = (parks as Array<Record<string, any>>).find(t => t.slug === slug))) {
+    type = 'bikepark'
+  } else if ((base = (dirtParks as Array<Record<string, any>>).find(t => t.slug === slug))) {
+    type = 'dirtpark'
+  }
+  if (!base) return null
+
+  const id = base.id
+  const [detailsRes, photosRes] = await Promise.all([
+    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+  ])
+  const [details, photos] = await Promise.all([
+    detailsRes.ok ? detailsRes.json() : [],
+    photosRes.ok ? photosRes.json() : [],
+  ])
+
+  const detail = (details as Array<Record<string, any>>).find(d => d.trail_id === id)
+  return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
+}
+
 export interface PhotoResponse {
   url: string
   created_at: string

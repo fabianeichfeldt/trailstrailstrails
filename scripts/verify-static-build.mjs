@@ -18,7 +18,7 @@
 //   node scripts/verify-static-build.mjs --skip-build   # verify an already-built .output/public (CI)
 
 import { spawn, spawnSync } from 'node:child_process'
-import { readdirSync, rmSync, existsSync } from 'node:fs'
+import { readdirSync, readFileSync, rmSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { setTimeout as sleep } from 'node:timers/promises'
 
@@ -40,12 +40,34 @@ if (!skipBuild) {
 }
 
 const trailsDir = `${ROOT}.output/public/trails`
-const ids = existsSync(trailsDir) ? readdirSync(trailsDir).filter(f => !f.includes('.')) : []
+const candidates = existsSync(trailsDir) ? readdirSync(trailsDir).filter(f => !f.includes('.')) : []
+// Skip the legacy-URL redirect stubs (id/retired-slug dirs whose index.html is
+// just a canonical + meta-refresh to the real /trails/<slug>/ page) — pick a
+// real prerendered page, identified by the Nuxt app root.
+const ids = candidates.filter(f => {
+  try {
+    return readFileSync(`${trailsDir}/${f}/index.html`, 'utf8').includes('id="__nuxt"')
+  } catch {
+    return false
+  }
+})
 if (ids.length === 0) {
   console.error('✗ No prerendered trail pages found in .output/public/trails')
   process.exit(1)
 }
 const sampleId = ids[0]
+
+// A legacy-URL redirect stub: an id/retired-slug dir whose index.html is a
+// canonical + meta-refresh to the real /trails/<slug>/ page (see the
+// prerender:done hook in nuxt.config.ts). Its presence is what keeps old
+// /trails/<uuid>/ links alive after the id→slug switch.
+const stubId = candidates.find(f => {
+  try {
+    return readFileSync(`${trailsDir}/${f}/index.html`, 'utf8').includes('http-equiv="refresh"')
+  } catch {
+    return false
+  }
+})
 
 console.log(`→ Serving .output/public and checking /trails/${sampleId} ...`)
 const server = spawn('npx', ['serve', '-l', String(PORT), '.output/public'], { cwd: ROOT, stdio: 'ignore' })
@@ -67,6 +89,32 @@ try {
     exitCode = 1
   } else {
     console.log(`✓ /trails/${sampleId} rendered correctly from a pure static server (no live API)`)
+  }
+
+  // Legacy-URL redirect stub: 200, points at a real /trails/<slug>/ page.
+  if (!stubId) {
+    console.error('✗ No legacy-URL redirect stub found in .output/public/trails')
+    exitCode = 1
+  } else {
+    const stubRes = await fetch(`http://localhost:${PORT}/trails/${stubId}`, { redirect: 'manual' })
+    const stubBody = await stubRes.text()
+    const target = stubBody.match(/http-equiv="refresh" content="0; url=(\/trails\/[^"]+\/)"/)?.[1]
+    const stubFailures = []
+    if (stubRes.status !== 200) stubFailures.push(`stub expected HTTP 200, got ${stubRes.status}`)
+    if (!target) stubFailures.push('stub has no meta-refresh to a /trails/<slug>/ URL')
+    if (target && !stubBody.includes(`<link rel="canonical" href="https://trailradar.org${target}">`)) {
+      stubFailures.push('stub canonical does not match its redirect target')
+    }
+    if (target && !ids.includes(target.replace(/^\/trails\/|\/$/g, ''))) {
+      stubFailures.push(`stub redirects to ${target} which is not a real prerendered page`)
+    }
+    if (stubFailures.length) {
+      console.error('✗ Redirect-stub verification FAILED:')
+      for (const f of stubFailures) console.error(`  - ${f}`)
+      exitCode = 1
+    } else {
+      console.log(`✓ /trails/${stubId} is a redirect stub → ${target} (a real page)`)
+    }
   }
 } finally {
   server.kill()

@@ -18,16 +18,16 @@ function mountWith(spots: NearbySpot[]) {
   })
 }
 
-const withPhoto: NearbySpot = { id: 'a1', name: 'Alpha Trail', type: 'trail', km: 2.4, photo: 'https://example.com/a.jpg' }
-const noPhoto: NearbySpot = { id: 'b2', name: 'Bravo Bikepark', type: 'bikepark', km: 12.7 }
+const withPhoto: NearbySpot = { id: 'a1', slug: 'alpha-trail', name: 'Alpha Trail', type: 'trail', km: 2.4, photo: 'https://example.com/a.jpg' }
+const noPhoto: NearbySpot = { id: 'b2', slug: 'bravo-bikepark', name: 'Bravo Bikepark', type: 'bikepark', km: 12.7 }
 
 describe('SpotDetailNearby', () => {
-  it('renders one card per spot with a /trails/{id} link', () => {
+  it('renders one card per spot with a /trails/{slug} link', () => {
     const wrapper = mountWith([withPhoto, noPhoto])
     const links = wrapper.findAll('a.nearby-card')
     expect(links).toHaveLength(2)
-    expect(links[0].attributes('href')).toBe('/trails/a1')
-    expect(links[1].attributes('href')).toBe('/trails/b2')
+    expect(links[0].attributes('href')).toBe('/trails/alpha-trail')
+    expect(links[1].attributes('href')).toBe('/trails/bravo-bikepark')
   })
 
   it('renders an <img> with the photo url when a photo is present', () => {

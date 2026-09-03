@@ -79,6 +79,27 @@ baseTest('/trails/[id] shows the trail name and a "View on map" link that flies 
   assertNoLeaks();
 });
 
+// Legacy /trails/<id>/ URLs (pre-slug shares, old sitemap entries) must still
+// land the user on the spot — resolved by id, then redirected to the canonical
+// /trails/<slug>/ path. See getTrailBySlug/getTrailById in
+// app/communication/trails.ts and the resolver in app/pages/trails/[slug].vue.
+baseTest('/trails/<id> for a spot whose slug differs redirects to the slug URL', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.route('**/rest/v1/trails**', (route) => route.fulfill({
+    json: [{
+      id: 'legacy-uuid-123', slug: 'flowtrail-kelkheim', name: 'Flowtrail Kelkheim', type: 'trail',
+      latitude: 50.13, longitude: 8.44, approved: true, creator: '', url: '', instagram: '', spotcheck: '', created_at: '2024-01-01',
+    }],
+  }));
+
+  await page.goto('/trails/legacy-uuid-123');
+  await page.waitForURL(/\/trails\/flowtrail-kelkheim\/?$/);
+
+  expect(page.url()).toContain('/trails/flowtrail-kelkheim');
+  await expect(page.locator('h1')).toContainText('Flowtrail Kelkheim');
+  assertNoLeaks();
+});
+
 // Regression test for "the embedded map on a trail page shows the wrong
 // location" (reported: /trails/[uuid] pages showing a map centered near
 // Salzburg — the DEFAULT_LAT/DEFAULT_LNG fallback in app/utils/embedQuery.ts

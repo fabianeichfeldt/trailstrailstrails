@@ -5,6 +5,7 @@
 
 export interface ShareableItem {
   id: string;
+  slug: string;
   name: string;
 }
 
@@ -16,11 +17,11 @@ export interface ShareDeps {
   reportShare: (id: string) => Promise<void>;
 }
 
-export function trailShareUrl(id: string): string {
+export function trailShareUrl(slug: string): string {
   // Trailing slash = the page's canonical URL. Without it the request 301s,
   // and link-preview crawlers that read tags off the first response (not the
   // redirect target) get nothing.
-  return `https://trailradar.org/trails/${id}/`;
+  return `https://trailradar.org/trails/${slug}/`;
 }
 
 // Firefox desktop does not implement navigator.share at all (Android-only,
@@ -28,7 +29,7 @@ export function trailShareUrl(id: string): string {
 // support it everywhere. copyToClipboard() is the fallback for any browser
 // missing the native share sheet.
 export async function shareTrail(item: ShareableItem, deps: ShareDeps): Promise<void> {
-  const url = trailShareUrl(item.id);
+  const url = trailShareUrl(item.slug);
 
   if (deps.hasNativeShare) {
     try {
