@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -60,6 +60,70 @@ describe('fetchMultipleSpotParking', () => {
   })
 })
 
+// ── fetchMultipleSpotGpx ────────────────────────────────────────────────────
+
+describe('fetchMultipleSpotGpx', () => {
+  function routeFetch(tables: { spot_gpx_trails?: unknown[]; spot_gpx_tours?: unknown[] }) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      return ok((tables as Record<string, unknown[]>)[table] ?? [])
+    })
+  }
+
+  it('returns an empty Map without calling fetch when given no spot IDs', async () => {
+    const fetch = vi.fn()
+    vi.stubGlobal('fetch', fetch)
+    const result = await fetchMultipleSpotGpx([])
+    expect(result).toEqual(new Map())
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('scopes both requests to the requested spot IDs (no whole-table scan)', async () => {
+    const fetch = routeFetch({})
+    vi.stubGlobal('fetch', fetch)
+    await fetchMultipleSpotGpx(['s1', 's2'])
+
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    const trailsUrl = urls.find(u => u.includes('/spot_gpx_trails'))!
+    const toursUrl = urls.find(u => u.includes('/spot_gpx_tours'))!
+    expect(trailsUrl).toContain('spot_id=in.(s1,s2)')
+    expect(toursUrl).toContain('spot_id=in.(s1,s2)')
+  })
+
+  it('URL-encodes spot IDs in the filter', async () => {
+    const fetch = routeFetch({})
+    vi.stubGlobal('fetch', fetch)
+    await fetchMultipleSpotGpx(['a b', 's/2'])
+
+    const trailsUrl = fetch.mock.calls.map(c => String(c[0])).find(u => u.includes('/spot_gpx_trails'))!
+    expect(trailsUrl).toContain('spot_id=in.(a%20b,s%2F2)')
+  })
+
+  it('groups trails and tours by spot_id, including spots with no GPX', async () => {
+    const fetch = routeFetch({
+      spot_gpx_trails: [
+        { spot_id: 's1', name: 'T1', difficulty: 'S1', gpx_points: [[47, 13, 0]] },
+        { spot_id: 's2', name: 'T2', difficulty: 'S2', gpx_points: [[48, 14, 0]] },
+      ],
+      spot_gpx_tours: [
+        { spot_id: 's1', name: 'Tour 1', gpx_points: [[47, 13, 0]] },
+      ],
+    })
+    vi.stubGlobal('fetch', fetch)
+    const result = await fetchMultipleSpotGpx(['s1', 's2', 's3'])
+
+    expect(result.get('s1')?.trails.map(t => t.name)).toEqual(['T1'])
+    expect(result.get('s1')?.tours.map(t => t.name)).toEqual(['Tour 1'])
+    expect(result.get('s2')?.trails.map(t => t.name)).toEqual(['T2'])
+    expect(result.get('s3')).toEqual({ trails: [], tours: [] })
+  })
+
+  it('throws when a request fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'server error')))
+    await expect(fetchMultipleSpotGpx(['s1'])).rejects.toThrow('spot_gpx_trails fetch failed')
+  })
+})
+
 // ── getTrailBySlug ───────────────────────────────────────────────────────────
 
 describe('getTrailBySlug', () => {
@@ -108,6 +172,21 @@ describe('getTrailBySlug', () => {
     vi.stubGlobal('fetch', fetch)
     await getTrailBySlug('a b/c')
     expect(String(fetch.mock.calls[0][0])).toContain('slug=eq.a%20b%2Fc')
+  })
+
+  it('fetches only the baked trail_details columns, not select=*', async () => {
+    const fetch = routeFetch({
+      trails: [{ id: 't-uuid', slug: 'flowtrail', name: 'Flow', latitude: 50, longitude: 8 }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    await getTrailBySlug('flowtrail')
+
+    const detailsUrl = fetch.mock.calls.map(c => String(c[0])).find(u => u.includes('/trail_details'))!
+    expect(detailsUrl).not.toContain('select=*')
+    // the fields bakedTrailDetails() reads must all be requested
+    for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
+      expect(detailsUrl).toContain(col)
+    }
   })
 })
 

@@ -1,5 +1,5 @@
 import { REST, FUNCTIONS, anonHeaders, userHeaders } from './http'
-import { BaseTrail, BikePark, DirtPark, isBikePark, isDirtPark, SingleTrail, Trail } from '../types/Trail'
+import { Trail } from '../types/Trail'
 import { TrailDetails } from '../types/TrailDetails'
 import type { IAuthService } from '../auth/auth_service'
 import { SpotMtbData, MtbTrail, MtbTour, ElevationPoint } from '../types/MtbTypes'
@@ -11,50 +11,22 @@ function fallbackDetails(trail: Trail): TrailDetails {
 const DETAILS_TTL = 5 * 60 * 1000
 const detailsCache = new Map<string, { data: TrailDetails; ts: number }>()
 
+// The trail_details columns bakedTrailDetails() (app/utils/bakedTrailDetails.ts)
+// actually reads to seed the anti-flash/SEO render. Everything else on the row
+// (opening_hours_text, affected_trail_ids, rain_window_*, night_* — all
+// SpotManager-only) never reaches the detail page, and the genuinely dynamic
+// fields are refreshed post-mount by getTrailDetails() anyway. Keep this in
+// sync with bakedTrailDetails() — see docs/db-egress-reduction-plan.md P1-1.
+const TRAIL_DETAILS_BAKED_COLUMNS =
+  'trail_id,rules,last_update,trail_description,status,status_until,status_hint,' +
+  'access_type,donation_url,seasonal_from,seasonal_to,rain_policy,rain_closed_hours'
+
 // Maps trail type to the Supabase edge-function path and query-parameter name.
 // Adding a new type only requires adding a new entry here — callers stay unchanged.
 const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = {
   trail:    { path: 'trail-details',       param: 'trail' },
   bikepark: { path: 'bike-parks-details',  param: 'id' },
   dirtpark: { path: 'dirt-parks-details',  param: 'id' },
-}
-
-export async function getTrails(): Promise<SingleTrail[]> {
-  const res = await fetch(`${REST}/trails?select=*`, {
-    method: 'GET',
-    cache: 'no-store',
-    headers: anonHeaders(),
-  })
-  if (!res.ok) return []
-  const data = await res.json()
-  return (data as Array<Trail>).map(i => ({ ...i, type: 'trail' }))
-}
-
-export async function getFavoriteTrails(userID: string): Promise<BaseTrail[]> {
-  const res = await fetch(
-    `${REST}/trail_favorites?select=*,trails(*)&user_id=eq.${userID}`,
-    { method: 'GET', cache: 'no-store', headers: anonHeaders() },
-  )
-  const data = await res.json()
-  return (data as { trails: BaseTrail }[]).map(i => i.trails)
-}
-
-export async function getTrailsByUserId(userId: string): Promise<BaseTrail[]> {
-  const [dirtRes, trailRes, parkRes] = await Promise.all([
-    fetch(`${REST}/dirt_parks?creator_id=eq.${userId}`,   { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trails?select=*&creator_id=eq.${userId}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/parks?creator_id=eq.${userId}`,        { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-  ])
-
-  const [dirtData, trailData, parkData] = await Promise.all([
-    dirtRes.json(), trailRes.json(), parkRes.json(),
-  ])
-
-  return [
-    ...(trailData as SingleTrail[]).map(i => ({ ...i, type: 'trail' as const })),
-    ...(dirtData  as DirtPark[])   .map(i => ({ ...i, type: 'dirtpark' as const })),
-    ...(parkData  as BikePark[])   .map(i => ({ ...i, type: 'bikepark' as const })),
-  ]
 }
 
 // Fetches a single spot's full detail payload directly from Supabase REST —
@@ -70,7 +42,7 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
     fetch(`${REST}/trails?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
 
@@ -133,7 +105,7 @@ export async function getTrailBySlug(slug: string): Promise<Record<string, any> 
 
   const id = base.id
   const [detailsRes, photosRes] = await Promise.all([
-    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
   const [details, photos] = await Promise.all([
@@ -143,23 +115,6 @@ export async function getTrailBySlug(slug: string): Promise<Record<string, any> 
 
   const detail = (details as Array<Record<string, any>>).find(d => d.trail_id === id)
   return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
-}
-
-export interface PhotoResponse {
-  url: string
-  created_at: string
-  trailName: string
-  trailID: string
-}
-
-export async function getPhotosByUserId(userId: string): Promise<PhotoResponse[]> {
-  const res = await fetch(
-    `${REST}/trail_photos?select=*,trails(name)&creator=eq.${userId}`,
-    { method: 'GET', cache: 'no-store', headers: anonHeaders() },
-  )
-  const data = await res.json()
-  return (data as { url: string; created_at: string; trail_id: string; trails: { name: string } }[])
-    .map(i => ({ url: i.url, created_at: i.created_at, trailName: i.trails.name, trailID: i.trail_id }))
 }
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
@@ -348,12 +303,16 @@ export async function fetchMultipleSpotGpx(
 ): Promise<Map<string, { trails: SpotGpxTrail[]; tours: SpotGpxTour[] }>> {
   if (!spotIds.length) return new Map()
 
+  // Scope both requests to the requested spots. Without this filter PostgREST
+  // returns gpx_points (the largest column in the schema) for *every* row in
+  // spot_gpx_trails / spot_gpx_tours on every GPX-view render — see
+  // docs/db-egress-reduction-plan.md P0-1.
   const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
   const [tRes, rRes] = await Promise.all([
-    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description,closed_from,closed_to,hint`, {
+    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description,closed_from,closed_to,hint&spot_id=in.(${idList})`, {
       headers: anonHeaders(),
     }),
-    fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points`, {
+    fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points&spot_id=in.(${idList})`, {
       headers: anonHeaders(),
     }),
   ])
