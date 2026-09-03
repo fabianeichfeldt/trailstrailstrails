@@ -3,8 +3,10 @@ name: Build and Deploy
 on:
   # Run the test + build jobs on every branch push. Only pushes to `main`
   # continue on to the deploy job automatically (see the `deploy` job's `if`).
+  # `branches: ['**']` = every branch, no tags — a lone `tags-ignore` here
+  # would silently stop the workflow running on branch pushes at all.
   push:
-    tags-ignore:
+    branches:
       - '**'
   # Manual "Run workflow" button (Actions tab): pick any branch to build AND
   # deploy it to production Pages — used to smoke-test a feature branch live.
