@@ -3,6 +3,10 @@ name: Build and Deploy
 on:
   push:
     branches: [main]
+  # Manual "Run workflow" button (Actions tab): pick any branch to build and
+  # deploy it to production Pages — used to smoke-test a feature branch live.
+  # To roll back, run it again on `main`.
+  workflow_dispatch:
 
 permissions:
   contents: read
