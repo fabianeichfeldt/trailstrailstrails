@@ -1,9 +1,12 @@
 name: Build and Deploy
 
 on:
+  # Run the test + build jobs on every branch push. Only pushes to `main`
+  # continue on to the deploy job automatically (see the `deploy` job's `if`).
   push:
-    branches: [main]
-  # Manual "Run workflow" button (Actions tab): pick any branch to build and
+    tags-ignore:
+      - '**'
+  # Manual "Run workflow" button (Actions tab): pick any branch to build AND
   # deploy it to production Pages — used to smoke-test a feature branch live.
   # To roll back, run it again on `main`.
   workflow_dispatch:
@@ -13,8 +16,11 @@ permissions:
   pages: write
   id-token: write
 
+# Per-branch: a newer push to the same branch cancels its own in-flight run,
+# but different branches never cancel each other. The deploy job additionally
+# serialises on a global `pages` group (below) so concurrent deploys can't race.
 concurrency:
-  group: pages
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -89,6 +95,12 @@ jobs:
 
   deploy:
     needs: build
+    # Deploy automatically only on `main`. Any other branch deploys only when
+    # a run is started by hand from the Actions tab ("Run workflow").
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     steps:
       - uses: actions/deploy-pages@v5
