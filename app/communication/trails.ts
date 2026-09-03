@@ -348,12 +348,16 @@ export async function fetchMultipleSpotGpx(
 ): Promise<Map<string, { trails: SpotGpxTrail[]; tours: SpotGpxTour[] }>> {
   if (!spotIds.length) return new Map()
 
+  // Scope both requests to the requested spots. Without this filter PostgREST
+  // returns gpx_points (the largest column in the schema) for *every* row in
+  // spot_gpx_trails / spot_gpx_tours on every GPX-view render — see
+  // docs/db-egress-reduction-plan.md P0-1.
   const idList = spotIds.map(id => encodeURIComponent(id)).join(',')
   const [tRes, rRes] = await Promise.all([
-    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description,closed_from,closed_to,hint`, {
+    fetch(`${REST}/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points,trail_description,closed_from,closed_to,hint&spot_id=in.(${idList})`, {
       headers: anonHeaders(),
     }),
-    fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points`, {
+    fetch(`${REST}/spot_gpx_tours?select=spot_id,name,gpx_points&spot_id=in.(${idList})`, {
       headers: anonHeaders(),
     }),
   ])
