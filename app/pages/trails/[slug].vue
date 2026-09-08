@@ -232,7 +232,13 @@ const { data: nearby } = await useAsyncData(
 
 const regionEmbedSrc = computed(() => {
   if (!region) return ''
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${region.lat}&lng=${region.lng}&zoom=${region.zoom}&parentHost=trailradar.org`
+  // Trailing slash is deliberate: GitHub Pages serves /embed/{token} as a
+  // directory and 301s to /embed/{token}/. A plain browser tab follows that
+  // transparently, but under the PWA service worker the iframe navigation
+  // (issued with redirect:"manual") turns the 301 into an opaqueredirect the
+  // worker caches and replays — the embedded map then renders blank / a
+  // stale shell. Request the canonical URL directly so there is no redirect.
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}/?lat=${region.lat}&lng=${region.lng}&zoom=${region.zoom}&parentHost=trailradar.org`
 })
 
 const otherRegions = computed(() =>
@@ -273,7 +279,9 @@ const supabaseUser = useSupabaseUser()
 // host page's scroll the way a third-party iframe embed could.
 const embedSrc = computed(() => {
   if (!trail.value) return ''
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
+  // Trailing slash: see regionEmbedSrc — avoids the GitHub Pages 301 that
+  // the PWA service worker mishandles for iframe navigations.
+  return `${EMBED_BASE}/embed/${EMBED_TOKEN}/?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
 })
 
 // Clicking a Touren/Trails row (SpotPanelTrailsTab.vue/SpotPanelToursTab.vue)

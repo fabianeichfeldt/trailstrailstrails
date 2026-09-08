@@ -185,11 +185,48 @@ export default defineNuxtConfig({
       navigateFallback: null,
       runtimeCaching: [
         {
+          // The spot-detail page (app/pages/trails/[slug].vue) embeds the map
+          // as <iframe src="/embed/[token]/?…">, and that page fetches its
+          // data from the /_embed/[token] Cloudflare Worker. Neither path is
+          // part of this SSG build. They must be kept OUT of the generic
+          // "navigate" rule below: a navigation request is issued with
+          // redirect:"manual", so any redirect on the iframe URL (e.g. a
+          // GitHub Pages trailing-slash 301) reaches the worker as an
+          // opaqueredirect it then caches and replays — the embedded map
+          // renders blank / a stale shell in the installed PWA while the main
+          // /map keeps working. Give each its own network-first cache so the
+          // embed also survives offline, and so a poisoned entry can never
+          // leak into the "pages" cache.
+          urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/embed/'),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'embed-page',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
+          urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith('/_embed/'),
+          handler: 'NetworkFirst',
+          options: {
+            cacheName: 'embed-data',
+            networkTimeoutSeconds: 3,
+            expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 7 },
+            cacheableResponse: { statuses: [0, 200] },
+          },
+        },
+        {
           // Every page navigation (the homepage, /map, region pages, every
           // /trails/* spot page): network-first with a short timeout, so a
           // returning online visitor always gets the freshly deployed HTML,
           // and an offline/slow one still falls back to the last copy seen.
-          urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+          // /embed/ and /_embed/ are excluded — they have their own caches
+          // above (a redirect on an iframe navigation poisons this one).
+          urlPattern: ({ request, url }: { request: Request; url: URL }) =>
+            request.mode === 'navigate'
+            && !url.pathname.startsWith('/embed/')
+            && !url.pathname.startsWith('/_embed/'),
           handler: 'NetworkFirst',
           options: {
             cacheName: 'pages',

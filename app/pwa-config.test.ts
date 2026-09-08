@@ -55,3 +55,34 @@ describe('PWA content stays fresh independently of the service-worker update cyc
     expect(nuxtConfig).toMatch(/periodicSyncForUpdates:\s*\d/)
   })
 })
+
+// Regression test for a third real production bug: the spot-detail page
+// (app/pages/trails/[slug].vue) embeds the map as <iframe src="/embed/[token]/?…">,
+// and that page fetches its data from the /_embed/[token] Cloudflare Worker.
+// Neither path is part of this SSG build. The generic "navigate" NetworkFirst
+// rule was catching the iframe navigation: navigation requests are issued with
+// redirect:"manual", so a trailing-slash 301 on the iframe URL became an
+// opaqueredirect the worker cached and replayed, and the embedded map rendered
+// blank / a stale shell in the installed PWA (the main /map kept working, so it
+// looked PWA-specific). Both paths need their own runtime caches, kept out of
+// the generic navigation rule, so the embed also survives offline.
+describe('PWA service worker leaves the embedded-map iframe to its own cache', () => {
+  const workboxBlock = nuxtConfig.match(/workbox:\s*{[\s\S]*?\n {4}}/)![0]
+
+  test('the generic navigation rule skips /embed/ and /_embed/ paths', () => {
+    const navRule = workboxBlock.slice(workboxBlock.indexOf("request.mode === 'navigate'"))
+    const urlPattern = navRule.slice(0, navRule.indexOf('handler:'))
+    expect(urlPattern).toContain("pathname.startsWith('/embed/')")
+    expect(urlPattern).toContain("pathname.startsWith('/_embed/')")
+  })
+
+  test('the /embed/ iframe page has its own runtime cache, separate from "pages"', () => {
+    expect(workboxBlock).toContain("cacheName: 'embed-page'")
+  })
+
+  test('the /_embed/ worker API has its own network-first runtime cache', () => {
+    expect(workboxBlock).toContain("cacheName: 'embed-data'")
+    const embedDataRule = workboxBlock.slice(workboxBlock.indexOf("cacheName: 'embed-data'") - 400, workboxBlock.indexOf("cacheName: 'embed-data'"))
+    expect(embedDataRule).toMatch(/handler:\s*'NetworkFirst'/)
+  })
+})
