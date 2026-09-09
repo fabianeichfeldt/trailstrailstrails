@@ -86,21 +86,18 @@
           </section>
         </div>
 
-        <!-- Embedded map — token-scoped widget, same iframe pattern as
-             before this rework (Decision 9: double-Leaflet-bundle cost
-             accepted), now with panning/zooming enabled (interactive=1)
-             since this is trailradar.org's own page, not a third-party
-             embed. -->
+        <!-- Inline mini-map — a Vue component fed by the data already in
+             spotPanelStore (via the communication/ REST layer, so it's
+             offline-cacheable), not a self-embedding iframe. Decision 9
+             (double-Leaflet-bundle) is reversed for the spot page; region
+             pages below still use the /embed/[token] iframe. -->
         <div class="explore-map">
           <section class="map-section content-section">
-            <iframe
-              v-if="embedSrc"
-              ref="mapIframeEl"
-              :src="embedSrc"
-              class="trail-map"
-              frameborder="0"
-              loading="lazy"
-              title="Trailradar Karte"
+            <SpotDetailMiniMap
+              :spot="trailForStore"
+              :data="spotPanelStore.data"
+              :parking="spotPanelStore.parkingLots"
+              :focus="mapFocus"
             />
             <NuxtLink :to="`/map?trail=${trailForStore.id}`" class="map-all-trails-btn">Trailradar Karte</NuxtLink>
           </section>
@@ -158,6 +155,7 @@ import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
 import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
 import SpotPanelComments from '~/components/map/SpotPanelComments.vue'
+import SpotDetailMiniMap from '~/components/trail_detail/SpotDetailMiniMap.vue'
 import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
 import { toSocialImage, OG_FALLBACK_IMAGE } from '~/utils/socialImage'
@@ -279,18 +277,8 @@ const spotPanelStore = useSpotPanelStore()
 const authStore = useAuthStore()
 const supabaseUser = useSupabaseUser()
 
-// interactive=1: unlike third-party embeds, this is trailradar.org's own
-// page for this exact spot, so panning/zooming the map here can't hijack a
-// host page's scroll the way a third-party iframe embed could.
-const embedSrc = computed(() => {
-  if (!trail.value) return ''
-  // Trailing slash: see regionEmbedSrc — avoids the GitHub Pages 301 that
-  // the PWA service worker mishandles for iframe navigations.
-  return `${EMBED_BASE}/embed/${EMBED_TOKEN}/?lat=${trail.value.latitude}&lng=${trail.value.longitude}&zoom=11&parentHost=trailradar.org&interactive=1`
-})
-
 // Clicking a Touren/Trails row (SpotPanelTrailsTab.vue/SpotPanelToursTab.vue)
-// flies the embedded map to that trail instead of the spot's own marker.
+// flies the inline mini-map to that trail instead of the spot's own marker.
 // Center point: midpoint of the GPX track's start and end (not a centroid
 // of every point) — a cheap, good-enough proxy for "where this trail is".
 const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
@@ -305,35 +293,22 @@ const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
   return { lat: (startLat + endLat) / 2, lng: (startLng + endLng) / 2 }
 })
 
-// Reloading the iframe's `src` on every row click would work but reload the
-// whole map (tile flash, lost pan/zoom state) — jarring compared to the
-// live map's flyTo(). Posting a message instead lets the embed page's own
-// Leaflet instance animate to the new view without a reload; see the
-// `message` listener in app/pages/embed/[token].vue. In the native shell the
-// iframe is cross-origin (EMBED_BASE = https://trailradar.org), so the
-// postMessage target origin must match it there; same-origin everywhere else.
-const mapIframeEl = ref<HTMLIFrameElement | null>(null)
-const FLY_TO_TRAIL_ZOOM = 14
-
-function flyMapTo(lat: number, lng: number, zoom: number) {
-  const win = mapIframeEl.value?.contentWindow
-  if (!win) return
-  win.postMessage({ type: 'trailradar:flyTo', lat, lng, zoom }, EMBED_BASE || window.location.origin)
+// Clicking a Parkplätze row (SpotPanelParkingTab.vue) flies the mini-map to
+// that lot. It's cleared as soon as a Touren/Trails row is selected, so
+// `mapFocus` below falls through to the trail focus / the spot itself.
+const parkingFocus = ref<{ lat: number; lng: number } | null>(null)
+function onParkingFlyTo(lat: number, lng: number) {
+  spotPanelStore.clearSelection()
+  parkingFocus.value = { lat, lng }
 }
-
-watch(selectedItemFocus, (focus) => {
-  if (focus) {
-    flyMapTo(focus.lat, focus.lng, FLY_TO_TRAIL_ZOOM)
-  } else if (trailForStore.value) {
-    flyMapTo(trailForStore.value.latitude, trailForStore.value.longitude, 11)
-  }
+watch(() => spotPanelStore.selectedItemId, (id) => {
+  if (id) parkingFocus.value = null
 })
 
-// Clicking a Parkplätze row (SpotPanelParkingTab.vue) flies the embedded
-// map to that lot, same as clicking a Touren/Trails row.
-function onParkingFlyTo(lat: number, lng: number) {
-  flyMapTo(lat, lng, FLY_TO_TRAIL_ZOOM)
-}
+// Fed to <SpotDetailMiniMap :focus>: a selected trail/tour wins, then a
+// clicked parking lot, else null (fly back to the spot). The component
+// applies zoom 14 for a focus target and 11 for null.
+const mapFocus = computed(() => selectedItemFocus.value ?? parkingFocus.value)
 
 // `details` (trail_details row: status/rules/description/photos/videos/
 // likes) is owned here rather than by any single section component, since
