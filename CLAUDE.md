@@ -38,6 +38,13 @@ The SpotManager is **not a separate app** — it lives inside the same Nuxt proj
 - **Activity feed** — latest community contributions (new spots, photos, GPX routes)
 - **Embed widget** — token-scoped iframe embeds served via Cloudflare Worker (`/_embed/[token]`)
 
+### Embedded maps
+
+Two different surfaces, don't conflate them:
+
+- **Spot-detail pages** (`trails/[slug].vue`, trail branch) render their map as an **inline Vue component** (`SpotDetailMiniMap.vue` → `app/map/miniMap.ts`), fed by the data already in `spotPanelStore` (through the `communication/` REST layer, so it's offline-cacheable). No iframe, no token, no worker, no `postMessage`. This reverses the earlier "spot page embeds itself through `/embed/[token]`" decision (the double-Leaflet-bundle cost) — for the spot page only.
+- **Region overview pages** (`trails/[slug].vue`, region branch) **and third-party sites** still use the `/embed/[token]` iframe + `/_embed` Cloudflare Worker (`embed.js` snippet, host allowlist, admin token UI). `app/pages/embed/[token].vue` renders through the same `app/map/miniMap.ts` module. The region iframe needs the interim `EMBED_BASE = import.meta.dev ? '' : 'https://trailradar.org'` gate so it resolves in the Capacitor native shell (origin `https://localhost`).
+
 ---
 
 ## Supabase rules
@@ -130,7 +137,7 @@ app/anon.ts
 - Must not import from `app/map/`.
 
 **`composables/`**
-- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`). It also owns the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`.
+- `useTrailMap` owns the live `/map` Leaflet instance (client-only, inside `onMounted`) — the interactive map, its markers, and the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`. The **only** other place Leaflet `L` lives is `app/map/miniMap.ts`, the read-only mini-map renderer for the spot-detail page (`SpotDetailMiniMap.vue`) and the third-party embed page (`/embed/[token]`); it dynamic-imports `leaflet` inside `createMiniMap()` and takes no store/composable deps.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
@@ -194,6 +201,8 @@ else { ... }
 | `app/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
 | `app/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
 | `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
-| `app/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/map/miniMap.ts` | Read-only Leaflet mini-map renderer (`createMiniMap()` → `{ flyTo, setData, destroy }`) — shared by the spot-detail page and the third-party embed page; dynamic-imports `leaflet`, no store/composable deps |
+| `app/components/trail_detail/SpotDetailMiniMap.vue` | Inline mini-map on the spot-detail page — wires `spotPanelStore` (data / parkingLots / selectItem) to `createMiniMap`; client-only init, stable SSR placeholder |
+| `app/composables/useTrailMap.ts` | Live `/map` init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
 | `app/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |

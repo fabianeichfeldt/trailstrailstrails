@@ -1,6 +1,6 @@
 # Inline spot-detail mini-map — design
 
-**Status:** ready for implementation
+**Status:** done
 **Date:** 2026-09-09
 **Branch:** cut a feature branch off `main` (do NOT commit to `main`)
 
