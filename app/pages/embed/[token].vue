@@ -14,14 +14,9 @@
 
 <script setup lang="ts">
 import type { EmbedTrail } from '~/server/routes/_embed/[token].get'
-import { markerIconOptions, parkingIconOptions } from '~/map/markerIcon'
-import {
-  DIFF_COLOR,
-  computeTrailStats, trailTooltipHtml, placeholderDesc,
-  positionTooltip, createTooltipEl,
-} from '~/map/trailTooltip'
-import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
+import { createMiniMap, type MiniMapHandle, type MiniMapInput, type MiniMapMarker, type MiniMapPolyline } from '~/map/miniMap'
 import { shouldShowGpx } from '~/map/gpxZoomThreshold'
+import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
 import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css'
 
 definePageMeta({ layout: 'embed' })
@@ -31,11 +26,52 @@ const error  = ref(false)
 const errorMessage = ref('Dieser Embed ist für diese Domain nicht autorisiert.')
 
 // Everything below is set up inside an async onMounted (after awaits for the
-// _embed fetch and the Leaflet dynamic import), where the component instance
-// is no longer active — so onUnmounted can't be registered there. Own the
-// teardown from synchronous setup instead and hand listeners its signal.
+// _embed fetch and the mini-map's Leaflet dynamic import), where the
+// component instance is no longer active — so onUnmounted can't be
+// registered there. Own the teardown from synchronous setup instead: hand
+// listeners the AbortController's signal, and destroy the map handle here.
 const teardown = new AbortController()
-onUnmounted(() => teardown.abort())
+let handle: MiniMapHandle | null = null
+onUnmounted(() => {
+  teardown.abort()
+  handle?.destroy()
+})
+
+// Groups a spot's tracks / marker / parking into the neutral mini-map shape.
+// Per-spot decision (matches the old inline behaviour): a spot past the GPX
+// zoom threshold contributes its tracks; below it, its marker. Parking lots
+// always contribute a marker. `p.id` stays the *spot* id so a polyline click
+// opens the right trail page.
+function toMiniMapInput(trails: EmbedTrail[], center: [number, number], zoom: number): MiniMapInput {
+  const polylines: MiniMapPolyline[] = []
+  const markers: MiniMapMarker[] = []
+
+  for (const t of trails) {
+    const hasGpx = t.gpx_trails.length > 0 || t.gpx_tours.length > 0
+    if (shouldShowGpx(hasGpx, zoom)) {
+      for (const tour of t.gpx_tours) {
+        polylines.push({ id: t.id, kind: 'tour', name: tour.name, difficulty: null, points: tour.gpx_points })
+      }
+      for (const tr of t.gpx_trails) {
+        polylines.push({ id: t.id, kind: 'trail', name: tr.name, difficulty: tr.difficulty || null, points: tr.gpx_points })
+      }
+    } else {
+      markers.push({
+        lat: t.latitude,
+        lng: t.longitude,
+        kind: 'spot',
+        spotType: t.type,
+        approved: t.approved ?? false,
+        popupHtml: `<strong>${t.name}</strong><br><a href="https://trailradar.org/trails/${t.id}" target="_blank" rel="noopener">In Trailradar öffnen ↗</a>`,
+      })
+    }
+    for (const lot of t.parking) {
+      markers.push({ lat: lot.lat, lng: lot.lng, kind: 'parking', name: lot.name })
+    }
+  }
+
+  return { center, zoom, polylines, markers }
+}
 
 onMounted(async () => {
   // /embed/[token] is a prerendered dynamic route. Once Nuxt's client-side
@@ -74,38 +110,21 @@ onMounted(async () => {
 
   if (!mapEl.value) return
 
-  const L = (await import('leaflet')).default
-  // Registers L.Map's "gestureHandling" option (side effect on L.Map, no
-  // export needed here) — see the interactive:true branch below.
-  await import('leaflet-gesture-handling')
+  const openTrail = (p: MiniMapPolyline) =>
+    window.open(`https://trailradar.org/trails/${p.id}`, '_blank', 'noopener')
 
-  const map = L.map(mapEl.value, {
-    zoomControl: interactive,
-    dragging: interactive,
-    scrollWheelZoom: interactive,
-    doubleClickZoom: interactive,
-    touchZoom: interactive,
-    boxZoom: interactive,
-    keyboard: interactive,
-    // Only trailradar.org's own /trails/[slug] page opts into `interactive`
-    // (see parseEmbedQuery) — that's the one place this map sits inside a
-    // normally-scrolling page, so a stray wheel-scroll or one-finger touch
-    // over the map must not hijack the page instead of zooming/panning it.
-    // Requires ctrl/cmd+scroll to zoom and two fingers to pan on touch,
-    // showing a translated hint on the blocked gesture; third-party embeds
-    // (interactive:false) already have all of this disabled outright.
-    gestureHandling: interactive,
-  } as any)
-  map.setView([lat, lng], zoom)
-  map.setMaxZoom(19)
+  handle = await createMiniMap(mapEl.value, toMiniMapInput(trails, [lat, lng], zoom), {
+    interactive,
+    onPolylineActivate: openTrail,
+    onTooltipAction: openTrail,
+  })
 
   // Lets the parent page (app/pages/trails/[slug].vue) fly the map to a
   // trail/tour without reloading this iframe — reloading on every row click
-  // flashes the tiles and loses pan/zoom state, unlike the live map's
-  // flyTo(). The parent can now be cross-origin (the Capacitor native shell
-  // runs at https://localhost and loads this iframe from
-  // https://trailradar.org), so on top of event.source === window.parent we
-  // also allow-list the origin: trailradar.org plus our own origin.
+  // flashes the tiles and loses pan/zoom state, unlike a real flyTo(). The
+  // parent can now be cross-origin (the Capacitor native shell runs at
+  // https://localhost and loads this iframe from https://trailradar.org), so
+  // on top of event.source === window.parent we also allow-list the origin.
   const FLY_TO_ALLOWED_ORIGINS = ['https://trailradar.org', window.location.origin]
   function onFlyToMessage(event: MessageEvent) {
     if (event.source !== window.parent) return
@@ -114,116 +133,9 @@ onMounted(async () => {
     if (!data || data.type !== 'trailradar:flyTo') return
     const { lat: flyLat, lng: flyLng, zoom: flyZoom } = data
     if (typeof flyLat !== 'number' || typeof flyLng !== 'number') return
-    map.flyTo([flyLat, flyLng], typeof flyZoom === 'number' ? flyZoom : map.getZoom(), { duration: 1 })
+    handle?.flyTo(flyLat, flyLng, typeof flyZoom === 'number' ? flyZoom : undefined)
   }
   window.addEventListener('message', onFlyToMessage, { signal: teardown.signal })
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(map)
-
-  // Shared elevation tooltip element
-  const tooltipEl = createTooltipEl(map.getContainer())
-  const containerW = () => map.getContainer().clientWidth
-
-  function showPolylineTooltip(name: string, difficulty: string | null, points: [number, number, number][], e: any) {
-    const stats = computeTrailStats(points)
-    const desc  = difficulty ? placeholderDesc(difficulty) : 'Eine abwechslungsreiche Tour durch die Trailanlage.'
-    tooltipEl.innerHTML = trailTooltipHtml(name, difficulty, desc, stats)
-    positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW())
-  }
-
-  // Tooltip hide is delayed so the mouse can move from the line to the card
-  // and click "Spot öffnen" without the card vanishing in between.
-  let hideTimer: ReturnType<typeof setTimeout> | null = null
-  function scheduleHide() {
-    if (hideTimer) clearTimeout(hideTimer)
-    hideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 800)
-  }
-  function cancelHide() { if (hideTimer) clearTimeout(hideTimer) }
-  tooltipEl.addEventListener('mouseenter', cancelHide)
-  tooltipEl.addEventListener('mouseleave', () => { tooltipEl.style.display = 'none' })
-
-  let touchHideTimer: ReturnType<typeof setTimeout> | null = null
-
-  // Bind hover/touch tooltip events to a hit-area polyline.
-  function addPolylineWithTooltip(
-    latlngs: [number, number][],
-    visibleOpts: any,
-    name: string,
-    difficulty: string | null,
-    points: [number, number, number][],
-    openUrl: string,
-  ) {
-    L.polyline(latlngs, { ...visibleOpts, interactive: false }).addTo(map)
-    const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(map)
-
-    function show(e: { containerPoint: { x: number; y: number } }) {
-      showPolylineTooltip(name, difficulty, points, e)
-      // Bind "Spot öffnen" button to open trail page in new tab
-      tooltipEl.querySelector('.ttr-open')?.addEventListener('click', (ev) => {
-        ev.stopPropagation()
-        window.open(openUrl, '_blank', 'noopener')
-      }, { once: true })
-    }
-
-    hit.on('mouseover', (e: any) => { cancelHide(); show(e) })
-    hit.on('mousemove', (e: any) => positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW()))
-    hit.on('mouseout',  scheduleHide)
-    hit.on('touchstart', (e: any) => {
-      if (touchHideTimer) clearTimeout(touchHideTimer)
-      const touch = e.originalEvent.touches[0]
-      const rect  = map.getContainer().getBoundingClientRect()
-      show({ containerPoint: { x: touch.clientX - rect.left, y: touch.clientY - rect.top } })
-      touchHideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 3000)
-    }, { passive: true })
-  }
-
-  for (const trail of trails) {
-    const appUrl = `https://trailradar.org/trails/${trail.id}`
-    const popup  = `<strong>${trail.name}</strong><br><a href="${appUrl}" target="_blank" rel="noopener">In Trailradar öffnen ↗</a>`
-    const hasGpx = trail.gpx_trails.length > 0 || trail.gpx_tours.length > 0
-    // Embed zoom is fixed at load (no interactive zoom), so this is a
-    // one-time decision, not a live zoomend switch like the main map.
-    const showGpx = shouldShowGpx(hasGpx, zoom)
-
-    if (showGpx) {
-      // Tours added first — their SVG elements sit below trails.
-      // Trails added second — their hit areas are on top when stacked.
-      for (const t of trail.gpx_tours) {
-        const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
-        addPolylineWithTooltip(
-          latlngs,
-          { color: '#555', weight: 5, opacity: 0.6, dashArray: '8, 6' },
-          t.name, null, t.gpx_points, appUrl,
-        )
-      }
-
-      for (const t of trail.gpx_trails) {
-        const latlngs = t.gpx_points.map(([la, ln]) => [la, ln] as [number, number])
-        addPolylineWithTooltip(
-          latlngs,
-          { color: DIFF_COLOR[t.difficulty] ?? '#888', weight: 6, opacity: 0.85 },
-          t.name, t.difficulty, t.gpx_points, appUrl,
-        )
-      }
-    } else {
-      // No GPX shown at this zoom — the marker is the only indicator and
-      // acts as the clickable "open in app" entry point.
-      const icon = L.divIcon(markerIconOptions(trail.type, trail.approved ?? false))
-      L.marker([trail.latitude, trail.longitude], { icon, opacity: 1 })
-        .addTo(map)
-        .bindPopup(popup)
-    }
-
-    for (const lot of trail.parking) {
-      const icon = L.divIcon(parkingIconOptions())
-      L.marker([lot.lat, lot.lng], { icon })
-        .addTo(map)
-        .bindPopup(`<strong>${lot.name}</strong>`)
-    }
-  }
 })
 </script>
 
