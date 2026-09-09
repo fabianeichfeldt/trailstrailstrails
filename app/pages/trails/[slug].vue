@@ -167,8 +167,13 @@ import type { Trail } from '~/types/Trail'
 import type { NearbySpot } from '@@/build/nearby'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
-//const EMBED_BASE = 'https://trailradar.org'
-const EMBED_BASE = ''
+// '' in dev/E2E (same-origin dev server) and in the prod web/PWA build
+// (served from trailradar.org — still same-origin). The Capacitor native
+// shell (origin https://localhost) is the only case needing an absolute
+// URL: no local /embed/{token}/ pages, no /_embed/ worker. import.meta.dev
+// is a build-time constant, so server and client agree — no hydration
+// mismatch on the iframe src.
+const EMBED_BASE = import.meta.dev ? '' : 'https://trailradar.org'
 const route = useRoute()
 const { goBack } = useBackNavigation()
 const slug = route.params.slug as string
@@ -304,16 +309,16 @@ const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
 // whole map (tile flash, lost pan/zoom state) — jarring compared to the
 // live map's flyTo(). Posting a message instead lets the embed page's own
 // Leaflet instance animate to the new view without a reload; see the
-// `message` listener in app/pages/embed/[token].vue. Same-origin postMessage
-// only (EMBED_BASE is a relative, same-origin path), so window.location.origin
-// is a safe target.
+// `message` listener in app/pages/embed/[token].vue. In the native shell the
+// iframe is cross-origin (EMBED_BASE = https://trailradar.org), so the
+// postMessage target origin must match it there; same-origin everywhere else.
 const mapIframeEl = ref<HTMLIFrameElement | null>(null)
 const FLY_TO_TRAIL_ZOOM = 14
 
 function flyMapTo(lat: number, lng: number, zoom: number) {
   const win = mapIframeEl.value?.contentWindow
   if (!win) return
-  win.postMessage({ type: 'trailradar:flyTo', lat, lng, zoom }, window.location.origin)
+  win.postMessage({ type: 'trailradar:flyTo', lat, lng, zoom }, EMBED_BASE || window.location.origin)
 }
 
 watch(selectedItemFocus, (focus) => {

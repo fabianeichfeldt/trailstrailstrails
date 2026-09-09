@@ -33,3 +33,19 @@ describe('spot-detail embedded-map iframe src is redirect-free', () => {
     expect(src).not.toMatch(/\/embed\/\$\{EMBED_TOKEN\}\?/)
   })
 })
+
+// The Capacitor native shell runs at origin https://localhost — it has no
+// local /embed/{token}/ pages and no /_embed/ worker, so the iframe src must
+// be absolute (https://trailradar.org) there. In dev/E2E and the prod web/PWA
+// build the page is already served same-origin, so EMBED_BASE stays ''.
+// import.meta.dev is a build-time constant, so SSR and client agree — no
+// hydration mismatch on the iframe src.
+describe('EMBED_BASE is gated on import.meta.dev', () => {
+  test('EMBED_BASE is "" in dev and absolute https://trailradar.org otherwise', () => {
+    expect(src).toMatch(/const EMBED_BASE = import\.meta\.dev \? '' : 'https:\/\/trailradar\.org'/)
+  })
+
+  test('the fly-to postMessage targets EMBED_BASE || window.location.origin', () => {
+    expect(src).toContain("EMBED_BASE || window.location.origin")
+  })
+})

@@ -102,11 +102,14 @@ onMounted(async () => {
   // Lets the parent page (app/pages/trails/[slug].vue) fly the map to a
   // trail/tour without reloading this iframe — reloading on every row click
   // flashes the tiles and loses pan/zoom state, unlike the live map's
-  // flyTo(). Same-origin only: this embed is always loaded from a relative,
-  // same-origin URL (EMBED_BASE in the caller), so requiring
-  // event.source === window.parent is enough to reject any other frame.
+  // flyTo(). The parent can now be cross-origin (the Capacitor native shell
+  // runs at https://localhost and loads this iframe from
+  // https://trailradar.org), so on top of event.source === window.parent we
+  // also allow-list the origin: trailradar.org plus our own origin.
+  const FLY_TO_ALLOWED_ORIGINS = ['https://trailradar.org', window.location.origin]
   function onFlyToMessage(event: MessageEvent) {
     if (event.source !== window.parent) return
+    if (!FLY_TO_ALLOWED_ORIGINS.includes(event.origin)) return
     const data = event.data
     if (!data || data.type !== 'trailradar:flyTo') return
     const { lat: flyLat, lng: flyLng, zoom: flyZoom } = data
