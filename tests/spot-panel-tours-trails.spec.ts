@@ -124,33 +124,24 @@ baseTest('clicking a trail row inserts the elevation panel directly after that r
   assertNoLeaks();
 });
 
-baseTest('clicking a trail row flies the embedded map to that trail\'s midpoint at zoom 14, without reloading the iframe', async ({ page }) => {
+baseTest('clicking a trail row flies the inline mini-map to that trail\'s midpoint at zoom 14', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await mockGpxData(page);
   await openTrailPage(page);
 
-  const iframeEl = page.locator('iframe.trail-map');
-  const srcBefore = await iframeEl.getAttribute('src');
+  const miniMap = page.locator('[data-testid="spot-minimap"]');
+  await expect(miniMap).toBeVisible();
 
-  // Listen for the raw postMessage inside the iframe's own window — this
-  // is the contract between the parent page and app/pages/embed/[token].vue,
-  // independent of whether the embed's own data fetch succeeds. Locator's
-  // own contentFrame() returns a FrameLocator (no evaluate()) — the actual
-  // Frame, which does, comes from the underlying ElementHandle instead.
-  const frame = await (await iframeEl.elementHandle())!.contentFrame();
-  const messagePromise = frame!.evaluate(() => new Promise((resolve) => {
-    window.addEventListener('message', (e) => resolve(e.data), { once: true });
-  }));
+  const row = page.locator('#trails .spot-item[data-id="gt1"]');
+  await row.click();
 
-  await page.locator('#trails .spot-item[data-id="gt1"]').click();
-
+  await expect(row).toHaveClass(/active/);
   // gt1's gpx_points run from [47.710, 11.760] to [47.716, 11.766] — the
-  // midpoint of start and end, not a centroid of every point.
-  await expect(messagePromise).resolves.toEqual({ type: 'trailradar:flyTo', lat: 47.713, lng: 11.763, zoom: 14 });
-
-  // The iframe itself never reloaded — src is unchanged (flyTo happens via
-  // the message above, not by swapping the iframe's src).
-  await expect(iframeEl).toHaveAttribute('src', srcBefore!);
+  // midpoint of start and end, not a centroid of every point. The mini-map
+  // component exposes each flyTo target as `data-fly="lat,lng,zoom"`
+  // (SpotDetailMiniMap.vue) so the fly can be asserted without reaching
+  // into Leaflet internals.
+  await expect(miniMap).toHaveAttribute('data-fly', '47.713,11.763,14');
   assertNoLeaks();
 });
 

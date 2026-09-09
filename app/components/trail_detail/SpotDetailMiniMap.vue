@@ -5,13 +5,14 @@
        app/pages/trails/[slug].vue) fixes its height so the section doesn't
        jump when the map initialises.
        Test hooks: `data-testid="spot-minimap"` for the container, and
-       `data-fly="lat,lng,zoom"` — updated on every flyTo() — so E2E can
-       assert fly targets without reaching into Leaflet internals. -->
+       `data-fly="lat,lng,zoom"` — the current view target, seeded with the
+       spot centre once the map inits and updated on every flyTo() — so E2E
+       can assert without reaching into Leaflet internals. -->
   <div
     ref="mapEl"
     class="trail-map"
     data-testid="spot-minimap"
-    :data-fly="flyState"
+    :data-fly="flyState || undefined"
   />
 </template>
 
@@ -101,6 +102,7 @@ onMounted(async () => {
     handle = null
     return
   }
+  flyState.value = `${props.spot.latitude},${props.spot.longitude},${SPOT_ZOOM}`
 
   // GPX (props.data) is null until loadSpotData resolves post-mount; parking
   // arrives separately. Sync once now in case either landed during the

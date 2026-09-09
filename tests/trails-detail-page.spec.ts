@@ -11,12 +11,12 @@ import { expect, setupAllMocks } from './fixtures';
 // and stay on the SpotPanel for now; those get rewritten around real
 // navigation in a later phase once marker clicks become router.push calls.
 
-baseTest('renders the hero, embedded map, jump-nav and sections for a trail spot', async ({ page }) => {
+baseTest('renders the hero, inline map, jump-nav and sections for a trail spot', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
 
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
-  await expect(page.locator('iframe.trail-map')).toBeVisible();
+  await expect(page.locator('[data-testid="spot-minimap"]')).toBeVisible();
   await expect(page.locator('.spot-detail-nav')).toBeVisible();
   await expect(page.locator('#description')).toBeVisible();
   await expect(page.locator('#touren')).toBeVisible();
@@ -144,15 +144,17 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
   assertNoLeaks();
 });
 
-// This page's own embed (not a third-party site's) may enable dragging/
-// zooming — see app/utils/embedQuery.ts's `interactive` flag.
-baseTest('embeds an interactive map (drag/zoom enabled), unlike a third-party embed', async ({ page }) => {
+// The spot page's own inline map is interactive (drag/zoom enabled), unlike
+// a third-party embed — createMiniMap({ interactive: true }) in
+// SpotDetailMiniMap.vue. The Leaflet zoom control only renders when
+// zoomControl (=== interactive) is on, so its presence proves it.
+baseTest('renders an interactive inline map (drag/zoom enabled), unlike a third-party embed', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
-  await expect(page.locator('iframe.trail-map')).toBeVisible();
 
-  const src = await page.locator('iframe.trail-map').getAttribute('src');
-  expect(src).toContain('interactive=1');
+  const miniMap = page.locator('[data-testid="spot-minimap"]');
+  await expect(miniMap).toBeVisible();
+  await expect(miniMap.locator('.leaflet-control-zoom')).toBeVisible();
 
   assertNoLeaks();
 });

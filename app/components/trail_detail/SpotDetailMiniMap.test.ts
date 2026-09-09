@@ -67,6 +67,14 @@ describe('SpotDetailMiniMap', () => {
     const wrapper = mountMap()
     const el = wrapper.get('[data-testid="spot-minimap"]')
     expect(el.classes()).toContain('trail-map')
+    // No fly target before the map inits.
+    expect(el.attributes('data-fly')).toBeUndefined()
+  })
+
+  it('seeds data-fly with the spot centre once the map inits', async () => {
+    const wrapper = mountMap()
+    await flushPromises()
+    expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.71,11.76,11')
   })
 
   it('calls createMiniMap once on mount with interactive:true and the spot centre', async () => {
