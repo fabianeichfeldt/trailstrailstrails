@@ -92,20 +92,23 @@ describe('SpotDetailHero', () => {
     expect(wrapper.get('.spot-like-btn').classes()).toContain('hidden')
   })
 
-  it('shows the like button once likeVisible is true, with an outline star when not liked', () => {
+  it('shows the like button once likeVisible is true, with an outline heart when not liked', () => {
     store.likeVisible = true
     store.isLiked = false
     const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
     const likeBtn = wrapper.get('.spot-like-btn')
     expect(likeBtn.classes()).not.toContain('hidden')
-    expect(likeBtn.find('.fa-regular.fa-star').exists()).toBe(true)
+    expect(likeBtn.classes()).not.toContain('liked')
+    expect(likeBtn.find('.fa-regular.fa-heart').exists()).toBe(true)
   })
 
-  it('shows a filled star when liked', () => {
+  it('shows a filled red heart when liked', () => {
     store.likeVisible = true
     store.isLiked = true
     const wrapper = mount(SpotDetailHero, { props: { trail: trail() } })
-    expect(wrapper.get('.spot-like-btn').text()).toContain('⭐')
+    const likeBtn = wrapper.get('.spot-like-btn')
+    expect(likeBtn.classes()).toContain('liked')
+    expect(likeBtn.find('.fa-solid.fa-heart').exists()).toBe(true)
   })
 
   it('clicking like while signed out opens the sign-in modal instead of calling the API', async () => {

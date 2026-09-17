@@ -126,7 +126,7 @@
               <h4>Favoriten</h4>
               <ul v-if="favoriteTrails.length" class="contribution-list">
                 <li v-for="trail in favoriteTrails" :key="trail.id">
-                  <span class="contribution-title">⭐ {{ trail.name }}</span>
+                  <span class="contribution-title"><i class="fa-solid fa-heart favorite-heart"></i> {{ trail.name }}</span>
                 </li>
               </ul>
               <p v-else class="empty-hint">Noch keine Favoriten</p>
@@ -477,6 +477,10 @@ async function onUpdatePassword() {
   display: block;
   font-size: 0.8em;
   font-weight: 500;
+}
+
+.favorite-heart {
+  color: #e53e3e;
 }
 
 .contribution-meta {

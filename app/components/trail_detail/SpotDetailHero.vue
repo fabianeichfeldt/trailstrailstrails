@@ -6,13 +6,12 @@
       <div class="hero-actions">
         <button
           class="spot-action-btn spot-like-btn"
-          :class="{ hidden: !store.likeVisible }"
+          :class="{ hidden: !store.likeVisible, liked: store.isLiked }"
           :data-liked="store.isLiked ? 'true' : 'false'"
           aria-label="Favorit"
           @click="handleLike"
         >
-          <template v-if="store.isLiked">⭐</template>
-          <i v-else class="fa-regular fa-star"></i>
+          <i :class="store.isLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"></i>
         </button>
         <button
           class="spot-action-btn spot-share-btn"
@@ -174,6 +173,7 @@ async function handleShare() {
 }
 .spot-action-btn:hover { background: #f0faf5; color: #1a2035; }
 .spot-action-btn.hidden { display: none; }
+.spot-like-btn.liked { color: #e53e3e; }
 
 .spot-share-toast {
   position: absolute;
