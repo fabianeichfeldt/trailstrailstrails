@@ -23,7 +23,7 @@ async function signIn(page: import('@playwright/test').Page) {
 
 // ── Like button ──────────────────────────────────────────────────────────
 
-baseTest('the like button stays hidden until the live details refresh resolves, then reveals unfilled when not liked', async ({ page }) => {
+baseTest('the like button stays hidden until the live details refresh resolves, then reveals an unfilled heart when not liked', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   let resolveDetails!: () => void;
   const detailsGate = new Promise<void>((resolve) => { resolveDetails = resolve; });
@@ -40,7 +40,7 @@ baseTest('the like button stays hidden until the live details refresh resolves, 
   resolveDetails();
 
   await expect(page.locator('.spot-like-btn')).not.toHaveClass(/hidden/);
-  await expect(page.locator('.spot-like-btn .fa-regular.fa-star')).toBeVisible();
+  await expect(page.locator('.spot-like-btn .fa-regular.fa-heart')).toBeVisible();
   assertNoLeaks();
 });
 
@@ -76,14 +76,16 @@ test('a logged-in user can like and unlike a trail from the hero', async ({ page
   await page.waitForLoadState('networkidle');
   const likeBtn = page.locator('.spot-like-btn');
   await expect(likeBtn).not.toHaveClass(/hidden/);
-  await expect(likeBtn.locator('.fa-regular.fa-star')).toBeVisible();
+  await expect(likeBtn.locator('.fa-regular.fa-heart')).toBeVisible();
 
   await likeBtn.click();
-  await expect(likeBtn).toContainText('⭐');
+  await expect(likeBtn).toHaveClass(/liked/);
+  await expect(likeBtn.locator('.fa-solid.fa-heart')).toBeVisible();
   expect(liked).toBe(true);
 
   await likeBtn.click();
-  await expect(likeBtn.locator('.fa-regular.fa-star')).toBeVisible();
+  await expect(likeBtn).not.toHaveClass(/liked/);
+  await expect(likeBtn.locator('.fa-regular.fa-heart')).toBeVisible();
   expect(liked).toBe(false);
 });
 
