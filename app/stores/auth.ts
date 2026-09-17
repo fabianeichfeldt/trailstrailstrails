@@ -16,6 +16,21 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => user.value !== null)
 
+  // @nuxtjs/supabase's own plugin re-populates useSupabaseUser() on every
+  // page:start navigation from client.auth.getClaims() (see
+  // supabase.client.js), which overwrites the ref with the *decoded JWT
+  // claims* object — keyed by "sub", not "id" — instead of a full Supabase
+  // User. app/plugins/auth.client.ts's onAuthStateChange listener corrects
+  // this back to a real User once an auth event fires, but until then
+  // user.value has no "id" field. Reading `.id` directly in that window
+  // silently produced '', which Postgres then rejected as an invalid uuid
+  // (e.g. the first spot comment after landing on a page). Always resolve
+  // through this helper instead of `user.value.id`/`user.value?.id`.
+  function resolveUserId(u: typeof user.value): string {
+    if (!u) return ''
+    return (u as { id?: string }).id ?? (u as { sub?: string }).sub ?? ''
+  }
+
   const nickname = computed(() =>
     user.value?.user_metadata?.name ||
     user.value?.user_metadata?.nickname ||
@@ -136,7 +151,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadAvatar(file: File): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    const filePath = `${user.value.id}/avatar.webp`
+    const filePath = `${resolveUserId(user.value)}/avatar.webp`
     const { error } = await client.storage
       .from('avatars')
       .upload(filePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
@@ -147,10 +162,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadTrailPhoto(file: File, trailId: string): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    return uploadTrailPhotoImpl(file, trailId, client, user.value.id)
+    return uploadTrailPhotoImpl(file, trailId, client, resolveUserId(user.value))
   }
 
-  const userId = computed(() => user.value?.id ?? '')
+  const userId = computed(() => resolveUserId(user.value))
 
   async function getToken(): Promise<string> {
     const { data: { session } } = await client.auth.getSession()
@@ -158,7 +173,8 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function getUserId(): Promise<string> {
-    if (user.value?.id) return user.value.id
+    const fromUser = resolveUserId(user.value)
+    if (fromUser) return fromUser
     const { data: { session } } = await client.auth.getSession()
     return session?.user?.id ?? ''
   }

@@ -272,7 +272,6 @@ const mapFlyToHref = computed(() => {
 
 const spotPanelStore = useSpotPanelStore()
 const authStore = useAuthStore()
-const supabaseUser = useSupabaseUser()
 
 // interactive=1: unlike third-party embeds, this is trailradar.org's own
 // page for this exact spot, so panning/zooming the map here can't hijack a
@@ -342,8 +341,8 @@ const details = ref<TrailDetails>(bakedDetails.value)
 
 async function updateLikeButton(d: TrailDetails) {
   try {
-    const user = { id: supabaseUser.value?.id ?? '' }
-    spotPanelStore.isLiked = !!user.id && !!d.likes?.find(l => l.user_id === user.id)
+    const userId = authStore.userId
+    spotPanelStore.isLiked = !!userId && !!d.likes?.find(l => l.user_id === userId)
   } catch {
     spotPanelStore.isLiked = false
   }
@@ -370,7 +369,7 @@ async function refreshDetails() {
 function loadLiveSpotData(item: Trail) {
   spotPanelStore.load(item)
   spotPanelStore.loadComments(item.id, {
-    userId: supabaseUser.value?.id ?? '',
+    userId: authStore.userId,
     isAdmin: authStore.isAdmin,
     isTrailcrew: authStore.isTrailcrew,
   })
