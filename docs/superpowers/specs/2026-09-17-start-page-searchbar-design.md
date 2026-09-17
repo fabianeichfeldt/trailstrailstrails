@@ -60,8 +60,19 @@ section.map-teaser-section
     │   └── div.map-preview
     │       ├── .marker …
     │       └── NuxtLink.map-cta-overlay  to="/map", inset: 0, z-index: 3
-    └── SearchBar variant="teaser"  absolute, top center of the wrap, z-index: 10
+    └── div.teaser-search-slot      absolute, top: var(--map-chrome-height), height: 0
+        └── SearchBar variant="teaser"  absolute, top center of the slot, z-index: 10
 ```
+
+**Correction made during implementation.** An earlier draft of this spec put the
+searchbar directly in the wrap at `top: 10px`. That is wrong: the wrap starts at the fake
+browser chrome, not at `.map-preview`, so a literal `top: 10px` lands the pill on top of the
+"trailradar.org/map" chrome bar — contradicting this spec's own "exactly where the dummy pill
+sits today". `MapTeaser` therefore interposes `.teaser-search-slot`, a zero-height box offset
+by `--map-chrome-height` (36px, also pinned on `.map-chrome` so the two cannot drift).
+`SearchBar` keeps a variant-agnostic `top: 10px` relative to its containing block and never
+learns that the fake chrome exists. The slot is zero-height so it can never intercept a click
+meant for the CTA overlay.
 
 `.map-teaser-wrap` takes over the sizing the old `.map-teaser-link` anchor had
 (`max-width: 780px; width: 100%`) and becomes the positioned ancestor. Positioning against
@@ -123,8 +134,14 @@ function onOpenTrail(id: string) { router.push(`/map?trail=${id}`) }
 function onFlyTo(lat: number, lon: number) { router.push(`/map?fly=${lat},${lon}`) }
 ```
 
-`map.vue` keeps its current handlers unchanged. A picked spot therefore flies the camera
-and opens its panel, exactly as picking it on the map does.
+`map.vue` keeps its current handlers unchanged. A picked spot therefore flies the camera to
+the spot and zooms in, exactly as picking it in the map's own searchbar does.
+
+**Correction made during implementation.** An earlier draft of this spec said `?trail=`
+"opens its panel". It does not — `openTrail()` flies the live map and zooms, staying on
+`/map`; only clicking a spot's own marker navigates to its detail page. See the comment in
+`app/pages/map.vue` and `tests/trail-open.spec.ts`. The behavioural requirement is unaffected:
+picking from the landing page is identical to picking from the map.
 
 ## 3. Lazy data loading
 
@@ -162,7 +179,7 @@ Vitest throughout, plus one Playwright case for the cross-page navigation.
 - **`app/communication/places.test.ts`** — a DACH hit returns without a second request;
   an empty DACH response falls back to the worldwide query; a rejected `fetch` returns `[]`.
 - **`app/composables/useSpotSearch.test.ts`** — scoring order (exact 100 > prefix 80 >
-  substring 60 > word-prefix 40, non-match dropped); the 5-result cap; group assembly with
+  substring 60, non-match dropped); the 5-result cap; group assembly with
   the right labels and icons per spot type; the stale-query guard (a slow place response for
   an abandoned query must not overwrite newer results); `ensureLoaded()` is awaited before
   scoring; queries under 2 characters produce no results.
@@ -194,6 +211,15 @@ No new architecture invariants are introduced, so `app/architecture.test.ts` nee
 - The landing page is reachable cold (shared link, home-screen icon), but it *is* the app's
   entry point, so no back affordance is needed. Navigating to `/map` from it pushes history,
   so the map's own back handling is unaffected.
+
+## Known dead code carried over
+
+`trailScore()`'s fourth tier — `n.split(/\s+/).some(w => w.startsWith(qq))` returning 40 — is
+unreachable. Any name containing a word that starts with the query also satisfies
+`n.includes(qq)`, which returns 60 first. This is pre-existing behaviour from the original
+`SearchBar.vue`, carried over verbatim rather than changed, since altering it would change
+result ranking and is not what this task is for. The unit test asserts the three reachable
+tiers plus the drop case. Removing the branch is a separate, behaviour-neutral cleanup.
 
 ## Out of scope
 
