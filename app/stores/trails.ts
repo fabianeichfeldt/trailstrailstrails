@@ -37,6 +37,10 @@ export const useTrailsStore = defineStore('trails', () => {
   const dirtparks = ref<DirtPark[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const loaded = ref(false)
+  // The promise of a fetchAll() that is still running, so concurrent callers
+  // of ensureLoaded() share one request instead of racing three more.
+  let inFlight: Promise<void> | null = null
 
   async function fetchAll() {
     loading.value = true
@@ -61,11 +65,30 @@ export const useTrailsStore = defineStore('trails', () => {
       if (import.meta.client && 'caches' in window && !navigator.serviceWorker?.controller) {
         warmSwCaches(sbConfig.url, trailsRes.data, parksRes.data, dirtRes.data).catch(() => {})
       }
+      loaded.value = true
     } catch {
       error.value = 'Trails konnten nicht geladen werden'
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Fetches the spot lists once, on demand.
+   *
+   * The landing-page searchbar loads spots lazily (on first focus / first
+   * keystroke) so a visitor who never searches costs zero extra Supabase
+   * egress — see docs/superpowers/specs/2026-09-17-start-page-searchbar-design.md
+   * §3 and docs/db-egress-reduction-plan.md. Both entry points can fire
+   * within the same tick, hence the in-flight dedupe: focus + first keystroke
+   * must not trigger two fetches. A failed fetch leaves `loaded` false, so the
+   * next interaction retries.
+   */
+  async function ensureLoaded(): Promise<void> {
+    if (loaded.value) return
+    if (inFlight) return inFlight
+    inFlight = fetchAll().finally(() => { inFlight = null })
+    return inFlight
   }
 
   async function warmSwCaches(
@@ -98,5 +121,5 @@ export const useTrailsStore = defineStore('trails', () => {
     ...dirtparks.value,
   ])
 
-  return { trails, bikeparks, dirtparks, all, loading, error, fetchAll }
+  return { trails, bikeparks, dirtparks, all, loading, loaded, error, fetchAll, ensureLoaded }
 })
