@@ -55,7 +55,12 @@
     <template v-else-if="trail && trailForStore">
       <SpotDetailHero :trail="trailForStore" />
 
-      <SpotDetailStatus :details="details" />
+      <SpotDetailStatus :details="details" :weather="weather" />
+
+      <!-- Sits with the status banner rather than below the photos: both
+           answer the same "can I ride this today" question. Above the sticky
+           nav, so it needs no jump-link of its own. -->
+      <SpotDetailWeather :trail="trailForStore" :weather="weather" :loading="weatherLoading" />
 
       <SpotDetailPhotos
         :trail="trailForStore"
@@ -148,6 +153,7 @@ import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
 import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
 import SpotDetailStatus from '~/components/trail_detail/SpotDetailStatus.vue'
+import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
 import SpotDetailPhotos from '~/components/trail_detail/SpotDetailPhotos.vue'
 import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
 import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescription.vue'
@@ -338,6 +344,17 @@ function onParkingFlyTo(lat: number, lng: number) {
 // off a live getTrailDetails() refresh for the genuinely dynamic bits that
 // aren't in the static payload at all: status_hint freshness and likes.
 const details = ref<TrailDetails>(bakedDetails.value)
+
+// Weather is fetched once here and handed to both consumers (the Trail-Zustand
+// card and the status banner's rain rule) rather than each fetching its own —
+// one request, one cache entry, one verdict on the page. Deliberately not part
+// of the useAsyncData payload above: that runs during `nuxt generate` and
+// would freeze the build day's weather into the static HTML.
+const { weather, loading: weatherLoading } = useSpotWeather(() =>
+  trailForStore.value
+    ? { lat: trailForStore.value.latitude, lon: trailForStore.value.longitude }
+    : null,
+)
 
 async function updateLikeButton(d: TrailDetails) {
   try {

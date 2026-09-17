@@ -217,3 +217,49 @@ describe('trailTooltip utility (pure layer)', () => {
     expect(src).toContain('export function positionTooltip')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Trail condition scoring — pure, and it has to stay that way
+// ─────────────────────────────────────────────────────────────────────────────
+// The verdict ("Griffig", "Nass und weich", ...) comes from a water-balance
+// calculation over a spot's recent weather. Keeping it free of I/O and of any
+// higher layer is what makes it deterministically testable against fixed
+// fixtures, and what would let the same function run server-side if the
+// per-spot weather cache (pg_cron) sketched in the design spec ever gets
+// built. A fetch smuggled in here would quietly end both.
+describe('trailCondition scoring (pure layer)', () => {
+  test('trailCondition.ts does not import from communication/, stores/ or composables/', () => {
+    const src = read('app/utils/trailCondition.ts')
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?communication\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?stores\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?composables\//)
+  })
+
+  test('trailCondition.ts performs no I/O of its own', () => {
+    const src = read('app/utils/trailCondition.ts')
+    expect(src).not.toMatch(/\bfetch\s*\(/)
+    expect(src).not.toMatch(/localStorage/)
+  })
+
+  test('the weather fetch stays client-only, so nuxt generate cannot bake it in', () => {
+    // A build-time fetch would freeze the build day's weather into the static
+    // HTML until the next deploy — the same failure class as the prerendered
+    // server/api route this project already shipped once.
+    const src = read('app/composables/useSpotWeather.ts')
+    expect(src).toMatch(/onMounted\(/)
+    // Matches the call, not the mention — the file's own doc comment names
+    // useAsyncData precisely to warn against it.
+    expect(src).not.toMatch(/\buseAsyncData\s*\(/)
+    expect(src).not.toMatch(/\buseFetch\s*\(/)
+  })
+
+  test('the weather module is the only place the Open-Meteo host appears', () => {
+    const violations: string[] = []
+    for (const file of collectTs('app')) {
+      if (file === 'app/communication/weather.ts') continue
+      if (/\.test\.ts$/.test(file)) continue
+      if (/open-meteo\.com\/v1/.test(read(file))) violations.push(file)
+    }
+    expect(violations).toEqual([])
+  })
+})

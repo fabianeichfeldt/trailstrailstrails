@@ -66,6 +66,50 @@ const TRAIL_DETAILS_MOCK = {
   data: { id: 'mock', rules: [], description: '', last_update: '2024-01-01', opening_hours: '', trail_description: '', photos: [], videos: [], likes: [] },
 };
 
+/**
+ * Open-Meteo payload for the spot weather card. Six days ending "today",
+ * generated at run time so the data always lands inside the balance window —
+ * a frozen date would drift out of it and silently turn every spot's verdict
+ * into "no card".
+ *
+ * Mild and dry, so the card renders its "Griffig" state and no test has to
+ * care about it unless it wants to.
+ */
+function mockWeather() {
+  const dates = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - (5 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const time: string[] = [];
+  for (const date of dates) {
+    for (let h = 0; h < 24; h++) time.push(`${date}T${String(h).padStart(2, '0')}:00`);
+  }
+  return {
+    utc_offset_seconds: 0,
+    timezone: 'UTC',
+    elevation: 700,
+    current: {
+      temperature_2m: 12, apparent_temperature: 10,
+      weather_code: 2, precipitation: 0, wind_speed_10m: 13,
+    },
+    daily: {
+      time: dates,
+      weather_code: dates.map(() => 2),
+      precipitation_sum: dates.map(() => 0),
+      temperature_2m_max: dates.map(() => 18),
+      temperature_2m_min: dates.map(() => 9),
+      et0_fao_evapotranspiration: dates.map(() => 2),
+      snowfall_sum: dates.map(() => 0),
+    },
+    hourly: {
+      time,
+      precipitation: time.map(() => 0),
+      snowfall: time.map(() => 0),
+    },
+  };
+}
+
 const MOCK_ACTIVITY = [
   { type: 'spot', trailId: 't3', name: 'Schotterpiste',       created_at: '2024-01-03' },
   { type: 'spot', trailId: 't2', name: 'Waldpfad Ingolstadt', created_at: '2024-01-02' },
@@ -142,6 +186,8 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/trailradar.org/geo',         (route) => route.fulfill({ json: { lat: 48.1, lon: 11.5 } }));
   // Nominatim — empty by default so tests only see trail results, not place suggestions
   await page.route('**/nominatim.openstreetmap.org/**', (route) => route.fulfill({ json: [] }));
+  // Spot weather (Trail-Zustand card on /trails/[slug])
+  await page.route('**/api.open-meteo.com/**',      (route) => route.fulfill({ json: mockWeather() }));
   // OSM map tiles — abort; not needed for logic tests
   await page.route('**tile.openstreetmap.org/**',   (route) => route.abort());
   await page.route('**tile.tracestrack.com/**',   (route) => route.abort());

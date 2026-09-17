@@ -144,6 +144,30 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
   assertNoLeaks();
 });
 
+// The Trail-Zustand card is fetched client-side in onMounted (never during
+// prerender — see app/composables/useSpotWeather.ts), so only a real browser
+// run proves the page actually wires it up. The card's own rendering logic is
+// covered by vitest in SpotDetailWeather.test.ts.
+baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/trails/t1');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
+
+  const card = page.locator('[data-testid="weather-card"]');
+  await expect(card).toBeVisible();
+  // The mock payload has no rain on any of the six days, so the balance
+  // bottoms out at the driest verdict.
+  await expect(card).toContainText('Staubtrocken');
+  await expect(card).toContainText('Open-Meteo');
+  await expect(card.locator('.wx-day')).toHaveCount(6);
+
+  const weatherY = (await card.boundingBox())!.y;
+  const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;
+  expect(weatherY).toBeLessThan(photosY);
+
+  assertNoLeaks();
+});
+
 // This page's own embed (not a third-party site's) may enable dragging/
 // zooming — see app/utils/embedQuery.ts's `interactive` flag.
 baseTest('embeds an interactive map (drag/zoom enabled), unlike a third-party embed', async ({ page }) => {
