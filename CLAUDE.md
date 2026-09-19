@@ -80,10 +80,13 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
-### Git commits
-- **Never commit to `main` directly** unless the user explicitly says to in that request. Default: all commits go to a working branch (highly prefer a feature branch; if on main, ask about creating one). An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
-- Committing to a working branch at logical checkpoints is encouraged — it lets you review progress and keeps the work recoverable.
-- The user merges working branches into `main` themselves.
+### Git commits & worktrees
+- **Never commit to `main` directly** unless the user explicitly says to in that request. Default: work happens in an isolated **git worktree**, not a feature branch in the primary checkout. An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
+- **Start new tasks with the `EnterWorktree` tool**, not `git checkout -b`. It creates an isolated working directory + new branch under `.claude/worktrees/` and switches the session into it, so the primary checkout's `main` stays untouched and other in-flight work is never disturbed. Use it at the start of a task, before making changes — don't ask first, just start the worktree (this project has opted in to worktrees, so `EnterWorktree`'s "only when explicitly instructed" condition is satisfied by this file).
+- If already mid-task on a plain feature branch in the primary checkout (not a worktree) when this rule applies, that's fine to finish out — don't migrate work-in-progress into a worktree mid-task. Start the next task in a worktree instead.
+- Commit at logical checkpoints inside the worktree — it lets the user review progress and keeps the work recoverable.
+- Only call `ExitWorktree` when the user asks to leave or wrap up that piece of work. Default to `action: "keep"` (branch + directory stay on disk) unless the user says the work is abandoned/no longer needed, in which case `action: "remove"`.
+- The user merges finished worktree branches into `main` themselves, and removes the worktree once merged (or asks Claude to `ExitWorktree` with `remove`).
 
 ---
 
