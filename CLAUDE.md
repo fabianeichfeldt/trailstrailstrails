@@ -38,6 +38,13 @@ The SpotManager is **not a separate app** — it lives inside the same Nuxt proj
 - **Activity feed** — latest community contributions (new spots, photos, GPX routes)
 - **Embed widget** — token-scoped iframe embeds served via Cloudflare Worker (`/_embed/[token]`)
 
+### Embedded maps
+
+Two different surfaces, don't conflate them:
+
+- **Spot-detail pages** (`trails/[slug].vue`, trail branch) render their map as an **inline Vue component** (`SpotDetailMiniMap.vue` → `app/map/miniMap.ts`), fed by the data already in `spotPanelStore` (through the `communication/` REST layer, so it's offline-cacheable). No iframe, no token, no worker, no `postMessage`. This reverses the earlier "spot page embeds itself through `/embed/[token]`" decision (the double-Leaflet-bundle cost) — for the spot page only.
+- **Region overview pages** (`trails/[slug].vue`, region branch) **and third-party sites** still use the `/embed/[token]` iframe + `/_embed` Cloudflare Worker (`embed.js` snippet, host allowlist, admin token UI). `app/pages/embed/[token].vue` renders through the same `app/map/miniMap.ts` module. The region iframe needs the interim `EMBED_BASE = import.meta.dev ? '' : 'https://trailradar.org'` gate so it resolves in the Capacitor native shell (origin `https://localhost`).
+
 ---
 
 ## Supabase rules
@@ -80,10 +87,13 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
-### Git commits
-- **Never commit to `main` directly** unless the user explicitly says to in that request. Default: all commits go to a working branch (highly prefer a feature branch; if on main, ask about creating one). An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
-- Committing to a working branch at logical checkpoints is encouraged — it lets you review progress and keeps the work recoverable.
-- The user merges working branches into `main` themselves.
+### Git commits & worktrees
+- **Never commit to `main` directly** unless the user explicitly says to in that request. Default: work happens in an isolated **git worktree**, not a feature branch in the primary checkout. An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
+- **Start new tasks with the `EnterWorktree` tool**, not `git checkout -b`. It creates an isolated working directory + new branch under `.claude/worktrees/` and switches the session into it, so the primary checkout's `main` stays untouched and other in-flight work is never disturbed. Use it at the start of a task, before making changes — don't ask first, just start the worktree (this project has opted in to worktrees, so `EnterWorktree`'s "only when explicitly instructed" condition is satisfied by this file).
+- If already mid-task on a plain feature branch in the primary checkout (not a worktree) when this rule applies, that's fine to finish out — don't migrate work-in-progress into a worktree mid-task. Start the next task in a worktree instead.
+- Commit at logical checkpoints inside the worktree — it lets the user review progress and keeps the work recoverable.
+- Only call `ExitWorktree` when the user asks to leave or wrap up that piece of work. Default to `action: "keep"` (branch + directory stay on disk) unless the user says the work is abandoned/no longer needed, in which case `action: "remove"`.
+- The user merges finished worktree branches into `main` themselves, and removes the worktree once merged (or asks Claude to `ExitWorktree` with `remove`).
 
 ---
 
@@ -130,7 +140,7 @@ app/anon.ts
 - Must not import from `app/map/`.
 
 **`composables/`**
-- `useTrailMap` is the only place Leaflet `L` exists (client-only, inside `onMounted`). It also owns the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`.
+- `useTrailMap` owns the live `/map` Leaflet instance (client-only, inside `onMounted`) — the interactive map, its markers, and the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`. The **only** other place Leaflet `L` lives is `app/map/miniMap.ts`, the read-only mini-map renderer for the spot-detail page (`SpotDetailMiniMap.vue`) and the third-party embed page (`/embed/[token]`); it dynamic-imports `leaflet` inside `createMiniMap()` and takes no store/composable deps.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
@@ -194,6 +204,8 @@ else { ... }
 | `app/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
 | `app/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
 | `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
-| `app/composables/useTrailMap.ts` | Map init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/map/miniMap.ts` | Read-only Leaflet mini-map renderer (`createMiniMap()` → `{ flyTo, setData, destroy }`) — shared by the spot-detail page and the third-party embed page; dynamic-imports `leaflet`, no store/composable deps |
+| `app/components/trail_detail/SpotDetailMiniMap.vue` | Inline mini-map on the spot-detail page — wires `spotPanelStore` (data / parkingLots / selectItem) to `createMiniMap`; client-only init, stable SSR placeholder |
+| `app/composables/useTrailMap.ts` | Live `/map` init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
 | `app/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |

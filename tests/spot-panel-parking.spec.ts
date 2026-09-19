@@ -31,31 +31,23 @@ baseTest('the Parkplätze section shows the lot name and info lines when the spo
   assertNoLeaks();
 });
 
-baseTest('clicking a parking lot flies the embedded map to it and marks the row active', async ({ page }) => {
+baseTest('clicking a parking lot flies the inline mini-map to it and marks the row active', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.route('**/rest/v1/parking**', (route) => route.fulfill({ json: [LOT_WITH_INFO] }));
 
   await page.goto('/trails/t1');
   await page.waitForLoadState('networkidle');
 
-  const iframeEl = page.locator('iframe.trail-map');
-  const srcBefore = await iframeEl.getAttribute('src');
-
-  // Listen for the raw postMessage inside the iframe's own window — same
-  // contract used for Touren/Trails rows (app/pages/embed/[token].vue).
-  const frame = await (await iframeEl.elementHandle())!.contentFrame();
-  const messagePromise = frame!.evaluate(() => new Promise((resolve) => {
-    window.addEventListener('message', (e) => resolve(e.data), { once: true });
-  }));
+  const miniMap = page.locator('[data-testid="spot-minimap"]');
+  await expect(miniMap).toBeVisible();
 
   const row = page.locator('#parking .spot-item[data-id="p1"]');
   await row.click();
 
-  await expect(messagePromise).resolves.toEqual({ type: 'trailradar:flyTo', lat: 47.709, lng: 11.758, zoom: 14 });
   await expect(row).toHaveClass(/active/);
-
-  // The iframe itself never reloaded — src is unchanged.
-  await expect(iframeEl).toHaveAttribute('src', srcBefore!);
+  // p1 sits at [47.709, 11.758]; the mini-map exposes the fly target as
+  // data-fly="lat,lng,zoom" (SpotDetailMiniMap.vue).
+  await expect(miniMap).toHaveAttribute('data-fly', '47.709,11.758,14');
   assertNoLeaks();
 });
 
