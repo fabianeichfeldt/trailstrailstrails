@@ -99,30 +99,31 @@ describe('computeTrailCondition — water balance', () => {
     expect(condition.hoursSinceRain).toBeNull()
   })
 
-  it('calls the real Winterberg payload griffig — 13.4mm, then four drying days', () => {
+  it('still calls the real Winterberg payload feucht — 13.4mm, four mild days later', () => {
+    // At DRYING_FACTOR 1.0 this read "Griffig". Halving the drying rate (the
+    // FAO reference rate describes open grassland, not a trail under canopy)
+    // moves it one band wetter, which is the intended recalibration.
     const condition = computeTrailCondition(buildWeather({ days: winterbergDays() }), 'soil', NOW)
 
-    expect(condition.level).toBe('prime')
-    expect(condition.headline).toBe('Griffig')
+    expect(condition.level).toBe('damp')
+    expect(condition.headline).toBe('Feucht, aber fahrbar')
     // 13.4mm fell at 12:00 on the 13th; "now" is 18:00 on the 17th.
     expect(condition.hoursSinceRain).toBe(30)
-    expect(condition.detail).toContain('Seit 30 Stunden kein Regen')
   })
 
-  it('reaches a different verdict for the same rainfall in November', () => {
-    // Identical precipitation, only evapotranspiration drops to a November
-    // value. If this came out the same as the September case, the whole water
-    // balance would be pointless and a plain 72h rain sum would do.
-    const september = computeTrailCondition(buildWeather({ days: winterbergDays() }), 'soil', NOW)
-    const november = computeTrailCondition(
-      buildWeather({ days: winterbergDays([0.4, 0.4, 0.4, 0.4, 0.4, 0.4]) }),
-      'soil',
-      NOW,
-    )
+  it('reaches a different verdict for the same rainfall in July and December', () => {
+    // Identical precipitation, only evapotranspiration changes. If these came
+    // out the same, the whole water balance would be pointless and a plain
+    // 72h rain sum would do.
+    const rain = (et0: number) =>
+      DATES.map((date, i) => ({ date, precipMm: i === DATES.length - 2 ? 15 : 0, et0Mm: et0 }))
 
-    expect(september.level).toBe('prime')
-    expect(november.level).toBe('damp')
-    expect(november.wetnessMm).toBeGreaterThan(september.wetnessMm)
+    const july = computeTrailCondition(buildWeather({ days: rain(4.5) }), 'soil', NOW)
+    const december = computeTrailCondition(buildWeather({ days: rain(0.4) }), 'soil', NOW)
+
+    expect(july.level).toBe('damp')
+    expect(december.level).toBe('wet')
+    expect(december.wetnessMm).toBeGreaterThan(july.wetnessMm)
   })
 
   it('calls a soaked November week nass und weich', () => {

@@ -155,11 +155,14 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
 
   const card = page.locator('[data-testid="weather-card"]');
   await expect(card).toBeVisible();
-  // The mock payload has no rain on any of the six days, so the balance
-  // bottoms out at the driest verdict.
+  // The mock payload is rain-free throughout, so the balance bottoms out at
+  // the driest verdict.
   await expect(card).toContainText('Staubtrocken');
   await expect(card).toContainText('Open-Meteo');
-  await expect(card.locator('.wx-day')).toHaveCount(6);
+  // Seven columns, today in the middle, the three after it marked as forecast.
+  await expect(card.locator('.wx-day')).toHaveCount(7);
+  await expect(card.locator('.wx-day').nth(3)).toHaveClass(/today/);
+  await expect(card.locator('.wx-day.forecast')).toHaveCount(3);
 
   const weatherY = (await card.boundingBox())!.y;
   const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;

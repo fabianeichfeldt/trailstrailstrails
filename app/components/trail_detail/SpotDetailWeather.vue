@@ -37,7 +37,7 @@
           v-for="day in strip"
           :key="day.date"
           class="wx-day"
-          :class="{ today: day.isToday }"
+          :class="{ today: day.isToday, forecast: day.isForecast }"
         >
           <div class="wx-day-label">{{ day.label }}</div>
           <div class="wx-day-icon">{{ day.icon }}</div>
@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import type { Trail } from '~/types/Trail'
 import type { SpotWeather, ConditionLevel } from '~/types/Weather'
-import { computeTrailCondition, conditionModeFor } from '~/utils/trailCondition'
+import { computeTrailCondition, conditionModeFor, todayIndex } from '~/utils/trailCondition'
 import { weatherCodeIcon } from '~/utils/weatherCodes'
 
 // Weather arrives as a prop rather than being fetched here: the status banner
@@ -136,16 +136,35 @@ function formatMm(mm: number): string {
   return (rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')
 }
 
+// Today sits in the middle, with as many days ahead as behind: "has it dried
+// out yet" and "will it dry out by Saturday" are the same question asked from
+// opposite sides, and a strip that stops at today can only answer one of them.
+//
+// The balance still consumes five past days (PAST_DAYS in communication/
+// weather.ts) — the strip showing three is a display choice, not a shorter
+// calculation window.
+const STRIP_PAST_DAYS = 3
+const STRIP_FUTURE_DAYS = 3
+
 const strip = computed(() => {
-  const days = props.weather?.days ?? []
-  return days.map((day, i) => {
-    const isToday = i === days.length - 1
+  const weather = props.weather
+  const days = weather?.days ?? []
+  if (!weather || !days.length) return []
+
+  const today = todayIndex(weather, new Date())
+  const from = Math.max(0, today - STRIP_PAST_DAYS)
+  const to = Math.min(days.length, today + STRIP_FUTURE_DAYS + 1)
+
+  return days.slice(from, to).map((day, offset) => {
+    const index = from + offset
+    const isToday = index === today
     // Parsed at noon UTC so the weekday can't slip a day on either side of
     // the date line.
     const weekday = WEEKDAYS[new Date(`${day.date}T12:00:00Z`).getUTCDay()] ?? ''
     return {
       date: day.date,
       isToday,
+      isForecast: index > today,
       label: isToday ? 'Heute' : weekday,
       icon: weatherCodeIcon(day.weatherCode),
       mm: formatMm(day.precipitationMm),
@@ -212,7 +231,10 @@ const strip = computed(() => {
 /* ── Evidence strip ── */
 .wx-strip {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  /* Column count follows the data (7 normally, fewer at the edges of the
+     payload) instead of being pinned to a number the template can't see. */
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 6px;
   margin-top: 14px;
   padding-top: 12px;
@@ -251,9 +273,21 @@ const strip = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
+/* Forecast columns are dimmed and their bars hollow: what already fell is
+   measurement, what is coming is a model guess, and the verdict above rests
+   only on the former. Same geometry either way so the baseline stays flat. */
+.wx-day.forecast { opacity: 0.62; }
+.wx-day.forecast .wx-bar {
+  background: transparent;
+  border: 1.5px solid #cfd8e3;
+}
+.wx-day.forecast .wx-bar.w1 { border-color: #90cdf4; }
+.wx-day.forecast .wx-bar.w2 { border-color: #4299e1; }
+.wx-day.forecast .wx-bar.w3 { border-color: #2b6cb0; }
+
 /* Today is marked by label colour and an accent rule, deliberately not by a
    background box — a box changes the column's height and shifts the bar
-   baseline out of line with the other five. */
+   baseline out of line with the others. */
 .wx-day.today .wx-day-label,
 .wx-day.today .wx-day-mm { color: #1a2035; font-weight: 700; }
 .wx-day.today::after {

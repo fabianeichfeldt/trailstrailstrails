@@ -76,9 +76,12 @@ const TRAIL_DETAILS_MOCK = {
  * care about it unless it wants to.
  */
 function mockWeather() {
-  const dates = Array.from({ length: 6 }, (_, i) => {
+  // Ten past days + today + three forecast days, matching PAST_DAYS /
+  // FORECAST_DAYS in app/communication/weather.ts. The strip renders a
+  // seven-day window centred on today out of this.
+  const dates = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
-    d.setUTCDate(d.getUTCDate() - (5 - i));
+    d.setUTCDate(d.getUTCDate() - (10 - i));
     return d.toISOString().slice(0, 10);
   });
   const time: string[] = [];

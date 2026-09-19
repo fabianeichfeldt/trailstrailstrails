@@ -17,8 +17,18 @@ import { weatherCodeLabel } from './weatherCodes'
  * tion drains it — and classify the leftover surplus.
  */
 
-/** Hours of history the balance runs over. */
-export const BALANCE_WINDOW_HOURS = 120
+/**
+ * Hours of history the balance runs over.
+ *
+ * Ten days rather than five: rain leaving the window drops out of the bucket
+ * in a single step, which at five days produced a visible cliff — a December
+ * spot went from 8.8mm of surplus ("Feucht") to zero ("Staubtrocken") from one
+ * day to the next with no weather to justify it. Ten days pushes that edge out
+ * past the range where it bites in practice. It does not remove it: at
+ * et0 ≈ 0.4mm/day a soaking genuinely takes weeks to drain, so a hard window
+ * always truncates eventually. An exponential decay would remove it entirely.
+ */
+export const BALANCE_WINDOW_HOURS = 240
 /** Ceiling on the bucket: past ~30mm of surplus, wetter is still just "wet". */
 export const BALANCE_CAP_MM = 30
 /** Below this an hour counts as dry — sensor/model noise, not rain. */
@@ -37,6 +47,22 @@ export const RAIN_TRACE_MM = 0.2
  * truth from trailcrews.
  */
 export const RUNOFF_FRACTION = 0.3
+
+/**
+ * Multiplier on the API's reference evapotranspiration before it drains the
+ * bucket — i.e. how fast a trail dries relative to open grassland, which is
+ * what et0 actually describes.
+ *
+ * 1.0 would mean "exactly the FAO reference rate", which describes open,
+ * well-watered grassland. A forest trail under canopy sees far less sun and
+ * wind than that, and at 1.0 the model called trails dry roughly a day before
+ * they ride dry.
+ *
+ * Kept as its own named knob rather than folded into RUNOFF_FRACTION because
+ * the two describe different things: runoff is how much rain never arrives,
+ * this is how fast what did arrive leaves again.
+ */
+export const DRYING_FACTOR = 0.5
 
 /** Upper bounds (mm of surplus) for the three drier levels; above = wet. */
 export const THRESHOLD_DUSTY_MM = 1
@@ -79,6 +105,25 @@ function hourUtcMs(localTime: string, utcOffsetSeconds: number): number {
  * not "40,0". Hand-rolled rather than Intl so the output is identical under
  * every locale the app might boot in.
  */
+/** The spot's own calendar date at `now`, as `yyyy-mm-dd`. */
+export function spotLocalDate(weather: SpotWeather, now: Date): string {
+  return new Date(now.getTime() + weather.utcOffsetSeconds * 1000).toISOString().slice(0, 10)
+}
+
+/**
+ * Index of "today" in `weather.days`.
+ *
+ * Must not be shortcut to `days.length - 1`: the payload carries forecast days
+ * after today (so the strip can show what's coming), and taking the last entry
+ * would silently read tomorrow's — or the day after's — temperature into the
+ * frost check.
+ */
+export function todayIndex(weather: SpotWeather, now: Date): number {
+  const today = spotLocalDate(weather, now)
+  const found = weather.days.findIndex((d) => d.date === today)
+  return found === -1 ? weather.days.length - 1 : found
+}
+
 function formatMm(mm: number): string {
   if (mm < 0.05) return '0'
   const rounded = mm.toFixed(1)
@@ -151,7 +196,7 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     // Daily et0 spread flat across the day. Crude — it ignores the diurnal
     // cycle — but the seasonal swing (July ~4mm/day vs November ~0.4mm/day)
     // is what actually decides the verdict, and that survives the flattening.
-    const et0Hour = (et0ByDate.get(time[i]!.slice(0, 10)) ?? 0) / 24
+    const et0Hour = ((et0ByDate.get(time[i]!.slice(0, 10)) ?? 0) / 24) * DRYING_FACTOR
 
     // Only the *retained* share enters the bucket. `rain` itself stays intact
     // below — the mm figure shown to the user must be the measured rainfall,
@@ -180,8 +225,12 @@ function levelFromWetness(wetnessMm: number): ConditionLevel {
   return 'wet'
 }
 
-function describe(level: ConditionLevel, weather: SpotWeather, b: Balance): { headline: string; detail: string } {
-  const todayMaxTemp = weather.days[weather.days.length - 1]?.tempMax ?? 0
+function describe(
+  level: ConditionLevel,
+  weather: SpotWeather,
+  b: Balance,
+  todayMaxTemp: number,
+): { headline: string; detail: string } {
 
   switch (level) {
     case 'snow': {
@@ -202,7 +251,9 @@ function describe(level: ConditionLevel, weather: SpotWeather, b: Balance): { he
       }
     case 'dusty': {
       const detail = b.hoursSinceRain === null
-        ? 'Seit über 5 Tagen kein Regen. Loser Staub in Kurven, spätes Bremsen geht schief.'
+        // Derived from the window, not written out — the two drifted apart
+        // once the window was widened.
+        ? `Seit über ${Math.floor(BALANCE_WINDOW_HOURS / 24)} Tagen kein Regen. Loser Staub in Kurven, spätes Bremsen geht schief.`
         : `Seit ${Math.floor(b.hoursSinceRain / 24)} Tagen kein Regen. Loser Staub in Kurven, spätes Bremsen geht schief.`
       return { headline: 'Staubtrocken', detail }
     }
@@ -245,7 +296,7 @@ export function computeTrailCondition(
   if (!isUsable(weather)) return UNKNOWN
 
   const balance = computeBalance(weather, now)
-  const todayMaxTemp = weather.days[weather.days.length - 1]?.tempMax ?? 0
+  const todayMaxTemp = weather.days[todayIndex(weather, now)]?.tempMax ?? 0
 
   // Precedence: frozen ground beats falling rain beats surface type beats the
   // balance. Snow first because a snowed-in trail is not "wet", it's a
@@ -256,7 +307,7 @@ export function computeTrailCondition(
   else if (mode === 'hard') level = 'hard'
   else level = levelFromWetness(balance.wetnessMm)
 
-  const { headline, detail } = describe(level, weather, balance)
+  const { headline, detail } = describe(level, weather, balance, todayMaxTemp)
 
   return {
     level,

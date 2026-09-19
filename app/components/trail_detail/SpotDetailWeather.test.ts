@@ -18,16 +18,33 @@ function isoDaysAgo(n: number): string {
 
 interface DaySpec { precip: number; et0: number; code?: number; tempMax?: number }
 
-/** A raw Open-Meteo payload, same shape the live API returns. */
-function rawPayload(days: DaySpec[], current: Record<string, number> = {}) {
-  const dates = days.map((_, i) => isoDaysAgo(days.length - 1 - i))
+/** Three forecast days, dry and mild — the live payload always carries them. */
+const FORECAST: DaySpec[] = [
+  { precip: 0, et0: 2 },
+  { precip: 0, et0: 2 },
+  { precip: 0, et0: 2 },
+]
+
+/**
+ * A raw Open-Meteo payload, same shape the live API returns.
+ *
+ * `past` ends with today; `future` is appended after it, so the day list spans
+ * past → today → forecast exactly as the real response does.
+ */
+function rawPayload(past: DaySpec[], current: Record<string, number> = {}, future: DaySpec[] = FORECAST) {
+  const days = [...past, ...future]
+  const dates = days.map((_, i) => isoDaysAgo(past.length - 1 - i))
+  const todayIdx = past.length - 1
   const time: string[] = []
   const precipitation: number[] = []
   const snowfall: number[] = []
   dates.forEach((date, dayIndex) => {
     for (let h = 0; h < 24; h++) {
       time.push(`${date}T${String(h).padStart(2, '0')}:00`)
-      const isPastDay = dayIndex < dates.length - 1
+      // Rain lands at 12:00 on past days only — today's noon may still be in
+      // the future when the suite runs, and forecast rain must never reach
+      // the balance.
+      const isPastDay = dayIndex < todayIdx
       precipitation.push(h === 12 && isPastDay ? days[dayIndex]!.precip : 0)
       snowfall.push(0)
     }
@@ -102,7 +119,7 @@ afterEach(() => {
 // and the German text a rider reads is the real code path.
 
 describe('SpotDetailWeather — from raw API response to rendered card', () => {
-  it('turns the verified Winterberg payload into a "Griffig" card with its evidence', async () => {
+  it('turns the verified Winterberg payload into a "Feucht" card with its evidence', async () => {
     mockFetch(rawPayload(WINTERBERG))
     const weather = await fetchSpotWeather(51.1927, 8.5236)
 
@@ -111,15 +128,21 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
 
     expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(true)
     expect(text).toContain('Trail-Zustand')
-    expect(text).toContain('Griffig')
-    expect(text).toContain('kein Regen')
-    // The 13.4mm that produced the verdict must be visible as evidence.
-    expect(text).toContain('13,4')
+    expect(text).toContain('Feucht, aber fahrbar')
     expect(text).toContain('12°')
     expect(text).toContain('Open-Meteo')
-    // Six columns: five days back plus today.
-    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
-    expect(wrapper.find('.wx-day.today').text()).toContain('Heute')
+    // Rain inside the displayed window shows up as evidence.
+    expect(text).toContain('1,1')
+
+    // Seven columns with today dead centre: three measured days behind it,
+    // three forecast days ahead.
+    const columns = wrapper.findAll('.wx-day')
+    expect(columns).toHaveLength(7)
+    expect(columns[3]!.classes()).toContain('today')
+    expect(columns[3]!.text()).toContain('Heute')
+    expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
+    // Nothing before today may be marked as forecast.
+    for (const past of columns.slice(0, 3)) expect(past.classes()).not.toContain('forecast')
   })
 
   it('turns a soaked November payload into a "Nass" card with the trail-care nudge', async () => {
@@ -184,8 +207,8 @@ describe('SpotDetailWeather — states', () => {
 
     const wrapper = mount(SpotDetailWeather, { props: { trail: mixed, weather, loading: false } })
 
-    expect(wrapper.text()).toContain('Griffig')
-    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
+    expect(wrapper.text()).toContain('Feucht, aber fahrbar')
+    expect(wrapper.findAll('.wx-day')).toHaveLength(7)
   })
 
   it('drops the evidence strip while it is raining — the headline no longer rests on it', async () => {

@@ -17,8 +17,20 @@ import type { SpotWeather, DayWeather } from '~/types/Weather'
 
 const WEATHER_API = 'https://api.open-meteo.com/v1/forecast'
 
-/** Days of history fetched — five back plus today fills the evidence strip. */
-export const PAST_DAYS = 5
+/**
+ * Days of history fetched — matches BALANCE_WINDOW_HOURS (240h), which is
+ * far more than the strip displays. Display and calculation are deliberately
+ * decoupled: shrinking the strip must not quietly shorten the balance window,
+ * and the window must not be capped by how many columns fit on a phone.
+ */
+export const PAST_DAYS = 10
+
+/**
+ * Days ahead. The strip centres on today, so it needs future days to put
+ * there — and "will it dry out by the weekend" is half of why anyone looks
+ * at this card at all.
+ */
+export const FORECAST_DAYS = 3
 
 export const WEATHER_CACHE_TTL_MS = 60 * 60 * 1000
 const CACHE_PREFIX = 'tr_wx_v1_'
@@ -38,7 +50,7 @@ export function buildWeatherUrl(lat: number, lon: number): string {
     latitude: lat.toFixed(4),
     longitude: lon.toFixed(4),
     past_days: String(PAST_DAYS),
-    forecast_days: '1',
+    forecast_days: String(FORECAST_DAYS),
     timezone: 'auto',
     current: 'temperature_2m,apparent_temperature,weather_code,precipitation,wind_speed_10m',
     daily: 'weather_code,precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration,snowfall_sum',
