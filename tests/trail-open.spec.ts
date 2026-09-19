@@ -102,28 +102,25 @@ baseTest('/trails/<id> for a spot whose slug differs redirects to the slug URL',
 // Regression test for "the embedded map on a trail page shows the wrong
 // location" (reported: /trails/[uuid] pages showing a map centered near
 // Salzburg — the DEFAULT_LAT/DEFAULT_LNG fallback in app/utils/embedQuery.ts
-// — instead of the trail's actual coordinates). Nothing previously asserted
-// on the <iframe class="trail-map"> element at all: the only existing test
-// above only checks the h1 and the "open in map" link, both of which are
-// derived from the slug/name and would stay green even if the iframe's
-// src carried completely wrong (or default) coordinates. This test follows
-// the full first-party chain that was actually broken in production:
-// trail.latitude/longitude (app/pages/trails/[slug].vue) -> the embedSrc
-// computed -> the rendered <iframe src>.
-baseTest('/trails/[id] embeds a map centered on the trail\'s own coordinates, not the embed-query default', async ({ page }) => {
+// — instead of the trail's actual coordinates). The spot map is now the
+// inline <SpotDetailMiniMap> (fed by trail.latitude/longitude directly, no
+// embed query), so this decodes the OSM tile requests the mini-map's Leaflet
+// instance makes back to lat/lng and checks they cover the trail's real
+// coordinates, well clear of the old default.
+baseTest('/trails/[id] renders an inline map centered on the trail\'s own coordinates, not the embed-query default', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/t1');
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
 
-  const src = await page.locator('iframe.trail-map').getAttribute('src');
-  expect(src).toBeTruthy();
-
-  // t1's fixture coordinates (tests/fixtures.ts) — well clear of Salzburg
-  // (lat 47.8, lng 13.0) so a fallback-to-default regression is unmistakable.
-  expect(src).toContain('lat=47.71');
-  expect(src).toContain('lng=11.76');
-  expect(src).not.toContain('lat=47.8&');
-  expect(src).not.toContain('lng=13');
+  const miniMap = page.locator('[data-testid="spot-minimap"]');
+  // The mini-map's Leaflet instance actually initialised (Leaflet adds
+  // .leaflet-container to the element it's mounted on)...
+  await expect(miniMap).toBeVisible();
+  await expect(miniMap).toHaveClass(/leaflet-container/);
+  // ...centered on t1's fixture coordinates (47.71, 11.76) — well clear of
+  // Salzburg (lat 47.8, lng 13.0), so a fallback-to-default regression is
+  // unmistakable. SpotDetailMiniMap seeds data-fly with the spot centre.
+  await expect(miniMap).toHaveAttribute('data-fly', '47.71,11.76,11');
 
   assertNoLeaks();
 });
