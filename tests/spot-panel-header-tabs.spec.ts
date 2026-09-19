@@ -79,11 +79,12 @@ test('a logged-in user can like and unlike a trail from the hero', async ({ page
   await expect(likeBtn.locator('.fa-regular.fa-heart')).toBeVisible();
 
   await likeBtn.click();
+  await expect(likeBtn).toHaveClass(/liked/);
   await expect(likeBtn.locator('.fa-solid.fa-heart')).toBeVisible();
-  await expect(likeBtn).toHaveAttribute('data-liked', 'true');
   expect(liked).toBe(true);
 
   await likeBtn.click();
+  await expect(likeBtn).not.toHaveClass(/liked/);
   await expect(likeBtn.locator('.fa-regular.fa-heart')).toBeVisible();
   expect(liked).toBe(false);
 });

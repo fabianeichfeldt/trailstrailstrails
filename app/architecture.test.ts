@@ -130,9 +130,13 @@ describe('Embed page (self-contained)', () => {
     expect(src, 'embed page must not pull in useTrailMap').not.toContain('useTrailMap')
   })
 
-  test('embed page uses shared markerIconOptions instead of inline icon creation', () => {
+  test('embed page renders via the shared mini-map renderer, not its own inline Leaflet', () => {
     const src = read('app/pages/embed/[token].vue')
-    expect(src, 'embed page must import markerIconOptions').toContain('markerIconOptions')
+    // Icon creation (markerIconOptions etc.) is now reached transitively
+    // through ~/map/miniMap — the embed page must not init Leaflet itself.
+    expect(src, 'embed page must use the shared createMiniMap').toContain('createMiniMap')
+    expect(src, 'embed page must not import leaflet directly').not.toMatch(/from ['"]leaflet['"]/)
+    expect(src, 'embed page must not call L.map itself').not.toMatch(/L\.map\(/)
   })
 
   test('useTrailMap uses shared markerIconOptions instead of inline icon creation', () => {
@@ -261,5 +265,43 @@ describe('trailCondition scoring (pure layer)', () => {
       if (/open-meteo\.com\/v1/.test(read(file))) violations.push(file)
     }
     expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mini-map renderer — owns Leaflet, but only dynamically and only in a function
+// ─────────────────────────────────────────────────────────────────────────────
+// app/map/miniMap.ts is the read-only Leaflet renderer shared by the
+// spot-detail page (SpotDetailMiniMap.vue) and the third-party embed page.
+// It is allowed to own an `L` instance (like useTrailMap), but leaflet +
+// leaflet-gesture-handling must be pulled in dynamically inside createMiniMap
+// so they never reach the entry bundle, and it must stay off the store /
+// composable layers.
+describe('miniMap renderer (owns Leaflet, dynamically)', () => {
+  test('miniMap.ts does not import from stores/ or composables/', () => {
+    const src = read('app/map/miniMap.ts')
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?stores\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?composables\//)
+  })
+
+  test('miniMap.ts imports leaflet only via a dynamic import(), never at module level', () => {
+    const src = read('app/map/miniMap.ts')
+    expect(src, 'must dynamic-import leaflet').toMatch(/import\(['"]leaflet['"]\)/)
+    expect(src, 'must dynamic-import leaflet-gesture-handling').toMatch(/import\(['"]leaflet-gesture-handling['"]\)/)
+    expect(src, 'no top-level leaflet import').not.toMatch(/^import .*from ['"]leaflet['"]/m)
+  })
+
+  test('miniMap.ts reuses the shared app/map helpers instead of duplicating them', () => {
+    const src = read('app/map/miniMap.ts')
+    expect(src).toMatch(/from ['"]\.\/trailTooltip['"]/)
+    expect(src).toMatch(/from ['"]\.\/markerIcon['"]/)
+    expect(src).toMatch(/from ['"]\.\/gpxZoomThreshold['"]/)
+  })
+
+  test('miniMap.ts exposes createMiniMap and the pure decision helpers', () => {
+    const src = read('app/map/miniMap.ts')
+    expect(src).toContain('export async function createMiniMap')
+    expect(src).toContain('export function orderPolylines')
+    expect(src).toContain('export function resolveShowGpx')
   })
 })
