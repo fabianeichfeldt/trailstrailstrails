@@ -159,14 +159,14 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
     expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
   })
 
-  it('turns a soaked November payload into a "Nass" card with the trail-care nudge', async () => {
+  it('turns a soaked November payload into a "Schlammig" card with the trail-care nudge', async () => {
     mockFetch(rawPayload(SOAKED_NOVEMBER, { temperature_2m: 6, weather_code: 63 }))
     const weather = await fetchSpotWeather(51.1927, 8.5236)
 
     const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
     const text = wrapper.text()
 
-    expect(text).toContain('Nass und weich')
+    expect(text).toContain('Schlammig')
     expect(text).toContain('Trails schonen')
     expect(wrapper.find('.wx-care').exists()).toBe(true)
     expect(wrapper.find('[data-testid="weather-card"]').classes()).toContain('v-wet')

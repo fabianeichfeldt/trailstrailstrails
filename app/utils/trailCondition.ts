@@ -336,8 +336,8 @@ function describe(
       // "Slippery" is the wrong thing to say about a downpour and the right
       // thing to say about a shower, so the wording follows where the bucket
       // will stand by this evening — read with the same thresholds as the
-      // ground states, which keeps "schlammig" meaning what "Nass und weich"
-      // means everywhere else. Mentioning the amount still to come is what
+      // ground states, so a "schlammig" outlook here is exactly the point at
+      // which the card would show the Schlammig state. Mentioning the amount still to come is what
       // lets a rider judge the claim; below half a millimetre it is noise.
       const rate = `${formatMm(b.currentRainMmPerHour)} mm/h`
       const ahead = b.rainAheadMm >= 0.5 ? `, bis heute Abend noch ca. ${formatMm(b.rainAheadMm)} mm` : ''
@@ -379,7 +379,7 @@ function describe(
       }
     case 'wet':
       return {
-        headline: 'Nass und weich',
+        headline: 'Schlammig',
         detail: `${formatMm(b.rainWindowMm)} mm in den letzten 3 Tagen, kaum Abtrocknung. Reifen hinterlassen Spuren.`,
       }
     default:

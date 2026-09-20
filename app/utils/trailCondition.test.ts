@@ -129,7 +129,7 @@ describe('computeTrailCondition — water balance', () => {
     expect(december.wetnessMm).toBeGreaterThan(july.wetnessMm)
   })
 
-  it('calls a soaked November week nass und weich', () => {
+  it('calls a soaked November week schlammig', () => {
     const condition = computeTrailCondition(
       buildWeather({
         days: DATES.map((date, i) => ({
@@ -145,7 +145,7 @@ describe('computeTrailCondition — water balance', () => {
     )
 
     expect(condition.level).toBe('wet')
-    expect(condition.headline).toBe('Nass und weich')
+    expect(condition.headline).toBe('Schlammig')
     // The evidence figure must be the measured rainfall of the last 3 days,
     // not the runoff-reduced amount the bucket works with.
     expect(condition.detail).toContain('40 mm')
@@ -168,7 +168,7 @@ describe('computeTrailCondition — water balance', () => {
 // While it rains, "slippery" is the wrong answer for a downpour and the right
 // one for a shower. The outlook runs the water bucket forward through the rest
 // of today's forecast and reads it with the same thresholds as the ground
-// states, so "schlammig" here means what "Nass und weich" means everywhere else.
+// states, so "schlammig" here means what the Schlammig state means everywhere else.
 describe('computeTrailCondition — raining outlook', () => {
   /** 10:00 local on the last day — its 12:00 rain is still ahead of us. */
   const MORNING = new Date('2026-09-17T08:00:00Z')
