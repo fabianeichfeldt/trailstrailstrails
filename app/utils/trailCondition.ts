@@ -192,6 +192,8 @@ interface Balance {
   dryingSinceRainMm: number
   hoursSinceRain: number | null
   rainWindowMm: number
+  /** Measured rain over the whole balance window. */
+  rainBalanceWindowMm: number
   snow24hCm: number
   currentRainMmPerHour: number
 }
@@ -210,6 +212,7 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
   let surplus = 0
   let dryingSinceRain = 0
   let rainWindowMm = 0
+  let rainBalanceWindowMm = 0
   let snow24hCm = 0
 
   const { time, precipitationMm, snowfallCm } = weather.hourly
@@ -239,6 +242,7 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     if (rain >= RAIN_TRACE_MM) dryingSinceRain = 0
     else dryingSinceRain += et0Hour
 
+    rainBalanceWindowMm += rain
     if (stampMs >= rainWindowStartMs) rainWindowMm += rain
     if (stampMs >= snowWindowStartMs) snow24hCm += snow
   }
@@ -252,6 +256,7 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     // Shared with the status banner's rain rule — see hoursSinceLastRain.
     hoursSinceRain: hoursSinceLastRain(weather, now),
     rainWindowMm,
+    rainBalanceWindowMm,
     snow24hCm,
     currentRainMmPerHour: weather.current.precipitationMm ?? 0,
   }
@@ -294,25 +299,25 @@ function describe(
       const detail = b.hoursSinceRain === null
         // Derived from the window, not written out — the two drifted apart
         // once the window was widened.
-        ? `Seit über ${Math.floor(BALANCE_WINDOW_HOURS / 24)} Tagen kein Regen. Loser Staub in Kurven, spätes Bremsen geht schief.`
-        : `Seit ${Math.floor(b.hoursSinceRain / 24)} Tagen kein Regen. Loser Staub in Kurven, spätes Bremsen geht schief.`
+        ? `Seit über ${Math.floor(BALANCE_WINDOW_HOURS / 24)} Tagen kein Regen. Loser Sand und Geröll in Kurven rutschig.`
+        : `Seit ${Math.floor(b.hoursSinceRain / 24)} Tagen kein Regen. Loser Sand in Kurven rutschig.`
       return { headline: 'Staubtrocken', detail }
     }
     case 'prime': {
       const detail = b.hoursSinceRain === null
         ? 'Bester Zustand. Der Boden ist abgetrocknet.'
-        : `Bester Zustand. Seit ${b.hoursSinceRain} Stunden kein Regen, Boden hat abgetrocknet.`
+        : `Bester Zustand. Seit ${b.hoursSinceRain} Stunden kein Regen, Boden weitgehend abgetrocknet.`
       return { headline: 'Griffig', detail }
     }
     case 'damp':
       return {
-        headline: 'Feucht, aber fahrbar',
-        detail: `${formatMm(b.rainWindowMm)} mm in den letzten 3 Tagen. Wurzeln und Steine sind rutschig, Untergrund trägt noch.`,
+        headline: 'Feucht, aber gut fahrbar',
+        detail: `${formatMm(b.rainWindowMm)} mm in den letzten 3 Tagen. Wurzeln und Steine sind evtl. rutschig.`,
       }
     case 'wet':
       return {
         headline: 'Nass und weich',
-        detail: `${formatMm(b.rainWindowMm)} mm in den letzten 3 Tagen, kaum Abtrocknung. Reifen schneiden ein — Spuren bleiben lange.`,
+        detail: `${formatMm(b.rainWindowMm)} mm in den letzten 3 Tagen, kaum Abtrocknung. Reifen hinterlassen Spuren.`,
       }
     default:
       return { headline: '', detail: '' }
@@ -325,6 +330,7 @@ const UNKNOWN: TrailCondition = {
   detail: '',
   wetnessMm: 0,
   hoursSinceRain: null,
+  rain10dMm: 0,
 }
 
 export function computeTrailCondition(
@@ -356,5 +362,6 @@ export function computeTrailCondition(
     detail,
     wetnessMm: balance.wetnessMm,
     hoursSinceRain: balance.hoursSinceRain,
+    rain10dMm: balance.rainBalanceWindowMm,
   }
 }

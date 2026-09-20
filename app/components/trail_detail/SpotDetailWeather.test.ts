@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import type { Trail, DirtPark } from '~/types/Trail'
 import { fetchSpotWeather } from '~/communication/weather'
@@ -128,7 +130,7 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
 
     expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(true)
     expect(text).toContain('Trail-Zustand')
-    expect(text).toContain('Feucht, aber fahrbar')
+    expect(text).toContain('Feucht, aber gut fahrbar')
     expect(text).toContain('12°')
     expect(text).toContain('Open-Meteo')
     // Rain inside the displayed window shows up as evidence.
@@ -155,6 +157,86 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
     expect(text).toContain('Trails schonen')
     expect(wrapper.find('.wx-care').exists()).toBe(true)
     expect(wrapper.find('[data-testid="weather-card"]').classes()).toContain('v-wet')
+  })
+
+  it('states how much rain fell over the last 10 days, so the verdict can be checked', async () => {
+    mockFetch(rawPayload(WINTERBERG))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    // 13.4mm + 1.1mm — the strip only shows two past days, so without this
+    // line the 13.4 would be invisible even though the verdict rests on it.
+    const total = wrapper.find('[data-testid="rain-10d"]')
+    expect(total.exists()).toBe(true)
+    expect(total.text()).toContain('10 Tage')
+    expect(total.text()).toContain('14,5 mm')
+  })
+
+  it('credits Open-Meteo with a link, on the same row as the "calculated" note', async () => {
+    mockFetch(rawPayload(WINTERBERG))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    // Attribution is a condition of Open-Meteo's free tier, so it must stay on
+    // the card. It shares the footer row with the statement that the verdict is
+    // calculated: both are about where the numbers come from.
+    const foot = wrapper.find('.wx-foot')
+    expect(foot.text()).toContain('Berechnete Angabe')
+    const link = foot.find('a')
+    expect(link.exists()).toBe(true)
+    expect(link.text()).toContain('Open-Meteo')
+    expect(link.attributes('href')).toBe('https://open-meteo.com/')
+    expect(link.attributes('rel')).toContain('noopener')
+    expect(link.attributes('target')).toBe('_blank')
+  })
+
+  it('puts the 10-day rain directly under the verdict, above the strip', async () => {
+    mockFetch(rawPayload(WINTERBERG))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    // Inside the verdict block, so it reads as part of the statement it backs up.
+    const inVerdict = wrapper.find('.wx-verdict [data-testid="rain-10d"]')
+    expect(inVerdict.exists()).toBe(true)
+    // ...and the verdict block comes before the evidence strip in the card.
+    const html = wrapper.html()
+    expect(html.indexOf('data-testid="rain-10d"')).toBeLessThan(html.indexOf('class="wx-strip"'))
+  })
+
+  it('draws the weather icons big enough to read on a desktop screen', () => {
+    const source = readFileSync(resolve(__dirname, 'SpotDetailWeather.vue'), 'utf8')
+    const size = (selector: string): number => {
+      // First (base, non-media-query) declaration of the selector.
+      const rule = source.match(new RegExp(`${selector.replace('.', '\\.')}\\s*\\{([^}]*)\\}`))
+      const px = rule?.[1]?.match(/font-size:\s*(\d+)px/)
+      return px ? Number(px[1]) : 0
+    }
+
+    expect(size('.wx-day-icon')).toBeGreaterThanOrEqual(24)
+    expect(size('.wx-now-icon')).toBeGreaterThanOrEqual(26)
+  })
+
+  it('sums a soaked spot to the full amount, not a per-day figure', async () => {
+    mockFetch(rawPayload(SOAKED_NOVEMBER, { temperature_2m: 6, weather_code: 63 }))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    expect(wrapper.find('[data-testid="rain-10d"]').text()).toContain('40 mm')
+  })
+
+  it('does not dim the forecast days — riders plan trips around them', () => {
+    // Scoped CSS is not applied under jsdom, so assert on the stylesheet
+    // source: a forecast column must keep full opacity. Hollow bars are what
+    // separates a prediction from a measurement.
+    const source = readFileSync(resolve(__dirname, 'SpotDetailWeather.vue'), 'utf8')
+    const rules = [...source.matchAll(/([^{}]*\.wx-day\.forecast[^{}]*)\{([^}]*)\}/g)]
+
+    expect(rules.length).toBeGreaterThan(0)
+    for (const [, , body] of rules) expect(body).not.toMatch(/opacity|filter\s*:/)
   })
 
   it('does not show the trail-care nudge on a dry spot', async () => {
@@ -206,7 +288,7 @@ describe('SpotDetailWeather — states', () => {
 
     const wrapper = mount(SpotDetailWeather, { props: { trail: mixed, weather, loading: false } })
 
-    expect(wrapper.text()).toContain('Feucht, aber fahrbar')
+    expect(wrapper.text()).toContain('Feucht, aber gut fahrbar')
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
   })
 

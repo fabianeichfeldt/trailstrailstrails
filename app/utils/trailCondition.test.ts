@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import eberbachPayload from './__fixtures__/eberbach-2026-09-20.json'
+import bayreuthPayload from './__fixtures__/bayreuth-2026-09-20.json'
 import type { SpotWeather, DayWeather } from '~/types/Weather'
 import type { Trail, DirtPark } from '~/types/Trail'
 import { mapWeatherResponse } from '~/communication/weather'
@@ -108,7 +109,7 @@ describe('computeTrailCondition — water balance', () => {
     const condition = computeTrailCondition(buildWeather({ days: winterbergDays() }), 'soil', NOW)
 
     expect(condition.level).toBe('damp')
-    expect(condition.headline).toBe('Feucht, aber fahrbar')
+    expect(condition.headline).toBe('Feucht, aber gut fahrbar')
     // 13.4mm fell at 12:00 on the 13th; "now" is 18:00 on the 17th.
     expect(condition.hoursSinceRain).toBe(30)
   })
@@ -160,7 +161,7 @@ describe('computeTrailCondition — water balance', () => {
     )
 
     expect(condition.level).toBe('damp')
-    expect(condition.headline).toBe('Feucht, aber fahrbar')
+    expect(condition.headline).toBe('Feucht, aber gut fahrbar')
   })
 })
 
@@ -321,5 +322,29 @@ describe('computeTrailCondition — Eberbach regression', () => {
     expect(condition.wetnessMm).toBeLessThanOrEqual(0)
     expect(Math.abs(condition.wetnessMm)).toBeLessThan(THRESHOLD_DUST_DRYING_MM)
     expect(condition.hoursSinceRain).toBe(86)
+  })
+})
+
+// Ground truth from a rider: Bärenleite (Bayreuth) on 2026-09-20 was prime.
+// 10.4mm fell a week earlier (13th), a little on the 14th and 16th, dry since,
+// and the forecast rain (4.3mm from 18:00) had not started yet. Forecast hours
+// must not count against the ground.
+describe('computeTrailCondition — Bayreuth ground truth', () => {
+  /** 2026-09-20 14:20 local (CEST) — when the payload was captured. */
+  const OBSERVED_AT = new Date('2026-09-20T12:20:00Z')
+
+  it('is griffig a week after 10mm, with the day\'s rain still in the forecast', () => {
+    const condition = computeTrailCondition(mapWeatherResponse(bayreuthPayload), 'soil', OBSERVED_AT)
+
+    expect(condition.level).toBe('prime')
+    expect(condition.headline).toBe('Griffig')
+  })
+
+  it('reports the rain measured over the last 10 days, without the forecast', () => {
+    const condition = computeTrailCondition(mapWeatherResponse(bayreuthPayload), 'soil', OBSERVED_AT)
+
+    // 12.6mm measured (10.4 + 0.5 + 1.7). The same payload holds 4.7mm more
+    // from 18:00 onwards — counting that would read 17.3.
+    expect(condition.rain10dMm).toBeCloseTo(12.6, 1)
   })
 })

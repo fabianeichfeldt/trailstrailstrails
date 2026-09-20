@@ -21,6 +21,9 @@
         <div class="wx-verdict">
           <strong>{{ condition.headline }}</strong>
           <span>{{ condition.detail }}</span>
+          <div v-if="showStrip" class="wx-total" data-testid="rain-10d">
+            Regen in den letzten 10 Tagen: <b>{{ rain10d }} mm</b>
+          </div>
         </div>
         <div class="wx-now">
           <div class="wx-now-icon">{{ currentIcon }}</div>
@@ -30,6 +33,13 @@
             {{ Math.round(weather!.current.windKmh) }} km/h
           </div>
         </div>
+      </div>
+      <div class="wx-foot">
+        <span>{{ footNote }}</span>
+        <span>
+          Wetter:
+          <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+        </span>
       </div>
 
       <div v-if="showStrip" class="wx-strip">
@@ -51,16 +61,7 @@
       <div v-if="condition.level === 'wet'" class="wx-care">
         <span class="wx-care-icon" aria-hidden="true">🌱</span>
         <span>
-          <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Rillen, die die
-          Trailcrew von Hand reparieren muss. Lieber auf Schotter ausweichen oder zwei Tage warten.
-        </span>
-      </div>
-
-      <div class="wx-foot">
-        <span>{{ footNote }}</span>
-        <span>
-          Wetter:
-          <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
+          <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Spuren, die die Trailcrew von Hand reparieren muss.
         </span>
       </div>
     </div>
@@ -88,10 +89,10 @@ const condition = computed(() =>
 )
 
 const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
-  dusty:   { cls: 'v-dust',  badge: '🏜️' },
+  dusty:   { cls: 'v-dust',  badge: '🧹' },
   prime:   { cls: 'v-prime', badge: '🤙' },
   damp:    { cls: 'v-damp',  badge: '💧' },
-  wet:     { cls: 'v-wet',   badge: '🛑' },
+  wet:     { cls: 'v-wet',   badge: '⚠️' },
   raining: { cls: 'v-damp',  badge: '☔' },
   snow:    { cls: 'v-snow',  badge: '❄️' },
   // A sealed surface gets no verdict colour — the badge just mirrors the sky.
@@ -112,8 +113,13 @@ const showStrip = computed(() => BALANCE_LEVELS.includes(condition.value.level))
 const footNote = computed(() =>
   condition.value.level === 'hard'
     ? ''
-    : 'Berechnet aus Niederschlag & Verdunstung · keine Trailcrew-Angabe',
+    : 'Berechnete Angabe · keine Trailcrew-Angabe',
 )
+
+// The verdict rests on ten days of rain but the strip only draws two of them,
+// so the total is stated outright — it is what lets a rider check the claim
+// against the week they remember.
+const rain10d = computed(() => formatMm(condition.value.rain10dMm).replace(/ mm$/, ''))
 
 const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
 
@@ -225,10 +231,9 @@ const strip = computed(() => {
   padding-left: 10px;
   border-left: 1px solid #e4e9f0;
 }
-.wx-now-icon { font-size: 17px; }
+.wx-now-icon { font-size: 30px; line-height: 1; }
 .wx-now-temp { font-size: 19px; font-weight: 700; line-height: 1; }
 .wx-now-meta { font-size: 11px; color: #4a5568; margin-top: 3px; white-space: nowrap; }
-
 /* ── Evidence strip ── */
 .wx-strip {
   display: grid;
@@ -250,7 +255,7 @@ const strip = computed(() => {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.wx-day-icon { font-size: 14px; margin: 3px 0 4px; line-height: 1; }
+.wx-day-icon { font-size: 32px; margin: 2px 0 0; line-height: 1; }
 
 .wx-bar-track {
   height: 44px;
@@ -274,10 +279,11 @@ const strip = computed(() => {
   font-variant-numeric: tabular-nums;
 }
 
-/* Forecast columns are dimmed and their bars hollow: what already fell is
-   measurement, what is coming is a model guess, and the verdict above rests
-   only on the former. Same geometry either way so the baseline stays flat. */
-.wx-day.forecast { opacity: 0.62; }
+/* Forecast bars are hollow: what already fell is measurement, what is coming
+   is a model guess, and the verdict above rests only on the former. Same
+   geometry either way so the baseline stays flat. Deliberately not dimmed —
+   the coming days are what a rider plans a trip around, so they get full
+   contrast and only the bar style says "prediction". */
 .wx-day.forecast .wx-bar {
   background: transparent;
   border: 1.5px solid #cfd8e3;
@@ -301,6 +307,13 @@ const strip = computed(() => {
   border-radius: 2px;
   background: #1a2035;
 }
+
+.wx-total {
+  margin-top: 6px;
+  font-size: 12.5px;
+  color: #4a5568;
+}
+.wx-total b { color: #1a2035; font-variant-numeric: tabular-nums; }
 
 /* ── Trail-care nudge ── */
 .wx-care {
@@ -371,9 +384,10 @@ const strip = computed(() => {
     background: #f7f9fc;
     border-radius: 9px;
   }
+  .wx-now-icon { font-size: 28px; }
+  .wx-day-icon { font-size: 28px; }
   .wx-now-temp { font-size: 15px; }
-  .wx-now-meta { white-space: normal; margin-top: 0; }
-  .wx-bar { width: 13px; }
+  .wx-now-meta { white-space: normal; margin-top: 0; }  .wx-bar { width: 13px; }
   .wx-day-mm { font-size: 10px; }
 }
 </style>

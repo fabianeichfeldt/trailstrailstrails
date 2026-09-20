@@ -76,4 +76,10 @@ export interface TrailCondition {
   wetnessMm: number
   /** Hours since the last hour with measurable rain, or null if none in range. */
   hoursSinceRain: number | null
+  /**
+   * Rain that actually fell over the balance window (10 days), in mm. Measured
+   * hours only — forecast rain is never included. Shown next to the verdict so
+   * a rider can check the claim against something they can remember.
+   */
+  rain10dMm: number
 }
