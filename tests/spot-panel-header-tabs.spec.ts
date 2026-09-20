@@ -23,7 +23,7 @@ async function signIn(page: import('@playwright/test').Page) {
 
 // ── Like button ──────────────────────────────────────────────────────────
 
-baseTest('the like button stays hidden until the live details refresh resolves, then reveals unfilled when not liked', async ({ page }) => {
+baseTest('the like button stays hidden until the live details refresh resolves, then reveals an unfilled heart when not liked', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   let resolveDetails!: () => void;
   const detailsGate = new Promise<void>((resolve) => { resolveDetails = resolve; });
