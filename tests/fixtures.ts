@@ -72,7 +72,7 @@ const TRAIL_DETAILS_MOCK = {
  * a frozen date would drift out of it and silently turn every spot's verdict
  * into "no card".
  *
- * Mild and dry, so the card renders its "Griffig" state and no test has to
+ * Mild and dry, so the card renders its "Hero Dirt" state and no test has to
  * care about it unless it wants to.
  */
 function mockWeather() {
@@ -103,7 +103,7 @@ function mockWeather() {
     daily: {
       time: dates,
       // 4mm two days ago: enough to reset the drying counter so the verdict
-      // sits solidly in "Griffig" rather than on the dust threshold, where a
+      // sits solidly in "Hero Dirt" rather than on the dust threshold, where a
       // rain-free fixture lands by coincidence.
       weather_code: dates.map((_, i) => (i === 8 ? 61 : 2)),
       precipitation_sum: dates.map((_, i) => (i === 8 ? 4 : 0)),

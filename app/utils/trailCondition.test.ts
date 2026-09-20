@@ -103,7 +103,7 @@ describe('computeTrailCondition — water balance', () => {
   })
 
   it('still calls the real Winterberg payload feucht — 13.4mm, four mild days later', () => {
-    // At DRYING_FACTOR 1.0 this read "Griffig". Halving the drying rate (the
+    // At DRYING_FACTOR 1.0 this read "Hero Dirt". Halving the drying rate (the
     // FAO reference rate describes open grassland, not a trail under canopy)
     // moves it one band wetter, which is the intended recalibration.
     const condition = computeTrailCondition(buildWeather({ days: winterbergDays() }), 'soil', NOW)
@@ -215,7 +215,7 @@ describe('computeTrailCondition — raining outlook', () => {
   })
 
   it('takes the ground it lands on into account — soaked ground turns muddy on little rain', () => {
-    // 3mm alone would read "griffig"; on top of two days of soaking it is mud.
+    // 3mm alone would read "Hero Dirt"; on top of two days of soaking it is mud.
     const condition = rainingDay(3, { before: [0, 0, 14, 13, 0] })
 
     expect(condition.detail).toContain('schlammig')
@@ -371,11 +371,11 @@ describe('computeTrailCondition — Eberbach regression', () => {
   /** 2026-09-20 08:45 local (CEST) — when the card was looked at. */
   const OBSERVED_AT = new Date('2026-09-20T06:45:00Z')
 
-  it('calls it griffig, not staubtrocken, four days after 5.7mm in September', () => {
+  it('calls it Hero Dirt, not staubtrocken, four days after 5.7mm in September', () => {
     const condition = computeTrailCondition(mapWeatherResponse(raw), 'soil', OBSERVED_AT)
 
     expect(condition.level).toBe('prime')
-    expect(condition.headline).toBe('Griffig')
+    expect(condition.headline).toBe('Hero Dirt')
   })
 
   it('has drained its surplus but has nowhere near enough drying for dust', () => {
@@ -397,11 +397,11 @@ describe('computeTrailCondition — Bayreuth ground truth', () => {
   /** 2026-09-20 14:20 local (CEST) — when the payload was captured. */
   const OBSERVED_AT = new Date('2026-09-20T12:20:00Z')
 
-  it('is griffig a week after 10mm, with the day\'s rain still in the forecast', () => {
+  it('is Hero Dirt a week after 10mm, with the day\'s rain still in the forecast', () => {
     const condition = computeTrailCondition(mapWeatherResponse(bayreuthPayload), 'soil', OBSERVED_AT)
 
     expect(condition.level).toBe('prime')
-    expect(condition.headline).toBe('Griffig')
+    expect(condition.headline).toBe('Hero Dirt')
   })
 
   it('reports the rain measured over the last 10 days, without the forecast', () => {

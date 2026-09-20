@@ -279,7 +279,7 @@ describe('SpotDetailWeather — states', () => {
 
     expect(wrapper.find('[data-testid="weather-skeleton"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(false)
-    expect(wrapper.text()).not.toContain('Griffig')
+    expect(wrapper.text()).not.toContain('Hero Dirt')
   })
 
   it('gives an asphalt pumptrack current weather and the forecast, but no ground verdict', async () => {
@@ -290,7 +290,7 @@ describe('SpotDetailWeather — states', () => {
     const wrapper = mount(SpotDetailWeather, { props: { trail: pumptrack, weather, loading: false } })
 
     expect(wrapper.text()).toContain('Asphalt trocknet in Minuten')
-    expect(wrapper.text()).not.toContain('Griffig')
+    expect(wrapper.text()).not.toContain('Hero Dirt')
     // For asphalt the forecast is the whole point: it decides if the session is on.
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
     // The 10-day rain is shown in every state, asphalt included.

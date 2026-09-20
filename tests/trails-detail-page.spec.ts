@@ -156,7 +156,7 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
   const card = page.locator('[data-testid="weather-card"]');
   await expect(card).toBeVisible();
   // The mock has 4mm two days ago and mild weather since — solidly grippy.
-  await expect(card).toContainText('Griffig');
+  await expect(card).toContainText('Hero Dirt');
   await expect(card).toContainText('Open-Meteo');
   // Six columns: two measured days, today, three forecast days.
   await expect(card.locator('.wx-day')).toHaveCount(6);

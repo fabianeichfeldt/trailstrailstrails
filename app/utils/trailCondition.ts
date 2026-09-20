@@ -370,7 +370,7 @@ function describe(
       const detail = b.hoursSinceRain === null
         ? 'Bester Zustand. Der Boden ist abgetrocknet.'
         : `Bester Zustand. Seit ${b.hoursSinceRain} Stunden kein Regen, Boden weitgehend abgetrocknet.`
-      return { headline: 'Griffig', detail }
+      return { headline: 'Hero Dirt', detail }
     }
     case 'damp':
       return {

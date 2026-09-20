@@ -225,7 +225,7 @@ describe('trailTooltip utility (pure layer)', () => {
 // ─────────────────────────────────────────────────────────────────────────────
 // Trail condition scoring — pure, and it has to stay that way
 // ─────────────────────────────────────────────────────────────────────────────
-// The verdict ("Griffig", "Nass und weich", ...) comes from a water-balance
+// The verdict ("Hero Dirt", "Nass und weich", ...) comes from a water-balance
 // calculation over a spot's recent weather. Keeping it free of I/O and of any
 // higher layer is what makes it deterministically testable against fixed
 // fixtures, and what would let the same function run server-side if the
