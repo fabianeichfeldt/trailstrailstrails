@@ -21,7 +21,7 @@
         <div class="wx-verdict">
           <strong>{{ condition.headline }}</strong>
           <span>{{ condition.detail }}</span>
-          <div v-if="showTotal" class="wx-total" data-testid="rain-10d">
+          <div class="wx-total" data-testid="rain-10d">
             Regen in den letzten 10 Tagen: <b>{{ rain10d }} mm</b>
           </div>
         </div>
@@ -104,16 +104,12 @@ const style = computed(() => LEVEL_STYLE[condition.value.level])
 const currentIcon = computed(() => weatherCodeIcon(props.weather?.current.weatherCode))
 const badge = computed(() => style.value.badge || currentIcon.value)
 
-// The strip is shown in every state. It used to be hidden while raining, in
-// snow and on asphalt on the grounds that the headline there does not rest on
-// past days — but the strip is mostly a forecast now, and "when does it stop /
-// is the weekend dry" matters most exactly then.
-//
-// The 10-day total is different: it is evidence for a *ground* verdict, so it
-// stays with the four ground states. (While it rains the outlook text already
-// quotes what is still to come.)
-const BALANCE_LEVELS: ConditionLevel[] = ['dusty', 'prime', 'damp', 'wet']
-const showTotal = computed(() => BALANCE_LEVELS.includes(condition.value.level))
+// The strip and the 10-day rain total are shown in every state. Both used to be
+// hidden while raining, in snow and on asphalt on the grounds that the headline
+// there does not rest on past days — but the strip is mostly a forecast now
+// ("when does it stop / is the weekend dry" matters most exactly then), and the
+// total is what lets a rider check any claim on the card against the week they
+// remember. Do not gate them on the verdict level again.
 
 const footNote = computed(() =>
   condition.value.level === 'hard'

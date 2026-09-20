@@ -293,8 +293,8 @@ describe('SpotDetailWeather — states', () => {
     expect(wrapper.text()).not.toContain('Griffig')
     // For asphalt the forecast is the whole point: it decides if the session is on.
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
-    // The 10-day figure backs up a ground verdict, which this spot does not get.
-    expect(wrapper.find('[data-testid="rain-10d"]').exists()).toBe(false)
+    // The 10-day rain is shown in every state, asphalt included.
+    expect(wrapper.find('[data-testid="rain-10d"]').text()).toContain('14,5 mm')
   })
 
   it('keeps a soil verdict for a dirt jump spot that also has a pumptrack', async () => {
@@ -318,6 +318,9 @@ describe('SpotDetailWeather — states', () => {
     // Two measured days, today, three ahead — same as any other state.
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
     expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
+    // And the 10-day rain, so the "feucht/schlammig" outlook can be checked
+    // against what actually fell.
+    expect(wrapper.find('.wx-verdict [data-testid="rain-10d"]').text()).toContain('14,5 mm')
   })
 
   it('keeps the forecast strip in snow and frost too', async () => {
@@ -330,6 +333,7 @@ describe('SpotDetailWeather — states', () => {
 
     expect(wrapper.text()).toContain('Schnee & Frost')
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
+    expect(wrapper.find('[data-testid="rain-10d"]').text()).toContain('10 Tage')
   })
 
   it('labels the verdict as calculated, not as a trailcrew statement', async () => {
