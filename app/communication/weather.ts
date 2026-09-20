@@ -26,11 +26,13 @@ const WEATHER_API = 'https://api.open-meteo.com/v1/forecast'
 export const PAST_DAYS = 10
 
 /**
- * Days ahead. The strip centres on today, so it needs future days to put
- * there — and "will it dry out by the weekend" is half of why anyone looks
- * at this card at all.
+ * Forecast days requested, *including today* — Open-Meteo counts the current
+ * day as the first. The strip centres on today and draws three days after it
+ * ("will it dry out by the weekend" is half of why anyone looks at this card),
+ * so this is 3 + 1. At 3 the API returned only two days ahead and the strip
+ * quietly came up a column short.
  */
-export const FORECAST_DAYS = 3
+export const FORECAST_DAYS = 4
 
 export const WEATHER_CACHE_TTL_MS = 60 * 60 * 1000
 const CACHE_PREFIX = 'tr_wx_v1_'

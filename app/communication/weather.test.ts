@@ -66,7 +66,7 @@ describe('buildWeatherUrl', () => {
     // Ten past days feed the 240h balance; three ahead fill the right half
     // of the strip, which centres on today.
     expect(url).toContain('past_days=10')
-    expect(url).toContain('forecast_days=3')
+    expect(url).toContain('forecast_days=4')
     expect(url).toContain('timezone=auto')
     // Evapotranspiration is what makes the verdict seasonal — losing it from
     // the query would silently turn the balance into a plain rain sum.

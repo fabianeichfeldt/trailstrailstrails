@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import type { Trail, DirtPark } from '~/types/Trail'
-import { fetchSpotWeather } from '~/communication/weather'
+import { fetchSpotWeather, FORECAST_DAYS } from '~/communication/weather'
 import SpotDetailWeather from './SpotDetailWeather.vue'
 
 // ── Fixtures ───────────────────────────────────────────────────────────────
@@ -144,6 +144,19 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
     expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
     // Nothing up to and including today may be marked as forecast.
     for (const measured of columns.slice(0, 3)) expect(measured.classes()).not.toContain('forecast')
+  })
+
+  it('shows three days ahead from a payload shaped like the live API request', async () => {
+    // FORECAST_DAYS counts today, so the API returns FORECAST_DAYS - 1 days
+    // after it. The strip is designed for three; asking the API for one day
+    // too few silently left a rider with two.
+    const live = Array.from({ length: FORECAST_DAYS - 1 }, () => ({ precip: 0, et0: 2 }))
+    mockFetch(rawPayload(WINTERBERG, {}, live))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
   })
 
   it('turns a soaked November payload into a "Nass" card with the trail-care nudge', async () => {
