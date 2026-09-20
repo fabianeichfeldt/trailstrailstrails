@@ -31,6 +31,25 @@ import { weatherCodeLabel } from './weatherCodes'
 export const BALANCE_WINDOW_HOURS = 240
 /** Ceiling on the bucket: past ~30mm of surplus, wetter is still just "wet". */
 export const BALANCE_CAP_MM = 30
+
+/**
+ * Evaporation accumulated since the last measurable rain, past which a trail
+ * counts as dusty.
+ *
+ * This is deliberately a *second, independent* signal rather than letting the
+ * bucket run negative. Two linked accounts (surplus above zero, deficit below)
+ * look more physical but are arithmetically identical to one unclamped
+ * counter: without a binding limit the result collapses to "total rain minus
+ * total evaporation", which is order-blind — 15mm today and 15mm nine days ago
+ * score exactly the same. The bucket only knows about recency *because* it
+ * clamps at zero and throws the excess drying away.
+ *
+ * So the wet side keeps its clamp, and dryness is measured from the last rain
+ * instead. Seasonal by construction: 10mm of evaporation is about a week of
+ * July, and unreachable in a German December — which is correct, because
+ * December trails do not turn to dust.
+ */
+export const THRESHOLD_DUST_DRYING_MM = 10
 /** Below this an hour counts as dry — sensor/model noise, not rain. */
 export const RAIN_TRACE_MM = 0.2
 /**
@@ -64,8 +83,7 @@ export const RUNOFF_FRACTION = 0.3
  */
 export const DRYING_FACTOR = 0.5
 
-/** Upper bounds (mm of surplus) for the three drier levels; above = wet. */
-export const THRESHOLD_DUSTY_MM = 1
+/** Upper bounds (mm of surplus) for the wetter levels. */
 export const THRESHOLD_PRIME_MM = 4
 export const THRESHOLD_DAMP_MM = 10
 
@@ -166,7 +184,12 @@ export function hoursSinceLastRain(
 }
 
 interface Balance {
+  /** Signed, for display: positive = free water, negative = drying since rain. */
   wetnessMm: number
+  /** Free water only, never negative. */
+  surplusMm: number
+  /** Evaporation piled up since the last measurable rain. */
+  dryingSinceRainMm: number
   hoursSinceRain: number | null
   rainWindowMm: number
   snow24hCm: number
@@ -180,7 +203,12 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
   const rainWindowStartMs = nowMs - 72 * 3600_000
   const snowWindowStartMs = nowMs - 24 * 3600_000
 
-  let wetness = 0
+  // Two independent signals, because one number cannot carry both halves of
+  // the question. `surplus` is free water — what makes a spot slick.
+  // `dryingSinceRain` is how hard the sun has worked since it last rained —
+  // what eventually makes a spot dusty.
+  let surplus = 0
+  let dryingSinceRain = 0
   let rainWindowMm = 0
   let snow24hCm = 0
 
@@ -201,15 +229,26 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     // Only the *retained* share enters the bucket. `rain` itself stays intact
     // below — the mm figure shown to the user must be the measured rainfall,
     // not our modelled fraction of it.
+    // Free water: clamped at zero, and the clamp is the point — throwing the
+    // excess drying away is what lets the bucket forget old rain.
     const retained = rain * (1 - RUNOFF_FRACTION)
-    wetness = Math.min(BALANCE_CAP_MM, Math.max(0, wetness + retained - et0Hour))
+    surplus = Math.min(BALANCE_CAP_MM, Math.max(0, surplus + retained - et0Hour))
+
+    // Dryness: evaporation piled up since the last rain, reset by any rain
+    // worth the name. Independent of the bucket, so it survives the clamp.
+    if (rain >= RAIN_TRACE_MM) dryingSinceRain = 0
+    else dryingSinceRain += et0Hour
 
     if (stampMs >= rainWindowStartMs) rainWindowMm += rain
     if (stampMs >= snowWindowStartMs) snow24hCm += snow
   }
 
   return {
-    wetnessMm: wetness,
+    // One signed number for the UI: positive is free water, negative is how
+    // much evaporation has piled up since the last rain.
+    wetnessMm: surplus > 0 ? surplus : -dryingSinceRain,
+    surplusMm: surplus,
+    dryingSinceRainMm: dryingSinceRain,
     // Shared with the status banner's rain rule — see hoursSinceLastRain.
     hoursSinceRain: hoursSinceLastRain(weather, now),
     rainWindowMm,
@@ -218,11 +257,13 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
   }
 }
 
-function levelFromWetness(wetnessMm: number): ConditionLevel {
-  if (wetnessMm <= THRESHOLD_DUSTY_MM) return 'dusty'
-  if (wetnessMm <= THRESHOLD_PRIME_MM) return 'prime'
-  if (wetnessMm <= THRESHOLD_DAMP_MM) return 'damp'
-  return 'wet'
+function levelFromBalance(b: Balance): ConditionLevel {
+  // Wetness first — a trail carrying free water is never dusty, whatever the
+  // calendar says.
+  if (b.surplusMm > THRESHOLD_DAMP_MM) return 'wet'
+  if (b.surplusMm > THRESHOLD_PRIME_MM) return 'damp'
+  if (b.dryingSinceRainMm >= THRESHOLD_DUST_DRYING_MM) return 'dusty'
+  return 'prime'
 }
 
 function describe(
@@ -305,7 +346,7 @@ export function computeTrailCondition(
   if (balance.snow24hCm > 0 || todayMaxTemp < 1) level = 'snow'
   else if (balance.currentRainMmPerHour > 0) level = 'raining'
   else if (mode === 'hard') level = 'hard'
-  else level = levelFromWetness(balance.wetnessMm)
+  else level = levelFromBalance(balance)
 
   const { headline, detail } = describe(level, weather, balance, todayMaxTemp)
 

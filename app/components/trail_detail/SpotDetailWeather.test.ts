@@ -134,15 +134,14 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
     // Rain inside the displayed window shows up as evidence.
     expect(text).toContain('1,1')
 
-    // Seven columns with today dead centre: three measured days behind it,
-    // three forecast days ahead.
+    // Six columns: two measured days, today, three forecast days.
     const columns = wrapper.findAll('.wx-day')
-    expect(columns).toHaveLength(7)
-    expect(columns[3]!.classes()).toContain('today')
-    expect(columns[3]!.text()).toContain('Heute')
+    expect(columns).toHaveLength(6)
+    expect(columns[2]!.classes()).toContain('today')
+    expect(columns[2]!.text()).toContain('Heute')
     expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
-    // Nothing before today may be marked as forecast.
-    for (const past of columns.slice(0, 3)) expect(past.classes()).not.toContain('forecast')
+    // Nothing up to and including today may be marked as forecast.
+    for (const measured of columns.slice(0, 3)) expect(measured.classes()).not.toContain('forecast')
   })
 
   it('turns a soaked November payload into a "Nass" card with the trail-care nudge', async () => {
@@ -208,7 +207,7 @@ describe('SpotDetailWeather — states', () => {
     const wrapper = mount(SpotDetailWeather, { props: { trail: mixed, weather, loading: false } })
 
     expect(wrapper.text()).toContain('Feucht, aber fahrbar')
-    expect(wrapper.findAll('.wx-day')).toHaveLength(7)
+    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
   })
 
   it('drops the evidence strip while it is raining — the headline no longer rests on it', async () => {

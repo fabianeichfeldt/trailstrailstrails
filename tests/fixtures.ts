@@ -85,9 +85,13 @@ function mockWeather() {
     return d.toISOString().slice(0, 10);
   });
   const time: string[] = [];
-  for (const date of dates) {
-    for (let h = 0; h < 24; h++) time.push(`${date}T${String(h).padStart(2, '0')}:00`);
-  }
+  const hourlyRain: number[] = [];
+  dates.forEach((date, dayIndex) => {
+    for (let h = 0; h < 24; h++) {
+      time.push(`${date}T${String(h).padStart(2, '0')}:00`);
+      hourlyRain.push(dayIndex === 8 && h === 12 ? 4 : 0);
+    }
+  });
   return {
     utc_offset_seconds: 0,
     timezone: 'UTC',
@@ -98,8 +102,11 @@ function mockWeather() {
     },
     daily: {
       time: dates,
-      weather_code: dates.map(() => 2),
-      precipitation_sum: dates.map(() => 0),
+      // 4mm two days ago: enough to reset the drying counter so the verdict
+      // sits solidly in "Griffig" rather than on the dust threshold, where a
+      // rain-free fixture lands by coincidence.
+      weather_code: dates.map((_, i) => (i === 8 ? 61 : 2)),
+      precipitation_sum: dates.map((_, i) => (i === 8 ? 4 : 0)),
       temperature_2m_max: dates.map(() => 18),
       temperature_2m_min: dates.map(() => 9),
       et0_fao_evapotranspiration: dates.map(() => 2),
@@ -107,7 +114,7 @@ function mockWeather() {
     },
     hourly: {
       time,
-      precipitation: time.map(() => 0),
+      precipitation: hourlyRain,
       snowfall: time.map(() => 0),
     },
   };

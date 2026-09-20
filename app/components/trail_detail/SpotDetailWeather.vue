@@ -136,14 +136,15 @@ function formatMm(mm: number): string {
   return (rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')
 }
 
-// Today sits in the middle, with as many days ahead as behind: "has it dried
-// out yet" and "will it dry out by Saturday" are the same question asked from
-// opposite sides, and a strip that stops at today can only answer one of them.
+// Weighted towards what is coming: "has it dried out yet" is already answered
+// by the verdict above, so the strip spends its width on "will it dry out by
+// Saturday". Two measured days back are enough to show the rain the verdict
+// rests on; three ahead are what you plan a ride around.
 //
-// The balance still consumes five past days (PAST_DAYS in communication/
-// weather.ts) — the strip showing three is a display choice, not a shorter
-// calculation window.
-const STRIP_PAST_DAYS = 3
+// The balance still consumes ten past days (PAST_DAYS in communication/
+// weather.ts) — showing two is a display choice, not a shorter calculation
+// window.
+const STRIP_PAST_DAYS = 2
 const STRIP_FUTURE_DAYS = 3
 
 const strip = computed(() => {

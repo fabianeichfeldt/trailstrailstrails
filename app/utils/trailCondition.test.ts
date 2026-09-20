@@ -1,7 +1,9 @@
 import { describe, it, expect } from 'vitest'
+import eberbachPayload from './__fixtures__/eberbach-2026-09-20.json'
 import type { SpotWeather, DayWeather } from '~/types/Weather'
 import type { Trail, DirtPark } from '~/types/Trail'
-import { computeTrailCondition, conditionModeFor } from './trailCondition'
+import { mapWeatherResponse } from '~/communication/weather'
+import { computeTrailCondition, conditionModeFor, THRESHOLD_DUST_DRYING_MM } from './trailCondition'
 
 // ── Fixture builder ────────────────────────────────────────────────────────
 // Mirrors the real Open-Meteo shape: offset-less local timestamps plus a
@@ -283,5 +285,41 @@ describe('conditionModeFor', () => {
   it('treats a dirt jump line as soil, even when a pumptrack shares the spot', () => {
     expect(conditionModeFor(dirtpark({ pumptrack: true, dirtpark: true }))).toBe('soil')
     expect(conditionModeFor(dirtpark({ pumptrack: false, dirtpark: true }))).toBe('soil')
+  })
+})
+
+// ── Regression: real payload, reported as implausible ────────────────────
+// Reported from the live app on 2026-09-20: Bikeländ Eberbach showed
+// "Staubtrocken" four days after 5.7mm of rain, in September, at 20–24°C.
+// A rider's read of the same trail was "pretty grippy, almost perfect".
+//
+// The cause was not a threshold. The bucket was clamped at zero, so it forgot
+// everything once the surplus ran out — "the rain finished draining
+// yesterday" and "no rain for three weeks in August" both scored 0.0, and both
+// came out Staubtrocken. Dust needs an accumulated moisture *deficit*, which a
+// bucket floored at zero can never represent.
+//
+// The fixture is the unmodified Open-Meteo response for the spot's real
+// coordinates at the moment it was reported.
+describe('computeTrailCondition — Eberbach regression', () => {
+  const raw = eberbachPayload
+  /** 2026-09-20 08:45 local (CEST) — when the card was looked at. */
+  const OBSERVED_AT = new Date('2026-09-20T06:45:00Z')
+
+  it('calls it griffig, not staubtrocken, four days after 5.7mm in September', () => {
+    const condition = computeTrailCondition(mapWeatherResponse(raw), 'soil', OBSERVED_AT)
+
+    expect(condition.level).toBe('prime')
+    expect(condition.headline).toBe('Griffig')
+  })
+
+  it('has drained its surplus but has nowhere near enough drying for dust', () => {
+    const condition = computeTrailCondition(mapWeatherResponse(raw), 'soil', OBSERVED_AT)
+
+    // Free water gone (so wetnessMm reports the drying side, i.e. <= 0), but
+    // four mild September days are well short of the dust threshold.
+    expect(condition.wetnessMm).toBeLessThanOrEqual(0)
+    expect(Math.abs(condition.wetnessMm)).toBeLessThan(THRESHOLD_DUST_DRYING_MM)
+    expect(condition.hoursSinceRain).toBe(86)
   })
 })
