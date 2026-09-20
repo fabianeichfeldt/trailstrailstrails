@@ -165,6 +165,70 @@ describe('computeTrailCondition — water balance', () => {
   })
 })
 
+// While it rains, "slippery" is the wrong answer for a downpour and the right
+// one for a shower. The outlook runs the water bucket forward through the rest
+// of today's forecast and reads it with the same thresholds as the ground
+// states, so "schlammig" here means what "Nass und weich" means everywhere else.
+describe('computeTrailCondition — raining outlook', () => {
+  /** 10:00 local on the last day — its 12:00 rain is still ahead of us. */
+  const MORNING = new Date('2026-09-17T08:00:00Z')
+
+  /** Dry, mild run-up; `todayMm` falls at 12:00 today, `tomorrowMm` the day after. */
+  function rainingDay(todayMm: number, opts: { before?: number[]; tomorrowMm?: number } = {}) {
+    const before = opts.before ?? [0, 0, 0, 0, 0]
+    const days = [...DATES.slice(0, 5), DATES[5]!].map((date, i) => ({
+      date,
+      precipMm: i < 5 ? before[i] : todayMm,
+      et0Mm: 2,
+    }))
+    if (opts.tomorrowMm !== undefined) days.push({ date: '2026-09-18', precipMm: opts.tomorrowMm, et0Mm: 2 })
+    return computeTrailCondition(
+      buildWeather({ days, currentPrecipMm: 0.3, currentCode: 61 }),
+      'soil',
+      MORNING,
+    )
+  }
+
+  it('warns that it will turn muddy over the day when a lot of rain is still coming', () => {
+    const condition = rainingDay(20)
+
+    expect(condition.level).toBe('raining')
+    expect(condition.headline).toBe('Es regnet gerade')
+    expect(condition.detail).toContain('Im Laufe des Tages wird es schlammig')
+    // The evidence: how much is still to come today.
+    expect(condition.detail).toContain('20 mm')
+  })
+
+  it('says the ground will get damp and slick, not muddy, for a moderate amount', () => {
+    const condition = rainingDay(8)
+
+    expect(condition.detail).toContain('feucht')
+    expect(condition.detail).not.toContain('schlammig')
+  })
+
+  it('stays calm about a passing shower on dry ground', () => {
+    const condition = rainingDay(1)
+
+    expect(condition.detail).toContain('weitgehend griffig')
+    expect(condition.detail).not.toContain('schlammig')
+    expect(condition.detail).toContain('0,3 mm/h')
+  })
+
+  it('takes the ground it lands on into account — soaked ground turns muddy on little rain', () => {
+    // 3mm alone would read "griffig"; on top of two days of soaking it is mud.
+    const condition = rainingDay(3, { before: [0, 0, 14, 13, 0] })
+
+    expect(condition.detail).toContain('schlammig')
+  })
+
+  it('only counts rain still to come today, not tomorrow\'s', () => {
+    const condition = rainingDay(1, { tomorrowMm: 30 })
+
+    expect(condition.detail).not.toContain('schlammig')
+    expect(condition.detail).toContain('weitgehend griffig')
+  })
+})
+
 describe('computeTrailCondition — overrides', () => {
   it('reports falling rain regardless of how dry the ground was', () => {
     const condition = computeTrailCondition(

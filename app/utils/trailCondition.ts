@@ -196,6 +196,49 @@ interface Balance {
   rainBalanceWindowMm: number
   snow24hCm: number
   currentRainMmPerHour: number
+  /** Free water expected by the end of today, given the forecast. */
+  projectedSurplusMm: number
+  /** Forecast rain still to come today. */
+  rainAheadMm: number
+}
+
+/**
+ * One hour of the bucket: retained rain in, evaporation out, clamped at both
+ * ends. Shared by the measured pass and the forecast projection so the two can
+ * never disagree about how water moves.
+ */
+function bucketStep(surplus: number, retainedMm: number, et0Hour: number): number {
+  return Math.min(BALANCE_CAP_MM, Math.max(0, surplus + retainedMm - et0Hour))
+}
+
+/**
+ * Runs the bucket forward through the forecast hours of the spot's *own*
+ * remaining day — "what will the ground be like by this evening" — starting
+ * from the measured surplus. Tomorrow's rain is deliberately not included:
+ * the wording it feeds says "im Laufe des Tages", and a forecast a day out is
+ * too soft to put in a rider's mouth.
+ */
+function projectRestOfDay(
+  weather: SpotWeather,
+  now: Date,
+  surplusNow: number,
+  et0ByDate: Map<string, number>,
+): { projectedSurplusMm: number; rainAheadMm: number } {
+  const today = spotLocalDate(weather, now)
+  const nowMs = now.getTime()
+  const { time, precipitationMm } = weather.hourly
+  let surplus = surplusNow
+  let rainAheadMm = 0
+
+  for (let i = 0; i < time.length; i++) {
+    if (hourUtcMs(time[i]!, weather.utcOffsetSeconds) <= nowMs) continue
+    if (time[i]!.slice(0, 10) !== today) break
+    const rain = precipitationMm[i]!
+    const et0Hour = ((et0ByDate.get(today) ?? 0) / 24) * DRYING_FACTOR
+    rainAheadMm += rain
+    surplus = bucketStep(surplus, rain * (1 - RUNOFF_FRACTION), et0Hour)
+  }
+  return { projectedSurplusMm: surplus, rainAheadMm }
 }
 
 function computeBalance(weather: SpotWeather, now: Date): Balance {
@@ -235,7 +278,7 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     // Free water: clamped at zero, and the clamp is the point — throwing the
     // excess drying away is what lets the bucket forget old rain.
     const retained = rain * (1 - RUNOFF_FRACTION)
-    surplus = Math.min(BALANCE_CAP_MM, Math.max(0, surplus + retained - et0Hour))
+    surplus = bucketStep(surplus, retained, et0Hour)
 
     // Dryness: evaporation piled up since the last rain, reset by any rain
     // worth the name. Independent of the bucket, so it survives the clamp.
@@ -246,6 +289,8 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     if (stampMs >= rainWindowStartMs) rainWindowMm += rain
     if (stampMs >= snowWindowStartMs) snow24hCm += snow
   }
+
+  const { projectedSurplusMm, rainAheadMm } = projectRestOfDay(weather, now, surplus, et0ByDate)
 
   return {
     // One signed number for the UI: positive is free water, negative is how
@@ -259,6 +304,8 @@ function computeBalance(weather: SpotWeather, now: Date): Balance {
     rainBalanceWindowMm,
     snow24hCm,
     currentRainMmPerHour: weather.current.precipitationMm ?? 0,
+    projectedSurplusMm,
+    rainAheadMm,
   }
 }
 
@@ -285,11 +332,27 @@ function describe(
         : `Dauerfrost bei ${Math.round(todayMaxTemp)}°. Gefrorener Boden fährt sich gut — beim Auftauen wird er zu Matsch.`
       return { headline: 'Schnee & Frost', detail }
     }
-    case 'raining':
-      return {
-        headline: 'Es regnet gerade',
-        detail: `${formatMm(b.currentRainMmPerHour)} mm/h. Egal wie der Boden vorher war — heute wird es rutschig.`,
+    case 'raining': {
+      // "Slippery" is the wrong thing to say about a downpour and the right
+      // thing to say about a shower, so the wording follows where the bucket
+      // will stand by this evening — read with the same thresholds as the
+      // ground states, which keeps "schlammig" meaning what "Nass und weich"
+      // means everywhere else. Mentioning the amount still to come is what
+      // lets a rider judge the claim; below half a millimetre it is noise.
+      const rate = `${formatMm(b.currentRainMmPerHour)} mm/h`
+      const ahead = b.rainAheadMm >= 0.5 ? `, bis heute Abend noch ca. ${formatMm(b.rainAheadMm)} mm` : ''
+      let outlook: string
+      if (b.projectedSurplusMm > THRESHOLD_DAMP_MM) {
+        outlook = b.surplusMm > THRESHOLD_DAMP_MM
+          ? 'Der Boden ist schon nass — mit dem Regen wird es schlammig.'
+          : 'Im Laufe des Tages wird es schlammig.'
+      } else if (b.projectedSurplusMm > THRESHOLD_PRIME_MM) {
+        outlook = 'Im Laufe des Tages wird der Boden feucht — Wurzeln und Steine werden rutschig.'
+      } else {
+        outlook = 'Nur leichter Regen — Wurzeln und Steine sind nass und rutschig, der Boden bleibt weitgehend griffig.'
       }
+      return { headline: 'Es regnet gerade', detail: `${rate}${ahead}. ${outlook}` }
+    }
     case 'hard':
       return {
         headline: `${Math.round(weather.current.temperature)}°, ${weatherCodeLabel(weather.current.weatherCode).toLowerCase()}`,
