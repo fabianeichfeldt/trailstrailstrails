@@ -282,7 +282,7 @@ describe('SpotDetailWeather — states', () => {
     expect(wrapper.text()).not.toContain('Griffig')
   })
 
-  it('gives an asphalt pumptrack current weather and no evidence strip', async () => {
+  it('gives an asphalt pumptrack current weather and the forecast, but no ground verdict', async () => {
     mockFetch(rawPayload(WINTERBERG))
     const weather = await fetchSpotWeather(51.1927, 8.5236)
     const pumptrack = { type: 'dirtpark', id: 'p1', pumptrack: true, dirtpark: false } as DirtPark
@@ -290,8 +290,11 @@ describe('SpotDetailWeather — states', () => {
     const wrapper = mount(SpotDetailWeather, { props: { trail: pumptrack, weather, loading: false } })
 
     expect(wrapper.text()).toContain('Asphalt trocknet in Minuten')
-    expect(wrapper.findAll('.wx-day')).toHaveLength(0)
     expect(wrapper.text()).not.toContain('Griffig')
+    // For asphalt the forecast is the whole point: it decides if the session is on.
+    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
+    // The 10-day figure backs up a ground verdict, which this spot does not get.
+    expect(wrapper.find('[data-testid="rain-10d"]').exists()).toBe(false)
   })
 
   it('keeps a soil verdict for a dirt jump spot that also has a pumptrack', async () => {
@@ -305,14 +308,28 @@ describe('SpotDetailWeather — states', () => {
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
   })
 
-  it('drops the evidence strip while it is raining — the headline no longer rests on it', async () => {
+  it('keeps the forecast strip while it is raining — "when does it stop" is the question', async () => {
     mockFetch(rawPayload(WINTERBERG, { precipitation: 0.4, weather_code: 63 }))
     const weather = await fetchSpotWeather(51.1927, 8.5236)
 
     const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
 
     expect(wrapper.text()).toContain('Es regnet gerade')
-    expect(wrapper.findAll('.wx-day')).toHaveLength(0)
+    // Two measured days, today, three ahead — same as any other state.
+    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
+    expect(wrapper.findAll('.wx-day.forecast')).toHaveLength(3)
+  })
+
+  it('keeps the forecast strip in snow and frost too', async () => {
+    mockFetch(rawPayload(WINTERBERG, { temperature_2m: -3 }, FORECAST.map((d) => ({ ...d, tempMax: -2 }))))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+    // Frost verdict comes from today's daily high, so make today freezing too.
+    weather!.days = weather!.days.map((d) => ({ ...d, tempMax: -2 }))
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false } })
+
+    expect(wrapper.text()).toContain('Schnee & Frost')
+    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
   })
 
   it('labels the verdict as calculated, not as a trailcrew statement', async () => {

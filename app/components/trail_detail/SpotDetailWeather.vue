@@ -21,7 +21,7 @@
         <div class="wx-verdict">
           <strong>{{ condition.headline }}</strong>
           <span>{{ condition.detail }}</span>
-          <div v-if="showStrip" class="wx-total" data-testid="rain-10d">
+          <div v-if="showTotal" class="wx-total" data-testid="rain-10d">
             Regen in den letzten 10 Tagen: <b>{{ rain10d }} mm</b>
           </div>
         </div>
@@ -42,7 +42,7 @@
         </span>
       </div>
 
-      <div v-if="showStrip" class="wx-strip">
+      <div class="wx-strip">
         <div
           v-for="day in strip"
           :key="day.date"
@@ -104,11 +104,16 @@ const style = computed(() => LEVEL_STYLE[condition.value.level])
 const currentIcon = computed(() => weatherCodeIcon(props.weather?.current.weatherCode))
 const badge = computed(() => style.value.badge || currentIcon.value)
 
-// The evidence strip only backs up a soil verdict. When it is raining, snowing
-// or the surface is asphalt, the headline does not rest on the last five days,
-// so showing them would be decoration rather than evidence.
+// The strip is shown in every state. It used to be hidden while raining, in
+// snow and on asphalt on the grounds that the headline there does not rest on
+// past days — but the strip is mostly a forecast now, and "when does it stop /
+// is the weekend dry" matters most exactly then.
+//
+// The 10-day total is different: it is evidence for a *ground* verdict, so it
+// stays with the four ground states. (While it rains the outlook text already
+// quotes what is still to come.)
 const BALANCE_LEVELS: ConditionLevel[] = ['dusty', 'prime', 'damp', 'wet']
-const showStrip = computed(() => BALANCE_LEVELS.includes(condition.value.level))
+const showTotal = computed(() => BALANCE_LEVELS.includes(condition.value.level))
 
 const footNote = computed(() =>
   condition.value.level === 'hard'
