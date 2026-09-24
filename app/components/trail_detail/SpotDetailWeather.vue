@@ -12,7 +12,7 @@
     </div>
   </section>
 
-  <section v-else-if="condition.level !== 'unknown'" class="content-section spot-detail-weather">
+  <section v-else-if="condition && condition.verdict.level !== 'unknown'" class="content-section spot-detail-weather">
     <div class="section-label">Trail-Zustand</div>
 
     <!-- A sample (the locked teaser's backdrop) gets its own test id, so "a real
@@ -21,18 +21,18 @@
       <div class="wx-top">
         <div class="wx-badge">{{ badge }}</div>
         <div class="wx-verdict">
-          <strong>{{ condition.headline }}</strong>
-          <span>{{ condition.detail }}</span>
+          <strong>{{ condition.verdict.headline }}</strong>
+          <span>{{ condition.verdict.detail }}</span>
           <div class="wx-total" data-testid="rain-10d">
             Regen in den letzten 10 Tagen: <b>{{ rain10d }} mm</b>
           </div>
         </div>
         <div class="wx-now">
-          <div class="wx-now-icon">{{ currentIcon }}</div>
-          <div class="wx-now-temp">{{ Math.round(weather!.current.temperature) }}°</div>
+          <div class="wx-now-icon">{{ condition.current.icon }}</div>
+          <div class="wx-now-temp">{{ Math.round(condition.current.temperature) }}°</div>
           <div class="wx-now-meta">
-            gefühlt {{ Math.round(weather!.current.apparentTemperature) }}° ·
-            {{ Math.round(weather!.current.windKmh) }} km/h
+            gefühlt {{ Math.round(condition.current.apparentTemperature) }}° ·
+            {{ Math.round(condition.current.windKmh) }} km/h
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      <div v-if="condition.level === 'wet'" class="wx-care">
+      <div v-if="condition.verdict.level === 'wet'" class="wx-care">
         <span class="wx-care-icon" aria-hidden="true">🌱</span>
         <span>
           <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Spuren, die die Trailcrew von Hand reparieren muss.
@@ -72,26 +72,19 @@
 </template>
 
 <script setup lang="ts">
-import type { Trail } from '~/types/Trail'
-import type { SpotWeather, ConditionLevel } from '~/types/Weather'
-import { computeTrailCondition, conditionModeFor, todayIndex } from '~/utils/trailCondition'
-import { weatherCodeIcon } from '~/utils/weatherCodes'
+import type { TrailConditionResponse, ConditionLevel } from '~/types/Weather'
 
-// Weather arrives as a prop rather than being fetched here: the status banner
-// needs the same payload, and one page-level fetch beats two components
-// racing for the same cache entry. See app/composables/useSpotWeather.ts for
-// why the fetch has to stay client-only.
+// The condition arrives as a prop rather than being fetched here: the status
+// banner needs the same payload, and one page-level fetch beats two components
+// racing for the same cache entry. See app/composables/useTrailCondition.ts for
+// why the fetch has to stay client-only. The verdict is computed server-side
+// (trail-condition edge function); this component only renders it.
 const props = defineProps<{
-  trail: Trail
-  weather: SpotWeather | null
+  condition: TrailConditionResponse | null
   loading?: boolean
   /** Fixed sample data behind the locked teaser: same card, no credit, its own test id. */
   sample?: boolean
 }>()
-
-const condition = computed(() =>
-  computeTrailCondition(props.weather, conditionModeFor(props.trail)),
-)
 
 const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
   dusty:   { cls: 'v-dust',  badge: '🧹' },
@@ -105,9 +98,8 @@ const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
   unknown: { cls: '',        badge: '' },
 }
 
-const style = computed(() => LEVEL_STYLE[condition.value.level])
-const currentIcon = computed(() => weatherCodeIcon(props.weather?.current.weatherCode))
-const badge = computed(() => style.value.badge || currentIcon.value)
+const style = computed(() => LEVEL_STYLE[props.condition?.verdict.level ?? 'unknown'])
+const badge = computed(() => style.value.badge || props.condition?.current.icon || '')
 
 // The strip and the 10-day rain total are shown in every state. Both used to be
 // hidden while raining, in snow and on asphalt on the grounds that the headline
@@ -117,7 +109,7 @@ const badge = computed(() => style.value.badge || currentIcon.value)
 // remember. Do not gate them on the verdict level again.
 
 const footNote = computed(() =>
-  condition.value.level === 'hard'
+  props.condition?.verdict.level === 'hard'
     ? ''
     : 'Berechnete Angabe · keine Trailcrew-Angabe',
 )
@@ -125,9 +117,7 @@ const footNote = computed(() =>
 // The verdict rests on ten days of rain but the strip only draws two of them,
 // so the total is stated outright — it is what lets a rider check the claim
 // against the week they remember.
-const rain10d = computed(() => formatMm(condition.value.rain10dMm).replace(/ mm$/, ''))
-
-const WEEKDAYS = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa']
+const rain10d = computed(() => formatMm(props.condition?.verdict.rain10dMm ?? 0).replace(/ mm$/, ''))
 
 /** Square-root scale: without it 0,8 mm next to 13,4 mm is an invisible sliver. */
 function barHeight(mm: number): number {
@@ -150,42 +140,20 @@ function formatMm(mm: number): string {
 
 // Weighted towards what is coming: "has it dried out yet" is already answered
 // by the verdict above, so the strip spends its width on "will it dry out by
-// Saturday". Two measured days back are enough to show the rain the verdict
-// rests on; three ahead are what you plan a ride around.
-//
-// The balance still consumes ten past days (PAST_DAYS in communication/
-// weather.ts) — showing two is a display choice, not a shorter calculation
-// window.
-const STRIP_PAST_DAYS = 2
-const STRIP_FUTURE_DAYS = 3
-
-const strip = computed(() => {
-  const weather = props.weather
-  const days = weather?.days ?? []
-  if (!weather || !days.length) return []
-
-  const today = todayIndex(weather, new Date())
-  const from = Math.max(0, today - STRIP_PAST_DAYS)
-  const to = Math.min(days.length, today + STRIP_FUTURE_DAYS + 1)
-
-  return days.slice(from, to).map((day, offset) => {
-    const index = from + offset
-    const isToday = index === today
-    // Parsed at noon UTC so the weekday can't slip a day on either side of
-    // the date line.
-    const weekday = WEEKDAYS[new Date(`${day.date}T12:00:00Z`).getUTCDay()] ?? ''
-    return {
-      date: day.date,
-      isToday,
-      isForecast: index > today,
-      label: isToday ? 'Heute' : weekday,
-      icon: weatherCodeIcon(day.weatherCode),
-      mm: formatMm(day.precipitationMm),
-      barHeight: barHeight(day.precipitationMm),
-      barClass: barClass(day.precipitationMm),
-    }
-  })
-})
+// Saturday". The server sends exactly that window (two measured days, today,
+// three ahead); the ten-day history it rests on never leaves the server.
+const strip = computed(() =>
+  (props.condition?.strip ?? []).map((day) => ({
+    date: day.date,
+    isToday: day.isToday,
+    isForecast: day.isForecast,
+    label: day.isToday ? 'Heute' : day.weekday,
+    icon: day.icon,
+    mm: formatMm(day.precipitationMm),
+    barHeight: barHeight(day.precipitationMm),
+    barClass: barClass(day.precipitationMm),
+  })),
+)
 </script>
 
 <style scoped>

@@ -10,7 +10,7 @@
            never announces "Hero Dirt" as this spot's verdict, and inert so nothing
            in it can be focused or clicked. -->
       <div class="wx-sample-wrap" aria-hidden="true" inert>
-        <SpotDetailWeather :trail="SAMPLE_TRAIL" :weather="sample" :loading="false" sample />
+        <SpotDetailWeather :condition="sample" :loading="false" sample />
       </div>
 
       <!-- No purchase button on purpose: there is no billing flow to send anyone
@@ -29,9 +29,8 @@
 </template>
 
 <script setup lang="ts">
-import type { Trail } from '~/types/Trail'
 import { FEATURES, minPlanName } from '~/entitlements/features'
-import { sampleSpotWeather } from '~/utils/sampleWeather'
+import { sampleTrailCondition } from '~/utils/sampleCondition'
 import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
 
 // Derived from the registry rather than typed here, so moving the feature to
@@ -41,8 +40,7 @@ const plan = minPlanName('trail_condition')
 // Built once, locally: no request, and nothing about the spot in it. This card
 // only ever renders after mount (access is "checking" while prerendering), so a
 // date-relative sample cannot mismatch the static HTML.
-const sample = sampleSpotWeather(new Date())
-const SAMPLE_TRAIL = { type: 'trail', id: 'sample', name: 'Beispiel' } as Trail
+const sample = sampleTrailCondition(new Date())
 </script>
 
 <style scoped>

@@ -29,8 +29,7 @@
 
 <script setup lang="ts">
 import type { TrailDetails } from '~/types/TrailDetails'
-import type { SpotWeather } from '~/types/Weather'
-import { hoursSinceLastRain } from '~/utils/trailCondition'
+import type { TrailConditionResponse } from '~/types/Weather'
 import {
   computeEffectiveStatus,
   STATUS_META,
@@ -41,7 +40,7 @@ import {
 // (SpotDetailHero) rather than buried inside the description card — split
 // out of the former monolithic SpotDetailInfo.vue as its own section so the
 // page can place Photos/Touren/Trails/Map between it and the description.
-const props = defineProps<{ details: TrailDetails; weather?: SpotWeather | null }>()
+const props = defineProps<{ details: TrailDetails; condition?: TrailConditionResponse | null }>()
 
 const effectiveStatus = computed(() => (props.details?.status ? computeEffectiveStatus(props.details) : null))
 const statusMeta = computed(() => (effectiveStatus.value ? STATUS_META[effectiveStatus.value.status] : null))
@@ -75,7 +74,9 @@ const rainHint = computed(() => {
 
 /**
  * Answers the rain rule instead of only stating it: "gesperrt 24h nach Regen"
- * is useless on its own, "letzter Regen vor 31 h" finishes the sentence.
+ * is useless on its own, "letzter Regen vor 31 h" finishes the sentence. The
+ * numbers come from the view-model's `rainRule`, computed server-side from the
+ * same data as the verdict, so banner and card cannot disagree.
  *
  * Strictly advisory — this never touches `effectiveStatus` or the banner's
  * colour. The official open/closed state belongs to the trailcrew, who carry
@@ -83,16 +84,16 @@ const rainHint = computed(() => {
  * them. All this does is apply the rule they themselves recorded.
  */
 const rainRuleStatus = computed(() => {
-  if (!rainHint.value || !props.weather) return ''
+  if (!rainHint.value || !props.condition) return ''
 
   if (props.details.rain_policy === 'during') {
-    return props.weather.current.precipitationMm > 0
+    return props.condition.rainRule.raining
       ? 'es regnet gerade'
       : 'aktuell kein Regen'
   }
 
   if (props.details.rain_policy === 'after') {
-    const hours = hoursSinceLastRain(props.weather)
+    const hours = props.condition.rainRule.hoursSinceRain
     if (hours === null) return 'seit Tagen kein Regen'
     const closedFor = props.details.rain_closed_hours ?? 24
     return hours < closedFor

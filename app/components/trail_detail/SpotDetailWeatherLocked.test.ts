@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SpotDetailWeatherLocked from './SpotDetailWeatherLocked.vue'
 
@@ -48,11 +48,24 @@ describe('SpotDetailWeatherLocked', () => {
     expect(wrapper.find('a').exists()).toBe(false)
   })
 
-  it('needs nothing from the network: the sample is built locally, so a locked visitor costs no Open-Meteo request', () => {
+  it('needs nothing from the network: the sample is built locally, so a locked visitor costs no request', () => {
     const wrapper = mount(SpotDetailWeatherLocked)
 
     // Rendered synchronously and complete — no skeleton, nothing to wait for.
     expect(wrapper.find('[data-testid="weather-skeleton"]').exists()).toBe(false)
     expect(wrapper.text()).toContain('Hero Dirt')
+  })
+
+  it('makes no request of any kind', () => {
+    const realFetch = globalThis.fetch
+    const fetchMock = vi.fn()
+    globalThis.fetch = fetchMock as unknown as typeof fetch
+    try {
+      mount(SpotDetailWeatherLocked)
+      expect(fetchMock).not.toHaveBeenCalled()
+    } finally {
+      // Not vi.unstubAllGlobals(): it would also drop the ref/computed stubs from vitest.setup.ts.
+      globalThis.fetch = realFetch
+    }
   })
 })

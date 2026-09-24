@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { TrailDetails } from '~/types/TrailDetails'
-import type { SpotWeather } from '~/types/Weather'
+import type { TrailConditionResponse } from '~/types/Weather'
 import SpotDetailStatus from './SpotDetailStatus.vue'
 
 // Split out of SpotDetailInfo.test.ts as part of splitting the former
@@ -57,41 +57,21 @@ describe('SpotDetailStatus', () => {
 // banner's own status must never move because of it.
 
 /**
- * Builds a payload whose last measurable rain is `hoursAgo` hours back.
- * Hour stamps are UTC with a zero offset, matching what Open-Meteo returns
- * for a spot in UTC.
+ * A view-model whose rain rule says the last measurable rain was `hoursAgo`
+ * hours back (null: none in range). Only `rainRule` matters to the banner.
  */
-function weatherWithLastRain(hoursAgo: number | null, currentPrecipMm = 0): SpotWeather {
-  const nowMs = Date.now()
-  const time: string[] = []
-  const precipitationMm: number[] = []
-  const snowfallCm: number[] = []
-
-  for (let i = 120; i >= 1; i--) {
-    time.push(new Date(nowMs - i * 3600_000).toISOString().slice(0, 13) + ':00')
-    precipitationMm.push(hoursAgo !== null && i === hoursAgo ? 2.4 : 0)
-    snowfallCm.push(0)
-  }
-
-  const today = new Date(nowMs).toISOString().slice(0, 10)
+function conditionWithLastRain(hoursAgo: number | null, raining = false): TrailConditionResponse {
   return {
-    current: {
-      temperature: 12,
-      apparentTemperature: 10,
-      weatherCode: currentPrecipMm > 0 ? 63 : 2,
-      precipitationMm: currentPrecipMm,
-      windKmh: 13,
-    },
-    days: [{ date: today, weatherCode: 2, precipitationMm: 0, snowfallCm: 0, tempMax: 18, tempMin: 9, et0Mm: 2 }],
-    hourly: { time, precipitationMm, snowfallCm },
-    utcOffsetSeconds: 0,
-    timezone: 'UTC',
-    elevation: 500,
+    verdict: { level: 'prime', headline: 'Hero Dirt', detail: '', rain10dMm: 0 },
+    rainRule: { raining, hoursSinceRain: hoursAgo },
+    current: { temperature: 12, apparentTemperature: 10, icon: '⛅', windKmh: 13 },
+    strip: [],
+    fetchedAt: '2026-09-24T10:00:00.000Z',
   }
 }
 
-describe('SpotDetailStatus — rain rule with weather', () => {
-  it('leaves the rule unanswered when no weather is available', () => {
+describe('SpotDetailStatus — rain rule with the trail condition', () => {
+  it('leaves the rule unanswered when no condition is available', () => {
     const wrapper = mount(SpotDetailStatus, {
       props: { details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 24 }) },
     })
@@ -104,7 +84,7 @@ describe('SpotDetailStatus — rain rule with weather', () => {
     const wrapper = mount(SpotDetailStatus, {
       props: {
         details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 24 }),
-        weather: weatherWithLastRain(31),
+        condition: conditionWithLastRain(31),
       },
     })
 
@@ -117,11 +97,22 @@ describe('SpotDetailStatus — rain rule with weather', () => {
     const wrapper = mount(SpotDetailStatus, {
       props: {
         details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 24 }),
-        weather: weatherWithLastRain(5),
+        condition: conditionWithLastRain(5),
       },
     })
 
     expect(wrapper.find('[data-testid="rain-rule-status"]').text()).toContain('Regel greift')
+  })
+
+  it('says "seit Tagen kein Regen" when the function found no rain in range', () => {
+    const wrapper = mount(SpotDetailStatus, {
+      props: {
+        details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 24 }),
+        condition: conditionWithLastRain(null),
+      },
+    })
+
+    expect(wrapper.find('[data-testid="rain-rule-status"]').text()).toContain('seit Tagen kein Regen')
   })
 
   it('respects a non-default closure window', () => {
@@ -129,7 +120,7 @@ describe('SpotDetailStatus — rain rule with weather', () => {
     const wrapper = mount(SpotDetailStatus, {
       props: {
         details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 48 }),
-        weather: weatherWithLastRain(31),
+        condition: conditionWithLastRain(31),
       },
     })
 
@@ -138,10 +129,10 @@ describe('SpotDetailStatus — rain rule with weather', () => {
 
   it('answers a during-rain rule from the current conditions', () => {
     const raining = mount(SpotDetailStatus, {
-      props: { details: details({ status: 'open', rain_policy: 'during' }), weather: weatherWithLastRain(1, 0.4) },
+      props: { details: details({ status: 'open', rain_policy: 'during' }), condition: conditionWithLastRain(1, true) },
     })
     const dry = mount(SpotDetailStatus, {
-      props: { details: details({ status: 'open', rain_policy: 'during' }), weather: weatherWithLastRain(40) },
+      props: { details: details({ status: 'open', rain_policy: 'during' }), condition: conditionWithLastRain(40) },
     })
 
     expect(raining.find('[data-testid="rain-rule-status"]').text()).toContain('es regnet gerade')
@@ -154,7 +145,7 @@ describe('SpotDetailStatus — rain rule with weather', () => {
     const wrapper = mount(SpotDetailStatus, {
       props: {
         details: details({ status: 'open', rain_policy: 'after', rain_closed_hours: 24 }),
-        weather: weatherWithLastRain(5),
+        condition: conditionWithLastRain(5),
       },
     })
 
@@ -166,7 +157,7 @@ describe('SpotDetailStatus — rain rule with weather', () => {
 
   it('adds nothing when the spot has no rain policy at all', () => {
     const wrapper = mount(SpotDetailStatus, {
-      props: { details: details({ status: 'open' }), weather: weatherWithLastRain(2) },
+      props: { details: details({ status: 'open' }), condition: conditionWithLastRain(2) },
     })
 
     expect(wrapper.find('.ssb-rain').exists()).toBe(false)
