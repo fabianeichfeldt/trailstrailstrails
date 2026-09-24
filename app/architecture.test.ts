@@ -223,29 +223,33 @@ describe('trailTooltip utility (pure layer)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Trail condition scoring — pure, and it has to stay that way
+// Trail condition — the model and the weather source stay server-side
 // ─────────────────────────────────────────────────────────────────────────────
-// The verdict ("Hero Dirt", "Schlammig", ...) comes from a water-balance
-// calculation over a spot's recent weather. Keeping it free of I/O and of any
-// higher layer is what makes it deterministically testable against fixed
-// fixtures, and what would let the same function run server-side if the
-// per-spot weather cache (pg_cron) sketched in the design spec ever gets
-// built. A fetch smuggled in here would quietly end both.
-describe('trailCondition scoring (pure layer)', () => {
-  test('trailCondition.ts does not import from communication/, stores/ or composables/', () => {
-    const src = read('app/utils/trailCondition.ts')
-    expect(src).not.toMatch(/from\s+['"]([~@]\/)?communication\//)
-    expect(src).not.toMatch(/from\s+['"]([~@]\/)?stores\//)
-    expect(src).not.toMatch(/from\s+['"]([~@]\/)?composables\//)
+// The verdict ("Hero Dirt", "Schlammig", ...) is computed by the `trail-condition`
+// edge function (trailradar-backend), which also enforces the paid-tier gate.
+// If the model or a direct Open-Meteo call creeps back into the client bundle,
+// the gate is decorative again: anyone could read the model or skip the function.
+describe('trail condition (server-side only)', () => {
+  test('no client file imports the trail-condition model or weather codes', () => {
+    const violations: string[] = []
+    for (const file of collectTs('app')) {
+      if (/\.test\.ts$/.test(file)) continue
+      if (/from\s+['"][^'"]*\/(trailCondition|weatherCodes)['"]/.test(read(file))) violations.push(file)
+    }
+    expect(violations).toEqual([])
   })
 
-  test('trailCondition.ts performs no I/O of its own', () => {
-    const src = read('app/utils/trailCondition.ts')
-    expect(src).not.toMatch(/\bfetch\s*\(/)
-    expect(src).not.toMatch(/localStorage/)
+  test('the client never calls the Open-Meteo API itself', () => {
+    const violations: string[] = []
+    for (const file of collectTs('app')) {
+      if (/\.test\.ts$/.test(file)) continue
+      // The attribution link (https://open-meteo.com/) is fine; an API URL is not.
+      if (/open-meteo\.com\/v1|api\.open-meteo/.test(read(file))) violations.push(file)
+    }
+    expect(violations).toEqual([])
   })
 
-  test('the weather fetch stays client-only, so nuxt generate cannot bake it in', () => {
+  test('the condition fetch stays client-only, so nuxt generate cannot bake it in', () => {
     // A build-time fetch would freeze the build day's weather into the static
     // HTML until the next deploy — the same failure class as the prerendered
     // server/api route this project already shipped once.
@@ -255,16 +259,6 @@ describe('trailCondition scoring (pure layer)', () => {
     // useAsyncData precisely to warn against it.
     expect(src).not.toMatch(/\buseAsyncData\s*\(/)
     expect(src).not.toMatch(/\buseFetch\s*\(/)
-  })
-
-  test('the weather module is the only place the Open-Meteo host appears', () => {
-    const violations: string[] = []
-    for (const file of collectTs('app')) {
-      if (file === 'app/communication/weather.ts') continue
-      if (/\.test\.ts$/.test(file)) continue
-      if (/open-meteo\.com\/v1/.test(read(file))) violations.push(file)
-    }
-    expect(violations).toEqual([])
   })
 })
 

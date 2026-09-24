@@ -1,4 +1,4 @@
-import type { TrailConditionResponse, SpotWeather, DayWeather } from '~/types/Weather'
+import type { TrailConditionResponse } from '~/types/Weather'
 import { FUNCTIONS, userHeaders } from './http'
 
 /**
@@ -96,78 +96,5 @@ export async function fetchTrailCondition(
     return body
   } catch {
     return null
-  }
-}
-
-// ── LEGACY — delete with the client model (plan task F6) ────────────────────
-// The raw Open-Meteo mapping now lives in the backend (`openMeteo.ts`). It stays
-// here only because the old client model's tests and scripts/soil-backtest still
-// import it until the model is deleted; nothing in the app calls it.
-
-interface RawResponse {
-  utc_offset_seconds?: number
-  timezone?: string
-  elevation?: number
-  current?: Record<string, number>
-  daily?: Record<string, unknown[]>
-  hourly?: Record<string, unknown[]>
-}
-
-function numbers(input: unknown): number[] | null {
-  if (!Array.isArray(input)) return null
-  return input.map((v) => (typeof v === 'number' ? v : NaN))
-}
-
-/**
- * Maps the raw payload onto `SpotWeather`, or returns null if anything the
- * verdict depends on is missing. Returning null rather than a half-filled
- * object keeps the "say nothing instead of guessing" decision in one place.
- */
-export function mapWeatherResponse(raw: RawResponse | null | undefined): SpotWeather | null {
-  if (!raw?.current || !raw.daily || !raw.hourly) return null
-
-  const dailyTime = raw.daily.time
-  if (!Array.isArray(dailyTime) || dailyTime.length === 0) return null
-
-  const precipSum = numbers(raw.daily.precipitation_sum)
-  const et0 = numbers(raw.daily.et0_fao_evapotranspiration)
-  const snowSum = numbers(raw.daily.snowfall_sum)
-  const tempMax = numbers(raw.daily.temperature_2m_max)
-  const tempMin = numbers(raw.daily.temperature_2m_min)
-  const dailyCode = numbers(raw.daily.weather_code)
-  if (!precipSum || !et0 || !snowSum || !tempMax || !tempMin || !dailyCode) return null
-
-  const days: DayWeather[] = dailyTime.map((date, i) => ({
-    date: String(date),
-    weatherCode: dailyCode[i] ?? 0,
-    precipitationMm: precipSum[i] ?? 0,
-    snowfallCm: snowSum[i] ?? 0,
-    tempMax: tempMax[i] ?? 0,
-    tempMin: tempMin[i] ?? 0,
-    et0Mm: et0[i] ?? 0,
-  }))
-
-  const hourlyTime = raw.hourly.time
-  const hourlyPrecip = numbers(raw.hourly.precipitation)
-  const hourlySnow = numbers(raw.hourly.snowfall)
-  if (!Array.isArray(hourlyTime) || !hourlyPrecip || !hourlySnow) return null
-
-  return {
-    current: {
-      temperature: raw.current.temperature_2m ?? 0,
-      apparentTemperature: raw.current.apparent_temperature ?? raw.current.temperature_2m ?? 0,
-      weatherCode: raw.current.weather_code ?? 0,
-      precipitationMm: raw.current.precipitation ?? 0,
-      windKmh: raw.current.wind_speed_10m ?? 0,
-    },
-    days,
-    hourly: {
-      time: hourlyTime.map(String),
-      precipitationMm: hourlyPrecip,
-      snowfallCm: hourlySnow,
-    },
-    utcOffsetSeconds: raw.utc_offset_seconds ?? 0,
-    timezone: raw.timezone ?? 'UTC',
-    elevation: raw.elevation ?? 0,
   }
 }

@@ -12,7 +12,6 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "verify:static-build": "node scripts/verify-static-build.mjs",
-    "backtest:soil": "vite-node -c vitest.config.ts scripts/soil-backtest/run.ts",
     "lint:arch": "depcruise --config .dependency-cruiser.cjs app"
   },
   "repository": {
