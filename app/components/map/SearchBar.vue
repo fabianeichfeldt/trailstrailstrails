@@ -1,5 +1,5 @@
 <template>
-  <div class="search-wrapper" :class="{ open: isOpen }">
+  <div class="search-wrapper" :class="`search-wrapper--${variant}`">
     <div class="search-input-row">
       <span class="search-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
       <input
@@ -9,6 +9,7 @@
         type="search"
         class="search_input"
         placeholder="Trails, Parks, Orte …"
+        @focus="onFocus"
         @input="onInput"
         @keydown="onKeydown"
       />
@@ -22,9 +23,9 @@
           v-for="item in group.items"
           :key="item.key"
           class="search-result-item"
-          :class="{ highlighted: flatResults[selectedIndex]?.key === item.key }"
+          :class="{ highlighted: highlightedItem?.key === item.key }"
           @click="select(item)"
-          @mouseenter="selectedIndex = flatResults.findIndex(r => r.key === item.key)"
+          @mouseenter="highlight(item)"
         >
           <span class="search-result-icon">{{ item.icon }}</span>
           <div class="search-result-text">
@@ -40,130 +41,49 @@
       </div>
     </div>
   </div>
-
-  <!-- Mobile toggle -->
-  <button id="search-toggle" class="search-toggle-btn" @click="open" aria-label="Suche öffnen">
-    <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
 </template>
 
 <script setup lang="ts">
+import { useSpotSearch, type SpotSearchItem } from '~/composables/useSpotSearch'
+
+// Presentational only. All search behaviour lives in useSpotSearch(); where a
+// picked result takes the user is the host's business (map.vue drives the
+// Leaflet camera, MapTeaser.vue routes to /map) — hence emit-only.
+withDefaults(defineProps<{
+  /**
+   * Positioning only. 'map' floats the bar over the Leaflet canvas, 'teaser'
+   * pins it to the top center of the landing page's map teaser. Everything
+   * else — the input row and the whole results dropdown — is shared, which is
+   * what keeps the two optically identical.
+   */
+  variant?: 'map' | 'teaser'
+}>(), { variant: 'map' })
+
 const emit = defineEmits<{
   openTrail: [id: string]
   flyTo: [lat: number, lon: number]
 }>()
 
-const trailsStore = useTrailsStore()
+const {
+  query, results, noResults, highlightedItem,
+  onInput, onFocus, highlight, highlightNext, highlightPrev, clear, clearResults,
+} = useSpotSearch()
 
-interface ResultItem {
-  key: string
-  icon: string
-  name: string
-  sub: string
-  trailId?: string
-  lat?: number
-  lon?: number
-}
-interface ResultGroup { label: string; items: ResultItem[] }
-
-const query = ref('')
-const results = ref<ResultGroup[]>([])
-const noResults = ref(false)
-const isOpen = ref(false)
 const inputEl = ref<HTMLInputElement | null>(null)
-const selectedIndex = ref(-1)
-let debounceTimer: ReturnType<typeof setTimeout>
-let currentQuery = ''
-
-const flatResults = computed(() => results.value.flatMap(g => g.items))
-
-watch(results, () => { selectedIndex.value = -1 })
-
-const TYPE_ICON: Record<string, string> = { trail: '🚵️', bikepark: '🚵', dirtpark: '🚵' }
-const TYPE_LABEL: Record<string, string> = { trail: 'Trail', bikepark: 'Bikepark', dirtpark: 'Dirtpark / Pumptrack' }
-
-function trailScore(name: string, q: string): number {
-  const n = name.toLowerCase(); const qq = q.toLowerCase()
-  if (n === qq) return 100
-  if (n.startsWith(qq)) return 80
-  if (n.includes(qq)) return 60
-  if (n.split(/\s+/).some(w => w.startsWith(qq))) return 40
-  return 0
-}
-
-async function searchPlaces(q: string) {
-  const base = `https://nominatim.openstreetmap.org/search?format=json&accept-language=de&limit=5&q=${encodeURIComponent(q)}`
-  try {
-    const dach = await fetch(`${base}&countrycodes=de,at,ch`).then(r => r.ok ? r.json() : [])
-    if (dach.length) return dach
-    return await fetch(base).then(r => r.ok ? r.json() : [])
-  } catch { return [] }
-}
-
-async function runSearch(q: string) {
-  currentQuery = q
-  const all = [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
-  const matched = all
-    .map(t => ({ t, score: trailScore(t.name, q) }))
-    .filter(x => x.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5)
-    .map(x => x.t)
-
-  const groups: ResultGroup[] = []
-  if (matched.length) {
-    groups.push({
-      label: 'Trails & Parks',
-      items: matched.map(t => ({
-        key: t.id,
-        icon: TYPE_ICON[(t as any).type] ?? '📍',
-        name: t.name,
-        sub: TYPE_LABEL[(t as any).type] ?? '',
-        trailId: t.id,
-      })),
-    })
-  }
-  results.value = groups
-  noResults.value = false
-
-  const places = await searchPlaces(q)
-  if (currentQuery !== q) return
-
-  if (places.length) {
-    const parts = (d: string) => { const p = d.split(', '); return { name: p[0], sub: p.slice(1, 3).join(', ') } }
-    groups.push({
-      label: 'Orte & Regionen',
-      items: places.map((p: any, i: number) => {
-        const { name, sub } = parts(p.display_name)
-        return { key: `place-${i}`, icon: '📍', name, sub, lat: parseFloat(p.lat), lon: parseFloat(p.lon) }
-      }),
-    })
-  }
-  results.value = [...groups]
-  noResults.value = results.value.length === 0
-}
-
-function onInput() {
-  clearTimeout(debounceTimer)
-  if (query.value.length < 2) { results.value = []; noResults.value = false; return }
-  debounceTimer = setTimeout(() => runSearch(query.value.trim()), 250)
-}
 
 function onKeydown(e: KeyboardEvent) {
-  const total = flatResults.value.length
-  if (e.key === 'Escape') { close(); return }
-  if (!total) return
+  if (e.key === 'Escape') { clear(); return }
   if (e.key === 'ArrowDown') {
     e.preventDefault()
-    selectedIndex.value = selectedIndex.value < total - 1 ? selectedIndex.value + 1 : 0
+    highlightNext()
     scrollSelected()
   } else if (e.key === 'ArrowUp') {
     e.preventDefault()
-    selectedIndex.value = selectedIndex.value > 0 ? selectedIndex.value - 1 : total - 1
+    highlightPrev()
     scrollSelected()
-  } else if (e.key === 'Enter' && selectedIndex.value >= 0) {
+  } else if (e.key === 'Enter' && highlightedItem.value) {
     e.preventDefault()
-    select(flatResults.value[selectedIndex.value])
+    select(highlightedItem.value)
   }
 }
 
@@ -174,41 +94,48 @@ function scrollSelected() {
   })
 }
 
-function select(item: ResultItem) {
+function select(item: SpotSearchItem) {
   if (item.trailId) emit('openTrail', item.trailId)
-  else if (item.lat !== undefined) emit('flyTo', item.lat!, item.lon!)
+  else if (item.lat !== undefined) emit('flyTo', item.lat, item.lon!)
   clear()
 }
 
-function clear() {
-  query.value = ''; results.value = []; noResults.value = false
+function onDocumentClick(e: MouseEvent) {
+  const target = e.target as Element | null
+  if (target?.closest?.('.search-wrapper')) return
+  // On mobile the bar is the whole top chrome, so tapping away should reset it
+  // completely; on desktop only the dropdown is dismissed.
+  if (window.matchMedia('(max-width: 600px)').matches) clear()
+  else clearResults()
 }
 
-function open() { isOpen.value = true; nextTick(() => inputEl.value?.focus()) }
-function close() { isOpen.value = false; query.value = ''; results.value = [] }
-
-onMounted(() => {
-  document.addEventListener('click', (e) => {
-    if (!(e.target as Element).closest('.search-wrapper, #search-toggle')) {
-      if (window.matchMedia('(max-width: 600px)').matches) close()
-      else { results.value = []; noResults.value = false }
-    }
-  })
-})
+onMounted(() => document.addEventListener('click', onDocumentClick))
+onUnmounted(() => document.removeEventListener('click', onDocumentClick))
 </script>
 
 <style scoped>
-.search-toggle-btn {
-  display: none; /* never shown — mobile uses inline search bar */
-}
-
 .search-wrapper {
   position: absolute;
+}
+
+/* ── Variant: floating over the map canvas ── */
+.search-wrapper--map {
   top: calc(12px + env(safe-area-inset-top));
   left: 50%;
   transform: translateX(-50%);
   z-index: 1100;
   width: min(380px, calc(100vw - 100px));
+}
+
+/* ── Variant: pinned to the landing page's map teaser ──
+   Measured against .map-teaser-wrap, and above .map-cta-overlay (z-index 3)
+   so the dropdown stays clickable. */
+.search-wrapper--teaser {
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(380px, calc(100% - 28px));
 }
 
 .search-input-row {
@@ -269,16 +196,8 @@ onMounted(() => {
 }
 
 @media (max-width: 600px) {
-  /* Inline search bar — sits in the dark mobile top bar */
-  .search-wrapper {
-    top: calc(9px + env(safe-area-inset-top));
-    left: 64px;   /* 12px margin + 44px burger + 8px gap */
-    right: 60px;  /* 44px avatar + 8px gap + 8px margin */
-    transform: none;
-    width: auto;
-    z-index: 1100;
-  }
-
+  /* Appearance — shared by both variants. A 44px row is the touch target, and
+     14px type keeps the teaser bar identical to the map's. */
   .search-input-row {
     border-radius: 8px;
     height: 44px;
@@ -290,6 +209,20 @@ onMounted(() => {
 
   .search-results {
     border-radius: 8px;
+  }
+
+  /* Positioning — map only: the inline bar sits in the dark mobile top bar,
+     squeezed between the burger and the avatar. */
+  .search-wrapper--map {
+    top: calc(9px + env(safe-area-inset-top));
+    left: 64px;   /* 12px margin + 44px burger + 8px gap */
+    right: 60px;  /* 44px avatar + 8px gap + 8px margin */
+    transform: none;
+    width: auto;
+    z-index: 1100;
+  }
+
+  .search-wrapper--map .search-results {
     left: 0; right: 0;
     /* Expand to full width so results are readable */
     margin-left: -52px;
