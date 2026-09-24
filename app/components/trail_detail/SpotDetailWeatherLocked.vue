@@ -58,9 +58,10 @@ const SAMPLE_TRAIL = { type: 'trail', id: 'sample', name: 'Beispiel' } as Trail
 }
 
 .wx-sample-wrap {
-  /* Blurred enough that no text is legible, not so much that the colours and the
-     bar chart stop reading as "a weather card". */
-  filter: blur(5px);
+  /* Soft enough that the colours, icons and bar chart clearly read as "a weather
+     card" — the sample is made up, so how legible its small text gets is not a
+     concern. 4px: one step less than the first version's 5px, on request. */
+  filter: blur(4px);
   pointer-events: none;
   user-select: none;
 }
