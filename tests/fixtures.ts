@@ -67,56 +67,39 @@ const TRAIL_DETAILS_MOCK = {
 };
 
 /**
- * Open-Meteo payload for the spot weather card. Six days ending "today",
- * generated at run time so the data always lands inside the balance window —
- * a frozen date would drift out of it and silently turn every spot's verdict
- * into "no card".
+ * Response of the `trail-condition` edge function for the Trail-Zustand card:
+ * the finished view-model (two past days, today, three ahead), generated at run
+ * time so "today" in the strip matches the browser's today. The model and
+ * Open-Meteo live behind that function, so the browser never sees weather data.
  *
- * Mild and dry, so the card renders its "Hero Dirt" state and no test has to
- * care about it unless it wants to.
+ * Mild and dry with 4mm two days ago, so the card renders its "Hero Dirt" state
+ * and no test has to care about it unless it wants to.
  */
-function mockWeather() {
-  // Ten past days + today + three forecast days, matching PAST_DAYS /
-  // FORECAST_DAYS in app/communication/weather.ts. The strip renders a
-  // seven-day window centred on today out of this.
-  const dates = Array.from({ length: 14 }, (_, i) => {
+function mockTrailCondition() {
+  const names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const strip = [-2, -1, 0, 1, 2, 3].map((offset) => {
     const d = new Date();
-    d.setUTCDate(d.getUTCDate() - (10 - i));
-    return d.toISOString().slice(0, 10);
-  });
-  const time: string[] = [];
-  const hourlyRain: number[] = [];
-  dates.forEach((date, dayIndex) => {
-    for (let h = 0; h < 24; h++) {
-      time.push(`${date}T${String(h).padStart(2, '0')}:00`);
-      hourlyRain.push(dayIndex === 8 && h === 12 ? 4 : 0);
-    }
+    d.setUTCDate(d.getUTCDate() + offset);
+    return {
+      date: d.toISOString().slice(0, 10),
+      weekday: names[d.getUTCDay()],
+      icon: '⛅',
+      precipitationMm: offset === -2 ? 4 : 0,
+      isToday: offset === 0,
+      isForecast: offset > 0,
+    };
   });
   return {
-    utc_offset_seconds: 0,
-    timezone: 'UTC',
-    elevation: 700,
-    current: {
-      temperature_2m: 12, apparent_temperature: 10,
-      weather_code: 2, precipitation: 0, wind_speed_10m: 13,
+    verdict: {
+      level: 'prime',
+      headline: 'Hero Dirt',
+      detail: 'Bester Zustand. Seit 48 Stunden kein Regen, Boden weitgehend abgetrocknet.',
+      rain10dMm: 4,
     },
-    daily: {
-      time: dates,
-      // 4mm two days ago: enough to reset the drying counter so the verdict
-      // sits solidly in "Hero Dirt" rather than on the dust threshold, where a
-      // rain-free fixture lands by coincidence.
-      weather_code: dates.map((_, i) => (i === 8 ? 61 : 2)),
-      precipitation_sum: dates.map((_, i) => (i === 8 ? 4 : 0)),
-      temperature_2m_max: dates.map(() => 18),
-      temperature_2m_min: dates.map(() => 9),
-      et0_fao_evapotranspiration: dates.map(() => 2),
-      snowfall_sum: dates.map(() => 0),
-    },
-    hourly: {
-      time,
-      precipitation: hourlyRain,
-      snowfall: time.map(() => 0),
-    },
+    rainRule: { raining: false, hoursSinceRain: 48 },
+    current: { temperature: 12, apparentTemperature: 10, icon: '⛅', windKmh: 13 },
+    strip,
+    fetchedAt: new Date().toISOString(),
   };
 }
 
@@ -196,8 +179,9 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/trailradar.org/geo',         (route) => route.fulfill({ json: { lat: 48.1, lon: 11.5 } }));
   // Nominatim — empty by default so tests only see trail results, not place suggestions
   await page.route('**/nominatim.openstreetmap.org/**', (route) => route.fulfill({ json: [] }));
-  // Spot weather (Trail-Zustand card on /trails/[slug])
-  await page.route('**/api.open-meteo.com/**',      (route) => route.fulfill({ json: mockWeather() }));
+  // Trail-Zustand card on /trails/[slug]: the edge function answers with the finished view-model
+  // (registered after the catch-all above, so it wins)
+  await page.route('**/functions/v1/trail-condition', (route) => route.fulfill({ json: mockTrailCondition() }));
   // OSM map tiles — abort; not needed for logic tests
   await page.route('**tile.openstreetmap.org/**',   (route) => route.abort());
   await page.route('**tile.tracestrack.com/**',   (route) => route.abort());

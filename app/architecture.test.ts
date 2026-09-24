@@ -249,7 +249,7 @@ describe('trailCondition scoring (pure layer)', () => {
     // A build-time fetch would freeze the build day's weather into the static
     // HTML until the next deploy — the same failure class as the prerendered
     // server/api route this project already shipped once.
-    const src = read('app/composables/useSpotWeather.ts')
+    const src = read('app/composables/useTrailCondition.ts')
     expect(src).toMatch(/onMounted\(/)
     // Matches the call, not the mention — the file's own doc comment names
     // useAsyncData precisely to warn against it.

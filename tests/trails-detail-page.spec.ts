@@ -146,7 +146,7 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
 
 // The Trail-Zustand card is a paid feature (FEATURES.trail_condition, Plus and up)
 // and is fetched client-side in onMounted (never during prerender — see
-// app/composables/useSpotWeather.ts), so only a real browser run proves the page
+// app/composables/useTrailCondition.ts), so only a real browser run proves the page
 // wires the paywall and the fetch together. The card's own rendering logic is
 // covered by vitest in SpotDetailWeather.test.ts, the access rules in
 // stores/subscription.test.ts.
@@ -154,11 +154,11 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
 // Auth state lives in memory after signing in through the profile page's modal, so
 // the signed-in cases reach the trail page by client-side navigation, not page.goto.
 
-/** Records every request to Open-Meteo — a locked visitor must cause none. */
+/** Records every request to the trail-condition function — a locked visitor must cause none. */
 function trackWeatherRequests(page: import('@playwright/test').Page): string[] {
   const calls: string[] = [];
   page.on('request', (request) => {
-    if (request.url().includes('api.open-meteo.com')) calls.push(request.url());
+    if (request.url().includes('/functions/v1/trail-condition')) calls.push(request.url());
   });
   return calls;
 }
@@ -169,7 +169,7 @@ function entitlementRows(level: number) {
     : [{ plan_id: level >= 2 ? 'pro' : 'plus', level, discount_percent: 0, early_adopter_free_until: null }];
 }
 
-baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and never asks Open-Meteo', async ({ page }) => {
+baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and never calls the trail-condition function', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   const weatherCalls = trackWeatherRequests(page);
   await page.goto('/trails/t1');
@@ -212,6 +212,10 @@ baseTest('locks it for a signed-in free account too', async ({ page }) => {
 baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos for a Plus account', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(1) }));
+  const conditionRequests: import('@playwright/test').Request[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/functions/v1/trail-condition')) conditionRequests.push(request);
+  });
 
   await page.goto('/profile');
   await page.waitForLoadState('networkidle');
@@ -225,6 +229,9 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
   // The mock has 4mm two days ago and mild weather since — solidly grippy.
   await expect(card).toContainText('Hero Dirt');
   await expect(card).toContainText('Open-Meteo');
+  expect(conditionRequests).toHaveLength(1);
+  // The function looks the spot up itself: the browser sends its id, never coordinates.
+  expect(JSON.parse(conditionRequests[0]!.postData() ?? '{}')).toEqual({ spotType: 'trail', spotId: 't1' });
   // Six columns: two measured days, today, three forecast days.
   await expect(card.locator('.wx-day')).toHaveCount(6);
   await expect(card.locator('.wx-day').nth(2)).toHaveClass(/today/);
@@ -233,6 +240,25 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
   const weatherY = (await card.boundingBox())!.y;
   const photosY = (await page.locator('.spot-detail-photos').boundingBox())!.y;
   expect(weatherY).toBeLessThan(photosY);
+
+  assertNoLeaks();
+});
+
+// The browser thinks the account is entitled (stale entitlement), the function
+// disagrees: the teaser must replace the card, not leave an empty gap.
+baseTest('falls back to the locked teaser when the function answers 403 for an account the browser thought was Plus', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(1) }));
+  await page.route('**/functions/v1/trail-condition', (route) => route.fulfill({ status: 403, json: { error: 'forbidden' } }));
+
+  await page.goto('/profile');
+  await page.waitForLoadState('networkidle');
+  await signInOnProfilePage(page);
+  await navigateClientSide(page, '/trails/t1');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
+
+  await expect(page.locator('[data-testid="weather-locked"]')).toBeVisible();
+  await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
 
   assertNoLeaks();
 });
