@@ -22,14 +22,14 @@ describe('SpotDetailWeatherLocked', () => {
     expect(sample.attributes('inert')).toBeDefined()
   })
 
-  it('says in plain readable text that this is a Plus feature and that the picture is only an example', () => {
+  it('says in plain readable text that this is a Plus feature', () => {
     const wrapper = mount(SpotDetailWeatherLocked)
     const overlay = wrapper.find('.wx-lock')
 
     expect(overlay.exists()).toBe(true)
     // Plus is derived from the registry, not typed in here.
     expect(overlay.text()).toContain('Plus')
-    expect(overlay.text()).toMatch(/Beispiel/)
+    // (It used to also say "Beispielansicht"; the wording was shortened on purpose.)
     // The overlay itself is not hidden from anyone.
     expect(overlay.attributes('aria-hidden')).toBeUndefined()
   })

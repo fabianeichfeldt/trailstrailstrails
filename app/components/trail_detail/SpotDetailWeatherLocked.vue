@@ -20,7 +20,7 @@
           <span class="wx-lock-icon" aria-hidden="true">🔒</span>
           <strong>{{ FEATURES.trail_condition.label }} ist eine {{ plan }}-Funktion</strong>
           <span class="wx-lock-hint">
-            Bodenzustand und Wetter-Vorschau für jeden Spot — hier eine Beispielansicht.
+            Bodenzustand und Wetter für jeden Spot.
           </span>
         </div>
       </div>
@@ -58,10 +58,10 @@ const SAMPLE_TRAIL = { type: 'trail', id: 'sample', name: 'Beispiel' } as Trail
 }
 
 .wx-sample-wrap {
-  /* Soft enough that the colours, icons and bar chart clearly read as "a weather
-     card" — the sample is made up, so how legible its small text gets is not a
-     concern. 4px: one step less than the first version's 5px, on request. */
-  filter: blur(4px);
+  /* Deliberately light: the colours, icons and bar chart read as a real weather
+     card, and most of the small text is legible. Tuned by eye (5px -> 4px ->
+     1.8px). The sample is made up, so nothing about the spot is revealed. */
+  filter: blur(1.8px);
   pointer-events: none;
   user-select: none;
 }
