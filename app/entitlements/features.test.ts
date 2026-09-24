@@ -3,6 +3,8 @@ import { FEATURES, planNameForLevel, minPlanName } from './features'
 
 describe('trail_condition', () => {
   it('is a Plus feature: Plus (level 1) and everything above it — so Pro and the early-adopter Pro grant — get it', () => {
+    // Pinned on purpose: the trail-condition edge function (trailradar-backend,
+    // REQUIRED_LEVEL) enforces the same number. Change both together.
     expect(FEATURES.trail_condition.minLevel).toBe(1)
   })
 

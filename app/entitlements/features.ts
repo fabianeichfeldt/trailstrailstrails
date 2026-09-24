@@ -5,15 +5,17 @@ export const FEATURES = {
   // rain total and the status banner's live rain-rule line. Plus and up — which
   // takes in Pro and the early-adopter Pro grant.
   //
-  // UI-ONLY GATE, and the entitlement spec calls that a bug: the data comes
-  // straight from Open-Meteo in the browser and the model ships in the client
-  // bundle, so there is no Postgres resource an RLS policy could protect.
-  // Anyone can still call Open-Meteo themselves. Acceptable while every existing
-  // user holds a free Pro grant and there is no checkout; NOT acceptable once
-  // anyone pays. Before the first payment this needs a server-side check (a
-  // Worker like /_embed that verifies the JWT with has_min_tier(1) and calls
-  // Open-Meteo with a key) — and Open-Meteo's free tier is non-commercial, so a
-  // commercial licence is needed before this is charged for anyway.
+  // Enforced server-side by the `trail-condition` edge function in
+  // trailradar-backend: it checks the JWT and calls has_min_tier(REQUIRED_LEVEL)
+  // as the caller, and it owns Open-Meteo and the model, so this client holds
+  // neither. `minLevel` here must equal `REQUIRED_LEVEL` in
+  // supabase/functions/trail-condition — one number, two copies; each repo's
+  // tests pin it (see features.test.ts). What this entry still does in the
+  // browser is UX only: what to render and whether to ask at all.
+  //
+  // Remaining caveat before the first payment: Open-Meteo's free tier is
+  // non-commercial, so a commercial licence is needed (the function reads the key
+  // from its OPEN_METEO_API_KEY secret — a secret change, not a code change).
   trail_condition: { minLevel: 1, label: 'Trail-Zustand' },
 
   // future feature keys go here — one line each
