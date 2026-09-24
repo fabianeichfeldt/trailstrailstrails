@@ -178,8 +178,12 @@ baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and n
   const locked = page.locator('[data-testid="weather-locked"]');
   await expect(locked).toBeVisible();
   await expect(locked).toContainText('Plus');
+  // A blurred SAMPLE is showing (its six columns are made up), but no real card.
+  await expect(locked.locator('[data-testid="weather-sample"]')).toBeVisible();
   await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
-  await expect(page.locator('.wx-day')).toHaveCount(0);
+  await expect(page.locator('[data-testid="weather-card"] .wx-day')).toHaveCount(0);
+  // Decoration only: hidden from assistive technology so no one is read a made-up verdict.
+  await expect(locked.locator('.wx-sample-wrap')).toHaveAttribute('aria-hidden', 'true');
   await page.waitForLoadState('networkidle');
   expect(weatherCalls).toEqual([]);
 

@@ -3,28 +3,56 @@ import { mount } from '@vue/test-utils'
 import SpotDetailWeatherLocked from './SpotDetailWeatherLocked.vue'
 
 describe('SpotDetailWeatherLocked', () => {
-  it('tells a free user the feature exists and which plan unlocks it', () => {
-    const text = mount(SpotDetailWeatherLocked).text()
+  it('shows a blurred sample of the real card — good weather and Hero Dirt — as the teaser', () => {
+    const wrapper = mount(SpotDetailWeatherLocked)
+    const sample = wrapper.find('.wx-sample-wrap')
 
-    expect(text).toContain('Trail-Zustand')
-    // Plus is the cheapest plan with the feature — derived from the registry, not typed in here.
-    expect(text).toContain('Plus')
+    expect(sample.exists()).toBe(true)
+    expect(sample.find('[data-testid="weather-sample"]').exists()).toBe(true)
+    expect(sample.text()).toContain('Hero Dirt')
+    // The real strip, so the teaser looks like what a Plus user gets.
+    expect(sample.findAll('.wx-day')).toHaveLength(6)
   })
 
-  it('has its own test id and shows no weather at all — nothing about the spot leaks through the paywall', () => {
+  it('hides the sample from assistive technology and from the keyboard — it is decoration, and made up', () => {
+    const sample = mount(SpotDetailWeatherLocked).find('.wx-sample-wrap')
+
+    // Otherwise a screen reader would announce "Hero Dirt" as if it were this spot's verdict.
+    expect(sample.attributes('aria-hidden')).toBe('true')
+    expect(sample.attributes('inert')).toBeDefined()
+  })
+
+  it('says in plain readable text that this is a Plus feature and that the picture is only an example', () => {
+    const wrapper = mount(SpotDetailWeatherLocked)
+    const overlay = wrapper.find('.wx-lock')
+
+    expect(overlay.exists()).toBe(true)
+    // Plus is derived from the registry, not typed in here.
+    expect(overlay.text()).toContain('Plus')
+    expect(overlay.text()).toMatch(/Beispiel/)
+    // The overlay itself is not hidden from anyone.
+    expect(overlay.attributes('aria-hidden')).toBeUndefined()
+  })
+
+  it('has its own test id, and no REAL weather card — the sample carries a different id', () => {
     const wrapper = mount(SpotDetailWeatherLocked)
 
     expect(wrapper.find('[data-testid="weather-locked"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(false)
-    expect(wrapper.findAll('.wx-day')).toHaveLength(0)
-    // No temperature, no millimetre figure, no day count — no digits of any kind.
-    expect(wrapper.text()).not.toMatch(/\d/)
   })
 
-  it('offers no purchase button yet — there is no billing flow to send anyone to', () => {
+  it('offers no purchase button or link yet — there is no billing flow to send anyone to', () => {
     const wrapper = mount(SpotDetailWeatherLocked)
 
     expect(wrapper.find('button').exists()).toBe(false)
     expect(wrapper.find('a').exists()).toBe(false)
+  })
+
+  it('needs nothing from the network: the sample is built locally, so a locked visitor costs no Open-Meteo request', () => {
+    const wrapper = mount(SpotDetailWeatherLocked)
+
+    // Rendered synchronously and complete — no skeleton, nothing to wait for.
+    expect(wrapper.find('[data-testid="weather-skeleton"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Hero Dirt')
   })
 })

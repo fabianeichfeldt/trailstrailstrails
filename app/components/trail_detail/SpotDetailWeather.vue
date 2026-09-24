@@ -15,7 +15,9 @@
   <section v-else-if="condition.level !== 'unknown'" class="content-section spot-detail-weather">
     <div class="section-label">Trail-Zustand</div>
 
-    <div class="card wx" :class="style.cls" data-testid="weather-card">
+    <!-- A sample (the locked teaser's backdrop) gets its own test id, so "a real
+         card is showing" stays a question the paywall tests can ask. -->
+    <div class="card wx" :class="style.cls" :data-testid="sample ? 'weather-sample' : 'weather-card'">
       <div class="wx-top">
         <div class="wx-badge">{{ badge }}</div>
         <div class="wx-verdict">
@@ -36,7 +38,8 @@
       </div>
       <div class="wx-foot">
         <span>{{ footNote }}</span>
-        <span>
+        <!-- The credit is for Open-Meteo's data; a made-up sample has none. -->
+        <span v-if="!sample">
           Wetter:
           <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
         </span>
@@ -82,6 +85,8 @@ const props = defineProps<{
   trail: Trail
   weather: SpotWeather | null
   loading?: boolean
+  /** Fixed sample data behind the locked teaser: same card, no credit, its own test id. */
+  sample?: boolean
 }>()
 
 const condition = computed(() =>

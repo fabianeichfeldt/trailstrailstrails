@@ -205,6 +205,22 @@ describe('SpotDetailWeather — from raw API response to rendered card', () => {
     expect(link.attributes('target')).toBe('_blank')
   })
 
+  it('as a sample: is marked as one, and credits nobody for data that is made up', async () => {
+    mockFetch(rawPayload(WINTERBERG))
+    const weather = await fetchSpotWeather(51.1927, 8.5236)
+
+    const wrapper = mount(SpotDetailWeather, { props: { trail, weather, loading: false, sample: true } })
+
+    // A different test id, so "a real card is showing" stays a question the paywall tests can ask.
+    expect(wrapper.find('[data-testid="weather-sample"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(false)
+    // The Open-Meteo credit is for Open-Meteo data; a fixed sample has none.
+    expect(wrapper.find('.wx-foot a').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Open-Meteo')
+    // Otherwise it is the real card, strip and all.
+    expect(wrapper.findAll('.wx-day')).toHaveLength(6)
+  })
+
   it('puts the 10-day rain directly under the verdict, above the strip', async () => {
     mockFetch(rawPayload(WINTERBERG))
     const weather = await fetchSpotWeather(51.1927, 8.5236)
