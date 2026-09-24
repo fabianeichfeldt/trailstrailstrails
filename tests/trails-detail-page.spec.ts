@@ -1,5 +1,5 @@
 import { test as baseTest } from '@playwright/test';
-import { expect, setupAllMocks } from './fixtures';
+import { expect, setupAllMocks, signInOnProfilePage, navigateClientSide } from './fixtures';
 
 // Covers the evolved /trails/[slug] page from the spot-detail-real-pages
 // rework: a long-scroll page with real sections instead of the old thin SEO
@@ -144,15 +144,78 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
   assertNoLeaks();
 });
 
-// The Trail-Zustand card is fetched client-side in onMounted (never during
-// prerender — see app/composables/useSpotWeather.ts), so only a real browser
-// run proves the page actually wires it up. The card's own rendering logic is
-// covered by vitest in SpotDetailWeather.test.ts.
-baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos', async ({ page }) => {
+// The Trail-Zustand card is a paid feature (FEATURES.trail_condition, Plus and up)
+// and is fetched client-side in onMounted (never during prerender — see
+// app/composables/useSpotWeather.ts), so only a real browser run proves the page
+// wires the paywall and the fetch together. The card's own rendering logic is
+// covered by vitest in SpotDetailWeather.test.ts, the access rules in
+// stores/subscription.test.ts.
+//
+// Auth state lives in memory after signing in through the profile page's modal, so
+// the signed-in cases reach the trail page by client-side navigation, not page.goto.
+
+/** Records every request to Open-Meteo — a locked visitor must cause none. */
+function trackWeatherRequests(page: import('@playwright/test').Page): string[] {
+  const calls: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('api.open-meteo.com')) calls.push(request.url());
+  });
+  return calls;
+}
+
+function entitlementRows(level: number) {
+  return level === 0
+    ? []
+    : [{ plan_id: level >= 2 ? 'pro' : 'plus', level, discount_percent: 0, early_adopter_free_until: null }];
+}
+
+baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and never asks Open-Meteo', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  const weatherCalls = trackWeatherRequests(page);
   await page.goto('/trails/t1');
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
+  const locked = page.locator('[data-testid="weather-locked"]');
+  await expect(locked).toBeVisible();
+  await expect(locked).toContainText('Plus');
+  await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
+  await expect(page.locator('.wx-day')).toHaveCount(0);
+  await page.waitForLoadState('networkidle');
+  expect(weatherCalls).toEqual([]);
+
+  assertNoLeaks();
+});
+
+baseTest('locks it for a signed-in free account too', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(0) }));
+  const weatherCalls = trackWeatherRequests(page);
+
+  await page.goto('/profile');
+  await page.waitForLoadState('networkidle');
+  await signInOnProfilePage(page);
+  await navigateClientSide(page, '/trails/t1');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
+
+  await expect(page.locator('[data-testid="weather-locked"]')).toBeVisible();
+  await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
+  await page.waitForLoadState('networkidle');
+  expect(weatherCalls).toEqual([]);
+
+  assertNoLeaks();
+});
+
+baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos for a Plus account', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(1) }));
+
+  await page.goto('/profile');
+  await page.waitForLoadState('networkidle');
+  await signInOnProfilePage(page);
+  await navigateClientSide(page, '/trails/t1');
+  await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
+
+  await expect(page.locator('[data-testid="weather-locked"]')).toHaveCount(0);
   const card = page.locator('[data-testid="weather-card"]');
   await expect(card).toBeVisible();
   // The mock has 4mm two days ago and mild weather since — solidly grippy.

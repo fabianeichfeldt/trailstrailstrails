@@ -1,4 +1,4 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, expect as playwrightExpect, Page } from '@playwright/test';
 
 // slug === id in the fixtures so tests can keep navigating to /trails/t1 and
 // have it resolve straight through getTrailBySlug().
@@ -215,6 +215,35 @@ export async function setupAllMocks(page: Page): Promise<() => void> {
   const assertNoLeaks = await applySafetyNet(page); // lowest priority — must come first
   await setupApiMocks(page);                         // higher priority — overrides safety net
   return assertNoLeaks;
+}
+
+/**
+ * Sign in via the AuthModal embedded on the /profile page: the modal opens from the
+ * "Anmelden" button on the not-logged-in banner, and after sign-in the Vue reactive
+ * state updates — no page reload. Auth state therefore lives in memory, so a test
+ * that needs a signed-in user on another page must navigate client-side afterwards
+ * (see `navigateClientSide`), not with `page.goto`.
+ *
+ * Must be called AFTER `setupAllMocks(page)` and AFTER `page.goto('/profile')`. Mock
+ * anything the sign-in triggers (e.g. the entitlement RPC) BEFORE calling it.
+ */
+export async function signInOnProfilePage(page: Page) {
+  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }));
+  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }));
+
+  await page.locator('.not-logged-in button').click();  // "Anmelden" button
+  await page.locator('.auth-card input[autocomplete="email"]').fill('test@example.com');
+  await page.locator('.auth-card input[autocomplete="current-password"]').fill('password123');
+  await page.locator('.auth-card button[type="submit"]').click();
+  // Wait for modal to close — sign-in success
+  await playwrightExpect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
+  // Wait for profile content to appear reactively
+  await playwrightExpect(page.locator('.profile-layout')).toBeVisible({ timeout: 6000 });
+}
+
+/** SPA navigation through the Nuxt router, keeping in-memory state (e.g. a signed-in user). */
+export async function navigateClientSide(page: Page, path: string) {
+  await page.evaluate((to) => (window as unknown as { useNuxtApp: () => { $router: { push: (p: string) => Promise<void> } } }).useNuxtApp().$router.push(to), path);
 }
 
 /** Fixture: safety net + mocks + navigated to /map + networkidle. */

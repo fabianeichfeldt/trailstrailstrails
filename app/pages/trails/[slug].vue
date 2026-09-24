@@ -55,12 +55,21 @@
     <template v-else-if="trail && trailForStore">
       <SpotDetailHero :trail="trailForStore" />
 
-      <SpotDetailStatus :details="details" :weather="weather" />
+      <!-- The banner's live rain-rule line uses the weather, so it is part of the
+           paid feature: without access it gets no weather and shows only the
+           trailcrew's rule ("Geschlossen 24h nach Regen"), not the answer. -->
+      <SpotDetailStatus :details="details" :weather="conditionAccess === 'allowed' ? weather : null" />
 
       <!-- Sits with the status banner rather than below the photos: both
            answer the same "can I ride this today" question. Above the sticky
            nav, so it needs no jump-link of its own. -->
-      <SpotDetailWeather :trail="trailForStore" :weather="weather" :loading="weatherLoading" />
+      <SpotDetailWeatherLocked v-if="conditionAccess === 'locked'" />
+      <SpotDetailWeather
+        v-else
+        :trail="trailForStore"
+        :weather="weather"
+        :loading="weatherLoading || conditionAccess === 'checking'"
+      />
 
       <SpotDetailPhotos
         :trail="trailForStore"
@@ -151,6 +160,7 @@ import IconSend from '~/assets/icons/send.svg'
 import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
 import SpotDetailStatus from '~/components/trail_detail/SpotDetailStatus.vue'
 import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
+import SpotDetailWeatherLocked from '~/components/trail_detail/SpotDetailWeatherLocked.vue'
 import SpotDetailPhotos from '~/components/trail_detail/SpotDetailPhotos.vue'
 import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
 import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescription.vue'
@@ -330,8 +340,14 @@ const details = ref<TrailDetails>(bakedDetails.value)
 // one request, one cache entry, one verdict on the page. Deliberately not part
 // of the useAsyncData payload above: that runs during `nuxt generate` and
 // would freeze the build day's weather into the static HTML.
+//
+// Trail-Zustand is a paid feature (see FEATURES.trail_condition): no coordinates
+// are handed over — so no Open-Meteo request is made at all — until the visitor
+// is known to be allowed. "checking" covers SSR and the moment before a logged-in
+// user's entitlement arrives, and renders the same skeleton as a slow fetch.
+const conditionAccess = useFeatureAccess('trail_condition')
 const { weather, loading: weatherLoading } = useSpotWeather(() =>
-  trailForStore.value
+  trailForStore.value && conditionAccess.value === 'allowed'
     ? { lat: trailForStore.value.latitude, lon: trailForStore.value.longitude }
     : null,
 )
