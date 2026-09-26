@@ -57,6 +57,18 @@ describe('getMyEntitlement', () => {
     expect(result).toEqual(FREE_ENTITLEMENT)
   })
 
+  it('returns the free entitlement when the body is not a row list — the E2E catch-all answers every RPC with null', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(null)))
+
+    await expect(getMyEntitlement('token-123')).resolves.toEqual(FREE_ENTITLEMENT)
+  })
+
+  it('returns the free entitlement when the network is down, instead of throwing into the caller', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+
+    await expect(getMyEntitlement('token-123')).resolves.toEqual(FREE_ENTITLEMENT)
+  })
+
   it('returns the free entitlement when the request fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(401)))
 

@@ -55,7 +55,20 @@
     <template v-else-if="trail && trailForStore">
       <SpotDetailHero :trail="trailForStore" />
 
-      <SpotDetailStatus :details="details" />
+      <!-- The banner's live rain-rule line uses the weather, so it is part of the
+           paid feature: without access it gets no weather and shows only the
+           trailcrew's rule ("Geschlossen 24h nach Regen"), not the answer. -->
+      <SpotDetailStatus :details="details" :condition="showConditionLocked ? null : condition" />
+
+      <!-- Sits with the status banner rather than below the photos: both
+           answer the same "can I ride this today" question. Above the sticky
+           nav, so it needs no jump-link of its own. -->
+      <SpotDetailWeatherLocked v-if="showConditionLocked" />
+      <SpotDetailWeather
+        v-else
+        :condition="condition"
+        :loading="conditionLoading || conditionAccess === 'checking'"
+      />
 
       <SpotDetailPhotos
         :trail="trailForStore"
@@ -145,6 +158,8 @@ import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
 import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
 import SpotDetailStatus from '~/components/trail_detail/SpotDetailStatus.vue'
+import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
+import SpotDetailWeatherLocked from '~/components/trail_detail/SpotDetailWeatherLocked.vue'
 import SpotDetailPhotos from '~/components/trail_detail/SpotDetailPhotos.vue'
 import SpotDetailNav from '~/components/trail_detail/SpotDetailNav.vue'
 import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescription.vue'
@@ -318,6 +333,27 @@ const mapFocus = computed(() => selectedItemFocus.value ?? parkingFocus.value)
 // off a live getTrailDetails() refresh for the genuinely dynamic bits that
 // aren't in the static payload at all: status_hint freshness and likes.
 const details = ref<TrailDetails>(bakedDetails.value)
+
+// The Trail-Zustand verdict is fetched once here and handed to both consumers
+// (the card and the status banner's rain rule) rather than each fetching its
+// own — one request, one cache entry, one verdict on the page. Deliberately not
+// part of the useAsyncData payload above: that runs during `nuxt generate` and
+// would freeze the build day's weather into the static HTML.
+//
+// Trail-Zustand is a paid feature (see FEATURES.trail_condition), and the real
+// gate is the `trail-condition` edge function (JWT + has_min_tier). The client
+// check below only decides what to render and whether to ask at all: no request
+// is made until the visitor is known to be allowed. "checking" covers SSR and
+// the moment before a logged-in user's entitlement arrives, and renders the same
+// skeleton as a slow fetch. If the function still answers 403 (a stale
+// entitlement in the browser), the locked teaser replaces the card.
+const conditionAccess = useFeatureAccess('trail_condition')
+const { condition, loading: conditionLoading, forbidden: conditionForbidden } = useTrailCondition(() =>
+  trailForStore.value && conditionAccess.value === 'allowed'
+    ? { spotType: trailForStore.value.type, spotId: trailForStore.value.id }
+    : null,
+)
+const showConditionLocked = computed(() => conditionAccess.value === 'locked' || conditionForbidden.value)
 
 async function updateLikeButton(d: TrailDetails) {
   try {
