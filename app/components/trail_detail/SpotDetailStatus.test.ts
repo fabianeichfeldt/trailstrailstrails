@@ -62,7 +62,7 @@ describe('SpotDetailStatus', () => {
  */
 function conditionWithLastRain(hoursAgo: number | null, raining = false): TrailConditionResponse {
   return {
-    verdict: { level: 'prime', headline: 'Hero Dirt', detail: '', rain10dMm: 0 },
+    verdict: { level: 'prime', headline: 'Hero Dirt', detail: '', rain10dMm: 0, range: { lo: 1, hi: 1 } },
     rainRule: { raining, hoursSinceRain: hoursAgo },
     current: { temperature: 12, apparentTemperature: 10, icon: '⛅', windKmh: 13 },
     strip: [],

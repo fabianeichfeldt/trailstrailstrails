@@ -7,7 +7,7 @@ import { fetchTrailCondition, TRAIL_CONDITION_CACHE_TTL_MS } from './weather'
 // in this file reaches Supabase or the edge function.
 function condition(overrides: Partial<TrailConditionResponse> = {}): TrailConditionResponse {
   return {
-    verdict: { level: 'prime', headline: 'Hero Dirt', detail: 'Griffig und fest.', rain10dMm: 14.5 },
+    verdict: { level: 'prime', headline: 'Hero Dirt', detail: 'Griffig und fest.', rain10dMm: 14.5, range: { lo: 1, hi: 2 } },
     rainRule: { raining: false, hoursSinceRain: 31 },
     current: { temperature: 12, apparentTemperature: 10, icon: '⛅', windKmh: 13 },
     strip: [
@@ -24,7 +24,7 @@ function respond(status: number, body: unknown = condition()) {
 }
 
 const realFetch = globalThis.fetch
-const KEY = 'tr_wx_v2_trail_t1'
+const KEY = 'tr_wx_v3_trail_t1'
 
 beforeEach(() => localStorage.clear())
 afterEach(() => {
@@ -45,6 +45,38 @@ describe('fetchTrailCondition — request', () => {
     expect(init.method).toBe('POST')
     expect(init.headers.Authorization).toBe('Bearer jwt-123')
     expect(JSON.parse(init.body)).toEqual({ spotType: 'trail', spotId: 't1' })
+  })
+})
+
+describe('fetchTrailCondition — at (verdict for a past instant)', () => {
+  it('sends `at`, skips the real-now cache and does not overwrite it', async () => {
+    const shifted = condition({
+      verdict: { level: 'damp', headline: 'x', detail: 'y', rain10dMm: 1, range: { lo: 2, hi: 3 } },
+    })
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => shifted })
+    vi.stubGlobal('fetch', fetchMock)
+    // A cached real-now card must not answer a request for another instant.
+    localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), condition: condition() }))
+
+    const past = new Date(Date.now() - 3600_000).toISOString()
+    const result = await fetchTrailCondition('trail', 't1', 'jwt', undefined, past)
+
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ spotType: 'trail', spotId: 't1', at: past })
+    expect(result).toEqual(shifted)
+    expect(JSON.parse(localStorage.getItem(KEY)!).condition).toEqual(condition())
+  })
+
+  it('does not send `at` when absent', async () => {
+    const fetchMock = respond(200)
+    vi.stubGlobal('fetch', fetchMock)
+    await fetchTrailCondition('trail', 't1', 'jwt')
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).not.toHaveProperty('at')
+  })
+
+  it('returns null on a 400 (out-of-window `at`)', async () => {
+    vi.stubGlobal('fetch', respond(400, { error: 'bad at' }))
+    expect(await fetchTrailCondition('trail', 't1', 'jwt', undefined, new Date().toISOString())).toBeNull()
   })
 })
 

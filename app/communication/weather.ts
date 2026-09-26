@@ -11,7 +11,8 @@ import { FUNCTIONS, userHeaders } from './http'
  */
 
 export const TRAIL_CONDITION_CACHE_TTL_MS = 60 * 60 * 1000
-const CACHE_PREFIX = 'tr_wx_v2_'
+// v3: the verdict gained `range`; a v2 entry would hide the feedback link for up to an hour.
+const CACHE_PREFIX = 'tr_wx_v3_'
 
 function cacheKey(spotType: string, spotId: string): string {
   return `${CACHE_PREFIX}${spotType}_${spotId}`
@@ -71,28 +72,36 @@ export async function fetchTrailCondition(
   spotId: string,
   accessToken: string,
   onForbidden?: () => void,
+  /**
+   * ISO instant (at most 3 days back): the server then computes only the
+   * verdict for that moment. Such an answer is not "the card for now", so it
+   * neither reads nor writes the cache.
+   */
+  at?: string,
 ): Promise<TrailConditionResponse | null> {
   const key = cacheKey(spotType, spotId)
   const now = Date.now()
 
-  const cached = readCache(key, now)
-  if (cached) return cached
+  if (!at) {
+    const cached = readCache(key, now)
+    if (cached) return cached
+  }
 
   try {
     const res = await fetch(`${FUNCTIONS}/trail-condition`, {
       method: 'POST',
       headers: userHeaders(accessToken),
-      body: JSON.stringify({ spotType, spotId }),
+      body: JSON.stringify(at ? { spotType, spotId, at } : { spotType, spotId }),
     })
     if (res.status === 403) {
-      clearCache(key)
+      if (!at) clearCache(key)
       onForbidden?.()
       return null
     }
     if (!res.ok) return null
     const body: unknown = await res.json()
     if (!isCondition(body)) return null
-    writeCache(key, body, now)
+    if (!at) writeCache(key, body, now)
     return body
   } catch {
     return null

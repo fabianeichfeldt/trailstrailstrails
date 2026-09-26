@@ -21,6 +21,18 @@ export type ConditionLevel =
   | 'hard'
   | 'unknown'
 
+/** Position on the soil scale: 0 dusty, 1 prime, 2 damp, 3 wet. */
+export type ConditionIndex = 0 | 1 | 2 | 3
+
+/**
+ * The span of soil levels the model considers plausible across one spot
+ * (`lo <= hi`). Also the shape of a rider's correction.
+ */
+export interface ConditionRange {
+  lo: ConditionIndex
+  hi: ConditionIndex
+}
+
 /**
  * What the `trail-condition` edge function returns: the finished verdict, not
  * the weather behind it. The model, its thresholds and the raw Open-Meteo data
@@ -34,6 +46,11 @@ export interface TrailConditionResponse {
     detail: string
     /** Measured rain over the last 10 days, in mm. */
     rain10dMm: number
+    /**
+     * Always present on the wire; null for `raining`, `snow`, `hard` and
+     * `unknown`, where there is no soil verdict to put a range around.
+     */
+    range: ConditionRange | null
   }
   /** Just enough for the status banner's rain-rule line. */
   rainRule: { raining: boolean; hoursSinceRain: number | null }
