@@ -14,7 +14,11 @@
       </div>
 
       <!-- No purchase button on purpose: there is no billing flow to send anyone
-           to yet, and a dead "Upgrade" link is worse than none. -->
+           to yet, and a dead "Upgrade" link is worse than none. The only action
+           is for visitors who are logged out: every signup currently gets Plus
+           free (migration 20260926180000), so "register" is a promise we keep.
+           Logged-in users get no promo — they already signed up, so it would be
+           untrue for them. -->
       <div class="wx-lock">
         <div class="wx-lock-pill">
           <span class="wx-lock-icon" aria-hidden="true">🔒</span>
@@ -22,6 +26,15 @@
           <span class="wx-lock-hint">
             Bodenzustand und Wetter für jeden Spot.
           </span>
+          <button
+            v-if="!authStore.isLoggedIn"
+            type="button"
+            class="wx-lock-cta"
+            data-testid="weather-locked-cta"
+            @click="mapStore.authModalOpen = true"
+          >
+            Für begrenzte Zeit kostenlos — jetzt registrieren
+          </button>
         </div>
       </div>
     </div>
@@ -36,6 +49,11 @@ import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
 // Derived from the registry rather than typed here, so moving the feature to
 // another tier changes this card with it.
 const plan = minPlanName('trail_condition')
+
+// Shared stores only. This card renders after mount (access is "checking"
+// while prerendering), so reading auth state cannot mismatch the static HTML.
+const authStore = useAuthStore()
+const mapStore = useMapStore()
 
 // Built once, locally: no request, and nothing about the spot in it. This card
 // only ever renders after mount (access is "checking" while prerendering), so a
@@ -113,5 +131,26 @@ const sample = sampleTrailCondition(new Date())
   font-size: 12.5px;
   line-height: 1.45;
   color: #4a5568;
+}
+.wx-lock-cta {
+  margin-top: 4px;
+  min-height: 44px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1a5c3a;
+  background: #e6f4ec;
+  border: 1px solid #b7dcc6;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.wx-lock-cta:hover {
+  background: #d5ecdf;
+}
+.wx-lock-cta:focus-visible {
+  outline: 2px solid #1a5c3a;
+  outline-offset: 2px;
 }
 </style>

@@ -187,6 +187,13 @@ baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and n
   await page.waitForLoadState('networkidle');
   expect(weatherCalls).toEqual([]);
 
+  // Logged out: the promo is a real, tappable button that opens the auth modal.
+  const cta = locked.locator('[data-testid="weather-locked-cta"]');
+  await expect(cta).toContainText('jetzt registrieren');
+  expect((await cta.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await cta.click();
+  await expect(page.locator('.auth-card')).toBeVisible();
+
   assertNoLeaks();
 });
 
@@ -202,6 +209,8 @@ baseTest('locks it for a signed-in free account too', async ({ page }) => {
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 
   await expect(page.locator('[data-testid="weather-locked"]')).toBeVisible();
+  // Already signed up: no "free, register now" promo for them.
+  await expect(page.locator('[data-testid="weather-locked-cta"]')).toHaveCount(0);
   await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
   await page.waitForLoadState('networkidle');
   expect(weatherCalls).toEqual([]);
