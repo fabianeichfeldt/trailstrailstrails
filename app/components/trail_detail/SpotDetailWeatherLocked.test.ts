@@ -26,6 +26,14 @@ describe('SpotDetailWeatherLocked', () => {
     expect(sample.findAll('.wx-day')).toHaveLength(6)
   })
 
+  it('offers no rider-feedback scale or link in the teaser — the sample is made up, there is nothing to correct', () => {
+    const wrapper = mount(SpotDetailWeatherLocked)
+
+    expect(wrapper.find('[data-testid="soil-feedback-link"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('weißt es besser')
+    expect(wrapper.find('.cs').exists()).toBe(false)
+  })
+
   it('hides the sample from assistive technology and from the keyboard — it is decoration, and made up', () => {
     const sample = mount(SpotDetailWeatherLocked).find('.wx-sample-wrap')
 

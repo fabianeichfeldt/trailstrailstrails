@@ -36,6 +36,16 @@
           </div>
         </div>
       </div>
+      <!-- The model's range, and the way to correct it. Only for a real soil
+           verdict with a range (never snow/rain/asphalt/unknown), never in the
+           locked teaser's sample, and only where the page says which spot this is. -->
+      <div v-if="feedbackRange" class="wx-scale">
+        <ConditionScale :range="feedbackRange" label="Unsere Schätzung" />
+        <button type="button" class="wx-feedback-link" data-testid="soil-feedback-link" @click="onFeedbackClick">
+          Du bist gerade hier gefahren und weißt es besser?
+        </button>
+      </div>
+
       <div class="wx-foot">
         <span>{{ footNote }}</span>
         <!-- The credit is for Open-Meteo's data; a made-up sample has none. -->
@@ -68,11 +78,21 @@
         </span>
       </div>
     </div>
+
+    <SoilFeedbackSheet
+      v-if="sheetOpen && feedbackRange && spotType && spotId"
+      :spot-type="spotType"
+      :spot-id="spotId"
+      :model-range="feedbackRange"
+      @close="sheetOpen = false"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import type { TrailConditionResponse, ConditionLevel } from '~/types/Weather'
+import type { TrailConditionResponse, ConditionLevel, ConditionRange } from '~/types/Weather'
+import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
+import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 
 // The condition arrives as a prop rather than being fetched here: the status
 // banner needs the same payload, and one page-level fetch beats two components
@@ -84,7 +104,33 @@ const props = defineProps<{
   loading?: boolean
   /** Fixed sample data behind the locked teaser: same card, no credit, its own test id. */
   sample?: boolean
+  /** Which spot this card is about; needed to send rider feedback for it. */
+  spotType?: string
+  spotId?: string
 }>()
+
+const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'prime', 'damp', 'wet']
+
+// Shared stores only (see SpotDetailWeatherLocked.vue for the same login hand-off).
+const authStore = useAuthStore()
+const mapStore = useMapStore()
+const sheetOpen = ref(false)
+
+/** The range to show and correct, or null wherever feedback makes no sense. */
+const feedbackRange = computed<ConditionRange | null>(() => {
+  const v = props.condition?.verdict
+  if (props.sample || !props.spotType || !props.spotId || !v) return null
+  if (!SOIL_LEVELS.includes(v.level)) return null
+  return v.range ?? null
+})
+
+function onFeedbackClick() {
+  if (!authStore.isLoggedIn) {
+    mapStore.authModalOpen = true
+    return
+  }
+  sheetOpen.value = true
+}
 
 const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
   dusty:   { cls: 'v-dust',  badge: '🧹' },
@@ -304,6 +350,27 @@ const strip = computed(() =>
   line-height: 1.45;
 }
 .wx-care-icon { font-size: 14px; line-height: 1; }
+
+/* ── Model range + rider feedback entry ── */
+.wx-scale {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e9f0;
+}
+.wx-feedback-link {
+  display: block;
+  min-height: 44px;
+  margin: 2px 0 -6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: #2b6cb0;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 .wx-foot {
   display: flex;

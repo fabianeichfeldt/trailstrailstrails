@@ -162,6 +162,16 @@ describe('Communication layer has no UI concerns', () => {
     expect(src).not.toMatch(/export\s+const\s+createCustomIcon/)
   })
 
+  test('soilReports.ts goes through FUNCTIONS/userHeaders, with no hardcoded URL or upward imports', () => {
+    const src = read('app/communication/soilReports.ts')
+    expect(src).toMatch(/import\s*\{[^}]*\bFUNCTIONS\b[^}]*\}\s*from\s*['"]\.\/http['"]/)
+    expect(src).toMatch(/import\s*\{[^}]*\buserHeaders\b[^}]*\}\s*from\s*['"]\.\/http['"]/)
+    expect(src).toContain('${FUNCTIONS}/soil-report')
+    expect(src).not.toMatch(HARDCODED_URL_RE)
+    expect(src).not.toMatch(/https?:\/\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?(stores|composables|map)\//)
+  })
+
   test('communication/ does not import from stores/ or composables/', () => {
     const violations: string[] = []
     for (const file of collectTs('app/communication')) {
