@@ -5,6 +5,12 @@ export const FEATURES = {
   // rain total and the status banner's live rain-rule line. Plus and up — which
   // takes in Pro and the early-adopter Pro grant.
   //
+  // Promotion: every signup gets a free 6-month grant (rolling per user, not a
+  // fixed end date; discount 0) via an AFTER INSERT trigger on auth.users, plus
+  // a one-time backfill — see supabase/migrations/20260926180000_grant_free_plus_on_signup.sql.
+  // The plan is chosen in SQL: lowest active level >= 1. The locked teaser
+  // (SpotDetailWeatherLocked) advertises this to logged-out visitors only.
+  //
   // Enforced server-side by the `trail-condition` edge function in
   // trailradar-backend: it checks the JWT and calls has_min_tier(REQUIRED_LEVEL)
   // as the caller, and it owns Open-Meteo and the model, so this client holds
