@@ -300,6 +300,84 @@ baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and list
   assertNoLeaks();
 });
 
+// ── Mobile bottom-sheet resize ────────────────────────────────────────────────
+//
+// The sidebar becomes a drag-resizable bottom sheet below 700px width (see
+// app/spot_manager/sheetResize.ts). These tests exercise the real pointer
+// drag + real layout measurement that vitest can't cover: the rendered
+// height of `.sm-sidebar` actually changes when the grip handle is dragged,
+// and the new height (and the dismissed "desktop preferred" hint) survive a
+// page reload via the sm-sheet-height-vh / sm-desktop-hint-dismissed
+// localStorage keys.
+
+baseTest('spotmanager: dragging the mobile sheet handle resizes the sheet and the height persists across reload', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await signInOnSpotmanagerPage(page, 'admin');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const sidebar = page.locator('.sm-sidebar');
+  const handle = page.locator('.sm-sheet-handle');
+  await expect(handle).toBeVisible({ timeout: 4000 });
+
+  const before = await sidebar.boundingBox();
+  if (!before) throw new Error('sidebar not found before drag');
+
+  // Drag the handle upward — the sheet should grow taller in real time.
+  const handleBox = await handle.boundingBox();
+  if (!handleBox) throw new Error('handle not found');
+  const startX = handleBox.x + handleBox.width / 2;
+  const startY = handleBox.y + handleBox.height / 2;
+
+  await page.mouse.move(startX, startY);
+  await page.mouse.down();
+  await page.mouse.move(startX, startY - 150, { steps: 10 });
+  await page.mouse.up();
+
+  const afterDrag = await sidebar.boundingBox();
+  if (!afterDrag) throw new Error('sidebar not found after drag');
+  expect(afterDrag.height).toBeGreaterThan(before.height + 50);
+
+  // Reload — the dragged height must be restored from localStorage, not
+  // reset back to the 55vh default.
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const afterReload = await page.locator('.sm-sidebar').boundingBox();
+  if (!afterReload) throw new Error('sidebar not found after reload');
+  expect(Math.abs(afterReload.height - afterDrag.height)).toBeLessThan(10);
+
+  assertNoLeaks();
+});
+
+baseTest('spotmanager: "desktop preferred" hint shows on first mobile load and stays dismissed after reload', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await signInOnSpotmanagerPage(page, 'admin');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const hint = page.locator('.sm-desktop-hint');
+  await expect(hint).toBeVisible({ timeout: 4000 });
+  await expect(hint).toContainText('größeren Bildschirm');
+
+  await hint.locator('.sm-desktop-hint-close').click();
+  await expect(hint).toBeHidden();
+
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+  await expect(page.locator('.sm-desktop-hint')).toBeHidden();
+
+  assertNoLeaks();
+});
+
 // ── Breadcrumbs ──────────────────────────────────────────────────────────────
 //
 // The topbar shows a "Spot Manager > {spot} > Parkplätze > ..." trail instead
