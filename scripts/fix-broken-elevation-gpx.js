@@ -9,11 +9,18 @@
  * additionally never baked DEM-corrected elevation into the .gpx file
  * actually stored in Supabase Storage — only into the DB columns.
  *
- * This script re-runs the (now-fixed) DEM-correction + RDP-thinning +
- * GPX-rebuild pipeline against the *currently stored* gpx_url content for
- * each targeted row, and overwrites BOTH:
+ * This script re-runs the (now-fixed) DEM-correction + GPX-rebuild pipeline
+ * against the *currently stored* gpx_url content for each targeted row, and
+ * overwrites BOTH:
  *   - the .gpx file in Storage at the row's existing gpx_url path
  *   - the row's gpx_points / distance_km / elevation_gain / elevation_loss
+ *
+ * Deliberately does NOT apply GpxProcessor.ts's RDP thinning (EPSILON_M=0.5,
+ * tuned to smooth noisy GPS recordings): these files parse as precise vector
+ * geometry (exact duplicate points, tight corners) rather than GPS noise,
+ * and that epsilon cuts real trail geometry out of a source like that. Only
+ * exact duplicate consecutive points are dropped — lossless, not a
+ * simplification judgment call.
  *
  * ⚠️  DANGER — overwrites production data. Run `npm run backup` first and
  * review a DRY_RUN=1 pass before running for real.
@@ -49,7 +56,6 @@ const CHUNK_SIZE = 100;          // Open Topo Data max locations/request
 const MIN_REQUEST_GAP_MS = 1100; // stay under ~1 req/sec
 const MAX_ATTEMPTS = 3;
 const RETRY_BACKOFF_MS = 1500;
-const EPSILON_M = 0.5;           // same RDP epsilon as GpxProcessor.ts
 
 function restHeaders() {
   return { 'apikey': SERVICE_KEY, 'Authorization': `Bearer ${SERVICE_KEY}` };
@@ -127,34 +133,6 @@ function parseGpx(content) {
   return { name, points };
 }
 
-function perpDistMeters(p, a, b) {
-  const cos = Math.cos(a.lat * Math.PI / 180);
-  const px = (p.lng - a.lng) * 111000 * cos;
-  const py = (p.lat - a.lat) * 111000;
-  const dx = (b.lng - a.lng) * 111000 * cos;
-  const dy = (b.lat - a.lat) * 111000;
-  const lenSq = dx * dx + dy * dy;
-  if (lenSq === 0) return Math.hypot(px, py);
-  const t = Math.max(0, Math.min(1, (px * dx + py * dy) / lenSq));
-  return Math.hypot(px - t * dx, py - t * dy);
-}
-
-function rdp(points, epsilon) {
-  if (points.length <= 2) return points;
-  let maxD = 0, maxI = 0;
-  const last = points.length - 1;
-  for (let i = 1; i < last; i++) {
-    const d = perpDistMeters(points[i], points[0], points[last]);
-    if (d > maxD) { maxD = d; maxI = i; }
-  }
-  if (maxD > epsilon) {
-    const L = rdp(points.slice(0, maxI + 1), epsilon);
-    const R = rdp(points.slice(maxI), epsilon);
-    return L.slice(0, -1).concat(R);
-  }
-  return [points[0], points[last]];
-}
-
 function computeStats(points) {
   let distM = 0, gain = 0, loss = 0;
   for (let i = 1; i < points.length; i++) {
@@ -221,6 +199,7 @@ function storagePathFromUrl(gpxUrl) {
 }
 
 async function uploadGpx(path, content) {
+  if (DRY_RUN) return;
   const store = `${SUPABASE_URL}/storage/v1`;
   const gpxHeaders = { ...restHeaders(), 'Content-Type': 'application/gpx+xml' };
   let res = await fetch(`${store}/object/gpx-files/${path}`, { method: 'PUT', headers: gpxHeaders, body: content });
@@ -257,9 +236,14 @@ async function processRow(table, row, counts) {
     const { name, points } = parseGpx(content);
     if (points.length === 0) { console.log(`  ·  ${label} — no trkpts parsed, skipping`); counts.skipped++; return; }
 
-    const thinned = rdp(points, EPSILON_M);
-    const elevations = await fetchDemElevations(thinned.map(p => [p.lat, p.lng]));
-    const corrected = thinned.map((p, i) => ({ ...p, alt: Math.round(elevations[i]) }));
+    // No RDP thinning here — these files parse as precise vector geometry
+    // (exact duplicate points, tight corners), not noisy GPS recordings, and
+    // EPSILON_M=0.5 (tuned for GPS wobble) cuts real trail geometry out of
+    // that kind of source. Only drop exact duplicate consecutive points —
+    // lossless redundancy removal, not a simplification judgment call.
+    const deduped = points.filter((p, i) => i === 0 || p.lat !== points[i - 1].lat || p.lng !== points[i - 1].lng);
+    const elevations = await fetchDemElevations(deduped.map(p => [p.lat, p.lng]));
+    const corrected = deduped.map((p, i) => ({ ...p, alt: Math.round(elevations[i]) }));
     const stats = computeStats(corrected);
     const gpx_points = corrected.map(p => [
       Math.round(p.lat * 1e6) / 1e6,
@@ -270,7 +254,7 @@ async function processRow(table, row, counts) {
     const path = storagePathFromUrl(row.gpx_url);
 
     console.log(
-      `  ${DRY_RUN ? '→' : '✓'}  ${label} — ${points.length} raw → ${thinned.length} thinned pts, ` +
+      `  ${DRY_RUN ? '→' : '✓'}  ${label} — ${points.length} raw → ${deduped.length} deduped pts (no RDP), ` +
       `gain ${row.elevation_gain}→${stats.elevation_gain}m, loss ${row.elevation_loss}→${stats.elevation_loss}m, ` +
       `path=${path}` + (DRY_RUN ? ' (dry-run, not written)' : '')
     );
