@@ -27,6 +27,14 @@
           :style="{ '--img': `url('${p.url}')` }"
         >
           <img alt="offizieller MTB Trail" :src="p.url" :class="{ active: i === activePhoto }" />
+          <button
+            v-if="canDeletePhoto(p, permissionCtx)"
+            class="photo-delete-btn"
+            aria-label="Foto löschen"
+            @click.stop="removePhoto(p)"
+          >
+            <i class="fa-solid fa-trash"></i>
+          </button>
           <div class="photo-meta">
             <span class="photo-uploader">von {{ p.profiles?.display_name || '' }}</span>
             <span class="photo-date">{{ formatPhotoDate(p.created_at) }}</span>
@@ -49,8 +57,11 @@ import '~/css/photo_caroussel.css'
 import '~/map/detail_popup/details_popup.css'
 import { showToast } from '~/utils/toast'
 import { bindPhotoLightbox } from '~/map/lightbox'
+import { confirmDialog } from '~/map/confirmDialog'
+import { canDeletePhoto } from '~/utils/canDeletePhoto'
 import type { Trail } from '~/types/Trail'
 import type { TrailDetails } from '~/types/TrailDetails'
+import type { Photo } from '~/types/Photo'
 
 // Split out of the former monolithic SpotDetailInfo.vue: photos are now
 // their own top-level page section, positioned right under the hero/status
@@ -59,10 +70,17 @@ import type { TrailDetails } from '~/types/TrailDetails'
 // instead of a bare icon — keeps the section from looking empty/broken and
 // nudges the first upload.
 const props = defineProps<{ trail: Trail; details: TrailDetails }>()
-const emit = defineEmits<{ uploaded: [] }>()
+const emit = defineEmits<{ uploaded: []; 'photo-deleted': [id: string] }>()
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()
+const spotPanelStore = useSpotPanelStore()
+
+const permissionCtx = computed(() => ({
+  userId: authStore.userId,
+  isAdmin: authStore.isAdmin,
+  photosCanModerate: spotPanelStore.photosCanModerate,
+}))
 
 const activePhoto = ref(0)
 const photosContainer = ref<HTMLElement | null>(null)
@@ -139,6 +157,19 @@ async function onFileChosen(e: Event) {
     alert('Upload fehlgeschlagen 😢')
   }
 }
+
+async function removePhoto(photo: Photo) {
+  const confirmed = await confirmDialog('Foto wirklich löschen?')
+  if (!confirmed) return
+  try {
+    await authStore.deleteTrailPhoto(photo)
+    emit('photo-deleted', photo.id)
+    showToast('🗑️ Foto gelöscht')
+  } catch (err) {
+    console.error('Failed to delete photo:', err)
+    showToast('Löschen fehlgeschlagen 😢')
+  }
+}
 </script>
 
 <style scoped>
@@ -180,6 +211,26 @@ async function onFileChosen(e: Event) {
   margin: 0;
   text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
+
+.photo-delete-btn {
+  position: absolute;
+  top: 0.6em;
+  right: 0.6em;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); }
 
 @media (min-width: 600px) {
   .spot-detail-photos {
