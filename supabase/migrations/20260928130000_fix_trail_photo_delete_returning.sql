@@ -1,0 +1,17 @@
+-- Fix: DELETE ... RETURNING on trail_photos always came back empty for
+-- authenticated users, even when the DELETE itself was correctly authorized
+-- and actually happened. Postgres RLS filters RETURNING output through the
+-- table's SELECT policies, not just the DELETE policy that authorized the
+-- write — and trail_photos only had a SELECT policy scoped to "anon"
+-- (20260514075528_remote_schema.sql), none for "authenticated". So every
+-- authenticated delete silently succeeded at the row level while
+-- deletePhoto() (app/communication/photos.ts), seeing zero rows back from
+-- RETURNING, incorrectly reported it as blocked/not-permitted and never
+-- reached the storage-object cleanup step.
+--
+-- The data is already fully public via the existing "get" policy
+-- (USING (true), no auth check at all), so widening it to also cover
+-- "authenticated" changes nothing about what's exposed — it only lets an
+-- authenticated session's own RETURNING clause see the row it's
+-- entitled to read anyway.
+ALTER POLICY "get" ON "public"."trail_photos" TO anon, authenticated;

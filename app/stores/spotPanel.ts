@@ -7,6 +7,7 @@ import {
   deleteComment as deleteCommentApi,
   COMMENTS_PAGE_SIZE,
 } from '~/communication/comments'
+import { isSpotAssignedToTrailcrew } from '~/communication/photos'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
 import type { SpotMtbData } from '~/types/MtbTypes'
@@ -98,6 +99,31 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     commentsExpanded.value = !commentsExpanded.value
   }
 
+  // ── Photo moderation ─────────────────────────────────────────────────
+  // Precise trailcrew visibility for the photo-delete control (unlike
+  // commentsCanModerate above, which is coarse — true for any trailcrew
+  // member on any spot). Admin skips the query entirely; a plain user is
+  // never trailcrew so also skips it; only a trailcrew user triggers the
+  // trailcrew_spots assignment check.
+  const photosCanModerate = ref(false)
+
+  async function loadPhotoModeration(spotId: string, authInfo: CommentsAuthInfo, authService: IAuthService) {
+    if (authInfo.isAdmin) {
+      photosCanModerate.value = true
+      return
+    }
+    if (!authInfo.isTrailcrew) {
+      photosCanModerate.value = false
+      return
+    }
+    try {
+      photosCanModerate.value = await isSpotAssignedToTrailcrew(spotId, authService)
+    } catch (err) {
+      console.warn('Failed to check trailcrew spot assignment:', err)
+      photosCanModerate.value = false
+    }
+  }
+
   // `data` is the spot's tours+trails list (GPX-derived). `selectedItemId`/
   // `selectedItemKind` is which row is selected — drives which section
   // (Touren/Trails) renders <SpotPanelElevation> inline on the spot-detail
@@ -151,6 +177,7 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     commentsExpanded.value = false
     commentsHasMore.value = false
     commentsLoaded.value = false
+    photosCanModerate.value = false
     isLiked.value = false
     likeVisible.value = false
     data.value = null
@@ -176,6 +203,8 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     postComment,
     deleteComment,
     toggleCommentsExpanded,
+    photosCanModerate,
+    loadPhotoModeration,
     data,
     selectedItemId,
     selectedItemKind,

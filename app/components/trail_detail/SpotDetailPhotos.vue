@@ -34,6 +34,14 @@
         </div>
       </div>
       <ClientOnly>
+        <button
+          v-if="activePhotoObj && canDeletePhoto(activePhotoObj, permissionCtx)"
+          class="photo-delete-btn"
+          aria-label="Foto löschen"
+          @click="removePhoto(activePhotoObj)"
+        >
+          <i class="fa-solid fa-trash"></i>
+        </button>
         <button v-if="authStore.isLoggedIn" class="photo-fab" title="Foto hinzufügen" @click="triggerUpload">➕</button>
       </ClientOnly>
       <div class="carousel-dots">
@@ -49,8 +57,11 @@ import '~/css/photo_caroussel.css'
 import '~/map/detail_popup/details_popup.css'
 import { showToast } from '~/utils/toast'
 import { bindPhotoLightbox } from '~/map/lightbox'
+import { confirmDialog } from '~/map/confirmDialog'
+import { canDeletePhoto } from '~/utils/canDeletePhoto'
 import type { Trail } from '~/types/Trail'
 import type { TrailDetails } from '~/types/TrailDetails'
+import type { Photo } from '~/types/Photo'
 
 // Split out of the former monolithic SpotDetailInfo.vue: photos are now
 // their own top-level page section, positioned right under the hero/status
@@ -59,12 +70,23 @@ import type { TrailDetails } from '~/types/TrailDetails'
 // instead of a bare icon — keeps the section from looking empty/broken and
 // nudges the first upload.
 const props = defineProps<{ trail: Trail; details: TrailDetails }>()
-const emit = defineEmits<{ uploaded: [] }>()
+const emit = defineEmits<{ uploaded: []; 'photo-deleted': [id: string] }>()
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()
+const spotPanelStore = useSpotPanelStore()
+
+const permissionCtx = computed(() => ({
+  userId: authStore.userId,
+  isAdmin: authStore.isAdmin,
+  photosCanModerate: spotPanelStore.photosCanModerate,
+}))
 
 const activePhoto = ref(0)
+// The delete button now sits next to the upload FAB (one pair of controls
+// per carousel, not one delete button per photo), so it always targets
+// whichever photo is currently showing.
+const activePhotoObj = computed<Photo | undefined>(() => props.details.photos[activePhoto.value])
 const photosContainer = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 let carouselTimer: ReturnType<typeof setInterval> | null = null
@@ -139,6 +161,19 @@ async function onFileChosen(e: Event) {
     alert('Upload fehlgeschlagen 😢')
   }
 }
+
+async function removePhoto(photo: Photo) {
+  const confirmed = await confirmDialog('Foto wirklich löschen?')
+  if (!confirmed) return
+  try {
+    await authStore.deleteTrailPhoto(photo)
+    emit('photo-deleted', photo.id)
+    showToast('🗑️ Foto gelöscht')
+  } catch (err) {
+    console.error('Failed to delete photo:', err)
+    showToast('Löschen fehlgeschlagen 😢')
+  }
+}
 </script>
 
 <style scoped>
@@ -180,6 +215,30 @@ async function onFileChosen(e: Event) {
   margin: 0;
   text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
+
+/* Paired with .photo-fab (photo_caroussel.css: bottom/right 8px, 34x34) —
+   sits immediately to its left so both controls read as one action group
+   in the corner of the currently active photo. */
+.photo-delete-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 50px;
+  z-index: 20;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.85em;
+  cursor: pointer;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  transition: background 0.15s, transform 0.15s;
+}
+.photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); transform: scale(1.08); }
+.photo-delete-btn:active { transform: scale(0.95); opacity: 0.85; }
 
 @media (min-width: 600px) {
   .spot-detail-photos {

@@ -138,8 +138,11 @@
         <section v-if="photos.length" class="profile-section">
           <h3 class="section-title">Hochgeladene Fotos</h3>
           <div class="photo-grid">
-            <div v-for="photo in photos" :key="photo.url" class="photo-card">
+            <div v-for="photo in photos" :key="photo.id" class="photo-card">
               <img :src="photo.url" :alt="photo.trailName" />
+              <button class="photo-delete-btn" aria-label="Foto löschen" @click="removePhoto(photo)">
+                <i class="fa-solid fa-trash"></i>
+              </button>
               <div class="photo-meta">
                 <span>{{ photo.trailName }}</span>
                 <span>{{ formatDate(photo.created_at) }}</span>
@@ -155,6 +158,9 @@
 </template>
 
 <script setup lang="ts">
+import { confirmDialog } from '~/map/confirmDialog'
+import { showToast } from '~/utils/toast'
+
 useSeoMeta({
   title: 'Mein Profil',
   robots: 'noindex',
@@ -205,7 +211,7 @@ async function onRedeemCode() {
 }
 
 interface BaseTrail { id: string; name: string; created_at: string }
-interface PhotoItem { url: string; created_at: string; trailName: string; trailID: string }
+interface PhotoItem { id: string; url: string; created_at: string; trailName: string; trailID: string }
 
 const createdTrails = ref<BaseTrail[]>([])
 const favoriteTrails = ref<BaseTrail[]>([])
@@ -225,7 +231,7 @@ async function loadContributions() {
     client.from('parks').select('id, name, created_at').eq('creator_id', uid),
     client.from('dirt_parks').select('id, name, created_at').eq('creator_id', uid),
     client.from('trail_favorites').select('trails(id, name, created_at)').eq('user_id', uid),
-    client.from('trail_photos').select('url, created_at, trail_id, trails(name)').eq('creator', uid),
+    client.from('trail_photos').select('id, url, created_at, trail_id, trails(name)').eq('creator', uid),
   ])
 
   createdTrails.value = [
@@ -236,8 +242,21 @@ async function loadContributions() {
 
   favoriteTrails.value = ((favRes.data ?? []) as { trails: BaseTrail }[]).map(r => r.trails)
 
-  photos.value = ((photosRes.data ?? []) as { url: string; created_at: string; trail_id: string; trails: { name: string } }[])
-    .map(p => ({ url: p.url, created_at: p.created_at, trailName: p.trails.name, trailID: p.trail_id }))
+  photos.value = ((photosRes.data ?? []) as { id: string; url: string; created_at: string; trail_id: string; trails: { name: string } }[])
+    .map(p => ({ id: p.id, url: p.url, created_at: p.created_at, trailName: p.trails.name, trailID: p.trail_id }))
+}
+
+async function removePhoto(photo: PhotoItem) {
+  const confirmed = await confirmDialog('Foto wirklich löschen?')
+  if (!confirmed) return
+  try {
+    await authStore.deleteTrailPhoto(photo)
+    photos.value = photos.value.filter(p => p.id !== photo.id)
+    showToast('🗑️ Foto gelöscht')
+  } catch (err) {
+    console.error('Failed to delete photo:', err)
+    showToast('Löschen fehlgeschlagen 😢')
+  }
 }
 
 watch(user, (u) => {
@@ -508,10 +527,31 @@ async function onUpdatePassword() {
 }
 
 .photo-card {
+  position: relative;
   border-radius: 10px;
   overflow: hidden;
   background: #f5f5f5;
 }
+
+.photo-delete-btn {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5em;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); }
 
 .photo-card img {
   width: 100%;
