@@ -37,16 +37,24 @@
 </template>
 
 <script setup lang="ts">
-import type { ConditionIndex, ConditionRange } from '~/types/Weather'
+import type { ConditionIndex, ConditionPositionRange, ConditionRange } from '~/types/Weather'
 
 /**
  * The four soil levels as one continuous scale, dry to wet: a single gradient
  * track with a positioned fill bar, not four separate coloured boxes. Read-only
  * in the Trail-Zustand card (the model's estimate), interactive in the feedback
  * sheet (the rider's correction). Owns no state: the range comes in, taps go out.
+ *
+ * The fill's geometry normally snaps to whole blocks, driven by the discrete
+ * `range`. When `positionRange` (the model's continuous companion value) is
+ * also given, the fill instead spans exactly that finer position — e.g.
+ * 44%-50% instead of always 25%-75% — for a tighter, more accurate-looking
+ * band. Colours, tick bold/dim state and the summary/aria-label text always
+ * keep using the discrete `range`; only the fill's geometry becomes continuous.
  */
 const props = defineProps<{
   range: ConditionRange
+  positionRange?: ConditionPositionRange | null
   interactive?: boolean
   /** Model range for the picked time is being fetched. */
   loading?: boolean
@@ -55,6 +63,11 @@ const props = defineProps<{
 const emit = defineEmits<{ select: [index: ConditionIndex] }>()
 
 const NAMES = ['Staubig', 'Perfekt', 'Feucht', 'Nass']
+
+/** Avoids IEEE-754 float noise (e.g. `2.6 - 1.4` -> `1.2000000000000002`) leaking into the emitted CSS. */
+function round2(x: number): number {
+  return Math.round(x * 100) / 100
+}
 
 // Sand-yellow → green → teal → blue: dry to wet, carried entirely by the fill
 // bar — the track itself is neutral, so this is the only colour on the scale.
@@ -67,8 +80,9 @@ function isOn(i: number): boolean {
 
 const fillStyle = computed(() => {
   const { lo, hi } = props.range
-  const left = lo * QUARTER
-  const width = (hi - lo + 1) * QUARTER
+  const pos = props.positionRange
+  const left = round2((pos ? pos.lo : lo) * QUARTER)
+  const width = round2((pos ? pos.hi - pos.lo : hi - lo + 1) * QUARTER)
   const background = lo === hi ? COLORS[lo] : `linear-gradient(90deg, ${COLORS[lo]}, ${COLORS[hi]})`
   return { left: `${left}%`, width: `${width}%`, background }
 })

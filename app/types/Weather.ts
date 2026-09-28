@@ -34,6 +34,17 @@ export interface ConditionRange {
 }
 
 /**
+ * Continuous companion to `ConditionRange`: same dusty(0)..wet(3) axis, but as
+ * a float position rather than a snapped index — lets the read-only card's
+ * fill bar show where inside a block the estimate actually falls, instead of
+ * always spanning whole blocks.
+ */
+export interface ConditionPositionRange {
+  lo: number
+  hi: number
+}
+
+/**
  * What the `trail-condition` edge function returns: the finished verdict, not
  * the weather behind it. The model, its thresholds and the raw Open-Meteo data
  * stay server-side, so this is everything the card and the status banner get to
@@ -51,6 +62,8 @@ export interface TrailConditionResponse {
      * `unknown`, where there is no soil verdict to put a range around.
      */
     range: ConditionRange | null
+    /** Continuous companion to `range` — see `ConditionPositionRange`. */
+    positionRange?: ConditionPositionRange | null
   }
   /** Just enough for the status banner's rain-rule line. */
   rainRule: { raining: boolean; hoursSinceRain: number | null }

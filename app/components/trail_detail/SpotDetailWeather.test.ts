@@ -5,6 +5,7 @@ import { mount } from '@vue/test-utils'
 import { reactive } from 'vue'
 import type { ConditionLevel, TrailConditionResponse } from '~/types/Weather'
 import SpotDetailWeather from './SpotDetailWeather.vue'
+import ConditionScale from './ConditionScale.vue'
 
 // Nuxt auto-imports the stores; stub them as the shared-store shapes the card reads.
 let fakeAuthStore: { isLoggedIn: boolean; getToken: () => Promise<string> }
@@ -271,6 +272,19 @@ describe('SpotDetailWeather — rider feedback entry', () => {
   it('has neither without a spot to report on', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false } })
     expect(link(wrapper).exists()).toBe(false)
+  })
+
+  it('passes the continuous positionRange through to the read-only ConditionScale', () => {
+    const c = condition({ verdict: { ...condition().verdict, positionRange: { lo: 1.4, hi: 2.6 } } })
+    const wrapper = mount(SpotDetailWeather, { props: { condition: c, loading: false, ...spot } })
+
+    expect(wrapper.findComponent(ConditionScale).props('positionRange')).toEqual({ lo: 1.4, hi: 2.6 })
+  })
+
+  it('keeps working when positionRange is absent from the wire payload (optional field)', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, ...spot } })
+
+    expect(wrapper.findComponent(ConditionScale).props('positionRange')).toBeNull()
   })
 
   it('opens the feedback sheet for a logged-in rider', async () => {

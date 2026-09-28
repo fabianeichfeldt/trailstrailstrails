@@ -40,7 +40,7 @@
            verdict with a range (never snow/rain/asphalt/unknown), never in the
            locked teaser's sample, and only where the page says which spot this is. -->
       <div v-if="feedbackRange" class="wx-scale">
-        <ConditionScale :range="feedbackRange" label="Unsere Schätzung" />
+        <ConditionScale :range="feedbackRange" :position-range="feedbackPositionRange" label="Unsere Schätzung" />
         <button type="button" class="wx-feedback-link" data-testid="soil-feedback-link" @click="onFeedbackClick">
           Du bist gerade hier gefahren und weißt es besser?
         </button>
@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import type { TrailConditionResponse, ConditionLevel, ConditionRange } from '~/types/Weather'
+import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
 import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 
@@ -122,6 +122,14 @@ const feedbackRange = computed<ConditionRange | null>(() => {
   if (props.sample || !props.spotType || !props.spotId || !v) return null
   if (!SOIL_LEVELS.includes(v.level)) return null
   return v.range ?? null
+})
+
+/** Continuous companion to `feedbackRange`, for the read-only card's fill bar only. */
+const feedbackPositionRange = computed<ConditionPositionRange | null>(() => {
+  const v = props.condition?.verdict
+  if (props.sample || !props.spotType || !props.spotId || !v) return null
+  if (!SOIL_LEVELS.includes(v.level)) return null
+  return v.positionRange ?? null
 })
 
 function onFeedbackClick() {

@@ -38,6 +38,26 @@ describe('ConditionScale — read-only', () => {
     const wrapper = mount(ConditionScale, { props: { range: { lo: 3, hi: 3 }, label: 'Unsere Schätzung' } })
     expect(wrapper.find('[role="img"]').attributes('aria-label')).toBe('Unsere Schätzung: Nass')
   })
+
+  it('uses the continuous positionRange for the fill geometry when given, narrower than the block range', () => {
+    const wrapper = mount(ConditionScale, {
+      props: { range: { lo: 1, hi: 2 }, positionRange: { lo: 1.4, hi: 2.6 } },
+    })
+    const fill = wrapper.find('.cs-fill')
+    expect(fill.attributes('style')).toContain('left: 35%')
+    expect(fill.attributes('style')).toContain('width: 30%')
+  })
+
+  it('falls back to the discrete block geometry when positionRange is omitted or null', () => {
+    const withoutProp = mount(ConditionScale, { props: { range: { lo: 1, hi: 2 } } })
+    const withNull = mount(ConditionScale, { props: { range: { lo: 1, hi: 2 }, positionRange: null } })
+
+    for (const wrapper of [withoutProp, withNull]) {
+      const fill = wrapper.find('.cs-fill')
+      expect(fill.attributes('style')).toContain('left: 25%')
+      expect(fill.attributes('style')).toContain('width: 50%')
+    }
+  })
 })
 
 describe('ConditionScale — interactive', () => {
