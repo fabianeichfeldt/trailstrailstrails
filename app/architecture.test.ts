@@ -80,6 +80,64 @@ describe('No dynamic server/api routes', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// No orphaned content directories at repo root
+// ─────────────────────────────────────────────────────────────────────────────
+// `nuxt generate` only ships `.output/public`, which is `public/` copied
+// verbatim plus prerendered app routes — a hand-built static mini-site left
+// sitting directly at the repo root (a sibling of app/public/server, not
+// inside public/) is completely invisible to the build and 404s in
+// production for every one of its URLs. This exact bug shipped once already:
+// a `spotchecks/` directory with its own index.html pages got orphaned at
+// repo root during the Nuxt migration and 404'd at trailradar.org/spotchecks/*
+// while every other check stayed green. See CLAUDE.md's "No live Nitro
+// server in production" section and scripts/verify-static-build.mjs's
+// /spotchecks/kulmbach/ check for the runtime-level regression test.
+describe('No orphaned content directories at repo root', () => {
+  // Known non-content directories at repo root: source trees Nuxt already
+  // resolves (app, public, server), tooling/config/native-shell directories,
+  // and build output. None of these are expected to contain a top-level
+  // index.html of their own; if one ever does, it's either a false positive
+  // to add here with justification, or a real orphaned static site like the
+  // original spotchecks/ bug.
+  const ALLOWED_TOP_LEVEL_DIRS = new Set([
+    'app',
+    'public',
+    'server',
+    'node_modules',
+    '.git',
+    '.claude',
+    '.github',
+    '.idea',
+    '.nuxt',
+    '.output',
+    'dist',
+    'ios',
+    'android',
+    'assets', // Capacitor native-shell icon/splash source assets, not web content
+    'build', // build-time Nuxt hooks/config (build/region, etc.), not static content
+    'cloudflare', // Worker source for /_embed, deployed separately (see CLAUDE.md)
+    'docs',
+    'scripts',
+    'supabase',
+    'tests',
+  ])
+
+  test('no stray top-level directory ships its own index.html outside the known content roots', () => {
+    const entries = readdirSync(ROOT, { withFileTypes: true })
+    const violations: string[] = []
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue
+      if (ALLOWED_TOP_LEVEL_DIRS.has(entry.name)) continue
+      try {
+        statSync(join(ROOT, entry.name, 'index.html'))
+        violations.push(entry.name)
+      } catch { /* no index.html directly in this dir — fine */ }
+    }
+    expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Single Responsibility: auth store owns auth only
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Auth store (Single Responsibility)', () => {

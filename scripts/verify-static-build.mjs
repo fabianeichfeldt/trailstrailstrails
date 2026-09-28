@@ -116,6 +116,24 @@ try {
       console.log(`✓ /trails/${stubId} is a redirect stub → ${target} (a real page)`)
     }
   }
+  // spotchecks/ legacy static mini-site — lives at public/spotchecks/, must
+  // ship verbatim in the static output. Regression check for the bug where
+  // it sat at repo root (outside public/) and was invisible to the build,
+  // 404ing in production for every /spotchecks/* URL. See CLAUDE.md.
+  const spotcheckRes = await fetch(`http://localhost:${PORT}/spotchecks/kulmbach/`)
+  const spotcheckBody = await spotcheckRes.text()
+  const spotcheckFailures = []
+  if (spotcheckRes.status !== 200) spotcheckFailures.push(`expected HTTP 200, got ${spotcheckRes.status}`)
+  if (!spotcheckBody.includes('<h1>Bierstadt Trails Kulmbach</h1>')) {
+    spotcheckFailures.push('page did not contain the expected Kulmbach spotcheck content')
+  }
+  if (spotcheckFailures.length) {
+    console.error('✗ /spotchecks/kulmbach/ verification FAILED:')
+    for (const f of spotcheckFailures) console.error(`  - ${f}`)
+    exitCode = 1
+  } else {
+    console.log('✓ /spotchecks/kulmbach/ rendered correctly from a pure static server')
+  }
 } finally {
   server.kill()
   // Only clean up .output when this script built it itself (local, one-shot
