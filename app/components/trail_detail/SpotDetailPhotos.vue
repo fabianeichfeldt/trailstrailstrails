@@ -27,14 +27,6 @@
           :style="{ '--img': `url('${p.url}')` }"
         >
           <img alt="offizieller MTB Trail" :src="p.url" :class="{ active: i === activePhoto }" />
-          <button
-            v-if="canDeletePhoto(p, permissionCtx)"
-            class="photo-delete-btn"
-            aria-label="Foto löschen"
-            @click.stop="removePhoto(p)"
-          >
-            <i class="fa-solid fa-trash"></i>
-          </button>
           <div class="photo-meta">
             <span class="photo-uploader">von {{ p.profiles?.display_name || '' }}</span>
             <span class="photo-date">{{ formatPhotoDate(p.created_at) }}</span>
@@ -42,6 +34,14 @@
         </div>
       </div>
       <ClientOnly>
+        <button
+          v-if="activePhotoObj && canDeletePhoto(activePhotoObj, permissionCtx)"
+          class="photo-delete-btn"
+          aria-label="Foto löschen"
+          @click="removePhoto(activePhotoObj)"
+        >
+          <i class="fa-solid fa-trash"></i>
+        </button>
         <button v-if="authStore.isLoggedIn" class="photo-fab" title="Foto hinzufügen" @click="triggerUpload">➕</button>
       </ClientOnly>
       <div class="carousel-dots">
@@ -83,6 +83,10 @@ const permissionCtx = computed(() => ({
 }))
 
 const activePhoto = ref(0)
+// The delete button now sits next to the upload FAB (one pair of controls
+// per carousel, not one delete button per photo), so it always targets
+// whichever photo is currently showing.
+const activePhotoObj = computed<Photo | undefined>(() => props.details.photos[activePhoto.value])
 const photosContainer = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 let carouselTimer: ReturnType<typeof setInterval> | null = null
@@ -212,25 +216,29 @@ async function removePhoto(photo: Photo) {
   text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
+/* Paired with .photo-fab (photo_caroussel.css: bottom/right 8px, 34x34) —
+   sits immediately to its left so both controls read as one action group
+   in the corner of the currently active photo. */
 .photo-delete-btn {
   position: absolute;
-  top: 0.6em;
-  right: 0.6em;
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+  bottom: 8px;
+  right: 50px;
+  z-index: 20;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
   border: none;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.55);
   color: #fff;
-  font-size: 0.9em;
+  font-size: 0.85em;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+  transition: background 0.15s, transform 0.15s;
 }
-.photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); }
+.photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); transform: scale(1.08); }
+.photo-delete-btn:active { transform: scale(0.95); opacity: 0.85; }
 
 @media (min-width: 600px) {
   .spot-detail-photos {

@@ -214,4 +214,39 @@ describe('SpotDetailPhotos', () => {
     expect(wrapper.emitted('photo-deleted')).toBeFalsy()
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
   })
+
+  // There is exactly one delete button now (paired with the upload FAB,
+  // not one per photo) — it must follow whichever photo the carousel is
+  // currently showing, not any deletable photo in the list.
+  it('gates the single delete button on whichever photo is currently active in the carousel', async () => {
+    vi.useFakeTimers()
+    try {
+      fakeAuthStore.userId = 'u1'
+      const wrapper = mountPhotos({
+        trail: trail(),
+        details: details({
+          photos: [
+            { id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01', creator: 'someone-else', profiles: { display_name: '', avatar_url: '' } } as any,
+            { id: 'p2', url: 'https://example.com/2.jpg', created_at: '2024-01-02', creator: 'u1', profiles: { display_name: '', avatar_url: '' } } as any,
+          ],
+        }),
+      })
+
+      // Active photo is p1 (index 0), not owned by u1 — no delete button yet.
+      expect(wrapper.find('.photo-delete-btn').exists()).toBe(false)
+
+      // Carousel auto-advances every 4s to p2 (index 1), which u1 owns.
+      // advanceTimersByTimeAsync (not the sync variant) flushes microtasks
+      // between ticks, so it stays safe to await without ever switching
+      // back to real timers mid-test.
+      await vi.advanceTimersByTimeAsync(4000)
+      expect(wrapper.find('.photo-delete-btn').exists()).toBe(true)
+
+      await wrapper.find('.photo-delete-btn').trigger('click')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fakeAuthStore.deleteTrailPhoto).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }))
+    } finally {
+      vi.useRealTimers()
+    }
+  })
 })
