@@ -223,7 +223,7 @@ describe('SpotDetailWeather — rider feedback entry', () => {
     expect(scale.exists()).toBe(true)
     expect(scale.text()).toContain('Unsere Schätzung')
     expect(scale.findAll('button')).toHaveLength(0)
-    expect(scale.findAll('.cs-seg').map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
+    expect(scale.findAll('.cs-tick').map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
   })
 
   it('shows the entry link beneath the scale, with exactly the agreed text', () => {

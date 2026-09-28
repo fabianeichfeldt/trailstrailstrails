@@ -33,7 +33,8 @@ function mountSheet(modelRange: ConditionRange = { lo: 1, hi: 2 }) {
 }
 
 const action = (w: ReturnType<typeof mountSheet>) => w.find('[data-testid="soil-submit"]')
-const segs = (w: ReturnType<typeof mountSheet>) => w.findAll('.cs-seg')
+const ticks = (w: ReturnType<typeof mountSheet>) => w.findAll('.cs-tick')
+const hits = (w: ReturnType<typeof mountSheet>) => w.findAll('.cs-hit')
 const bodies = () => fetchMock.mock.calls.map(([url, init]) => ({ url: String(url), body: JSON.parse(init.body) }))
 
 beforeEach(() => {
@@ -54,8 +55,8 @@ describe('SoilFeedbackSheet — structure', () => {
 
     expect(wrapper.find('[role="dialog"]').attributes('aria-modal')).toBe('true')
     expect(wrapper.find('[role="dialog"]').attributes('aria-labelledby')).toBeTruthy()
-    expect(segs(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
-    expect(wrapper.findAll('.cs-seg')[0]!.element.tagName).toBe('BUTTON')
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
+    expect(wrapper.findAll('.cs-hit')[0]!.element.tagName).toBe('BUTTON')
   })
 
   it('offers a datetime-local picker: default now, max now, min now minus 3 days', () => {
@@ -95,11 +96,11 @@ describe('SoilFeedbackSheet — action button', () => {
     const wrapper = mountSheet()
     expect(action(wrapper).text()).toBe('Stimmt so')
 
-    await segs(wrapper)[3]!.trigger('click')
+    await hits(wrapper)[3]!.trigger('click')
     expect(action(wrapper).text()).toBe('Senden')
 
     // Back to the model range: reset by tapping the lone segment again.
-    await segs(wrapper)[3]!.trigger('click')
+    await hits(wrapper)[3]!.trigger('click')
     expect(action(wrapper).text()).toBe('Stimmt so')
 
     await wrapper.findAll('input[type="checkbox"]')[1]!.setValue(true)
@@ -112,8 +113,8 @@ describe('SoilFeedbackSheet — submitting', () => {
     fetchMock.mockResolvedValue(json(200, { ok: true }))
     const wrapper = mountSheet({ lo: 1, hi: 2 })
 
-    await segs(wrapper)[3]!.trigger('click') // alone: 3..3
-    await segs(wrapper)[2]!.trigger('click') // extends: 2..3
+    await hits(wrapper)[3]!.trigger('click') // alone: 3..3
+    await hits(wrapper)[2]!.trigger('click') // extends: 2..3
     await wrapper.findAll('input[type="checkbox"]')[0]!.setValue(true)
     await action(wrapper).trigger('click')
     await flushPromises()
@@ -146,13 +147,13 @@ describe('SoilFeedbackSheet — submitting', () => {
   it('on failure stays open, keeps the selection and shows a retry message; retry works', async () => {
     fetchMock.mockResolvedValueOnce(json(500, { error: 'boom' }))
     const wrapper = mountSheet({ lo: 1, hi: 2 })
-    await segs(wrapper)[0]!.trigger('click')
+    await hits(wrapper)[0]!.trigger('click')
     await action(wrapper).trigger('click')
     await flushPromises()
 
     expect(wrapper.emitted('close')).toBeUndefined()
     expect(wrapper.find('[data-testid="soil-error"]').text()).toContain('erneut')
-    expect(segs(wrapper).map((s) => s.classes().includes('on'))).toEqual([true, false, false, false])
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([true, false, false, false])
     expect(action(wrapper).attributes('disabled')).toBeUndefined()
 
     fetchMock.mockResolvedValueOnce(json(200, { ok: true }))
@@ -199,7 +200,7 @@ describe('SoilFeedbackSheet — picking another ride time', () => {
     answer()
     await flushPromises()
 
-    expect(segs(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, false, true, true])
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, false, true, true])
     expect(action(wrapper).attributes('disabled')).toBeUndefined()
     expect(action(wrapper).text()).toBe('Stimmt so')
   })

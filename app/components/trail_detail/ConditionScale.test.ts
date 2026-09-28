@@ -7,12 +7,23 @@ import ConditionScale from './ConditionScale.vue'
 const LABELS = ['Staubig', 'Perfekt', 'Feucht', 'Nass']
 
 describe('ConditionScale — read-only', () => {
-  it('draws four labelled segments and highlights exactly the range', () => {
+  it('draws one track with a fill positioned over the range and labelled ticks below it', () => {
     const wrapper = mount(ConditionScale, { props: { range: { lo: 1, hi: 2 } } })
-    const segs = wrapper.findAll('.cs-seg')
+    const ticks = wrapper.findAll('.cs-tick')
 
-    expect(segs.map((s) => s.text())).toEqual(LABELS)
-    expect(segs.map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
+    expect(ticks.map((t) => t.text())).toEqual(LABELS)
+    expect(ticks.map((t) => t.classes().includes('on'))).toEqual([false, true, true, false])
+
+    const fill = wrapper.find('.cs-fill')
+    expect(fill.attributes('style')).toContain('left: 25%')
+    expect(fill.attributes('style')).toContain('width: 50%')
+  })
+
+  it('positions a single-level range as one quarter-width slice', () => {
+    const wrapper = mount(ConditionScale, { props: { range: { lo: 3, hi: 3 } } })
+    const fill = wrapper.find('.cs-fill')
+    expect(fill.attributes('style')).toContain('left: 75%')
+    expect(fill.attributes('style')).toContain('width: 25%')
   })
 
   it('has no buttons and describes the range to assistive technology', () => {
@@ -30,7 +41,7 @@ describe('ConditionScale — read-only', () => {
 })
 
 describe('ConditionScale — interactive', () => {
-  it('renders one real button per segment with a label and aria-pressed', () => {
+  it('renders one real button per level with a label and aria-pressed, plus the track/fill/ticks', () => {
     const wrapper = mount(ConditionScale, { props: { range: { lo: 1, hi: 2 }, interactive: true } })
     const buttons = wrapper.findAll('button')
 
@@ -38,6 +49,9 @@ describe('ConditionScale — interactive', () => {
     expect(buttons.map((b) => b.attributes('type'))).toEqual(['button', 'button', 'button', 'button'])
     expect(buttons.map((b) => b.attributes('aria-pressed'))).toEqual(['false', 'true', 'true', 'false'])
     expect(buttons.map((b) => b.attributes('aria-label'))).toEqual(LABELS)
+
+    expect(wrapper.find('.cs-fill').exists()).toBe(true)
+    expect(wrapper.findAll('.cs-tick').map((t) => t.classes().includes('on'))).toEqual([false, true, true, false])
   })
 
   it('emits the tapped index (a native button is also keyboard operable)', async () => {
@@ -53,8 +67,8 @@ describe('ConditionScale — interactive', () => {
     expect(wrapper.classes()).toContain('loading')
   })
 
-  it('keeps segments at least 44px tall for touch', () => {
+  it('keeps the invisible hit buttons at least 44px tall even though the visible bar is thin', () => {
     const src = readFileSync(resolve(__dirname, 'ConditionScale.vue'), 'utf8')
-    expect(src).toMatch(/\.cs-interactive[^{]*\{[^}]*min-height:\s*(4[4-9]|[5-9]\d)px/)
+    expect(src).toMatch(/\.cs-hit[^{]*\{[^}]*min-height:\s*(4[4-9]|[5-9]\d)px/)
   })
 })
