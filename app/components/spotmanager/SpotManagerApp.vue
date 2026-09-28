@@ -25,7 +25,25 @@
 
     <div class="sm-body">
       <!-- Sidebar -->
-      <aside class="sm-sidebar">
+      <aside class="sm-sidebar" :style="{ '--sm-sheet-vh': sheetHeightVh + 'vh' }">
+        <!-- Mobile-only drag handle for the resizable bottom sheet -->
+        <div
+          class="sm-sheet-handle"
+          title="Ziehen zum Vergrößern/Verkleinern"
+          @pointerdown="sheetPointerDown"
+          @pointermove="sheetPointerMove"
+          @pointerup="sheetPointerUp"
+          @pointercancel="sheetPointerUp"
+        >
+          <i class="fas fa-grip-lines" />
+        </div>
+
+        <!-- Mobile-only "desktop preferred" hint -->
+        <div v-if="showDesktopHint" class="sm-desktop-hint">
+          <span>💻 SpotManager funktioniert am besten auf einem größeren Bildschirm.</span>
+          <button type="button" class="sm-desktop-hint-close" aria-label="Hinweis schließen" @click="dismissDesktopHint">×</button>
+        </div>
+
         <!-- Loading -->
         <template v-if="loading">
           <div class="sm-spinner" />
@@ -791,6 +809,14 @@ import type { ImbaColor } from '../../types/MtbTypes'
 import { listInvitationCodes, createInvitationCode } from '../../communication/invitations'
 import type { InvCode } from '../../communication/invitations'
 import { useSegmentEditor } from './useSegmentEditor'
+import {
+  clampSheetHeightVh,
+  getStoredSheetHeightVh,
+  setStoredSheetHeightVh,
+  isHintDismissed,
+  dismissHint,
+  DEFAULT_SHEET_VH,
+} from '../../spot_manager/sheetResize'
 
 type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
 
@@ -811,6 +837,37 @@ const loading = ref(true)
 const accessError = ref('')
 const helpOpen = ref(false)
 const busy = ref(false)
+
+// ── Mobile bottom-sheet resize ────────────────────────────────────────────────
+const sheetHeightVh = ref(DEFAULT_SHEET_VH)
+const showDesktopHint = ref(false)
+let sheetDragStartY = 0
+let sheetDragStartVh = DEFAULT_SHEET_VH
+let sheetDragging = false
+
+function sheetPointerDown(e: PointerEvent) {
+  sheetDragging = true
+  sheetDragStartY = e.clientY
+  sheetDragStartVh = sheetHeightVh.value
+  ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+}
+
+function sheetPointerMove(e: PointerEvent) {
+  if (!sheetDragging) return
+  const deltaPx = e.clientY - sheetDragStartY
+  sheetHeightVh.value = clampSheetHeightVh(sheetDragStartVh, deltaPx, window.innerHeight)
+}
+
+function sheetPointerUp() {
+  if (!sheetDragging) return
+  sheetDragging = false
+  setStoredSheetHeightVh(sheetHeightVh.value)
+}
+
+function dismissDesktopHint() {
+  showDesktopHint.value = false
+  dismissHint()
+}
 
 // ── Data state ────────────────────────────────────────────────────────────────
 const role = computed(() => authStore.dbRole)
@@ -1069,6 +1126,9 @@ const detailsBannerSub = computed(() => {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 onMounted(async () => {
+  sheetHeightVh.value = getStoredSheetHeightVh()
+  showDesktopHint.value = !isHintDismissed()
+
   const { MapView } = await import('../../spot_manager/MapView')
   mapView.value = new MapView(mapEl.value!) as MapViewLike
 
@@ -1667,10 +1727,15 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 
 /* ── Sidebar ──────────────────────────────────────────────────────── */
 .sm-sidebar {
-  width: 360px; flex-shrink: 0; background: #fff;
+  width: 480px; flex-shrink: 0; background: #fff;
   overflow-y: auto; box-shadow: 2px 0 8px rgba(0,0,0,.08);
   display: flex; flex-direction: column;
 }
+
+/* Mobile-only bottom-sheet grip handle + "desktop preferred" hint — hidden
+   on desktop by default, enabled in the @media (max-width: 700px) block below. */
+.sm-sheet-handle { display: none; }
+.sm-desktop-hint { display: none; }
 
 /* ── Map pane ─────────────────────────────────────────────────────── */
 .sm-map-pane { flex: 1; min-width: 0; position: relative; }
@@ -2031,9 +2096,36 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 
 /* ── Responsive ───────────────────────────────────────────────────── */
 @media (max-width: 700px) {
-  .sm-sidebar { width: 100%; position: absolute; z-index: 500; max-height: 55vh; bottom: 0; top: auto; left: 0; right: 0; box-shadow: 0 -4px 16px rgba(0,0,0,.15); overflow-y: auto; }
+  .sm-sidebar {
+    width: 100%; position: absolute; z-index: 500;
+    height: var(--sm-sheet-vh, 55vh); bottom: 0; top: auto; left: 0; right: 0;
+    box-shadow: 0 -4px 16px rgba(0,0,0,.15); overflow-y: auto;
+  }
   .sm-body { position: relative; flex: 1; }
   #sm-map { position: absolute; inset: 0; }
   .sm-crumb { max-width: 120px; font-size: 13px; }
+
+  /* Drag handle for the resizable bottom sheet. Sticky so it stays visible
+     while the content below it scrolls. */
+  .sm-sheet-handle {
+    display: flex; align-items: center; justify-content: center;
+    position: sticky; top: 0; z-index: 1;
+    height: 28px; flex-shrink: 0; background: #fff;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    cursor: grab; color: #ccc; font-size: 15px;
+  }
+  .sm-sheet-handle:active { cursor: grabbing; color: #aaa; }
+
+  /* "Desktop preferred" dismissible hint, mobile-only. */
+  .sm-desktop-hint {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    background: #fff7e0; border-bottom: 1px solid #f0e0b0;
+    padding: 8px 12px; font-size: 12px; line-height: 1.4; color: #6b5a20;
+  }
+  .sm-desktop-hint span { flex: 1; }
+  .sm-desktop-hint-close {
+    border: none; background: transparent; color: #6b5a20;
+    font-size: 18px; line-height: 1; padding: 2px 4px; flex-shrink: 0; cursor: pointer;
+  }
 }
 </style>
