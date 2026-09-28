@@ -37,11 +37,16 @@ function parseGpx(content: string): { name: string; points: GpxPoint[] } {
     if (!latM || !lonM) continue;
     const eleM  = m[2].match(/<ele>([^<]+)<\/ele>/);
     const timeM = m[2].match(/<time>([^<]+)<\/time>/);
+    // Some trail-planning-tool exports carry a blank `<time> </time>`
+    // placeholder rather than omitting the tag. new Date(' ') is an
+    // *Invalid Date object* (not null), which is truthy — so it must be
+    // checked explicitly or a later `.toISOString()` throws.
+    const parsedTime = timeM ? new Date(timeM[1]) : null;
     points.push({
       lat:  parseFloat(latM[1]),
       lng:  parseFloat(lonM[1]),
       alt:  eleM ? parseFloat(eleM[1]) : 0,
-      time: timeM ? new Date(timeM[1]) : null,
+      time: parsedTime && !isNaN(parsedTime.getTime()) ? parsedTime : null,
     });
   }
   return { name, points };
@@ -289,7 +294,11 @@ export async function processGpx(content: string): Promise<ProcessedGpx | null> 
     ...stats,
     rawCount:     points.length,
     thinnedCount: thinned.length,
-    gpxContent:   content,
+    // Rebuilt from `corrected` (DEM-corrected, RDP-thinned points), not the
+    // raw uploaded `content` — otherwise the .gpx file actually stored in
+    // Supabase Storage never picks up DEM correction, only the DB columns
+    // do. Mirrors processSegment(), which already does this correctly.
+    gpxContent:   buildGpxXml(corrected, name),
     demCorrected,
   };
 }
