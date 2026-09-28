@@ -20,8 +20,13 @@ vi.mock('~/communication/comments', () => ({
   COMMENTS_PAGE_SIZE: 20,
 }))
 
+vi.mock('~/communication/photos', () => ({
+  isSpotAssignedToTrailcrew: vi.fn(),
+}))
+
 import { fetchMultipleSpotParking, getSpotGpxData, type SpotParkingLot } from '~/communication/trails'
 import { getComments, getOlderComments, postComment, deleteComment } from '~/communication/comments'
+import { isSpotAssignedToTrailcrew } from '~/communication/photos'
 import { useSpotPanelStore, type CommentsAuthInfo } from './spotPanel'
 import type { Trail } from '~/types/Trail'
 import type { Comment } from '~/types/Comment'
@@ -62,6 +67,7 @@ describe('useSpotPanelStore', () => {
     vi.mocked(getOlderComments).mockReset()
     vi.mocked(postComment).mockReset()
     vi.mocked(deleteComment).mockReset()
+    vi.mocked(isSpotAssignedToTrailcrew).mockReset()
   })
 
   it('starts with empty defaults', () => {
@@ -74,6 +80,7 @@ describe('useSpotPanelStore', () => {
     expect(store.commentsLoaded).toBe(false)
     expect(store.commentsCurrentUserId).toBe('')
     expect(store.commentsCanModerate).toBe(false)
+    expect(store.photosCanModerate).toBe(false)
     expect(store.data).toBeNull()
     expect(store.selectedItemId).toBeNull()
     expect(store.selectedItemKind).toBeNull()
@@ -332,6 +339,60 @@ describe('useSpotPanelStore', () => {
     })
   })
 
+  // ── Photo moderation ─────────────────────────────────────────────────
+  describe('loadPhotoModeration', () => {
+    it('sets photosCanModerate = true immediately for admin, without querying', async () => {
+      const store = useSpotPanelStore()
+
+      await store.loadPhotoModeration('s1', { userId: 'u1', isAdmin: true, isTrailcrew: false }, fakeAuthService())
+
+      expect(store.photosCanModerate).toBe(true)
+      expect(isSpotAssignedToTrailcrew).not.toHaveBeenCalled()
+    })
+
+    it('sets photosCanModerate = false for a plain user, without querying', async () => {
+      const store = useSpotPanelStore()
+
+      await store.loadPhotoModeration('s1', { userId: 'u1', isAdmin: false, isTrailcrew: false }, fakeAuthService())
+
+      expect(store.photosCanModerate).toBe(false)
+      expect(isSpotAssignedToTrailcrew).not.toHaveBeenCalled()
+    })
+
+    it('sets photosCanModerate = true for trailcrew assigned to the spot', async () => {
+      const store = useSpotPanelStore()
+      vi.mocked(isSpotAssignedToTrailcrew).mockResolvedValue(true)
+
+      await store.loadPhotoModeration('s1', { userId: 'u1', isAdmin: false, isTrailcrew: true }, fakeAuthService())
+
+      expect(isSpotAssignedToTrailcrew).toHaveBeenCalledWith('s1', expect.anything())
+      expect(store.photosCanModerate).toBe(true)
+    })
+
+    it('sets photosCanModerate = false for trailcrew not assigned to the spot', async () => {
+      const store = useSpotPanelStore()
+      vi.mocked(isSpotAssignedToTrailcrew).mockResolvedValue(false)
+
+      await store.loadPhotoModeration('s1', { userId: 'u1', isAdmin: false, isTrailcrew: true }, fakeAuthService())
+
+      expect(store.photosCanModerate).toBe(false)
+    })
+
+    it('fails closed (false) without throwing when the assignment check rejects', async () => {
+      const store = useSpotPanelStore()
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      vi.mocked(isSpotAssignedToTrailcrew).mockRejectedValue(new Error('network error'))
+
+      await expect(
+        store.loadPhotoModeration('s1', { userId: 'u1', isAdmin: false, isTrailcrew: true }, fakeAuthService())
+      ).resolves.toBeUndefined()
+
+      expect(store.photosCanModerate).toBe(false)
+      expect(warnSpy).toHaveBeenCalled()
+      warnSpy.mockRestore()
+    })
+  })
+
   // ── Tours + Trails + Elevation ───────────────────────────────────────
   function baseTrail(overrides: Partial<MtbTrail> = {}): MtbTrail {
     return {
@@ -416,6 +477,7 @@ describe('useSpotPanelStore', () => {
       store.comments = [comment()]
       store.commentsExpanded = true
       store.commentsLoaded = true
+      store.photosCanModerate = true
       store.isLiked = true
       store.likeVisible = true
       store.selectedItemId = 'trail-1'
@@ -428,6 +490,7 @@ describe('useSpotPanelStore', () => {
       expect(store.comments).toEqual([])
       expect(store.commentsExpanded).toBe(false)
       expect(store.commentsLoaded).toBe(false)
+      expect(store.photosCanModerate).toBe(false)
       expect(store.isLiked).toBe(false)
       expect(store.likeVisible).toBe(false)
       expect(store.selectedItemId).toBeNull()
