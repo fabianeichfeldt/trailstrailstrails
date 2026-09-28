@@ -1,7 +1,9 @@
 # Photo Deletion — Design Spec
 
 **Date:** 2026-09-28
-**Status:** Approved, pending implementation
+**Status:** Implemented; one post-deploy fix applied (see below)
+
+**Correction after real-world verification (2026-09-28):** on first live test, an admin delete returned HTTP 200 but the app reported "not permitted." Root cause: Postgres RLS filters the `RETURNING` output of a `DELETE` through the table's `SELECT` policies, not just the `DELETE` policy that authorized the write. `trail_photos`'s only `SELECT` policy was scoped `TO anon` (pre-existing, `20260514075528_remote_schema.sql`) — there was none for `authenticated`. So every authenticated delete actually succeeded at the row level, but `deletePhoto()`'s `.select('id')` came back empty (no rows visible to `RETURNING` under an `authenticated` session), which `deletePhoto()` correctly-by-design treats as "not permitted," and the storage-object cleanup step (gated behind that check) never ran. Fixed by `supabase/migrations/20260928130000_fix_trail_photo_delete_returning.sql`, widening the existing "get" policy to `TO anon, authenticated` — safe because that policy is `USING (true)` (unconditionally public) already, so this changes nothing about what data is exposed, only which sessions can see it via `RETURNING`. No application code changed; `deletePhoto()`'s empty-RETURNING-means-throw check is still correct in principle, it just needed the SELECT policy gap closed to stop false-triggering on legitimate deletes.
 
 ## Purpose
 
