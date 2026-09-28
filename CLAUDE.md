@@ -87,6 +87,9 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
 
+### Code comments
+- Keep comments short and precise — one line, stating the non-obvious *why*, not the *what*. If it needs a paragraph, put it in the PR description instead.
+
 ### Git commits & worktrees
 - **Never commit to `main` directly** unless the user explicitly says to in that request. Default: work happens in an isolated **git worktree**, not a feature branch in the primary checkout. An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
 - **Start new tasks with the `EnterWorktree` tool**, not `git checkout -b`. It creates an isolated working directory + new branch under `.claude/worktrees/` and switches the session into it, so the primary checkout's `main` stays untouched and other in-flight work is never disturbed. Use it at the start of a task, before making changes — don't ask first, just start the worktree (this project has opted in to worktrees, so `EnterWorktree`'s "only when explicitly instructed" condition is satisfied by this file).
