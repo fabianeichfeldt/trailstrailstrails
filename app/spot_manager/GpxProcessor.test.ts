@@ -252,6 +252,35 @@ describe('DEM elevation correction', () => {
     expect(result).not.toBeNull();
     expect(result!.demCorrected).toBe(false);
   });
+
+  // Regression: processGpx() used to return the raw uploaded content
+  // verbatim as gpxContent, so the .gpx file actually stored in Supabase
+  // Storage never picked up DEM-corrected elevation — only the DB columns
+  // (gpx_points/elevation_gain/elevation_loss) did. A trailcrew member
+  // re-downloading "their own" trail file, or any third-party tool reading
+  // the public gpx_url, always got back 0m/uncorrected altitude.
+  it('bakes the DEM-corrected elevation into gpxContent, not just gpxPoints', async () => {
+    vi.mocked(fetchDemElevations).mockResolvedValueOnce([111, 222, 333, 444, 555, 666, 777, 888, 999, 1000]);
+    const result = await processGpx(MINIMAL_GPX);
+    expect(result).not.toBeNull();
+    expect(result!.gpxContent).not.toContain('<ele>500</ele>');
+    expect(result!.gpxContent).toMatch(/<ele>111<\/ele>/);
+  });
+
+  // Real-world trail-planning-tool exports have been seen with a blank
+  // <time> tag (`<time> </time>`) instead of omitting it. new Date(' ') is
+  // an *Invalid Date object* — not null — so `p.time ? ... : ''` is truthy
+  // and `.toISOString()` throws "Invalid time value", crashing the import.
+  it('does not crash rebuilding gpxContent when the source GPX has a blank <time> tag', async () => {
+    const blankTimeGpx = `<?xml version="1.0"?>
+<gpx><trk><name>Blank Time</name><trkseg>
+  <trkpt lat="48.000000" lon="11.500000"><ele>500</ele><time> </time></trkpt>
+  <trkpt lat="48.002000" lon="11.501000"><ele>520</ele><time> </time></trkpt>
+  <trkpt lat="48.004000" lon="11.502000"><ele>540</ele><time> </time></trkpt>
+</trkseg></trk></gpx>`;
+    vi.mocked(fetchDemElevations).mockResolvedValueOnce([905, 906, 907]);
+    await expect(processGpx(blankTimeGpx)).resolves.not.toBeNull();
+  });
 });
 
 // ── processSegment ─────────────────────────────────────────────────────────────

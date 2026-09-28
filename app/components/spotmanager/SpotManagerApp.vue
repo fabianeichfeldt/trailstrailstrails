@@ -268,6 +268,10 @@
                 <span v-if="p.processed.duration_minutes">⏱ {{ p.processed.duration_minutes }} min</span>
               </div>
 
+              <p v-if="!p.processed.demCorrected" class="sm-card-warn">
+                <i class="fas fa-triangle-exclamation" /> Höhendaten (DEM) nicht erreichbar — Höhe kommt aus der GPX-Datei und kann falsch sein (z. B. 0&nbsp;m). Vor dem Übernehmen prüfen oder GPX später erneut hochladen.
+              </p>
+
               <div class="sm-card-footer">
                 <button class="sm-btn-icon sm-btn-danger" @click="removePending(i)"><i class="fas fa-trash" /></button>
               </div>
@@ -1755,6 +1759,10 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sm-label { font-size: 12px; font-weight: 600; color: #555; }
 /* .sm-check-label/.sm-form-actions live in spotmanager-shared.css */
 .sm-badge-auto { font-size: 10px; background: #e3f2fd; color: #1565c0; border-radius: 4px; padding: 1px 5px; font-weight: 700; }
+.sm-card-warn {
+  font-size: 12px; color: #e65100; background: #fff3e0;
+  border: 1px solid #ffcc80; border-radius: 6px; padding: 7px 10px; margin: 6px 0 0;
+}
 .sm-edit-status-section {
   display: flex; flex-direction: column; gap: 10px;
   padding-top: 10px; border-top: 1px solid #eee;
