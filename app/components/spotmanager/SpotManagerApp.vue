@@ -41,7 +41,23 @@
             Keine Spots gefunden.<br>
             <small style="opacity:.7">Rolle: {{ role }}</small>
           </p>
-          <button v-for="s in spots" :key="s.id" class="sm-spot-btn" @click="openSpot(s.id, s.name)">
+          <div v-if="showSpotSearch" class="sm-search">
+            <input
+              v-model="spotQuery"
+              type="text"
+              class="sm-search-input"
+              placeholder="Spots filtern…"
+              aria-label="Spots filtern"
+              autocomplete="off"
+            >
+            <button v-if="spotQuery" type="button" class="sm-search-clear" aria-label="Suche löschen" @click="spotQuery = ''">
+              <i class="fas fa-times" />
+            </button>
+          </div>
+          <p v-if="spots.length > 0 && filteredSpots.length === 0" class="sm-center-msg">
+            Keine Spots für „{{ spotQuery }}“.
+          </p>
+          <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s.id, s.name)">
             <span class="sm-spot-name">{{ s.name }}</span>
             <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
           </button>
@@ -786,6 +802,7 @@ import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder,
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
+import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter'
 import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
 import { listInvitationCodes, createInvitationCode } from '../../communication/invitations'
@@ -815,6 +832,9 @@ const busy = ref(false)
 // ── Data state ────────────────────────────────────────────────────────────────
 const role = computed(() => authStore.dbRole)
 const spots = ref<SpotRow[]>([])
+const spotQuery = ref('')
+const showSpotSearch = computed(() => shouldShowSpotSearch(spots.value.length))
+const filteredSpots = computed(() => filterSpots(spots.value, spotQuery.value))
 const spotId = ref('')
 const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
@@ -1684,6 +1704,16 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   padding: 12px 14px; cursor: pointer; text-align: left; transition: all .15s;
 }
 .sm-spot-btn:hover { border-color: #0077cc; background: #f0f6ff; box-shadow: 0 2px 6px rgba(0,119,204,.12); }
+.sm-search { position: relative; }
+.sm-search-input {
+  width: 100%; box-sizing: border-box; padding: 10px 40px 10px 12px;
+  border: 1px solid #e0e0e0; border-radius: 8px; font-size: 16px; background: #fff;
+}
+.sm-search-input:focus { outline: none; border-color: #0077cc; }
+.sm-search-clear {
+  position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
+  width: 40px; height: 40px; border: none; background: none; color: #888; cursor: pointer;
+}
 .sm-spot-name { font-weight: 700; font-size: 14px; }
 .sm-spot-id { font-size: 11px; color: #aaa; font-family: monospace; }
 
