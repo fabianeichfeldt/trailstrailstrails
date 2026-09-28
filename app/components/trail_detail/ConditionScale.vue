@@ -56,8 +56,8 @@ const emit = defineEmits<{ select: [index: ConditionIndex] }>()
 
 const NAMES = ['Staubig', 'Perfekt', 'Feucht', 'Nass']
 
-// Sand-yellow → green → teal → blue: the same family the track's background
-// spectrum uses, so the fill always reads as "a slice of that spectrum".
+// Sand-yellow → green → teal → blue: dry to wet, carried entirely by the fill
+// bar — the track itself is neutral, so this is the only colour on the scale.
 const COLORS = ['#f2c744', '#8bc34a', '#29b6b6', '#2f6fb0']
 const QUARTER = 100 / NAMES.length
 
@@ -90,8 +90,9 @@ const summary = computed(() => {
   margin-bottom: 6px;
 }
 
-/* The track: always-visible full spectrum at low opacity, teaching its own
-   colour meaning, with the focal fill bar drawn full-opacity on top. */
+/* The track: a plain neutral rail, like a slider groove — all the colour
+   lives in the fill, so the actual range reads as a real, unmistakable bar
+   instead of a brighter patch on an already-coloured background. */
 .cs-track {
   position: relative;
 }
@@ -101,8 +102,7 @@ const summary = computed(() => {
   height: 10px;
   border-radius: 99px;
   overflow: hidden;
-  background: linear-gradient(90deg, #f2c744, #8bc34a, #29b6b6, #2f6fb0);
-  opacity: 0.28;
+  background: #e4e9f0;
 }
 
 .cs-fill {
