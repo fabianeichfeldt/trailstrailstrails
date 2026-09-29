@@ -137,7 +137,7 @@ function onFlyTo(lat: number, lon: number) {
   background:
     url('/assets/map1.webp') -120px -80px / 512px 512px no-repeat,
     url('/assets/map2.webp') 392px -80px / 512px 512px no-repeat;
-  filter: grayscale(1);
+  filter: grayscale(0.9);
 }
 
 /* Markers */

@@ -56,6 +56,6 @@ watch(mapReady, (ready) => {
 
 /* Tile pane only — markers, GPX polylines and popups sit in other panes and keep their colors */
 .map-grayscale :deep(.leaflet-tile-pane) {
-  filter: grayscale(1);
+  filter: grayscale(0.9);
 }
 </style>
