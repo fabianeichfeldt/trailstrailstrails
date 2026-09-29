@@ -126,11 +126,18 @@ function onFlyTo(lat: number, lon: number) {
 .map-preview {
   position: relative;
   height: 340px;
+  background: #e8f0e8;
+  overflow: hidden;
+}
+/* Tiles live on a pseudo-element so the grayscale filter skips the colored markers */
+.map-preview::before {
+  content: '';
+  position: absolute;
+  inset: 0;
   background:
     url('/assets/map1.webp') -120px -80px / 512px 512px no-repeat,
-    url('/assets/map2.webp') 392px -80px / 512px 512px no-repeat,
-    #e8f0e8;
-  overflow: hidden;
+    url('/assets/map2.webp') 392px -80px / 512px 512px no-repeat;
+  filter: grayscale(1);
 }
 
 /* Markers */
