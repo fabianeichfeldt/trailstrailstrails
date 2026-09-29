@@ -18,7 +18,7 @@ import { registerBackHandler } from '~/utils/nativeBack'
 // Zoom level used when flying to a single spot (search result, `?trail=`
 // query param) — matches the level used for the same purpose in the
 // embedded map on app/pages/trails/[slug].vue.
-const FLY_TO_TRAIL_ZOOM = 14
+const FLY_TO_TRAIL_ZOOM = 11
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()

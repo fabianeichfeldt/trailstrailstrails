@@ -87,7 +87,7 @@ baseTest('picking a spot in the landing-page searchbar opens it on the map', asy
         lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * Number(m[3]) / n))) * 180 / Math.PI,
       };
     })
-    .filter((t): t is { z: number; lat: number; lng: number } => t?.z === 14);
+    .filter((t): t is { z: number; lat: number; lng: number } => t?.z === 11);
   expect(flown.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
   assertNoLeaks();
 });

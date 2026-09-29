@@ -210,7 +210,7 @@ export async function createMiniMap(
 
   return {
     flyTo(lat: number, lng: number, zoom?: number) {
-      map.flyTo([lat, lng], typeof zoom === 'number' ? zoom : map.getZoom(), { duration: 1 })
+      map.flyTo([lat, lng], typeof zoom === 'number' ? zoom : map.getZoom(), { duration: 0.8 })
     },
     setData,
     destroy() {
