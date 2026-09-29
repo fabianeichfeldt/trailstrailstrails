@@ -1197,7 +1197,7 @@ async function openSpot(spot: SpotRow) {
       mapView.value?.highlight(itemId)
       mapView.value?.fitTo(itemId)
     })
-    if (spot.latitude != null && spot.longitude != null) mapView.value?.zoomTo(spot.latitude, spot.longitude, SPOT_OPEN_ZOOM)
+    if (spot.latitude != null && spot.longitude != null) mapView.value?.flyTo(spot.latitude, spot.longitude, SPOT_OPEN_ZOOM)
   } catch (e: any) {
     accessError.value = `Fehler: ${e.message}`
   }

@@ -18,7 +18,7 @@ export interface MapViewLike {
   resetHighlights(): void;
   fitTo(id: string): void;
   fitAll(): void;
-  zoomTo(lat: number, lng: number, zoom: number): void;
+  flyTo(lat: number, lng: number, zoom: number): void;
   setClickHandler(fn: (id: string) => void): void;
   invalidate(): void;
   showSourceTrack(points: GpxPoint[]): void;
@@ -117,8 +117,8 @@ export class MapView {
     if (pl) this.map.fitBounds(pl.getBounds(), { padding: [50, 50], maxZoom: 15, animate: true });
   }
 
-  zoomTo(lat: number, lng: number, zoom: number) {
-    this.map.setView([lat, lng], zoom);
+  flyTo(lat: number, lng: number, zoom: number) {
+    this.map.flyTo([lat, lng], zoom, { duration: 0.5 });
   }
 
   fitAll() {
