@@ -54,8 +54,11 @@ watch(mapReady, (ready) => {
   inset: 0;
 }
 
-/* Tile pane only — markers, GPX polylines and popups sit in other panes and keep their colors */
+/* Tiles get the strong tint; markers only a light one so status colors stay readable. GPX polylines and popups keep full color. */
 .map-grayscale :deep(.leaflet-tile-pane) {
-  filter: grayscale(0.9);
+  filter: grayscale(0.65);
+}
+.map-grayscale :deep(.leaflet-marker-pane) {
+  filter: grayscale(0.2);
 }
 </style>

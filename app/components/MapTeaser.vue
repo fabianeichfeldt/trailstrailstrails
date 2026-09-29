@@ -137,7 +137,7 @@ function onFlyTo(lat: number, lon: number) {
   background:
     url('/assets/map1.webp') -120px -80px / 512px 512px no-repeat,
     url('/assets/map2.webp') 392px -80px / 512px 512px no-repeat;
-  filter: grayscale(0.9);
+  filter: grayscale(0.65);
 }
 
 /* Markers */
@@ -149,6 +149,7 @@ function onFlyTo(lat: number, lon: number) {
   transform: rotate(-45deg);
   z-index: 2;
   box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  filter: grayscale(0.2); /* matches the real map's marker pane */
 }
 .marker::after {
   content: '';
