@@ -26,7 +26,7 @@ async function json<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null }
+export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null; approved?: boolean }
 export interface GpxTrailRow {
   id: string;
   spot_id: string;
@@ -81,11 +81,11 @@ export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'u
 
 export async function getManageableSpots(jwt: string, userId: string, role: string): Promise<SpotRow[]> {
   if (role === 'admin') {
-    const res = await fetch(`${REST}/trails?select=id,name,latitude,longitude&order=name`, { headers: headers(jwt) });
+    const res = await fetch(`${REST}/trails?select=id,name,latitude,longitude,approved&order=name`, { headers: headers(jwt) });
     return json<SpotRow[]>(res);
   }
   const res = await fetch(
-    `${REST}/trailcrew_spots?select=spot_id,trails(id,name,latitude,longitude)&user_id=eq.${userId}`,
+    `${REST}/trailcrew_spots?select=spot_id,trails(id,name,latitude,longitude,approved)&user_id=eq.${userId}`,
     { headers: headers(jwt) }
   );
   const rows = await json<Array<{ trails: SpotRow }>>(res);
