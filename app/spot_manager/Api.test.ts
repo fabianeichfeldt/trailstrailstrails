@@ -87,7 +87,14 @@ describe('getManageableSpots', () => {
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid', 'admin');
     expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name');
+    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name,latitude,longitude');
+  });
+
+  it('trailcrew path also selects the spot coordinates', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([]));
+    vi.stubGlobal('fetch', fetch);
+    await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
+    expect(decodeURIComponent(fetch.mock.calls[0][0])).toContain('trails(id,name,latitude,longitude)');
   });
 
   it('trailcrew path filters by user_id', async () => {

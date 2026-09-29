@@ -75,7 +75,7 @@
           <p v-if="spots.length > 0 && filteredSpots.length === 0" class="sm-center-msg">
             Keine Spots für „{{ spotQuery }}“.
           </p>
-          <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s.id, s.name)">
+          <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s)">
             <span class="sm-spot-name">{{ s.name }}</span>
             <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
           </button>
@@ -1166,7 +1166,9 @@ onMounted(async () => {
 })
 
 // ── Spot selection ─────────────────────────────────────────────────────────────
-async function openSpot(id: string, name: string) {
+const SPOT_OPEN_ZOOM = 13
+async function openSpot(spot: SpotRow) {
+  const { id, name } = spot
   spotId.value = id
   spotName.value = name
   pending.value = []
@@ -1195,6 +1197,7 @@ async function openSpot(id: string, name: string) {
       mapView.value?.highlight(itemId)
       mapView.value?.fitTo(itemId)
     })
+    if (spot.latitude != null && spot.longitude != null) mapView.value?.zoomTo(spot.latitude, spot.longitude, SPOT_OPEN_ZOOM)
   } catch (e: any) {
     accessError.value = `Fehler: ${e.message}`
   }
