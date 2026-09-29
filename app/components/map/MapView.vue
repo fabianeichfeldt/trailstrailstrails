@@ -1,8 +1,15 @@
 <template>
-  <div ref="mapEl" data-testid="map-container" class="map-container" />
+  <div
+    ref="mapEl"
+    data-testid="map-container"
+    class="map-container"
+    :class="{ 'map-grayscale': filtersStore.grayscaleMap }"
+  />
 </template>
 
 <script setup lang="ts">
+const filtersStore = useFiltersStore()
+
 const props = defineProps<{
   onOpenTrail?: (id: string) => void
   onFlyTo?: (lat: number, lon: number) => void
@@ -45,5 +52,13 @@ watch(mapReady, (ready) => {
   height: 100%;
   position: absolute;
   inset: 0;
+}
+
+/* Tiles get the strong tint; markers only a light one so status colors stay readable. GPX polylines and popups keep full color. */
+.map-grayscale :deep(.leaflet-tile-pane) {
+  filter: grayscale(0.65);
+}
+.map-grayscale :deep(.leaflet-marker-pane) {
+  filter: grayscale(0.2);
 }
 </style>

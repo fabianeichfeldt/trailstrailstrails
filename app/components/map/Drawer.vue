@@ -31,6 +31,12 @@
         <input data-testid="cluster-toggle" type="checkbox" v-model="filtersStore.useCluster" />
         <span class="filter-toggle" />
       </label>
+
+      <label class="filter-item" style="margin-top:0.4em">
+        <span class="filter-label" style="font-size:0.75em">Graue Karte</span>
+        <input data-testid="grayscale-toggle" type="checkbox" v-model="filtersStore.grayscaleMap" />
+        <span class="filter-toggle" />
+      </label>
     </div>
 
     <!-- Auth (mobile only — desktop uses the UserAvatar overlay) -->
