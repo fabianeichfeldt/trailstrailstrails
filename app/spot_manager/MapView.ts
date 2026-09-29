@@ -3,7 +3,7 @@ import { GpxTrailRow, GpxTourRow } from './Api';
 import { DIFF_COLOR } from './GpxProcessor';
 import type { GpxPoint } from './GpxProcessor';
 import { elevationSVG, bindElevationHover } from '../map/spot_panel/elevationSvg';
-import { parkingIconOptions } from '../map/markerIcon';
+import { markerIconOptions, parkingIconOptions } from '../map/markerIcon';
 import { roundCoord, type LatLng } from './coords';
 import { ElevationPoint } from '../types/MtbTypes';
 
@@ -18,6 +18,8 @@ export interface MapViewLike {
   resetHighlights(): void;
   fitTo(id: string): void;
   fitAll(): void;
+  flyTo(lat: number, lng: number, zoom: number): void;
+  showSpotMarker(lat: number, lng: number, approved: boolean): void;
   setClickHandler(fn: (id: string) => void): void;
   invalidate(): void;
   showSourceTrack(points: GpxPoint[]): void;
@@ -35,6 +37,7 @@ export class MapView {
   private map: L.Map;
   private layers = new Map<string, L.Polyline>();
   private hoverMarker: L.CircleMarker | null = null;
+  private spotMarker: L.Marker | null = null;
   private onPolylineClick?: (id: string) => void;
   private sourceTrack: L.Polyline | null = null;
   private liveSlice: L.Polyline | null = null;
@@ -114,6 +117,18 @@ export class MapView {
   fitTo(id: string) {
     const pl = this.layers.get(id);
     if (pl) this.map.fitBounds(pl.getBounds(), { padding: [50, 50], maxZoom: 15, animate: true });
+  }
+
+  flyTo(lat: number, lng: number, zoom: number) {
+    this.map.flyTo([lat, lng], zoom, { duration: 0.5 });
+  }
+
+  showSpotMarker(lat: number, lng: number, approved: boolean) {
+    this.spotMarker?.remove();
+    this.spotMarker = L.marker([lat, lng], {
+      icon: L.divIcon(markerIconOptions('trail', approved)),
+      interactive: false,
+    }).addTo(this.map);
   }
 
   fitAll() {
@@ -210,6 +225,8 @@ export class MapView {
     this.layers.forEach(pl => this.map.removeLayer(pl));
     this.layers.clear();
     this.removeHoverMarker();
+    this.spotMarker?.remove();
+    this.spotMarker = null;
     this.clearSourceTrack();
     this.clearLiveSlice();
     this.disablePointPicker();
