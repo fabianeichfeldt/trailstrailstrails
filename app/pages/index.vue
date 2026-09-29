@@ -363,6 +363,7 @@ useHead({
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: grayscale(1);
 }
 .hero-overlay {
   position: absolute;
