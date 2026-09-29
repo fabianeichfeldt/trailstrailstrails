@@ -2,6 +2,7 @@ export class Photo {
     id: string = "";
     url: string = "";
     created_at: string = "";
+    creator: string = "";
     profiles: {
       display_name: string
       avatar_url: string

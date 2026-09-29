@@ -61,6 +61,7 @@
         :trail="trailForStore"
         :details="details"
         @uploaded="refreshDetails"
+        @photo-deleted="onPhotoDeleted"
       />
 
       <SpotDetailNav :trail="trailForStore" :parking-count="spotPanelStore.parkingLots.length" />
@@ -163,6 +164,7 @@ import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/t
 import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
 import type { NearbySpot } from '@@/build/nearby'
+import type { IAuthService } from '~/auth/auth_service'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 // '' in dev/E2E (same-origin dev server) and in the prod web/PWA build
@@ -343,16 +345,43 @@ async function refreshDetails() {
   }
 }
 
+// Minimal IAuthService adapter — isSpotAssignedToTrailcrew() (via
+// spotPanelStore.loadPhotoModeration()) only ever calls
+// authService.getUser(). Same shape as the one already duplicated in
+// SpotDetailHero.vue/SpotPanelComments.vue.
+function authServiceAdapter(): IAuthService {
+  return {
+    loggedIn: authStore.isLoggedIn,
+    async getUser() {
+      return {
+        id: authStore.userId,
+        email: '',
+        nickname: authStore.nickname,
+        accessToken: await authStore.getToken(),
+        avatarUrl: authStore.avatarUrl,
+        avatarHTML: '',
+        isAdmin: authStore.isAdmin,
+        isTrailcrew: authStore.isTrailcrew,
+      }
+    },
+  } as IAuthService
+}
+
 // spotPanelStore.load()/loadComments() do real network fetches — onMounted
 // never fires during SSR/prerender, so this is inherently client-only (see
 // CLAUDE.md's "No live Nitro server in production"); no extra guard needed.
 function loadLiveSpotData(item: Trail) {
   spotPanelStore.load(item)
-  spotPanelStore.loadComments(item.id, {
-    userId: authStore.userId,
-    isAdmin: authStore.isAdmin,
-    isTrailcrew: authStore.isTrailcrew,
-  })
+  const authInfo = { userId: authStore.userId, isAdmin: authStore.isAdmin, isTrailcrew: authStore.isTrailcrew }
+  spotPanelStore.loadComments(item.id, authInfo)
+  spotPanelStore.loadPhotoModeration(item.id, authInfo, authServiceAdapter())
+}
+
+// Splices a deleted photo out of the page-owned `details` ref — mirrors
+// refreshDetails()'s own mutation of details.value. Photo delete UI lives in
+// SpotDetailPhotos.vue, which emits this rather than mutating props directly.
+function onPhotoDeleted(id: string) {
+  details.value.photos = details.value.photos.filter(p => p.id !== id)
 }
 
 onMounted(async () => {

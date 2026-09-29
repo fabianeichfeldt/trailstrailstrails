@@ -18,3 +18,21 @@ export function trackVisit(path: string, referrer: string): void {
     },
   }).catch(() => {})
 }
+
+// Debounced to collapse chained router transitions (navigateToSpot's
+// replace+push, legacy id->slug redirects) into one call.
+const VISIT_DEBOUNCE_MS = 500
+
+export function createVisitTracker(send: (path: string, referrer: string) => void = trackVisit) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  let referrer = ''
+
+  return function scheduleVisit(path: string, currentReferrer: string): void {
+    if (timer === null) referrer = currentReferrer
+    else clearTimeout(timer)
+    timer = setTimeout(() => {
+      timer = null
+      send(path, referrer)
+    }, VISIT_DEBOUNCE_MS)
+  }
+}

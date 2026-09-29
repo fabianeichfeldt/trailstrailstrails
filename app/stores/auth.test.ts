@@ -32,12 +32,13 @@ const mockClient = {
 vi.stubGlobal('useSupabaseClient', () => mockClient)
 vi.stubGlobal('useSupabaseUser', () => ({ value: null }))
 
-vi.mock('~/communication/photos', () => ({ uploadTrailPhoto: vi.fn() }))
+vi.mock('~/communication/photos', () => ({ uploadTrailPhoto: vi.fn(), deletePhoto: vi.fn() }))
 
 const browserClose = vi.fn().mockResolvedValue(undefined)
 vi.mock('@capacitor/browser', () => ({ Browser: { open: vi.fn(), close: () => browserClose() } }))
 
 import { useAuthStore } from './auth'
+import { deletePhoto } from '~/communication/photos'
 
 describe('useAuthStore.handleNativeAuthCallback', () => {
   beforeEach(() => {
@@ -133,5 +134,33 @@ describe('useAuthStore.handleNativeAuthCallback', () => {
     await expect(
       store.handleNativeAuthCallback('org.trailradar.app://auth-callback?code=bad')
     ).rejects.toThrow('invalid code')
+  })
+})
+
+describe('useAuthStore.deleteTrailPhoto', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    rpc.mockResolvedValue({ data: 'user' })
+    vi.mocked(deletePhoto).mockReset().mockResolvedValue(undefined)
+  })
+
+  it('throws "Not logged in" when there is no user, without calling deletePhoto', async () => {
+    const store = useAuthStore()
+    store.user.value = null
+
+    await expect(
+      store.deleteTrailPhoto({ id: 1, url: 'https://x/trail-photos/t1/a.webp' })
+    ).rejects.toThrow('Not logged in')
+    expect(deletePhoto).not.toHaveBeenCalled()
+  })
+
+  it('delegates to deletePhoto(photo, client) when logged in', async () => {
+    const store = useAuthStore()
+    store.user.value = { id: 'u1' } as any
+
+    const photo = { id: 1, url: 'https://x/trail-photos/t1/a.webp' }
+    await store.deleteTrailPhoto(photo)
+
+    expect(deletePhoto).toHaveBeenCalledWith(photo, mockClient)
   })
 })

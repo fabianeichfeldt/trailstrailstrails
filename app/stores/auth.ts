@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
-import { uploadTrailPhoto as uploadTrailPhotoImpl } from '~/communication/photos'
+import { uploadTrailPhoto as uploadTrailPhotoImpl, deletePhoto as deletePhotoImpl } from '~/communication/photos'
 
 // Google blocks OAuth sign-in from embedded WebViews, so on native we route
 // through the system browser instead and catch the redirect via a custom
@@ -165,6 +165,11 @@ export const useAuthStore = defineStore('auth', () => {
     return uploadTrailPhotoImpl(file, trailId, client, resolveUserId(user.value))
   }
 
+  async function deleteTrailPhoto(photo: { id: string | number; url: string }): Promise<void> {
+    if (!user.value) throw new Error('Not logged in')
+    return deletePhotoImpl(photo, client)
+  }
+
   const userId = computed(() => resolveUserId(user.value))
 
   async function getToken(): Promise<string> {
@@ -198,6 +203,7 @@ export const useAuthStore = defineStore('auth', () => {
     updatePassword,
     uploadAvatar,
     uploadTrailPhoto,
+    deleteTrailPhoto,
     getToken,
     getUserId,
   }

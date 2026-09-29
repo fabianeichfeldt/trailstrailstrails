@@ -115,7 +115,16 @@ async function fetchElevations(latLngs) {
   if (data.status !== 'OK') {
     throw new Error(`Open Topo Data error: ${JSON.stringify(data)}`);
   }
-  return data.results.map(r => r.elevation);
+  // Open Topo Data returns HTTP 200 / status "OK" with elevation: null for a
+  // location outside the dataset's coverage — documented behaviour, not an
+  // error. Math.round(null) === 0, so letting a null through here would
+  // silently corrupt a real trail's altitude to 0 instead of failing loudly.
+  return data.results.map(r => {
+    if (typeof r.elevation !== 'number' || !Number.isFinite(r.elevation)) {
+      throw new Error('Open Topo Data returned no elevation for a location (outside dataset coverage?)');
+    }
+    return r.elevation;
+  });
 }
 
 async function correctedPoints(gpxPoints) {

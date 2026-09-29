@@ -12,16 +12,24 @@ import { TrailDetails } from '~/types/TrailDetails'
 // drastic-redesign request.
 let fakeAuthStore: {
   isLoggedIn: boolean
+  userId: string
+  isAdmin: boolean
   uploadTrailPhoto: (file: File, trailId: string) => Promise<string>
+  deleteTrailPhoto: (photo: { id: string | number; url: string }) => Promise<void>
 }
 let fakeMapStore: { authModalOpen: boolean }
+let fakeSpotPanelStore: { photosCanModerate: boolean }
 
 vi.stubGlobal('useAuthStore', () => fakeAuthStore)
 vi.stubGlobal('useMapStore', () => fakeMapStore)
+vi.stubGlobal('useSpotPanelStore', () => fakeSpotPanelStore)
 vi.mock('~/map/lightbox', () => ({ bindPhotoLightbox: vi.fn() }))
 vi.mock('~/utils/toast', () => ({ showToast: vi.fn() }))
+vi.mock('~/map/confirmDialog', () => ({ confirmDialog: vi.fn() }))
 
 import SpotDetailPhotos from './SpotDetailPhotos.vue'
+import { confirmDialog } from '~/map/confirmDialog'
+import { showToast } from '~/utils/toast'
 
 // Client-side ClientOnly: render the default slot (what the real component
 // does once mounted in the browser). Keeps the DOM assertions below
@@ -49,8 +57,17 @@ function mountPhotos(props: { trail: Trail; details: TrailDetails }) {
 
 describe('SpotDetailPhotos', () => {
   beforeEach(() => {
-    fakeAuthStore = { isLoggedIn: false, uploadTrailPhoto: vi.fn(async () => 'https://example.com/photo.jpg') }
+    fakeAuthStore = {
+      isLoggedIn: false,
+      userId: 'u1',
+      isAdmin: false,
+      uploadTrailPhoto: vi.fn(async () => 'https://example.com/photo.jpg'),
+      deleteTrailPhoto: vi.fn(async () => {}),
+    }
     fakeMapStore = { authModalOpen: false }
+    fakeSpotPanelStore = { photosCanModerate: false }
+    vi.mocked(confirmDialog).mockReset().mockResolvedValue(true)
+    vi.mocked(showToast).mockReset()
   })
 
   it('shows the grayscale placeholder with an upload prompt when there are no photos', () => {
@@ -122,5 +139,114 @@ describe('SpotDetailPhotos', () => {
     expect(html).toContain('photo-login-link')
     expect(html).not.toContain('photo-upload-btn')
     expect(html).not.toContain('photo-fab')
+  })
+
+  // ── Photo delete ─────────────────────────────────────────────────────
+  function photoDetails(overrides: Partial<{ id: string; creator: string }> = {}) {
+    return details({
+      photos: [{
+        id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01',
+        creator: 'u1', profiles: { display_name: 'Alice', avatar_url: '' },
+        ...overrides,
+      } as any],
+    })
+  }
+
+  it('shows the delete button when the photo creator matches the current user', () => {
+    fakeAuthStore.userId = 'u1'
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'u1' }) })
+    expect(wrapper.find('.photo-delete-btn').exists()).toBe(true)
+  })
+
+  it('shows the delete button for an admin, regardless of creator', () => {
+    fakeAuthStore.userId = 'u1'
+    fakeAuthStore.isAdmin = true
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'someone-else' }) })
+    expect(wrapper.find('.photo-delete-btn').exists()).toBe(true)
+  })
+
+  it('shows the delete button when spotPanelStore.photosCanModerate is true, regardless of creator', () => {
+    fakeAuthStore.userId = 'u1'
+    fakeSpotPanelStore.photosCanModerate = true
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'someone-else' }) })
+    expect(wrapper.find('.photo-delete-btn').exists()).toBe(true)
+  })
+
+  it('hides the delete button for an unrelated logged-in user', () => {
+    fakeAuthStore.userId = 'u1'
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'someone-else' }) })
+    expect(wrapper.find('.photo-delete-btn').exists()).toBe(false)
+  })
+
+  it('confirming the delete dialog calls deleteTrailPhoto and emits photo-deleted', async () => {
+    fakeAuthStore.userId = 'u1'
+    vi.mocked(confirmDialog).mockResolvedValue(true)
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'u1' }) })
+
+    await wrapper.find('.photo-delete-btn').trigger('click')
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(fakeAuthStore.deleteTrailPhoto).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' }))
+    expect(wrapper.emitted('photo-deleted')).toEqual([['p1']])
+  })
+
+  it('cancelling the delete dialog does not call deleteTrailPhoto or emit', async () => {
+    fakeAuthStore.userId = 'u1'
+    vi.mocked(confirmDialog).mockResolvedValue(false)
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'u1' }) })
+
+    await wrapper.find('.photo-delete-btn').trigger('click')
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(fakeAuthStore.deleteTrailPhoto).not.toHaveBeenCalled()
+    expect(wrapper.emitted('photo-deleted')).toBeFalsy()
+  })
+
+  it('shows an error toast and does not emit when deleteTrailPhoto rejects', async () => {
+    fakeAuthStore.userId = 'u1'
+    fakeAuthStore.deleteTrailPhoto = vi.fn().mockRejectedValue(new Error('forbidden'))
+    vi.mocked(confirmDialog).mockResolvedValue(true)
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'u1' }) })
+
+    await expect(wrapper.find('.photo-delete-btn').trigger('click')).resolves.not.toThrow()
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(wrapper.emitted('photo-deleted')).toBeFalsy()
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
+  })
+
+  // There is exactly one delete button now (paired with the upload FAB,
+  // not one per photo) — it must follow whichever photo the carousel is
+  // currently showing, not any deletable photo in the list.
+  it('gates the single delete button on whichever photo is currently active in the carousel', async () => {
+    vi.useFakeTimers()
+    try {
+      fakeAuthStore.userId = 'u1'
+      const wrapper = mountPhotos({
+        trail: trail(),
+        details: details({
+          photos: [
+            { id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01', creator: 'someone-else', profiles: { display_name: '', avatar_url: '' } } as any,
+            { id: 'p2', url: 'https://example.com/2.jpg', created_at: '2024-01-02', creator: 'u1', profiles: { display_name: '', avatar_url: '' } } as any,
+          ],
+        }),
+      })
+
+      // Active photo is p1 (index 0), not owned by u1 — no delete button yet.
+      expect(wrapper.find('.photo-delete-btn').exists()).toBe(false)
+
+      // Carousel auto-advances every 4s to p2 (index 1), which u1 owns.
+      // advanceTimersByTimeAsync (not the sync variant) flushes microtasks
+      // between ticks, so it stays safe to await without ever switching
+      // back to real timers mid-test.
+      await vi.advanceTimersByTimeAsync(4000)
+      expect(wrapper.find('.photo-delete-btn').exists()).toBe(true)
+
+      await wrapper.find('.photo-delete-btn').trigger('click')
+      await vi.advanceTimersByTimeAsync(0)
+      expect(fakeAuthStore.deleteTrailPhoto).toHaveBeenCalledWith(expect.objectContaining({ id: 'p2' }))
+    } finally {
+      vi.useRealTimers()
+    }
   })
 })

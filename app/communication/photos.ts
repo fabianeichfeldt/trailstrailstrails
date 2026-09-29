@@ -1,4 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { REST, userHeaders } from './http'
+import type { IAuthService } from '../auth/auth_service'
 
 async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<Blob> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -43,4 +45,39 @@ export async function uploadTrailPhoto(
   if (dbError) throw new Error('Photo record insert failed')
 
   return data.publicUrl
+}
+
+export async function deletePhoto(
+  photo: { id: string | number; url: string },
+  client: SupabaseClient,
+): Promise<void> {
+  const { data, error } = await client
+    .from('trail_photos')
+    .delete()
+    .eq('id', photo.id)
+    .select('id')
+  if (error) throw new Error('Photo delete failed')
+  if (!data || data.length === 0) throw new Error('Photo delete failed: not permitted')
+
+  const path = photo.url.split('/trail-photos/')[1]
+  if (!path) return
+  const { error: storageError } = await client.storage.from('trail-photos').remove([path])
+  if (storageError) throw new Error('Photo file delete failed')
+}
+
+// Precise trailcrew-assignment check (not "is trailcrew at all") — used to
+// gate the photo-delete control's visibility. Plain authenticated REST read
+// against trailcrew_spots, same IAuthService + REST style as
+// comments.ts's deleteComment, since this is a table read, not a Storage
+// operation (deletePhoto above stays on the SupabaseClient style that
+// uploadTrailPhoto already established for this file).
+export async function isSpotAssignedToTrailcrew(spotId: string, authService: IAuthService): Promise<boolean> {
+  const user = await authService.getUser()
+  const res = await fetch(
+    `${REST}/trailcrew_spots?select=spot_id&user_id=eq.${user.id}&spot_id=eq.${spotId}&limit=1`,
+    { method: 'GET', cache: 'no-store', headers: userHeaders(user.accessToken) },
+  )
+  if (!res.ok) return false
+  const rows = await res.json()
+  return Array.isArray(rows) && rows.length > 0
 }
