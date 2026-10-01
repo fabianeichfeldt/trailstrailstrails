@@ -77,6 +77,7 @@
           </p>
           <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s)">
             <span class="sm-spot-name">{{ s.name }}</span>
+            <span class="sm-spot-type">{{ SPOT_CAPABILITIES[s.type].label }}</span>
             <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
           </button>
           <div v-if="authStore.isAdmin" class="sm-admin-section">
@@ -158,7 +159,7 @@
             <i class="fas fa-chevron-right sm-details-arrow" />
           </button>
 
-          <div class="sm-section">
+          <div v-if="caps.gpx" class="sm-section">
             <div class="sm-section-header">
               <h3>Touren <span class="sm-count">{{ tours.length }}</span></h3>
               <button class="sm-btn-add" @click="openSegmentUpload">
@@ -202,7 +203,7 @@
             </div>
           </div>
 
-          <div class="sm-section">
+          <div v-if="caps.gpx" class="sm-section">
             <div class="sm-section-header">
               <h3>Trails <span class="sm-count">{{ trails.length }}</span></h3>
               <button class="sm-btn-add" @click="openImport()">
@@ -486,6 +487,16 @@
           </div>
         </div>
 
+        <!-- Bikepark details editor -->
+        <BikeParkDetailsEditor
+          v-else-if="view === 'bikepark-details' && currentSpot"
+          :spot="currentSpot"
+          :details="bikeParkDetails"
+          :jwt="detailsJwt"
+          @cancel="view = 'list'"
+          @saved="onBikeParkSaved"
+        />
+
         <!-- Spot Details Editor -->
         <div v-else-if="view === 'details'" class="sd-editor">
           <div class="sm-form-header">
@@ -667,6 +678,8 @@
             <div class="sd-char-hint">{{ detailsDescription.length }}/2000</div>
           </div>
 
+          <SpotWebsiteField v-model="detailsWebsite" :error="detailsWebsiteError" />
+
           <SpotInvitationCodes :spot-id="spotId" />
 
           <div class="sd-save-row">
@@ -802,15 +815,19 @@
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import type { BikeParkDetailsRow, GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking, getBikeParkDetails, setSpotWebsite } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
+import { SPOT_CAPABILITIES } from '../../spot_manager/spotTypes'
+import { normalizeWebsiteUrl } from '../../spot_manager/spotWebsite'
 import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter'
 import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
 import SpotInvitationCodes from './SpotInvitationCodes.vue'
+import SpotWebsiteField from './SpotWebsiteField.vue'
+import BikeParkDetailsEditor from './BikeParkDetailsEditor.vue'
 import { useSegmentEditor } from './useSegmentEditor'
 import {
   clampSheetHeightVh,
@@ -821,7 +838,7 @@ import {
   DEFAULT_SHEET_VH,
 } from '../../spot_manager/sheetResize'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'bikepark-details'
 
 interface PendingImport {
   key: string
@@ -883,6 +900,12 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
+const bikeParkDetails = ref<BikeParkDetailsRow | null>(null)
+const currentSpot = ref<SpotRow | null>(null)
+const detailsJwt = ref('')
+const detailsWebsite = ref('')
+const detailsWebsiteError = ref('')
+const caps = computed(() => SPOT_CAPABILITIES[currentSpot.value?.type ?? 'trail'])
 
 // ── Embed tokens (admin only) ─────────────────────────────────────────────────
 const embedTokens      = ref<EmbedTokenRow[]>([])
@@ -1082,11 +1105,16 @@ function trailBadge(t: GpxTrailRow) {
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const currentStatusMeta = computed(() => {
-  const s = spotDetails.value?.status ?? 'open'
+  const s = (caps.value.details === 'bikepark' ? bikeParkDetails.value?.status : spotDetails.value?.status) ?? 'open'
   return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]
 })
 
 const detailsBannerSub = computed(() => {
+  if (caps.value.details === 'bikepark') {
+    const b = bikeParkDetails.value
+    if (!b) return 'Nicht konfiguriert'
+    return [currentStatusMeta.value.label, b.opening_hours].filter(Boolean).join(' · ')
+  }
   const d = spotDetails.value
   if (!d) return 'Nicht konfiguriert'
   const meta = currentStatusMeta.value
@@ -1122,6 +1150,9 @@ async function openSpot(spot: SpotRow) {
   const { id, name } = spot
   spotId.value = id
   spotName.value = name
+  currentSpot.value = spot
+  spotDetails.value = null
+  bikeParkDetails.value = null
   pending.value = []
   editingTrail.value = null
   editingTour.value = null
@@ -1130,15 +1161,18 @@ async function openSpot(spot: SpotRow) {
   loading.value = true
 
   try {
-    const [t, to, d, pk] = await Promise.all([
-      getSpotTrails(id),
-      getSpotTours(id),
-      getSpotDetails(id),
+    const c = SPOT_CAPABILITIES[spot.type]
+    const [t, to, d, bd, pk] = await Promise.all([
+      c.gpx ? getSpotTrails(id) : Promise.resolve([]),
+      c.gpx ? getSpotTours(id) : Promise.resolve([]),
+      c.details === 'trail' ? getSpotDetails(id) : Promise.resolve(null),
+      c.details === 'bikepark' ? getBikeParkDetails(id) : Promise.resolve(null),
       getSpotParking(id),
     ])
     trails.value = t
     tours.value = to
     spotDetails.value = d
+    bikeParkDetails.value = bd
     // Preloaded so the "Parkplätze" banner can show a count immediately;
     // openParkingList() re-fetches for freshness when the user drills in.
     parkingLots.value = pk
@@ -1164,6 +1198,8 @@ async function openSpot(spot: SpotRow) {
 function stepBack() {
   if (view.value === 'segment-editor' || view.value === 'segment-upload') {
     cancelSegmentEditor()
+    view.value = 'list'
+  } else if (view.value === 'bikepark-details') {
     view.value = 'list'
   } else if (view.value === 'embed-edit') {
     openEmbedList()
@@ -1220,7 +1256,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
     if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
     else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
     else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
-    else if (view.value === 'details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'details' || view.value === 'bikepark-details') crumbs.push({ label: 'Spot-Details' })
     else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
     else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
     else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
@@ -1535,7 +1571,14 @@ watch(view, async (newView, prevView) => {
 })
 
 // ── Details editor ────────────────────────────────────────────────────────────
-function openDetailsEditor() {
+async function openDetailsEditor() {
+  if (caps.value.details === 'bikepark') {
+    try { detailsJwt.value = await authStore.getToken() } catch (e: any) { alert(`Fehler: ${e.message}`); return }
+    view.value = 'bikepark-details'
+    return
+  }
+  detailsWebsite.value = currentSpot.value?.url ?? ''
+  detailsWebsiteError.value = ''
   const d = spotDetails.value
   detailsStatus.value = d?.status ?? 'open'
   detailsUseStatusUntil.value = !!d?.status_until
@@ -1560,7 +1603,25 @@ function openDetailsEditor() {
   view.value = 'details'
 }
 
+// Re-read the manageable list so SpotRow.url reflects a website saved elsewhere.
+async function refreshCurrentSpot() {
+  try {
+    const [userId, jwt] = await Promise.all([authStore.getUserId(), authStore.getToken()])
+    spots.value = await getManageableSpots(jwt, userId, role.value)
+    currentSpot.value = spots.value.find(s => s.id === spotId.value) ?? currentSpot.value
+  } catch { /* stale url only affects the seed value */ }
+}
+
+function onBikeParkSaved(row: BikeParkDetailsRow) {
+  bikeParkDetails.value = row
+  view.value = 'list'
+  refreshCurrentSpot()
+}
+
 async function saveDetails() {
+  const site = normalizeWebsiteUrl(detailsWebsite.value)
+  detailsWebsiteError.value = site.ok ? '' : site.error
+  if (!site.ok) return
   busy.value = true
   try {
     const row: SpotDetailsRow = {
@@ -1585,6 +1646,11 @@ async function saveDetails() {
     }
     const jwt = await authStore.getToken()
     spotDetails.value = await upsertSpotDetails(row, jwt)
+    if (site.url !== (currentSpot.value?.url ?? '')) {
+      await setSpotWebsite(spotId.value, site.url, jwt)
+      if (currentSpot.value) currentSpot.value = { ...currentSpot.value, url: site.url || null }
+      spots.value = spots.value.map(sp => sp.id === spotId.value ? { ...sp, url: site.url || null } : sp)
+    }
     view.value = 'list'
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -1739,6 +1805,7 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   width: 40px; height: 40px; border: none; background: none; color: #888; cursor: pointer;
 }
 .sm-spot-name { font-weight: 700; font-size: 14px; }
+.sm-spot-type { align-self: flex-start; font-size: 11px; font-weight: 600; color: #555; background: #eef1f5; border-radius: 10px; padding: 2px 8px; flex-shrink: 0; }
 .sm-spot-id { font-size: 11px; color: #aaa; font-family: monospace; }
 
 .sm-admin-section { margin-top: 16px; }

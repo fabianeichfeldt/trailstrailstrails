@@ -132,6 +132,8 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/rest/v1/parking**',          (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trailcrew_spots**',  (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_details**',    (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/invitation_codes**',  (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/bike_park_details**', (route) => route.fulfill({ json: [] }));
   // Supabase RPC calls (e.g. get_my_role). Return null — auth store defaults to 'user'.
   await page.route('**/rest/v1/rpc/**',             (route) => route.fulfill({ json: null }));
   // Supabase Edge Functions (trail details, visit counter, etc.)
