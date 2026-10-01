@@ -241,6 +241,12 @@ describe('Segment editor (architectural isolation)', () => {
       .not.toMatch(/from\s+['"][^'"]*app\/map\//)
   })
 
+  test('SpotManagerApp.vue dispatches on SPOT_CAPABILITIES, not on spot type literals', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('SPOT_CAPABILITIES')
+    expect(src, 'use SPOT_CAPABILITIES, not type === checks').not.toMatch(/type\s*[!=]==?\s*['"](bikepark|dirtpark)['"]|isBikePark|isDirtPark/)
+  })
+
   test('GpxProcessor exports processSegment', () => {
     const src = read('app/spot_manager/GpxProcessor.ts')
     expect(src).toContain('export async function processSegment')
