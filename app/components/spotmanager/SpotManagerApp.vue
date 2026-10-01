@@ -77,6 +77,7 @@
           </p>
           <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s)">
             <span class="sm-spot-name">{{ s.name }}</span>
+            <span class="sm-spot-type" :class="`sm-spot-type--${s.type}`">{{ SPOT_CAPABILITIES[s.type].label }}</span>
             <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
           </button>
           <div v-if="authStore.isAdmin" class="sm-admin-section">
@@ -130,6 +131,16 @@
           @saved="openParkingList"
         />
 
+        <!-- Bikepark details editor -->
+        <BikeParkDetailsEditor
+          v-else-if="view === 'bikepark-details'"
+          :spot="currentSpot!"
+          :details="bikeParkDetails"
+          :jwt="parkingJwt"
+          @cancel="view = 'list'"
+          @saved="onBikeParkSaved"
+        />
+
         <!-- Spot list -->
         <div v-else-if="view === 'list'" class="sm-list-view">
           <button class="sm-details-banner" @click="openDetailsEditor">
@@ -158,9 +169,9 @@
             <i class="fas fa-chevron-right sm-details-arrow" />
           </button>
 
-          <div class="sm-section">
+          <div v-if="spotCaps.gpx" class="sm-section">
             <div class="sm-section-header">
-              <h3>Touren <span class="sm-count">{{ tours.length }}</span></h3>
+              <h3>Touren<span class="sm-count">{{ tours.length }}</span></h3>
               <button class="sm-btn-add" @click="openSegmentUpload">
                 <i class="fas fa-plus" /> Tour
               </button>
@@ -202,9 +213,9 @@
             </div>
           </div>
 
-          <div class="sm-section">
+          <div v-if="spotCaps.gpx" class="sm-section">
             <div class="sm-section-header">
-              <h3>Trails <span class="sm-count">{{ trails.length }}</span></h3>
+              <h3>Trails<span class="sm-count">{{ trails.length }}</span></h3>
               <button class="sm-btn-add" @click="openImport()">
                 <i class="fas fa-plus" /> Trail
               </button>
@@ -667,6 +678,8 @@
             <div class="sd-char-hint">{{ detailsDescription.length }}/2000</div>
           </div>
 
+          <SpotWebsiteField v-model="detailsWebsite" />
+
           <!-- Invitation codes -->
           <SpotInvitationCodes :spot-id="spotId" />
 
@@ -803,8 +816,10 @@
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, BikeParkDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, getBikeParkDetails, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import { SPOT_CAPABILITIES } from '../../spot_manager/spotTypes'
+import { normalizeWebsiteUrl } from '../../spot_manager/spotWebsite'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
@@ -812,6 +827,8 @@ import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter
 import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
 import SpotInvitationCodes from './SpotInvitationCodes.vue'
+import SpotWebsiteField from './SpotWebsiteField.vue'
+import BikeParkDetailsEditor from './BikeParkDetailsEditor.vue'
 import { useSegmentEditor } from './useSegmentEditor'
 import {
   clampSheetHeightVh,
@@ -822,7 +839,7 @@ import {
   DEFAULT_SHEET_VH,
 } from '../../spot_manager/sheetResize'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'bikepark-details'
 
 interface PendingImport {
   key: string
@@ -884,6 +901,9 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
+const bikeParkDetails = ref<BikeParkDetailsRow | null>(null)
+const currentSpot = ref<SpotRow | null>(null)
+const spotCaps = computed(() => SPOT_CAPABILITIES[currentSpot.value?.type ?? 'trail'])
 
 // ── Embed tokens (admin only) ─────────────────────────────────────────────────
 const embedTokens      = ref<EmbedTokenRow[]>([])
@@ -1059,6 +1079,7 @@ const detailsRainWindowTo = ref('')
 const detailsNightPolicy = ref<NightPolicy>('none')
 const detailsMinutesBeforeDusk = ref(60)
 const detailsMinutesAfterDawn = ref(60)
+const detailsWebsite = ref('')
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const STATUS_OPTIONS = [
@@ -1082,12 +1103,23 @@ function trailBadge(t: GpxTrailRow) {
 }
 
 // ── Computed ──────────────────────────────────────────────────────────────────
+// Per-`details`-kind banner status; legacy bikepark status 'unknown'/null → grey.
 const currentStatusMeta = computed(() => {
-  const s = spotDetails.value?.status ?? 'open'
+  const kind = spotCaps.value.details
+  const s = (kind === null ? null : { trail: spotDetails.value?.status ?? 'open', bikepark: bikeParkDetails.value?.status ?? 'unknown' }[kind]) ?? 'open'
   return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]
 })
 
-const detailsBannerSub = computed(() => {
+const bikeParkBannerSub = computed(() => {
+  const d = bikeParkDetails.value
+  if (!d) return 'Nicht konfiguriert'
+  const parts = [currentStatusMeta.value.label]
+  const hours = d.opening_hours?.trim().split('\n')[0]
+  if (hours) parts.push(hours)
+  return parts.join(' · ')
+})
+
+const trailBannerSub = computed(() => {
   const d = spotDetails.value
   if (!d) return 'Nicht konfiguriert'
   const meta = currentStatusMeta.value
@@ -1098,6 +1130,11 @@ const detailsBannerSub = computed(() => {
   }
   if (d.status_hint) parts.push(d.status_hint)
   return parts.join(' · ')
+})
+
+const detailsBannerSub = computed(() => {
+  const kind = spotCaps.value.details
+  return kind === null ? '' : { trail: trailBannerSub.value, bikepark: bikeParkBannerSub.value }[kind]
 })
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
@@ -1121,25 +1158,32 @@ onMounted(async () => {
 const SPOT_OPEN_ZOOM = 13
 async function openSpot(spot: SpotRow) {
   const { id, name } = spot
+  const caps = SPOT_CAPABILITIES[spot.type]
+  currentSpot.value = spot
   spotId.value = id
   spotName.value = name
   pending.value = []
   editingTrail.value = null
   editingTour.value = null
+  spotDetails.value = null
+  bikeParkDetails.value = null
   mapView.value?.clear()
   view.value = 'list'
   loading.value = true
 
   try {
-    const [t, to, d, pk] = await Promise.all([
-      getSpotTrails(id),
-      getSpotTours(id),
-      getSpotDetails(id),
+    const detailsLoaders = {
+      trail: async () => { spotDetails.value = await getSpotDetails(id) },
+      bikepark: async () => { bikeParkDetails.value = await getBikeParkDetails(id) },
+    }
+    const [t, to, , pk] = await Promise.all([
+      caps.gpx ? getSpotTrails(id) : Promise.resolve([] as GpxTrailRow[]),
+      caps.gpx ? getSpotTours(id) : Promise.resolve([] as GpxTourRow[]),
+      caps.details ? detailsLoaders[caps.details]() : Promise.resolve(),
       getSpotParking(id),
     ])
     trails.value = t
     tours.value = to
-    spotDetails.value = d
     // Preloaded so the "Parkplätze" banner can show a count immediately;
     // openParkingList() re-fetches for freshness when the user drills in.
     parkingLots.value = pk
@@ -1172,7 +1216,7 @@ function stepBack() {
     view.value = 'selector'
   } else if (view.value === 'parking-edit') {
     openParkingList()
-  } else if (view.value === 'parking-list') {
+  } else if (view.value === 'parking-list' || view.value === 'bikepark-details') {
     view.value = 'list'
   } else if (view.value === 'import') {
     cancelImport()
@@ -1221,7 +1265,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
     if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
     else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
     else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
-    else if (view.value === 'details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'details' || view.value === 'bikepark-details') crumbs.push({ label: 'Spot-Details' })
     else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
     else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
     else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
@@ -1536,7 +1580,33 @@ watch(view, async (newView, prevView) => {
 })
 
 // ── Details editor ────────────────────────────────────────────────────────────
-function openDetailsEditor() {
+async function openDetailsEditor() {
+  const kind = spotCaps.value.details
+  if (kind === null) return
+  parkingJwt.value = await authStore.getToken()
+  ;({ trail: openTrailDetailsEditor, bikepark: () => { view.value = 'bikepark-details' } })[kind]()
+}
+
+function onBikeParkSaved(row: BikeParkDetailsRow) {
+  bikeParkDetails.value = row
+  // website lives on the base row; mirror the saved value so the next open starts from it
+  void refreshSpotUrl()
+  view.value = 'list'
+}
+
+async function refreshSpotUrl() {
+  const s = currentSpot.value
+  if (!s) return
+  try {
+    const jwt = await authStore.getToken()
+    const userId = await authStore.getUserId()
+    const fresh = (await getManageableSpots(jwt, userId, role.value)).find(x => x.id === s.id)
+    if (fresh) { currentSpot.value = fresh; spots.value = spots.value.map(x => x.id === fresh.id ? fresh : x) }
+  } catch { /* url refresh is best-effort */ }
+}
+
+function openTrailDetailsEditor() {
+  detailsWebsite.value = currentSpot.value?.url ?? ''
   const d = spotDetails.value
   detailsStatus.value = d?.status ?? 'open'
   detailsUseStatusUntil.value = !!d?.status_until
@@ -1562,6 +1632,8 @@ function openDetailsEditor() {
 }
 
 async function saveDetails() {
+  const url = normalizeWebsiteUrl(detailsWebsite.value)
+  if (!url.ok) { alert(url.error); return }
   busy.value = true
   try {
     const row: SpotDetailsRow = {
@@ -1586,6 +1658,10 @@ async function saveDetails() {
     }
     const jwt = await authStore.getToken()
     spotDetails.value = await upsertSpotDetails(row, jwt)
+    if (url.value !== (currentSpot.value?.url ?? '').trim()) {
+      await setSpotWebsite(spotId.value, url.value, jwt)
+      if (currentSpot.value) currentSpot.value = { ...currentSpot.value, url: url.value }
+    }
     view.value = 'list'
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -1741,6 +1817,11 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 }
 .sm-spot-name { font-weight: 700; font-size: 14px; }
 .sm-spot-id { font-size: 11px; color: #aaa; font-family: monospace; }
+.sm-spot-type {
+  align-self: flex-start; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  padding: 1px 7px; border-radius: 10px; background: #e8f5e9; color: #2e7d32;
+}
+.sm-spot-type--bikepark { background: #e3edfa; color: #0d5db8; }
 
 .sm-admin-section { margin-top: 16px; }
 .sm-admin-divider {
