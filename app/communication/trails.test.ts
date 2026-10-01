@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug, getTrailById } from './trails'
+import { bakedTrailDetails } from '../utils/bakedTrailDetails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -187,6 +188,49 @@ describe('getTrailBySlug', () => {
     for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
       expect(detailsUrl).toContain(col)
     }
+  })
+})
+
+// ── bikepark details on the public read path ────────────────────────────────
+
+describe('bikepark details merge', () => {
+  function routeFetch(tables: Record<string, unknown[]>) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      return ok(tables[table] ?? [])
+    })
+  }
+  const park = { id: 'p-uuid', slug: 'bikepark-x', name: 'Park X', latitude: 47, longitude: 12 }
+  const parkDetails = { id: 'p-uuid', status: 'open', opening_hours: 'Mo-So 9-17', trail_description: 'Lifts and flow', last_update: '2026-10-01' }
+
+  it('getTrailBySlug exposes bike_park_details opening_hours + trail_description', async () => {
+    vi.stubGlobal('fetch', routeFetch({ parks: [park], bike_park_details: [parkDetails] }))
+    const res = await getTrailBySlug('bikepark-x')
+    expect(res).toMatchObject({ type: 'bikepark', opening_hours: 'Mo-So 9-17', trail_description: 'Lifts and flow' })
+    const baked = bakedTrailDetails(res)
+    expect(baked.opening_hours).toBe('Mo-So 9-17')
+    expect(baked.trail_description).toBe('Lifts and flow')
+  })
+
+  it('getTrailBySlug still merges trail_details for a trail', async () => {
+    const fetch = routeFetch({
+      trails: [{ id: 't1', slug: 'tr', name: 'T', latitude: 1, longitude: 2 }],
+      trail_details: [{ trail_id: 't1', trail_description: 'Nice' }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailBySlug('tr')
+    expect(res).toMatchObject({ type: 'trail', trail_description: 'Nice' })
+    expect(fetch.mock.calls.map(c => String(c[0])).some(u => u.includes('/bike_park_details'))).toBe(false)
+  })
+
+  it('getTrailById exposes bikepark details, fetching them only after the type is resolved', async () => {
+    const fetch = routeFetch({ parks: [park], bike_park_details: [parkDetails] })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailById('p-uuid')
+    expect(res).toMatchObject({ type: 'bikepark', opening_hours: 'Mo-So 9-17', trail_description: 'Lifts and flow' })
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+    expect(urls.findIndex(u => u.includes('/bike_park_details'))).toBeGreaterThan(urls.findIndex(u => u.includes('/parks?')))
   })
 })
 
