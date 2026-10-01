@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug, getTrailById } from './trails'
+import { bakedTrailDetails } from '../utils/bakedTrailDetails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -187,6 +188,62 @@ describe('getTrailBySlug', () => {
     for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
       expect(detailsUrl).toContain(col)
     }
+  })
+})
+
+// ── bikepark details (bike_park_details) ────────────────────────────────────
+
+describe('bikepark details on the spot page', () => {
+  const park = { id: 'p-uuid', slug: 'bikepark-x', name: 'Bikepark X', latitude: 47, longitude: 11 }
+  const parkDetails = { id: 'p-uuid', status: 'open', opening_hours: 'Sa-So 9-17', trail_description: 'Flowy lines' }
+
+  function routeFetch(tables: Record<string, unknown[]>) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      return ok(tables[table] ?? [])
+    })
+  }
+  const tables = () => ({
+    parks: [park],
+    bike_park_details: [parkDetails],
+    trail_details: [{ trail_id: 'p-uuid', trail_description: 'WRONG' }],
+  })
+
+  it('getTrailBySlug exposes hours + description from bike_park_details', async () => {
+    const fetch = routeFetch(tables())
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailBySlug('bikepark-x')
+    expect(res).toMatchObject({ id: 'p-uuid', type: 'bikepark' })
+    const baked = bakedTrailDetails(res)
+    expect(baked.opening_hours).toBe('Sa-So 9-17')
+    expect(baked.trail_description).toBe('Flowy lines')
+    expect(baked.status).toBe('open')
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+  })
+
+  it('getTrailById resolves the type first, then fetches bike_park_details', async () => {
+    const fetch = routeFetch(tables())
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailById('p-uuid')
+    expect(res).toMatchObject({ id: 'p-uuid', type: 'bikepark' })
+    const baked = bakedTrailDetails(res)
+    expect(baked.opening_hours).toBe('Sa-So 9-17')
+    expect(baked.trail_description).toBe('Flowy lines')
+
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    const detailsIdx = urls.findIndex(u => u.includes('/bike_park_details'))
+    const lastBaseIdx = Math.max(...['/trails?', '/parks?', '/dirt_parks?'].map(p => urls.findIndex(u => u.includes(p))))
+    expect(detailsIdx).toBeGreaterThan(lastBaseIdx)
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+  })
+
+  it('getTrailById still merges trail_details for a trail (regression)', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      trails: [{ id: 't1', name: 'T', latitude: 1, longitude: 2 }],
+      trail_details: [{ trail_id: 't1', trail_description: 'Nice' }],
+    }))
+    expect(await getTrailById('t1')).toMatchObject({ id: 't1', type: 'trail', trail_description: 'Nice' })
   })
 })
 

@@ -18,6 +18,9 @@ import {
   getSpotParking,
   upsertParking,
   deleteParking,
+  getBikeParkDetails,
+  upsertBikeParkDetails,
+  setSpotWebsite,
   type GpxTrailRow,
   type GpxTourRow,
   type SpotDetailsRow,
@@ -82,35 +85,61 @@ describe('getMyRole', () => {
 // ── getManageableSpots ────────────────────────────────────────────────────────
 
 describe('getManageableSpots', () => {
-  it('admin path queries all trails ordered by name', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([{ id: 's1', name: 'Spot 1' }]));
+  const trailRow = { id: 't1', name: 'Zeta Trail', latitude: 1, longitude: 2, approved: true, url: 'https://t.example' };
+  const parkRow  = { id: 'p1', name: 'Alpha Park',  latitude: 3, longitude: 4, approved: true, url: null };
+
+  // Routes a fetch by table name in the URL path.
+  function routed(byTable: Record<string, unknown>) {
+    return vi.fn((url: string) => {
+      const table = url.split('/rest/v1/')[1].split('?')[0];
+      return ok(byTable[table] ?? []);
+    });
+  }
+
+  it('admin requests trails and parks (not dirt_parks), tags type, sorts by name, includes url', async () => {
+    const fetch = routed({ trails: [trailRow], parks: [parkRow] });
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid', 'admin');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name,latitude,longitude,approved');
+    const urls = fetch.mock.calls.map(c => c[0] as string);
+    expect(urls).toHaveLength(2);
+    expect(urls.some(u => u.includes('/rest/v1/trails?'))).toBe(true);
+    expect(urls.some(u => u.includes('/rest/v1/parks?'))).toBe(true);
+    expect(urls.some(u => u.includes('dirt_parks'))).toBe(false);
+    expect(urls.every(u => u.includes('select=id,name,latitude,longitude,approved,url'))).toBe(true);
+    expect(result).toEqual([
+      { ...parkRow,  type: 'bikepark' },
+      { ...trailRow, type: 'trail' },
+    ]);
   });
 
-  it('trailcrew path also selects the spot coordinates', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([]));
-    vi.stubGlobal('fetch', fetch);
-    await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(decodeURIComponent(fetch.mock.calls[0][0])).toContain('trails(id,name,latitude,longitude,approved)');
-  });
-
-  it('trailcrew path filters by user_id', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }];
-    const fetch = vi.fn().mockReturnValue(ok(rows));
+  it('trailcrew reads assignments, then queries each manageable table by id (no trails( embed)', async () => {
+    const fetch = routed({
+      trailcrew_spots: [{ spot_id: 't1' }, { spot_id: 'p1' }],
+      trails: [trailRow],
+      parks: [parkRow],
+    });
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('user_id=eq.uid-abc');
+    const urls = fetch.mock.calls.map(c => decodeURIComponent(c[0] as string));
+    expect(urls[0]).toContain('trailcrew_spots?select=spot_id&user_id=eq.uid-abc');
+    expect(urls.some(u => u.includes('/trails?') && u.includes('id=in.(t1,p1)'))).toBe(true);
+    expect(urls.some(u => u.includes('/parks?') && u.includes('id=in.(t1,p1)'))).toBe(true);
+    expect(urls.some(u => u.includes('trails('))).toBe(false);
+    expect(result.map(s => s.id)).toEqual(['p1', 't1']);
+    expect(result.map(s => s.type)).toEqual(['bikepark', 'trail']);
   });
 
-  it('trailcrew path filters out null trail refs', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }, { trails: null }];
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(rows)));
-    const result = await getManageableSpots(JWT, 'uid', 'trailcrew');
-    expect(result).toHaveLength(1);
+  it('trailcrew with no assignments makes exactly one request', async () => {
+    const fetch = routed({ trailcrew_spots: [] });
+    vi.stubGlobal('fetch', fetch);
+    expect(await getManageableSpots(JWT, 'uid', 'trailcrew')).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a failing request as an error', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) =>
+      url.includes('/parks?') ? err(500, 'boom') : ok([trailRow])));
+    await expect(getManageableSpots(JWT, 'uid', 'admin')).rejects.toThrow('500');
   });
 });
 
@@ -533,5 +562,68 @@ describe('deleteParking', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'forbidden')));
     await expect(deleteParking('pk1', JWT)).rejects.toThrow('Delete failed');
+  });
+});
+
+// ── bikepark details + website ────────────────────────────────────────────────
+
+describe('getBikeParkDetails', () => {
+  it('GETs bike_park_details by id and returns the row', async () => {
+    const row = { id: 'p1', status: 'open', opening_hours: 'Mo-So', trail_description: 'x', last_update: '2026-10-01' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getBikeParkDetails('p1')).toEqual(row);
+    const url = fetch.mock.calls[0][0] as string;
+    expect(url).toContain('/bike_park_details?id=eq.p1&select=');
+    expect(url).toContain('limit=1');
+  });
+
+  it('returns null when there is no row', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
+    expect(await getBikeParkDetails('p1')).toBeNull();
+  });
+});
+
+describe('upsertBikeParkDetails', () => {
+  it('POSTs merge-duplicates on id with only the owned columns and a cleared status_hint', async () => {
+    const row = { id: 'p1', status: 'open' as const, opening_hours: 'Mo-So', trail_description: 'x', last_update: '2026-10-01' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    const result = await upsertBikeParkDetails({ ...row, rules: ['legacy'] } as never, JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/bike_park_details?on_conflict=id');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Prefer).toContain('resolution=merge-duplicates');
+    expect(init.headers.Authorization).toBe(`Bearer ${JWT}`);
+    const body = JSON.parse(init.body);
+    expect(Object.keys(body).sort()).toEqual(
+      ['id', 'last_update', 'opening_hours', 'status', 'status_hint', 'trail_description'],
+    );
+    expect(body.status_hint).toBeNull();
+    expect(result).toEqual(row);
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'rls')));
+    await expect(upsertBikeParkDetails(
+      { id: 'p1', status: 'open', opening_hours: '', trail_description: '', last_update: 'd' }, JWT,
+    )).rejects.toThrow('403');
+  });
+});
+
+describe('setSpotWebsite', () => {
+  it('POSTs rpc/set_spot_website with p_spot_id and p_url', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await setSpotWebsite('p1', 'https://x.example', JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/rpc/set_spot_website');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.example' });
+  });
+
+  it('throws with the server text on non-ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'invalid_url')));
+    await expect(setSpotWebsite('p1', 'nope', JWT)).rejects.toThrow('invalid_url');
   });
 });

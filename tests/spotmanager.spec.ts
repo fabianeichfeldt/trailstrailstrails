@@ -10,7 +10,11 @@ import { expect, setupAllMocks, MOCK_SESSION, MOCK_USER, MOCK_GOOGLE_SESSION, MO
 async function signInOnSpotmanagerPage(
   page: import('@playwright/test').Page,
   rpcResponse: 'trailcrew' | 'admin' | null = null,
+  parks: Array<{ id: string; name: string }> = [],
 ) {
+  // The shared fixture's parks mock feeds the map; the SpotManager list reads the same endpoint.
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: parks }));
+  await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: [] }));
   // Override RPC BEFORE sign-in so the auth store watcher picks it up
   await page.route('**/rest/v1/rpc/**', (route) =>
     route.fulfill({ json: rpcResponse }),
@@ -104,8 +108,9 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
   await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
 
   await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)')).toHaveCount(2, { timeout: 6000 });
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Bikepark Lenggries');
+  // The list is sorted by name.
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Bikepark Lenggries');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Flowtrail Tegernsee');
   assertNoLeaks();
 });
 
@@ -133,9 +138,15 @@ baseTest('spotmanager loads trailcrew spots for Google OAuth user using user.id 
   // If the code used user.sub the eq() filter would not match and spots would be empty.
   await page.route('**/rest/v1/trailcrew_spots**', (route) =>
     route.fulfill({
-      json: [{ spot_id: 'spot-google-1', trails: { id: 'spot-google-1', name: 'Flowtrail Google Test' } }],
+      json: [{ spot_id: 'spot-google-1' }],
     }),
   );
+  // Spot rows are then fetched per table, filtered to the assigned ids.
+  await page.route('**/rest/v1/trails**', (route) =>
+    route.fulfill({ json: [{ id: 'spot-google-1', name: 'Flowtrail Google Test' }] }),
+  );
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: [] }));
 
   // Sign in with the Google session (sub !== id)
   await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_GOOGLE_SESSION }));
@@ -429,5 +440,32 @@ baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to a
   await expect(page.locator('.parking-editor')).toHaveCount(0);
   await expect(page.locator('.parking-list')).toHaveCount(0);
 
+  assertNoLeaks();
+});
+
+// ── Bikepark ──────────────────────────────────────────────────────────────────
+
+baseTest('spotmanager opens a bikepark with the bikepark editor and no GPX sections', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await page.route('**/rest/v1/trails**', (route) => route.fulfill({ json: [] }));
+
+  await signInOnSpotmanagerPage(page, 'admin', [{ id: 'bp-1', name: 'Bikepark Lenggries' }]);
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const spot = page.locator('.sm-spot-btn:not(.sm-embed-btn)');
+  await expect(spot).toHaveCount(1, { timeout: 6000 });
+  await expect(spot.locator('.sm-spot-type')).toHaveText('Bikepark');
+  await spot.click();
+
+  await expect(page.locator('.sm-details-banner-title', { hasText: 'Spot-Details' })).toBeVisible();
+  await expect(page.locator('.sm-details-banner-title', { hasText: 'Parkplätze' })).toBeVisible();
+  await expect(page.locator('.sm-section h3', { hasText: 'Touren' })).toHaveCount(0);
+  await expect(page.locator('.sm-section h3', { hasText: 'Trails' })).toHaveCount(0);
+
+  await page.locator('.sm-details-banner', { hasText: 'Spot-Details' }).click();
+  await expect(page.locator('.bp-hours')).toBeVisible();
   assertNoLeaks();
 });
