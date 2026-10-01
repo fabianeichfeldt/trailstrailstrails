@@ -2,6 +2,9 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   getMyRole,
   getManageableSpots,
+  getBikeParkDetails,
+  upsertBikeParkDetails,
+  setSpotWebsite,
   uploadGpx,
   upsertTrail,
   upsertTour,
@@ -82,35 +85,96 @@ describe('getMyRole', () => {
 // ── getManageableSpots ────────────────────────────────────────────────────────
 
 describe('getManageableSpots', () => {
-  it('admin path queries all trails ordered by name', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([{ id: 's1', name: 'Spot 1' }]));
+  it('admin merges trails and parks, tags type, sorts by name, includes url, skips dirt_parks', async () => {
+    const fetch = vi.fn().mockImplementation((u: string) =>
+      u.includes('/trails?')
+        ? ok([{ id: 't1', name: 'Zeta', url: 'https://z' }])
+        : ok([{ id: 'p1', name: 'Alpha', url: null }]));
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid', 'admin');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name,latitude,longitude,approved');
+    expect(result.map(r => [r.id, r.type])).toEqual([['p1', 'bikepark'], ['t1', 'trail']]);
+    expect(result[1].url).toBe('https://z');
+    const urls = fetch.mock.calls.map(c => c[0] as string);
+    expect(urls.some(u => u.includes('/trails?') && u.includes('url'))).toBe(true);
+    expect(urls.some(u => u.includes('/parks?'))).toBe(true);
+    expect(urls.some(u => u.includes('dirt_parks'))).toBe(false);
   });
 
-  it('trailcrew path also selects the spot coordinates', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([]));
-    vi.stubGlobal('fetch', fetch);
-    await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(decodeURIComponent(fetch.mock.calls[0][0])).toContain('trails(id,name,latitude,longitude,approved)');
-  });
-
-  it('trailcrew path filters by user_id', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }];
-    const fetch = vi.fn().mockReturnValue(ok(rows));
+  it('trailcrew resolves ids via trailcrew_spots then in.() per table, no embed', async () => {
+    const fetch = vi.fn().mockImplementation((u: string) => {
+      if (u.includes('trailcrew_spots')) return ok([{ spot_id: 'a' }, { spot_id: 'b' }]);
+      if (u.includes('/trails?')) return ok([{ id: 'a', name: 'A' }]);
+      return ok([{ id: 'b', name: 'B' }]);
+    });
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('user_id=eq.uid-abc');
+    expect(result.map(r => r.type)).toEqual(['trail', 'bikepark']);
+    const urls = fetch.mock.calls.map(c => decodeURIComponent(c[0] as string));
+    expect(urls[0]).toContain('trailcrew_spots?select=spot_id&user_id=eq.uid-abc');
+    expect(urls.some(u => u.includes('id=in.(a,b)'))).toBe(true);
+    expect(urls.some(u => u.includes('trails('))).toBe(false);
   });
 
-  it('trailcrew path filters out null trail refs', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }, { trails: null }];
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(rows)));
-    const result = await getManageableSpots(JWT, 'uid', 'trailcrew');
-    expect(result).toHaveLength(1);
+  it('trailcrew with no assignments makes exactly one request', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getManageableSpots(JWT, 'uid', 'trailcrew')).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a failing request', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'boom')));
+    await expect(getManageableSpots(JWT, 'uid', 'admin')).rejects.toThrow('500');
+  });
+});
+
+describe('getBikeParkDetails', () => {
+  it('GETs by id with limit=1 and returns the row', async () => {
+    const row = { id: 'p1', status: 'open' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getBikeParkDetails('p1')).toEqual(row);
+    const url = fetch.mock.calls[0][0] as string;
+    expect(url).toContain('bike_park_details?id=eq.p1');
+    expect(url).toContain('limit=1');
+  });
+  it('returns null when there is no row', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
+    expect(await getBikeParkDetails('p1')).toBeNull();
+  });
+});
+
+describe('upsertBikeParkDetails', () => {
+  it('posts merge-duplicates on id with exactly the editable columns and status_hint null', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([{ id: 'p1' }]));
+    vi.stubGlobal('fetch', fetch);
+    await upsertBikeParkDetails({
+      id: 'p1', status: 'closed', opening_hours: '9-17', trail_description: 'x',
+      last_update: '2026-10-01', rules: 'legacy', status_hint: 'old',
+    } as any, JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('bike_park_details?on_conflict=id');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Prefer).toContain('resolution=merge-duplicates');
+    const body = JSON.parse(init.body);
+    expect(Object.keys(body).sort()).toEqual(
+      ['id', 'last_update', 'opening_hours', 'status', 'status_hint', 'trail_description']);
+    expect(body.status_hint).toBeNull();
+  });
+});
+
+describe('setSpotWebsite', () => {
+  it('calls the RPC with p_spot_id and p_url', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await setSpotWebsite('p1', 'https://x.de', JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/rpc/set_spot_website');
+    expect(JSON.parse(init.body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.de' });
+  });
+  it('throws with the server text on failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'invalid_url')));
+    await expect(setSpotWebsite('p1', 'x', JWT)).rejects.toThrow('invalid_url');
   });
 });
 

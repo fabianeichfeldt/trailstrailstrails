@@ -1,4 +1,6 @@
 import { anon } from '../anon';
+import type { anyTrailType } from '~/types/Trail';
+import { SPOT_CAPABILITIES } from './spotTypes';
 
 const BASE = import.meta.env.VITE_SUPABASE_URL as string;
 const REST  = `${BASE}/rest/v1`;
@@ -26,7 +28,7 @@ async function json<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null; approved?: boolean }
+export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null; approved?: boolean; type: anyTrailType; url?: string | null }
 export interface GpxTrailRow {
   id: string;
   spot_id: string;
@@ -79,17 +81,75 @@ export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'u
   return role ?? 'user';
 }
 
-export async function getManageableSpots(jwt: string, userId: string, role: string): Promise<SpotRow[]> {
-  if (role === 'admin') {
-    const res = await fetch(`${REST}/trails?select=id,name,latitude,longitude,approved&order=name`, { headers: headers(jwt) });
-    return json<SpotRow[]>(res);
-  }
+const SPOT_COLUMNS = 'id,name,latitude,longitude,approved,url';
+
+const MANAGEABLE_TYPES = (Object.keys(SPOT_CAPABILITIES) as anyTrailType[])
+  .filter(t => SPOT_CAPABILITIES[t].manageable);
+
+async function fetchSpotsOfType(type: anyTrailType, jwt: string, ids?: string[]): Promise<SpotRow[]> {
+  const filter = ids ? `&id=in.(${ids.join(',')})` : '';
   const res = await fetch(
-    `${REST}/trailcrew_spots?select=spot_id,trails(id,name,latitude,longitude,approved)&user_id=eq.${userId}`,
-    { headers: headers(jwt) }
+    `${REST}/${SPOT_CAPABILITIES[type].table}?select=${SPOT_COLUMNS}${filter}&order=name`,
+    { headers: headers(jwt) },
   );
-  const rows = await json<Array<{ trails: SpotRow }>>(res);
-  return rows.map(r => r.trails).filter(Boolean);
+  const rows = await json<Omit<SpotRow, 'type'>[]>(res);
+  return rows.map(r => ({ ...r, type }));
+}
+
+export async function getManageableSpots(jwt: string, userId: string, role: string): Promise<SpotRow[]> {
+  let ids: string[] | undefined;
+  if (role !== 'admin') {
+    const res = await fetch(`${REST}/trailcrew_spots?select=spot_id&user_id=eq.${userId}`, { headers: headers(jwt) });
+    ids = (await json<Array<{ spot_id: string }>>(res)).map(r => r.spot_id);
+    if (!ids.length) return [];
+  }
+  const lists = await Promise.all(MANAGEABLE_TYPES.map(t => fetchSpotsOfType(t, jwt, ids)));
+  return lists.flat().sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export interface BikeParkDetailsRow {
+  id: string;
+  status: string | null;
+  opening_hours: string | null;
+  trail_description: string | null;
+  last_update: string | null;
+}
+
+export async function getBikeParkDetails(id: string): Promise<BikeParkDetailsRow | null> {
+  const res = await fetch(
+    `${REST}/bike_park_details?id=eq.${id}&select=id,status,opening_hours,trail_description,last_update&limit=1`,
+    { headers: anonHeaders() },
+  );
+  const rows = await json<BikeParkDetailsRow[]>(res);
+  return rows[0] ?? null;
+}
+
+// status_hint is cleared on save: a legacy import hint must not become the closure reason. Legacy `rules` stay untouched.
+export async function upsertBikeParkDetails(row: BikeParkDetailsRow, jwt: string): Promise<BikeParkDetailsRow> {
+  const body = {
+    id: row.id,
+    status: row.status,
+    opening_hours: row.opening_hours,
+    trail_description: row.trail_description,
+    status_hint: null,
+    last_update: row.last_update,
+  };
+  const res = await fetch(`${REST}/bike_park_details?on_conflict=id`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'resolution=merge-duplicates,return=representation' }),
+    body: JSON.stringify(body),
+  });
+  const data = await json<BikeParkDetailsRow | BikeParkDetailsRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function setSpotWebsite(spotId: string, url: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/rpc/set_spot_website`, {
+    method: 'POST',
+    headers: headers(jwt),
+    body: JSON.stringify({ p_spot_id: spotId, p_url: url }),
+  });
+  if (!res.ok) throw new Error(`Website update failed: ${await res.text()}`);
 }
 
 export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
