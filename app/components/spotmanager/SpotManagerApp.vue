@@ -77,7 +77,10 @@
           </p>
           <button v-for="s in filteredSpots" :key="s.id" class="sm-spot-btn" @click="openSpot(s)">
             <span class="sm-spot-name">{{ s.name }}</span>
-            <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
+            <span class="sm-spot-meta">
+              <span class="sm-type-badge">{{ SPOT_CAPABILITIES[s.type].label }}</span>
+              <span class="sm-spot-id">{{ s.id.slice(0, 8) }}…</span>
+            </span>
           </button>
           <div v-if="authStore.isAdmin" class="sm-admin-section">
             <div class="sm-admin-divider">Admin</div>
@@ -158,6 +161,7 @@
             <i class="fas fa-chevron-right sm-details-arrow" />
           </button>
 
+          <template v-if="caps.gpx">
           <div class="sm-section">
             <div class="sm-section-header">
               <h3>Touren <span class="sm-count">{{ tours.length }}</span></h3>
@@ -250,6 +254,7 @@
               </div>
             </div>
           </div>
+          </template>
         </div>
 
         <!-- Import view -->
@@ -486,6 +491,16 @@
           </div>
         </div>
 
+        <!-- Bikepark details editor -->
+        <BikeParkDetailsEditor
+          v-else-if="view === 'bikepark-details' && currentSpot"
+          :spot="currentSpot"
+          :details="bikeParkDetails"
+          :jwt="editorJwt"
+          @cancel="view = 'list'"
+          @saved="onBikeParkSaved"
+        />
+
         <!-- Spot Details Editor -->
         <div v-else-if="view === 'details'" class="sd-editor">
           <div class="sm-form-header">
@@ -667,24 +682,11 @@
             <div class="sd-char-hint">{{ detailsDescription.length }}/2000</div>
           </div>
 
-          <!-- Invitation codes -->
           <div class="sd-section">
-            <div class="sd-section-label"><i class="fas fa-key" /> Einladungscodes (Trailcrew)</div>
-            <div v-if="newInvitationCode" class="inv-new-code">
-              <span class="inv-code-chip">{{ newInvitationCode }}</span>
-              <span class="inv-code-meta">Gültig 7 Tage · einmalig verwendbar</span>
-            </div>
-            <div v-if="invitationCodes.length" class="inv-list">
-              <div v-for="c in invitationCodes" :key="c.code" class="inv-row" :class="{ 'inv-row--used': c.used_by }">
-                <span class="inv-code">{{ c.code }}</span>
-                <span class="inv-expires">bis {{ formatInvDate(c.expires_at) }}</span>
-                <span class="inv-badge">{{ c.used_by ? 'verwendet' : 'offen' }}</span>
-              </div>
-            </div>
-            <button class="sd-add-rule-btn" :disabled="invitationCodeGenerating" @click="generateInvCode">
-              <i class="fas fa-plus" /> Code erstellen
-            </button>
+            <SpotWebsiteField v-model="detailsWebsite" :error="detailsWebsiteError" />
           </div>
+
+          <SpotInvitationCodes :spot-id="spotId" />
 
           <div class="sd-save-row">
             <button class="sm-btn-secondary" @click="view = 'list'">Abbrechen</button>
@@ -819,16 +821,19 @@
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, BikeParkDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, getBikeParkDetails, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
 import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter'
+import { SPOT_CAPABILITIES } from '../../spot_manager/spotTypes'
+import { bikeParkBannerSub, bikeParkStatusKey } from '../../spot_manager/spotDetailsSummary'
+import { normalizeWebsiteUrl } from '../../spot_manager/spotWebsite'
+import BikeParkDetailsEditor from './BikeParkDetailsEditor.vue'
+import SpotWebsiteField from './SpotWebsiteField.vue'
 import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
-import { listInvitationCodes, createInvitationCode } from '../../communication/invitations'
-import type { InvCode } from '../../communication/invitations'
 import { useSegmentEditor } from './useSegmentEditor'
 import {
   clampSheetHeightVh,
@@ -839,7 +844,7 @@ import {
   DEFAULT_SHEET_VH,
 } from '../../spot_manager/sheetResize'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'bikepark-details'
 
 interface PendingImport {
   key: string
@@ -901,6 +906,12 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
+const bikeParkDetails = ref<BikeParkDetailsRow | null>(null)
+const currentSpot = computed(() => spots.value.find(x => x.id === spotId.value) ?? null)
+const caps = computed(() => SPOT_CAPABILITIES[currentSpot.value?.type ?? 'trail'])
+const editorJwt = ref('')
+const detailsWebsite = ref('')
+const detailsWebsiteError = ref('')
 
 // ── Embed tokens (admin only) ─────────────────────────────────────────────────
 const embedTokens      = ref<EmbedTokenRow[]>([])
@@ -1007,37 +1018,6 @@ async function executeEmbedDelete() {
   }
 }
 
-// ── Invitation codes ─────────────────────────────────────────────────────────
-const invitationCodes = ref<InvCode[]>([])
-const invitationCodeGenerating = ref(false)
-const newInvitationCode = ref<string | null>(null)
-
-function formatInvDate(iso: string) {
-  return new Date(iso).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' })
-}
-
-async function loadInvCodes() {
-  try {
-    invitationCodes.value = await listInvitationCodes(spotId.value, await authStore.getToken())
-  } catch {
-    invitationCodes.value = []
-  }
-}
-
-async function generateInvCode() {
-  invitationCodeGenerating.value = true
-  newInvitationCode.value = null
-  try {
-    const [createdBy, token] = await Promise.all([authStore.getUserId(), authStore.getToken()])
-    newInvitationCode.value = await createInvitationCode(spotId.value, createdBy, token)
-    await loadInvCodes()
-  } catch (e: any) {
-    alert(`Fehler: ${e.message}`)
-  } finally {
-    invitationCodeGenerating.value = false
-  }
-}
-
 // ── Edit form state ───────────────────────────────────────────────────────────
 const editingTrail = ref<GpxTrailRow | null>(null)
 const editingTour = ref<GpxTourRow | null>(null)
@@ -1131,11 +1111,12 @@ function trailBadge(t: GpxTrailRow) {
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const currentStatusMeta = computed(() => {
-  const s = spotDetails.value?.status ?? 'open'
+  const s = caps.value.details === 'bikepark' ? bikeParkStatusKey(bikeParkDetails.value) : (spotDetails.value?.status ?? 'open')
   return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]
 })
 
 const detailsBannerSub = computed(() => {
+  if (caps.value.details === 'bikepark') return bikeParkBannerSub(bikeParkDetails.value)
   const d = spotDetails.value
   if (!d) return 'Nicht konfiguriert'
   const meta = currentStatusMeta.value
@@ -1179,15 +1160,18 @@ async function openSpot(spot: SpotRow) {
   loading.value = true
 
   try {
+    const c = SPOT_CAPABILITIES[spot.type]
     const [t, to, d, pk] = await Promise.all([
-      getSpotTrails(id),
-      getSpotTours(id),
-      getSpotDetails(id),
+      c.gpx ? getSpotTrails(id) : Promise.resolve([]),
+      c.gpx ? getSpotTours(id) : Promise.resolve([]),
+      c.details === 'trail' ? getSpotDetails(id) : Promise.resolve(null),
       getSpotParking(id),
     ])
+    const bp = c.details === 'bikepark' ? await getBikeParkDetails(id) : null
     trails.value = t
     tours.value = to
     spotDetails.value = d
+    bikeParkDetails.value = bp
     // Preloaded so the "Parkplätze" banner can show a count immediately;
     // openParkingList() re-fetches for freshness when the user drills in.
     parkingLots.value = pk
@@ -1220,7 +1204,7 @@ function stepBack() {
     view.value = 'selector'
   } else if (view.value === 'parking-edit') {
     openParkingList()
-  } else if (view.value === 'parking-list') {
+  } else if (view.value === 'parking-list' || view.value === 'bikepark-details') {
     view.value = 'list'
   } else if (view.value === 'import') {
     cancelImport()
@@ -1269,7 +1253,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
     if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
     else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
     else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
-    else if (view.value === 'details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'details' || view.value === 'bikepark-details') crumbs.push({ label: 'Spot-Details' })
     else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
     else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
     else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
@@ -1584,8 +1568,15 @@ watch(view, async (newView, prevView) => {
 })
 
 // ── Details editor ────────────────────────────────────────────────────────────
-function openDetailsEditor() {
+async function openDetailsEditor() {
+  if (caps.value.details === 'bikepark') {
+    editorJwt.value = await authStore.getToken()
+    view.value = 'bikepark-details'
+    return
+  }
   const d = spotDetails.value
+  detailsWebsite.value = currentSpot.value?.url ?? ''
+  detailsWebsiteError.value = ''
   detailsStatus.value = d?.status ?? 'open'
   detailsUseStatusUntil.value = !!d?.status_until
   detailsStatusUntil.value = d?.status_until ?? ''
@@ -1606,12 +1597,24 @@ function openDetailsEditor() {
   detailsNightPolicy.value = d?.night_policy ?? 'none'
   detailsMinutesBeforeDusk.value = d?.night_before_dusk_min ?? 60
   detailsMinutesAfterDawn.value = d?.night_after_dawn_min ?? 60
-  newInvitationCode.value = null
-  loadInvCodes()
   view.value = 'details'
 }
 
+function onBikeParkSaved(details: BikeParkDetailsRow, url: string) {
+  bikeParkDetails.value = details
+  setSpotUrl(url)
+  view.value = 'list'
+}
+
+function setSpotUrl(url: string) {
+  const sp = currentSpot.value
+  if (sp) sp.url = url
+}
+
 async function saveDetails() {
+  detailsWebsiteError.value = ''
+  const site = normalizeWebsiteUrl(detailsWebsite.value)
+  if (!site.ok) { detailsWebsiteError.value = site.error; return }
   busy.value = true
   try {
     const row: SpotDetailsRow = {
@@ -1636,6 +1639,10 @@ async function saveDetails() {
     }
     const jwt = await authStore.getToken()
     spotDetails.value = await upsertSpotDetails(row, jwt)
+    if (site.url !== (currentSpot.value?.url ?? '')) {
+      await setSpotWebsite(spotId.value, site.url, jwt)
+      setSpotUrl(site.url)
+    }
     view.value = 'list'
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
@@ -1789,7 +1796,12 @@ function ddmmToMmdd(ddmm: string): string | undefined {
   position: absolute; right: 2px; top: 50%; transform: translateY(-50%);
   width: 40px; height: 40px; border: none; background: none; color: #888; cursor: pointer;
 }
-.sm-spot-name { font-weight: 700; font-size: 14px; }
+.sm-spot-name { font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+.sm-spot-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.sm-type-badge {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px;
+  color: #0067b0; background: #e6f1fb; border-radius: 10px; padding: 2px 8px; white-space: nowrap;
+}
 .sm-spot-id { font-size: 11px; color: #aaa; font-family: monospace; }
 
 .sm-admin-section { margin-top: 16px; }
@@ -1941,9 +1953,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 
 /* ── Details editor ───────────────────────────────────────────────── */
 .sd-editor { display: flex; flex-direction: column; gap: 0; padding: 14px 14px 100px; }
-.sd-section { padding: 14px 0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-.sd-section:last-of-type { border-bottom: none; }
-.sd-section-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888; }
 .sd-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .sd-status-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
 .sd-status-card {
@@ -2009,12 +2018,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 .sd-rule-input::placeholder { color: #bbb; }
 .sd-rule-del { background: none; border: none; color: #ccc; cursor: pointer; padding: 2px 4px; border-radius: 4px; font-size: 13px; flex-shrink: 0; }
 .sd-rule-del:hover { color: #c62828; background: #fdecea; }
-.sd-add-rule-btn {
-  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-  color: #0077cc; background: #f0f6ff; border: 1px dashed #a0c8f0; border-radius: 8px;
-  padding: 9px 14px; cursor: pointer; width: 100%; justify-content: center;
-}
-.sd-add-rule-btn:hover { background: #daeeff; border-color: #0077cc; }
 .sd-save-row {
   position: sticky; bottom: 0; background: #fff; border-top: 1px solid #eee;
   padding: 12px 0 4px; display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px;
@@ -2056,29 +2059,6 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 @keyframes sm-spin { to { transform: rotate(360deg); } }
 /* .sm-center-msg/.sm-error live in spotmanager-shared.css */
 .sm-muted { font-size: 12px; color: #aaa; }
-
-/* ── Invitation codes ─────────────────────────────────────────────── */
-.inv-new-code {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-  background: #f0f9eb; border: 1px solid #b7e1a0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
-}
-.inv-code-chip {
-  font-family: monospace; font-size: 22px; font-weight: 700; letter-spacing: .2em; color: #2d6a1f;
-}
-.inv-code-meta { font-size: 11px; color: #5a8a4a; }
-.inv-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px; }
-.inv-row {
-  display: flex; align-items: center; gap: 10px; padding: 6px 10px;
-  border-radius: 6px; background: #f8f8f8; font-size: 12px;
-}
-.inv-row--used { opacity: .5; }
-.inv-code { font-family: monospace; font-weight: 700; letter-spacing: .1em; color: #333; flex: 0 0 auto; }
-.inv-expires { color: #888; flex: 1; }
-.inv-badge {
-  font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
-  background: #e0f0e0; color: #2d6a1f;
-}
-.inv-row--used .inv-badge { background: #eee; color: #999; }
 
 /* ── Segment editor ──────────────────────────────────────────────── */
 .sm-header-actions { display: flex; gap: 6px; align-items: center; }

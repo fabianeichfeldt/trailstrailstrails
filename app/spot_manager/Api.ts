@@ -1,4 +1,6 @@
 import { anon } from '../anon';
+import type { anyTrailType } from '../types/Trail';
+import { SPOT_CAPABILITIES, type SpotCapability } from './spotTypes';
 
 const BASE = import.meta.env.VITE_SUPABASE_URL as string;
 const REST  = `${BASE}/rest/v1`;
@@ -26,7 +28,7 @@ async function json<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null; approved?: boolean }
+export interface SpotRow { id: string; name: string; type: anyTrailType; url?: string | null; latitude?: number | null; longitude?: number | null; approved?: boolean }
 export interface GpxTrailRow {
   id: string;
   spot_id: string;
@@ -79,17 +81,72 @@ export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'u
   return role ?? 'user';
 }
 
+const SPOT_COLUMNS = 'id,name,latitude,longitude,approved,url';
+
+const MANAGEABLE = (Object.entries(SPOT_CAPABILITIES) as [anyTrailType, SpotCapability][])
+  .filter(([, c]) => c.manageable);
+
+async function fetchSpotTable(type: anyTrailType, table: string, filter: string, jwt: string): Promise<SpotRow[]> {
+  const res = await fetch(`${REST}/${table}?select=${SPOT_COLUMNS}${filter}`, { headers: headers(jwt) });
+  const rows = await json<Omit<SpotRow, 'type'>[]>(res);
+  return rows.map(r => ({ ...r, type }));
+}
+
 export async function getManageableSpots(jwt: string, userId: string, role: string): Promise<SpotRow[]> {
-  if (role === 'admin') {
-    const res = await fetch(`${REST}/trails?select=id,name,latitude,longitude,approved&order=name`, { headers: headers(jwt) });
-    return json<SpotRow[]>(res);
+  let filter = '&order=name';
+  if (role !== 'admin') {
+    const res = await fetch(`${REST}/trailcrew_spots?select=spot_id&user_id=eq.${userId}`, { headers: headers(jwt) });
+    const ids = (await json<Array<{ spot_id: string }>>(res)).map(r => r.spot_id).filter(Boolean);
+    if (!ids.length) return [];
+    // Quote ids so PostgREST's in.() list can't be broken by odd characters.
+    const list = ids.map(id => `"${id.replace(/["\\]/g, '')}"`).join(',');
+    filter = `&id=in.(${encodeURIComponent(list)})`;
   }
+  const groups = await Promise.all(MANAGEABLE.map(([type, c]) => fetchSpotTable(type, c.table, filter, jwt)));
+  return groups.flat().sort((a, b) => a.name.localeCompare(b.name, 'de'));
+}
+
+export interface BikeParkDetailsRow {
+  id: string;
+  status: SpotStatus | null;
+  opening_hours: string | null;
+  trail_description: string | null;
+  last_update?: string | null;
+}
+
+export async function getBikeParkDetails(id: string): Promise<BikeParkDetailsRow | null> {
   const res = await fetch(
-    `${REST}/trailcrew_spots?select=spot_id,trails(id,name,latitude,longitude,approved)&user_id=eq.${userId}`,
-    { headers: headers(jwt) }
+    `${REST}/bike_park_details?id=eq.${id}&select=id,status,opening_hours,trail_description,last_update&limit=1`,
+    { headers: anonHeaders() },
   );
-  const rows = await json<Array<{ trails: SpotRow }>>(res);
-  return rows.map(r => r.trails).filter(Boolean);
+  const rows = await json<BikeParkDetailsRow[]>(res);
+  return rows[0] ?? null;
+}
+
+export async function upsertBikeParkDetails(row: BikeParkDetailsRow, jwt: string): Promise<BikeParkDetailsRow> {
+  const res = await fetch(`${REST}/bike_park_details?on_conflict=id`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'resolution=merge-duplicates,return=representation' }),
+    body: JSON.stringify({
+      id: row.id,
+      status: row.status,
+      opening_hours: row.opening_hours,
+      trail_description: row.trail_description,
+      status_hint: null,
+      last_update: row.last_update ?? new Date().toISOString(),
+    }),
+  });
+  const rows = await json<BikeParkDetailsRow[]>(res);
+  return rows[0];
+}
+
+export async function setSpotWebsite(spotId: string, url: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/rpc/set_spot_website`, {
+    method: 'POST',
+    headers: headers(jwt),
+    body: JSON.stringify({ p_spot_id: spotId, p_url: url }),
+  });
+  if (!res.ok) throw new Error(`Website update failed: ${await res.text()}`);
 }
 
 export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
