@@ -82,35 +82,61 @@ describe('getMyRole', () => {
 // ── getManageableSpots ────────────────────────────────────────────────────────
 
 describe('getManageableSpots', () => {
-  it('admin path queries all trails ordered by name', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([{ id: 's1', name: 'Spot 1' }]));
+  const trailRow = { id: 't1', name: 'Zeta Trail', latitude: 1, longitude: 2, approved: true, url: 'https://t.example' };
+  const parkRow  = { id: 'p1', name: 'Alpha Park',  latitude: 3, longitude: 4, approved: true, url: null };
+
+  // Routes a fetch by table name in the URL path.
+  function routed(byTable: Record<string, unknown>) {
+    return vi.fn((url: string) => {
+      const table = url.split('/rest/v1/')[1].split('?')[0];
+      return ok(byTable[table] ?? []);
+    });
+  }
+
+  it('admin requests trails and parks (not dirt_parks), tags type, sorts by name, includes url', async () => {
+    const fetch = routed({ trails: [trailRow], parks: [parkRow] });
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid', 'admin');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name,latitude,longitude,approved');
+    const urls = fetch.mock.calls.map(c => c[0] as string);
+    expect(urls).toHaveLength(2);
+    expect(urls.some(u => u.includes('/rest/v1/trails?'))).toBe(true);
+    expect(urls.some(u => u.includes('/rest/v1/parks?'))).toBe(true);
+    expect(urls.some(u => u.includes('dirt_parks'))).toBe(false);
+    expect(urls.every(u => u.includes('select=id,name,latitude,longitude,approved,url'))).toBe(true);
+    expect(result).toEqual([
+      { ...parkRow,  type: 'bikepark' },
+      { ...trailRow, type: 'trail' },
+    ]);
   });
 
-  it('trailcrew path also selects the spot coordinates', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([]));
-    vi.stubGlobal('fetch', fetch);
-    await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(decodeURIComponent(fetch.mock.calls[0][0])).toContain('trails(id,name,latitude,longitude,approved)');
-  });
-
-  it('trailcrew path filters by user_id', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }];
-    const fetch = vi.fn().mockReturnValue(ok(rows));
+  it('trailcrew reads assignments, then queries each manageable table by id (no trails( embed)', async () => {
+    const fetch = routed({
+      trailcrew_spots: [{ spot_id: 't1' }, { spot_id: 'p1' }],
+      trails: [trailRow],
+      parks: [parkRow],
+    });
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('user_id=eq.uid-abc');
+    const urls = fetch.mock.calls.map(c => decodeURIComponent(c[0] as string));
+    expect(urls[0]).toContain('trailcrew_spots?select=spot_id&user_id=eq.uid-abc');
+    expect(urls.some(u => u.includes('/trails?') && u.includes('id=in.(t1,p1)'))).toBe(true);
+    expect(urls.some(u => u.includes('/parks?') && u.includes('id=in.(t1,p1)'))).toBe(true);
+    expect(urls.some(u => u.includes('trails('))).toBe(false);
+    expect(result.map(s => s.id)).toEqual(['p1', 't1']);
+    expect(result.map(s => s.type)).toEqual(['bikepark', 'trail']);
   });
 
-  it('trailcrew path filters out null trail refs', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }, { trails: null }];
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(rows)));
-    const result = await getManageableSpots(JWT, 'uid', 'trailcrew');
-    expect(result).toHaveLength(1);
+  it('trailcrew with no assignments makes exactly one request', async () => {
+    const fetch = routed({ trailcrew_spots: [] });
+    vi.stubGlobal('fetch', fetch);
+    expect(await getManageableSpots(JWT, 'uid', 'trailcrew')).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a failing request as an error', async () => {
+    vi.stubGlobal('fetch', vi.fn((url: string) =>
+      url.includes('/parks?') ? err(500, 'boom') : ok([trailRow])));
+    await expect(getManageableSpots(JWT, 'uid', 'admin')).rejects.toThrow('500');
   });
 });
 

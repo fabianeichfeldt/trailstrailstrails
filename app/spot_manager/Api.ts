@@ -1,4 +1,6 @@
 import { anon } from '../anon';
+import type { anyTrailType } from '../types/Trail';
+import { SPOT_CAPABILITIES } from './spotTypes';
 
 const BASE = import.meta.env.VITE_SUPABASE_URL as string;
 const REST  = `${BASE}/rest/v1`;
@@ -26,7 +28,11 @@ async function json<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-export interface SpotRow { id: string; name: string; latitude?: number | null; longitude?: number | null; approved?: boolean }
+export interface SpotRow {
+  id: string; name: string; type: anyTrailType;
+  latitude?: number | null; longitude?: number | null; approved?: boolean; url?: string | null;
+}
+const SPOT_ROW_SELECT = 'id,name,latitude,longitude,approved,url';
 export interface GpxTrailRow {
   id: string;
   spot_id: string;
@@ -80,16 +86,19 @@ export async function getMyRole(jwt: string): Promise<'admin' | 'trailcrew' | 'u
 }
 
 export async function getManageableSpots(jwt: string, userId: string, role: string): Promise<SpotRow[]> {
-  if (role === 'admin') {
-    const res = await fetch(`${REST}/trails?select=id,name,latitude,longitude,approved&order=name`, { headers: headers(jwt) });
-    return json<SpotRow[]>(res);
+  let idFilter = '';
+  if (role !== 'admin') {
+    const res = await fetch(`${REST}/trailcrew_spots?select=spot_id&user_id=eq.${userId}`, { headers: headers(jwt) });
+    const ids = (await json<Array<{ spot_id: string }>>(res)).map(r => r.spot_id);
+    if (ids.length === 0) return [];
+    idFilter = `&id=in.(${ids.join(',')})`;
   }
-  const res = await fetch(
-    `${REST}/trailcrew_spots?select=spot_id,trails(id,name,latitude,longitude,approved)&user_id=eq.${userId}`,
-    { headers: headers(jwt) }
-  );
-  const rows = await json<Array<{ trails: SpotRow }>>(res);
-  return rows.map(r => r.trails).filter(Boolean);
+  const types = (Object.keys(SPOT_CAPABILITIES) as anyTrailType[]).filter(t => SPOT_CAPABILITIES[t].manageable);
+  const perType = await Promise.all(types.map(async type => {
+    const res = await fetch(`${REST}/${SPOT_CAPABILITIES[type].table}?select=${SPOT_ROW_SELECT}${idFilter}&order=name`, { headers: headers(jwt) });
+    return (await json<Array<Omit<SpotRow, 'type'>>>(res)).map(r => ({ ...r, type }));
+  }));
+  return perType.flat().sort((a, b) => a.name.localeCompare(b.name));
 }
 
 export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
