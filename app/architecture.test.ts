@@ -255,6 +255,14 @@ describe('Segment editor (architectural isolation)', () => {
   })
 })
 
+describe('SpotManager spot-type dispatch (Open/Closed)', () => {
+  test('SpotManagerApp.vue reads SPOT_CAPABILITIES instead of type chains', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('SPOT_CAPABILITIES')
+    expect(src).not.toMatch(/===\s*['"](bikepark|dirtpark)['"]/)
+  })
+})
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Trail tooltip utility — pure, no browser/store/composable deps
 // ─────────────────────────────────────────────────────────────────────────────

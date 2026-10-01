@@ -92,7 +92,8 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
-  // Return two spots from the admin trails query
+  // Return two spots from the admin trails query (no parks)
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trails**', (route) =>
     route.fulfill({ json: [
       { id: 'spot-1', name: 'Flowtrail Tegernsee' },
@@ -104,8 +105,8 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
   await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
 
   await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)')).toHaveCount(2, { timeout: 6000 });
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Bikepark Lenggries');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Bikepark Lenggries');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Flowtrail Tegernsee');
   assertNoLeaks();
 });
 
@@ -132,10 +133,12 @@ baseTest('spotmanager loads trailcrew spots for Google OAuth user using user.id 
   // Mock trailcrew_spots keyed on the Supabase UUID (user.id), not user.sub.
   // If the code used user.sub the eq() filter would not match and spots would be empty.
   await page.route('**/rest/v1/trailcrew_spots**', (route) =>
-    route.fulfill({
-      json: [{ spot_id: 'spot-google-1', trails: { id: 'spot-google-1', name: 'Flowtrail Google Test' } }],
-    }),
+    route.fulfill({ json: [{ spot_id: 'spot-google-1' }] }),
   );
+  await page.route('**/rest/v1/trails**', (route) =>
+    route.fulfill({ json: [{ id: 'spot-google-1', name: 'Flowtrail Google Test' }] }),
+  );
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
 
   // Sign in with the Google session (sub !== id)
   await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_GOOGLE_SESSION }));
@@ -191,6 +194,7 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
   await page.waitForLoadState('networkidle');
 
   // Return one spot for the admin spot list
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trails**', (route) =>
     route.fulfill({ json: [{ id: 'spot-1', name: 'Flowtrail Tegernsee' }] }),
   );
@@ -241,8 +245,12 @@ baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and list
 
   // trailcrew has exactly one assigned spot
   await page.route('**/rest/v1/trailcrew_spots**', (route) =>
-    route.fulfill({ json: [{ spot_id: 'spot-1', trails: { id: 'spot-1', name: 'Flowtrail Tegernsee' } }] }),
+    route.fulfill({ json: [{ spot_id: 'spot-1' }] }),
   );
+  await page.route('**/rest/v1/trails**', (route) =>
+    route.fulfill({ json: [{ id: 'spot-1', name: 'Flowtrail Tegernsee' }] }),
+  );
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/spot_gpx_trails**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_details**',   (route) => route.fulfill({ json: [] }));
@@ -390,8 +398,12 @@ baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to a
   await page.waitForLoadState('networkidle');
 
   await page.route('**/rest/v1/trailcrew_spots**', (route) =>
-    route.fulfill({ json: [{ spot_id: 'spot-1', trails: { id: 'spot-1', name: 'Flowtrail Tegernsee' } }] }),
+    route.fulfill({ json: [{ spot_id: 'spot-1' }] }),
   );
+  await page.route('**/rest/v1/trails**', (route) =>
+    route.fulfill({ json: [{ id: 'spot-1', name: 'Flowtrail Tegernsee' }] }),
+  );
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/spot_gpx_trails**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/spot_gpx_tours**',  (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_details**',   (route) => route.fulfill({ json: [] }));
@@ -428,6 +440,40 @@ baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to a
   await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toBeVisible({ timeout: 6000 });
   await expect(page.locator('.parking-editor')).toHaveCount(0);
   await expect(page.locator('.parking-list')).toHaveCount(0);
+
+  assertNoLeaks();
+});
+
+// ── Bikepark ─────────────────────────────────────────────────────────────────
+baseTest('spotmanager: admin opens a bikepark and gets the bikepark editor, not trails/tours', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await page.route('**/rest/v1/trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/parks**', (route) =>
+    route.fulfill({ json: [{ id: 'park-1', name: 'Bikepark Lenggries', latitude: 47.68, longitude: 11.56, approved: true, url: null }] }),
+  );
+  await page.route('**/rest/v1/bike_park_details**', (route) =>
+    route.fulfill({ json: [{ id: 'park-1', status: 'open', opening_hours: 'Mo-So 9-17', trail_description: null, last_update: null }] }),
+  );
+
+  await signInOnSpotmanagerPage(page, 'admin');
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const row = page.locator('.sm-spot-btn:not(.sm-embed-btn)');
+  await expect(row).toHaveCount(1, { timeout: 6000 });
+  await expect(row.first().locator('.sm-spot-type')).toHaveText('Bikepark');
+  await row.first().click();
+
+  await expect(page.locator('.sm-details-banner').filter({ hasText: 'Spot-Details' })).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-details-banner').filter({ hasText: 'Parkplätze' })).toBeVisible();
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toHaveCount(0);
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Trails' })).toHaveCount(0);
+
+  await page.locator('.sm-details-banner').filter({ hasText: 'Spot-Details' }).click();
+  await expect(page.locator('textarea.bp-hours')).toBeVisible({ timeout: 4000 });
+  await expect(page.locator('.sd-status-card')).toHaveText(['Offen', 'Gesperrt']);
 
   assertNoLeaks();
 });
