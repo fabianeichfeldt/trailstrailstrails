@@ -113,8 +113,6 @@ async function save() {
 
 <style scoped>
 .bpe { min-width: 0; }
-.bpe .sd-section { padding: 14px 0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-.bpe .sd-section-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888; }
 .bpe .sd-status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .bpe .sd-status-card {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;

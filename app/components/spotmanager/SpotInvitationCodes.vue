@@ -64,17 +64,6 @@ watch(() => props.spotId, () => {
 </script>
 
 <style scoped>
-/* .sd-section*, .sd-add-rule-btn duplicated from SpotManagerApp (its scoped styles don't reach child internals) */
-.sd-section { padding: 14px 0; border-bottom: 1px solid #f0f0f0; display: flex; flex-direction: column; gap: 10px; }
-.sd-section:last-of-type { border-bottom: none; }
-.sd-section-label { display: flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #888; }
-.sd-add-rule-btn {
-  display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-  color: #0077cc; background: #f0f6ff; border: 1px dashed #a0c8f0; border-radius: 8px;
-  padding: 9px 14px; cursor: pointer; width: 100%; justify-content: center;
-}
-.sd-add-rule-btn:hover { background: #daeeff; border-color: #0077cc; }
-
 .inv-new-code {
   display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
   background: #f0f9eb; border: 1px solid #b7e1a0; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px;
