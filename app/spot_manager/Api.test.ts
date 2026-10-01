@@ -2,6 +2,9 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   getMyRole,
   getManageableSpots,
+  getBikeParkDetails,
+  upsertBikeParkDetails,
+  setSpotWebsite,
   uploadGpx,
   upsertTrail,
   upsertTour,
@@ -82,35 +85,106 @@ describe('getMyRole', () => {
 // ── getManageableSpots ────────────────────────────────────────────────────────
 
 describe('getManageableSpots', () => {
-  it('admin path queries all trails ordered by name', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([{ id: 's1', name: 'Spot 1' }]));
+  const urls = (f: ReturnType<typeof vi.fn>) => f.mock.calls.map(c => decodeURIComponent(c[0] as string));
+
+  it('admin queries trails and parks (not dirt_parks), merges, tags type, sorts by name', async () => {
+    const fetch = vi.fn().mockImplementation((u: string) =>
+      u.includes('/trails?') ? ok([{ id: 't1', name: 'Zeta', url: 'https://z' }])
+      : u.includes('/parks?') ? ok([{ id: 'p1', name: 'Alpha', url: null }])
+      : ok([]));
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid', 'admin');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('/trails?select=id,name,latitude,longitude,approved');
+    expect(result).toEqual([
+      { id: 'p1', name: 'Alpha', url: null, type: 'bikepark' },
+      { id: 't1', name: 'Zeta', url: 'https://z', type: 'trail' },
+    ]);
+    const u = urls(fetch);
+    expect(u).toHaveLength(2);
+    expect(u.some(x => x.includes('/trails?select=id,name,latitude,longitude,approved,url'))).toBe(true);
+    expect(u.some(x => x.includes('/parks?select=id,name,latitude,longitude,approved,url'))).toBe(true);
+    expect(u.some(x => x.includes('dirt_parks'))).toBe(false);
   });
 
-  it('trailcrew path also selects the spot coordinates', async () => {
-    const fetch = vi.fn().mockReturnValue(ok([]));
-    vi.stubGlobal('fetch', fetch);
-    await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(decodeURIComponent(fetch.mock.calls[0][0])).toContain('trails(id,name,latitude,longitude,approved)');
-  });
-
-  it('trailcrew path filters by user_id', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }];
-    const fetch = vi.fn().mockReturnValue(ok(rows));
+  it('trailcrew reads assignments then id=in per manageable table, without embeds', async () => {
+    const fetch = vi.fn().mockImplementation((u: string) =>
+      u.includes('trailcrew_spots') ? ok([{ spot_id: 's1' }, { spot_id: 's2' }])
+      : u.includes('/trails?') ? ok([{ id: 's1', name: 'B' }])
+      : ok([{ id: 's2', name: 'A' }]));
     vi.stubGlobal('fetch', fetch);
     const result = await getManageableSpots(JWT, 'uid-abc', 'trailcrew');
-    expect(result).toEqual([{ id: 's1', name: 'Spot 1' }]);
-    expect(fetch.mock.calls[0][0]).toContain('user_id=eq.uid-abc');
+    expect(result.map(r => [r.id, r.type])).toEqual([['s2', 'bikepark'], ['s1', 'trail']]);
+    const u = urls(fetch);
+    expect(u[0]).toContain('trailcrew_spots?select=spot_id&user_id=eq.uid-abc');
+    expect(u.slice(1).every(x => x.includes('id=in.("s1","s2")'))).toBe(true);
+    expect(u.some(x => x.includes('trails('))).toBe(false);
   });
 
-  it('trailcrew path filters out null trail refs', async () => {
-    const rows = [{ trails: { id: 's1', name: 'Spot 1' } }, { trails: null }];
-    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok(rows)));
-    const result = await getManageableSpots(JWT, 'uid', 'trailcrew');
-    expect(result).toHaveLength(1);
+  it('trailcrew with no assignments makes exactly one request', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getManageableSpots(JWT, 'uid', 'trailcrew')).toEqual([]);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('surfaces a failing request', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(500, 'boom')));
+    await expect(getManageableSpots(JWT, 'uid', 'admin')).rejects.toThrow(/boom/);
+  });
+});
+
+// ── bike park details / website ───────────────────────────────────────────────
+
+describe('getBikeParkDetails', () => {
+  it('GETs the row by id and returns it', async () => {
+    const row = { id: 'p1', status: 'open', opening_hours: 'x', trail_description: 'y' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getBikeParkDetails('p1')).toEqual(row);
+    expect(fetch.mock.calls[0][0]).toContain(
+      'bike_park_details?id=eq.p1&select=id,status,opening_hours,trail_description,last_update&limit=1');
+  });
+  it('returns null when absent', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
+    expect(await getBikeParkDetails('p1')).toBeNull();
+  });
+});
+
+describe('upsertBikeParkDetails', () => {
+  it('POSTs merge-duplicates with exactly the allowed columns', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([{ id: 'p1', status: 'open', opening_hours: 'h', trail_description: 'd' }]));
+    vi.stubGlobal('fetch', fetch);
+    const out = await upsertBikeParkDetails(
+      { id: 'p1', status: 'open', opening_hours: 'h', trail_description: 'd', last_update: '2026-01-01T00:00:00Z' }, JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('bike_park_details?on_conflict=id');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Prefer).toContain('resolution=merge-duplicates');
+    expect(init.headers.Prefer).toContain('return=representation');
+    expect(JSON.parse(init.body)).toEqual({
+      id: 'p1', status: 'open', opening_hours: 'h', trail_description: 'd',
+      status_hint: null, last_update: '2026-01-01T00:00:00Z',
+    });
+    expect(out.id).toBe('p1');
+  });
+  it('defaults last_update to now', async () => {
+    const fetch = vi.fn().mockReturnValue(ok([{ id: 'p1' }]));
+    vi.stubGlobal('fetch', fetch);
+    await upsertBikeParkDetails({ id: 'p1', status: null, opening_hours: null, trail_description: null }, JWT);
+    expect(typeof JSON.parse(fetch.mock.calls[0][1].body).last_update).toBe('string');
+  });
+});
+
+describe('setSpotWebsite', () => {
+  it('POSTs the RPC with p_spot_id and p_url', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await setSpotWebsite('p1', 'https://x.de', JWT);
+    expect(fetch.mock.calls[0][0]).toContain('rpc/set_spot_website');
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.de' });
+  });
+  it('throws with the server text on failure', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'invalid url')));
+    await expect(setSpotWebsite('p1', 'x', JWT)).rejects.toThrow(/invalid url/);
   });
 });
 
