@@ -39,10 +39,7 @@
       <SpotWebsiteField v-model="website" :error="websiteError" />
     </div>
 
-    <div class="sd-section">
-      <div class="sd-section-label"><i class="fas fa-key" /> Einladungscodes (Trailcrew)</div>
-      <SpotInvitationCodes :spot-id="spot.id" />
-    </div>
+    <SpotInvitationCodes :spot-id="spot.id" />
 
     <p v-if="saveError" class="sm-error">{{ saveError }}</p>
     <div class="sd-save-row">

@@ -7,6 +7,14 @@ vi.mock('~/spot_manager/Api', () => ({
   setSpotWebsite: vi.fn().mockResolvedValue(undefined),
 }))
 
+vi.mock('~/communication/invitations', () => ({
+  listInvitationCodes: vi.fn().mockResolvedValue([]),
+  createInvitationCode: vi.fn(),
+}))
+vi.mock('~/stores/auth', () => ({
+  useAuthStore: () => ({ getToken: async () => 'jwt', getUserId: async () => 'u1' }),
+}))
+
 import { upsertBikeParkDetails, setSpotWebsite } from '~/spot_manager/Api'
 import BikeParkDetailsEditor from './BikeParkDetailsEditor.vue'
 
@@ -35,6 +43,12 @@ describe('BikeParkDetailsEditor', () => {
     for (const t of ['Regensperre', 'Nachtsperrung', 'Saison', 'Zugang', 'Nutzungsregeln', 'Betroffene Trails', 'Eingeschränkt']) {
       expect(text).not.toContain(t)
     }
+  })
+
+  it('shows the invitation-codes heading exactly once', async () => {
+    const w = mount(BikeParkDetailsEditor, { props: { spot, details, jwt: 'jwt' } })
+    await flushPromises()
+    expect(w.text().match(/Einladungscodes/g)).toHaveLength(1)
   })
 
   it.each(['unknown', 'limited', null] as const)('legacy status %s selects neither option', (status) => {
