@@ -18,6 +18,9 @@ import {
   getSpotParking,
   upsertParking,
   deleteParking,
+  getBikeParkDetails,
+  upsertBikeParkDetails,
+  setSpotWebsite,
   type GpxTrailRow,
   type GpxTourRow,
   type SpotDetailsRow,
@@ -559,5 +562,68 @@ describe('deleteParking', () => {
   it('throws on non-ok response', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'forbidden')));
     await expect(deleteParking('pk1', JWT)).rejects.toThrow('Delete failed');
+  });
+});
+
+// ── bikepark details + website ────────────────────────────────────────────────
+
+describe('getBikeParkDetails', () => {
+  it('GETs bike_park_details by id and returns the row', async () => {
+    const row = { id: 'p1', status: 'open', opening_hours: 'Mo-So', trail_description: 'x', last_update: '2026-10-01' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    expect(await getBikeParkDetails('p1')).toEqual(row);
+    const url = fetch.mock.calls[0][0] as string;
+    expect(url).toContain('/bike_park_details?id=eq.p1&select=');
+    expect(url).toContain('limit=1');
+  });
+
+  it('returns null when there is no row', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
+    expect(await getBikeParkDetails('p1')).toBeNull();
+  });
+});
+
+describe('upsertBikeParkDetails', () => {
+  it('POSTs merge-duplicates on id with only the owned columns and a cleared status_hint', async () => {
+    const row = { id: 'p1', status: 'open' as const, opening_hours: 'Mo-So', trail_description: 'x', last_update: '2026-10-01' };
+    const fetch = vi.fn().mockReturnValue(ok([row]));
+    vi.stubGlobal('fetch', fetch);
+    const result = await upsertBikeParkDetails({ ...row, rules: ['legacy'] } as never, JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/bike_park_details?on_conflict=id');
+    expect(init.method).toBe('POST');
+    expect(init.headers.Prefer).toContain('resolution=merge-duplicates');
+    expect(init.headers.Authorization).toBe(`Bearer ${JWT}`);
+    const body = JSON.parse(init.body);
+    expect(Object.keys(body).sort()).toEqual(
+      ['id', 'last_update', 'opening_hours', 'status', 'status_hint', 'trail_description'],
+    );
+    expect(body.status_hint).toBeNull();
+    expect(result).toEqual(row);
+  });
+
+  it('throws on non-ok response', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(403, 'rls')));
+    await expect(upsertBikeParkDetails(
+      { id: 'p1', status: 'open', opening_hours: '', trail_description: '', last_update: 'd' }, JWT,
+    )).rejects.toThrow('403');
+  });
+});
+
+describe('setSpotWebsite', () => {
+  it('POSTs rpc/set_spot_website with p_spot_id and p_url', async () => {
+    const fetch = vi.fn().mockReturnValue(ok(null));
+    vi.stubGlobal('fetch', fetch);
+    await setSpotWebsite('p1', 'https://x.example', JWT);
+    const [url, init] = fetch.mock.calls[0];
+    expect(url).toContain('/rpc/set_spot_website');
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.example' });
+  });
+
+  it('throws with the server text on non-ok', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'invalid_url')));
+    await expect(setSpotWebsite('p1', 'nope', JWT)).rejects.toThrow('invalid_url');
   });
 });

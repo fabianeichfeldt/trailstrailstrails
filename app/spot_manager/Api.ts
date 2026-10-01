@@ -260,6 +260,54 @@ export async function upsertSpotDetails(row: SpotDetailsRow, jwt: string): Promi
   return Array.isArray(data) ? data[0] : data;
 }
 
+// ─── Bikepark details ──────────────────────────────────────────────────────────
+
+export interface BikeParkDetailsRow {
+  id: string;
+  status: SpotStatus;
+  opening_hours: string | null;
+  trail_description: string | null;
+  last_update: string;
+}
+
+const BIKEPARK_DETAILS_SELECT = 'id,status,opening_hours,trail_description,last_update';
+
+export async function getBikeParkDetails(id: string): Promise<BikeParkDetailsRow | null> {
+  const res = await fetch(`${REST}/bike_park_details?id=eq.${id}&select=${BIKEPARK_DETAILS_SELECT}&limit=1`, {
+    headers: anonHeaders(),
+  });
+  const data = await json<BikeParkDetailsRow[]>(res);
+  return data[0] ?? null;
+}
+
+/** Sends only the owned columns (legacy `rules` stay untouched) and clears the stale status_hint. */
+export async function upsertBikeParkDetails(row: BikeParkDetailsRow, jwt: string): Promise<BikeParkDetailsRow> {
+  const body = {
+    id: row.id,
+    status: row.status,
+    opening_hours: row.opening_hours,
+    trail_description: row.trail_description,
+    status_hint: null,
+    last_update: row.last_update,
+  };
+  const res = await fetch(`${REST}/bike_park_details?on_conflict=id`, {
+    method: 'POST',
+    headers: headers(jwt, { Prefer: 'return=representation,resolution=merge-duplicates' }),
+    body: JSON.stringify(body),
+  });
+  const data = await json<BikeParkDetailsRow | BikeParkDetailsRow[]>(res);
+  return Array.isArray(data) ? data[0] : data;
+}
+
+export async function setSpotWebsite(spotId: string, url: string, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/rpc/set_spot_website`, {
+    method: 'POST',
+    headers: headers(jwt),
+    body: JSON.stringify({ p_spot_id: spotId, p_url: url }),
+  });
+  if (!res.ok) throw new Error(`Set website failed: ${await res.text()}`);
+}
+
 // ─── Embed token management ───────────────────────────────────────────────────
 
 export interface EmbedTokenRow {
