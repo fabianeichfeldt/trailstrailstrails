@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug, getTrailById } from './trails'
+import { bakedTrailDetails } from '../utils/bakedTrailDetails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -187,6 +188,77 @@ describe('getTrailBySlug', () => {
     for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
       expect(detailsUrl).toContain(col)
     }
+  })
+})
+
+// ── bikepark details read path ───────────────────────────────────────────────
+
+describe('bikepark spot details', () => {
+  function routeFetch(tables: Record<string, unknown[]>) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      return ok(tables[table] ?? [])
+    })
+  }
+  const park = { id: 'p-uuid', slug: 'bikepark-x', name: 'Bikepark X', latitude: 47, longitude: 12 }
+  const parkDetails = {
+    id: 'p-uuid', status: 'open', status_hint: null, opening_hours: 'Mo-Fr 9-17',
+    rules: [], trail_description: 'Lift-served park', last_update: '2026-10-01',
+  }
+  const tables = () => ({
+    parks: [park],
+    bike_park_details: [parkDetails],
+    // decoy: must not be used for a bikepark
+    trail_details: [{ trail_id: 'p-uuid', trail_description: 'WRONG' }],
+  })
+
+  it('getTrailBySlug: bikepark exposes opening_hours and trail_description from bike_park_details', async () => {
+    vi.stubGlobal('fetch', routeFetch(tables()))
+    const res = await getTrailBySlug('bikepark-x')
+    expect(res).toMatchObject({ type: 'bikepark', opening_hours: 'Mo-Fr 9-17', trail_description: 'Lift-served park' })
+    const baked = bakedTrailDetails(res)
+    expect(baked.opening_hours).toBe('Mo-Fr 9-17')
+    expect(baked.trail_description).toBe('Lift-served park')
+  })
+
+  it('getTrailById: bikepark exposes the same details', async () => {
+    vi.stubGlobal('fetch', routeFetch(tables()))
+    const res = await getTrailById('p-uuid')
+    const baked = bakedTrailDetails(res)
+    expect(res).toMatchObject({ type: 'bikepark' })
+    expect(baked.opening_hours).toBe('Mo-Fr 9-17')
+    expect(baked.trail_description).toBe('Lift-served park')
+  })
+
+  it('getTrailById: fetches details only after resolving the type', async () => {
+    const fetch = routeFetch(tables())
+    vi.stubGlobal('fetch', fetch)
+    await getTrailById('p-uuid')
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    const detailsUrl = urls.find(u => u.includes('/bike_park_details'))!
+    expect(detailsUrl).toContain('id=eq.p-uuid')
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+    const firstDetailIdx = urls.findIndex(u => u.includes('/bike_park_details') || u.includes('/trail_photos'))
+    const lastBaseIdx = Math.max(...urls.map((u, i) => (/\/(trails|parks|dirt_parks)\?/.test(u) ? i : -1)))
+    expect(firstDetailIdx).toBeGreaterThan(lastBaseIdx)
+  })
+
+  it('getTrailById: trail still merges trail_details (regression)', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      trails: [{ id: 't-uuid', slug: 't', name: 'T', latitude: 1, longitude: 2 }],
+      trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
+      bike_park_details: [{ id: 't-uuid', trail_description: 'WRONG' }],
+    }))
+    const res = await getTrailById('t-uuid')
+    expect(res).toMatchObject({ type: 'trail', trail_description: 'Nice' })
+  })
+
+  it('getTrailBySlug: trail still merges trail_details (regression)', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      trails: [{ id: 't-uuid', slug: 't', name: 'T', latitude: 1, longitude: 2 }],
+      trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
+    }))
+    expect(await getTrailBySlug('t')).toMatchObject({ type: 'trail', trail_description: 'Nice' })
   })
 })
 

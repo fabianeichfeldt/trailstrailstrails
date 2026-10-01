@@ -25,6 +25,11 @@ async function signInOnSpotmanagerPage(
   await expect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
 }
 
+// The default fixtures return a bikepark for /parks; these trail-focused tests expect only trails.
+async function mockNoParks(page: import('@playwright/test').Page) {
+  await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
+}
+
 // ── Not logged in ──────────────────────────────────────────────────────────────
 
 baseTest('spotmanager shows login prompt when not logged in', async ({ page }) => {
@@ -89,6 +94,7 @@ baseTest('spotmanager renders SpotManagerApp for an admin', async ({ page }) => 
 
 baseTest('spotmanager lists spots returned by the trails endpoint', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await mockNoParks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
@@ -104,8 +110,8 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
   await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
 
   await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)')).toHaveCount(2, { timeout: 6000 });
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Bikepark Lenggries');
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(0)).toContainText('Bikepark Lenggries'); // list is sorted by name
+  await expect(page.locator('.sm-spot-btn:not(.sm-embed-btn)').nth(1)).toContainText('Flowtrail Tegernsee');
   assertNoLeaks();
 });
 
@@ -121,6 +127,7 @@ baseTest('spotmanager lists spots returned by the trails endpoint', async ({ pag
 
 baseTest('spotmanager loads trailcrew spots for Google OAuth user using user.id not user.sub', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await mockNoParks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
@@ -132,9 +139,10 @@ baseTest('spotmanager loads trailcrew spots for Google OAuth user using user.id 
   // Mock trailcrew_spots keyed on the Supabase UUID (user.id), not user.sub.
   // If the code used user.sub the eq() filter would not match and spots would be empty.
   await page.route('**/rest/v1/trailcrew_spots**', (route) =>
-    route.fulfill({
-      json: [{ spot_id: 'spot-google-1', trails: { id: 'spot-google-1', name: 'Flowtrail Google Test' } }],
-    }),
+    route.fulfill({ json: [{ spot_id: 'spot-google-1' }] }),
+  );
+  await page.route('**/rest/v1/trails**', (route) =>
+    route.fulfill({ json: [{ id: 'spot-google-1', name: 'Flowtrail Google Test' }] }),
   );
 
   // Sign in with the Google session (sub !== id)
@@ -187,6 +195,7 @@ const MINIMAL_GPX = `<?xml version="1.0"?>
 
 baseTest('spotmanager: uploading a GPX file through the trail import view shows a pending card with point stats', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await mockNoParks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
@@ -236,6 +245,7 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
 
 baseTest('spotmanager: trailcrew adds a parking lot and it is persisted and listed', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await mockNoParks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
@@ -386,6 +396,7 @@ baseTest('spotmanager: "desktop preferred" hint shows on first mobile load and s
 
 baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to an ancestor level', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await mockNoParks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
 
@@ -429,5 +440,38 @@ baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to a
   await expect(page.locator('.parking-editor')).toHaveCount(0);
   await expect(page.locator('.parking-list')).toHaveCount(0);
 
+  assertNoLeaks();
+});
+
+// ── Bikepark management ────────────────────────────────────────────────────────
+
+baseTest('spotmanager: a bikepark shows its badge, no GPX sections, and opens the bikepark editor', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await page.route('**/rest/v1/trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/parks**', (route) =>
+    route.fulfill({ json: [{ id: 'park-1', name: 'Bikepark Lenggries', latitude: 47.68, longitude: 11.56, approved: true, url: '' }] }),
+  );
+  await page.route('**/rest/v1/bike_park_details**', (route) =>
+    route.fulfill({ json: [{ id: 'park-1', status: 'open', opening_hours: 'Täglich 9-17 Uhr', trail_description: '', last_update: null }] }),
+  );
+
+  await signInOnSpotmanagerPage(page, 'admin');
+  const parkBtn = page.locator('.sm-spot-btn:not(.sm-embed-btn)');
+  await expect(parkBtn).toHaveCount(1, { timeout: 6000 });
+  await expect(parkBtn).toContainText('Bikepark Lenggries');
+  await expect(parkBtn.locator('.sm-spot-type')).toHaveText('Bikepark');
+
+  await parkBtn.click();
+  await expect(page.locator('.sm-details-banner-title', { hasText: 'Spot-Details' })).toBeVisible({ timeout: 6000 });
+  await expect(page.locator('.sm-details-banner-title', { hasText: 'Parkplätze' })).toBeVisible();
+  await expect(page.locator('.sm-section')).toHaveCount(0);
+
+  await page.locator('.sm-details-banner', { hasText: 'Spot-Details' }).click();
+  await expect(page.locator('.sm-crumb-current')).toHaveText('Spot-Details');
+  // The trail editor's rules section must not be shown for a park
+  await expect(page.locator('.sd-rules-list')).toHaveCount(0);
   assertNoLeaks();
 });
