@@ -68,6 +68,8 @@
         v-else
         :condition="condition"
         :loading="conditionLoading || conditionAccess === 'checking'"
+        :spot-type="trailForStore.type"
+        :spot-id="trailForStore.id"
       />
 
       <SpotDetailPhotos

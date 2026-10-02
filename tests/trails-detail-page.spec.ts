@@ -144,7 +144,7 @@ baseTest('places Photos above Touren/Trails/Map, and those above Beschreibung/Ko
   assertNoLeaks();
 });
 
-// The Trail-Zustand card is a paid feature (FEATURES.trail_condition, Plus and up)
+// The Trail-Zustand card is a paid feature (FEATURES.trail_condition, Supporter and up)
 // and is fetched client-side in onMounted (never during prerender — see
 // app/composables/useTrailCondition.ts), so only a real browser run proves the page
 // wires the paywall and the fetch together. The card's own rendering logic is
@@ -177,7 +177,7 @@ baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and n
 
   const locked = page.locator('[data-testid="weather-locked"]');
   await expect(locked).toBeVisible();
-  await expect(locked).toContainText('Plus');
+  await expect(locked).toContainText('Supporter');
   // A blurred SAMPLE is showing (its six columns are made up), but no real card.
   await expect(locked.locator('[data-testid="weather-sample"]')).toBeVisible();
   await expect(page.locator('[data-testid="weather-card"]')).toHaveCount(0);
@@ -189,7 +189,7 @@ baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and n
 
   // Logged out: the promo is a real, tappable button that opens the auth modal.
   const cta = locked.locator('[data-testid="weather-locked-cta"]');
-  await expect(cta).toContainText('jetzt registrieren');
+  await expect(cta).toContainText('4 Wochen kostenlos testen');
   expect((await cta.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   await cta.click();
   await expect(page.locator('.auth-card')).toBeVisible();
@@ -218,7 +218,7 @@ baseTest('locks it for a signed-in free account too', async ({ page }) => {
   assertNoLeaks();
 });
 
-baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos for a Plus account', async ({ page }) => {
+baseTest('shows the weather-derived Trail-Zustand card between the status banner and the photos for a Supporter account', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(1) }));
   const conditionRequests: import('@playwright/test').Request[] = [];
@@ -255,7 +255,7 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
 
 // The browser thinks the account is entitled (stale entitlement), the function
 // disagrees: the teaser must replace the card, not leave an empty gap.
-baseTest('falls back to the locked teaser when the function answers 403 for an account the browser thought was Plus', async ({ page }) => {
+baseTest('falls back to the locked teaser when the function answers 403 for an account the browser thought was Supporter', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(1) }));
   await page.route('**/functions/v1/trail-condition', (route) => route.fulfill({ status: 403, json: { error: 'forbidden' } }));

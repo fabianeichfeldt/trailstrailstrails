@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { FEATURES, planNameForLevel, minPlanName } from './features'
 
 describe('trail_condition', () => {
-  it('is a Plus feature: Plus (level 1) and everything above it — so Pro and the early-adopter Pro grant — get it', () => {
+  it('is a Supporter feature: Supporter (level 1) and everything above it — so Pro and the early-adopter Pro grant — get it', () => {
     // Pinned on purpose: the trail-condition edge function (trailradar-backend,
     // REQUIRED_LEVEL) enforces the same number. Change both together.
     expect(FEATURES.trail_condition.minLevel).toBe(1)
@@ -15,7 +15,7 @@ describe('trail_condition', () => {
 
 describe('planNameForLevel', () => {
   it('names the seeded plans by level', () => {
-    expect(planNameForLevel(1)).toBe('Plus')
+    expect(planNameForLevel(1)).toBe('Supporter')
     expect(planNameForLevel(2)).toBe('Pro')
   })
 
@@ -26,6 +26,6 @@ describe('planNameForLevel', () => {
 
 describe('minPlanName', () => {
   it('names the cheapest plan that unlocks a feature, so the teaser can say what to get', () => {
-    expect(minPlanName('trail_condition')).toBe('Plus')
+    expect(minPlanName('trail_condition')).toBe('Supporter')
   })
 })

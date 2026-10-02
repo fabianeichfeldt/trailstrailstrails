@@ -36,6 +36,16 @@
           </div>
         </div>
       </div>
+      <!-- The model's range, and the way to correct it. Only for a real soil
+           verdict with a range (never snow/rain/asphalt/unknown), never in the
+           locked teaser's sample, and only where the page says which spot this is. -->
+      <div v-if="feedbackRange" class="wx-scale">
+        <ConditionScale :range="feedbackRange" :position-range="feedbackPositionRange" label="Unsere Schätzung" />
+        <button type="button" class="wx-feedback-link" data-testid="soil-feedback-link" @click="onFeedbackClick">
+          Du bist gerade hier gefahren und weißt es besser?
+        </button>
+      </div>
+
       <div class="wx-foot">
         <span>{{ footNote }}</span>
         <!-- The credit is for Open-Meteo's data; a made-up sample has none. -->
@@ -68,11 +78,21 @@
         </span>
       </div>
     </div>
+
+    <SoilFeedbackSheet
+      v-if="sheetOpen && feedbackRange && spotType && spotId"
+      :spot-type="spotType"
+      :spot-id="spotId"
+      :model-range="feedbackRange"
+      @close="sheetOpen = false"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import type { TrailConditionResponse, ConditionLevel } from '~/types/Weather'
+import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
+import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
+import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 
 // The condition arrives as a prop rather than being fetched here: the status
 // banner needs the same payload, and one page-level fetch beats two components
@@ -84,10 +104,45 @@ const props = defineProps<{
   loading?: boolean
   /** Fixed sample data behind the locked teaser: same card, no credit, its own test id. */
   sample?: boolean
+  /** Which spot this card is about; needed to send rider feedback for it. */
+  spotType?: string
+  spotId?: string
 }>()
+
+const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
+
+// Shared stores only (see SpotDetailWeatherLocked.vue for the same login hand-off).
+const authStore = useAuthStore()
+const mapStore = useMapStore()
+const sheetOpen = ref(false)
+
+/** The range to show and correct, or null wherever feedback makes no sense. */
+const feedbackRange = computed<ConditionRange | null>(() => {
+  const v = props.condition?.verdict
+  if (props.sample || !props.spotType || !props.spotId || !v) return null
+  if (!SOIL_LEVELS.includes(v.level)) return null
+  return v.range ?? null
+})
+
+/** Continuous companion to `feedbackRange`, for the read-only card's fill bar only. */
+const feedbackPositionRange = computed<ConditionPositionRange | null>(() => {
+  const v = props.condition?.verdict
+  if (props.sample || !props.spotType || !props.spotId || !v) return null
+  if (!SOIL_LEVELS.includes(v.level)) return null
+  return v.positionRange ?? null
+})
+
+function onFeedbackClick() {
+  if (!authStore.isLoggedIn) {
+    mapStore.authModalOpen = true
+    return
+  }
+  sheetOpen.value = true
+}
 
 const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
   dusty:   { cls: 'v-dust',  badge: '🧹' },
+  dry:     { cls: 'v-dry',   badge: '🍂' },
   prime:   { cls: 'v-prime', badge: '🤙' },
   damp:    { cls: 'v-damp',  badge: '💧' },
   wet:     { cls: 'v-wet',   badge: '⚠️' },
@@ -135,7 +190,7 @@ function barClass(mm: number): string {
 function formatMm(mm: number): string {
   if (mm < 0.05) return '0 mm'
   const rounded = mm.toFixed(1)
-  return (rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')
+  return `${(rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')} mm`
 }
 
 // Weighted towards what is coming: "has it dried out yet" is already answered
@@ -253,18 +308,9 @@ const strip = computed(() =>
   font-variant-numeric: tabular-nums;
 }
 
-/* Forecast bars are hollow: what already fell is measurement, what is coming
-   is a model guess, and the verdict above rests only on the former. Same
-   geometry either way so the baseline stays flat. Deliberately not dimmed —
-   the coming days are what a rider plans a trip around, so they get full
-   contrast and only the bar style says "prediction". */
-.wx-day.forecast .wx-bar {
-  background: transparent;
-  border: 1.5px solid #cfd8e3;
-}
-.wx-day.forecast .wx-bar.w1 { border-color: #90cdf4; }
-.wx-day.forecast .wx-bar.w2 { border-color: #4299e1; }
-.wx-day.forecast .wx-bar.w3 { border-color: #2b6cb0; }
+/* Forecast bars get the same solid fill as measured ones — no hollow/outline
+   treatment. The coming days are what a rider plans a trip around, so they
+   get full contrast; "measured vs. predicted" isn't worth losing that over. */
 
 /* Today is marked by label colour and an accent rule, deliberately not by a
    background box — a box changes the column's height and shifts the bar
@@ -305,6 +351,27 @@ const strip = computed(() =>
 }
 .wx-care-icon { font-size: 14px; line-height: 1; }
 
+/* ── Model range + rider feedback entry ── */
+.wx-scale {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e9f0;
+}
+.wx-feedback-link {
+  display: block;
+  min-height: 44px;
+  margin: 2px 0 -6px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  color: #2b6cb0;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .wx-foot {
   display: flex;
   justify-content: space-between;
@@ -319,6 +386,8 @@ const strip = computed(() =>
 /* ── Verdict variants ── */
 .v-dust  .wx-badge { background: #fefcbf; }
 .v-dust  .wx-verdict strong { color: #744210; }
+.v-dry   .wx-badge { background: #f5f7e0; }
+.v-dry   .wx-verdict strong { color: #6b6e1f; }
 .v-prime { border-color: #bbf7d0; }
 .v-prime .wx-badge { background: #f0faf5; }
 .v-prime .wx-verdict strong { color: #276749; }

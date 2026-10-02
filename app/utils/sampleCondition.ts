@@ -44,6 +44,7 @@ export function sampleTrailCondition(now: Date = new Date()): TrailConditionResp
       headline: 'Hero Dirt',
       detail: `Bester Zustand. Seit ${HOURS_SINCE_RAIN} Stunden kein Regen, Boden weitgehend abgetrocknet.`,
       rain10dMm: RAIN_10D_MM,
+      range: { lo: 1, hi: 2 },
     },
     rainRule: { raining: false, hoursSinceRain: HOURS_SINCE_RAIN },
     current: { temperature: 21, apparentTemperature: 20, icon: '☀️', windKmh: 9 },

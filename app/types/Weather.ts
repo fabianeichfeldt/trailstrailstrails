@@ -13,6 +13,7 @@
  */
 export type ConditionLevel =
   | 'dusty'
+  | 'dry'
   | 'prime'
   | 'damp'
   | 'wet'
@@ -20,6 +21,29 @@ export type ConditionLevel =
   | 'snow'
   | 'hard'
   | 'unknown'
+
+/** Position on the soil scale: 0 dusty, 1 dry, 2 prime, 3 damp, 4 wet. */
+export type ConditionIndex = 0 | 1 | 2 | 3 | 4
+
+/**
+ * The span of soil levels the model considers plausible across one spot
+ * (`lo <= hi`). Also the shape of a rider's correction.
+ */
+export interface ConditionRange {
+  lo: ConditionIndex
+  hi: ConditionIndex
+}
+
+/**
+ * Continuous companion to `ConditionRange`: same dusty(0)..wet(3) axis, but as
+ * a float position rather than a snapped index — lets the read-only card's
+ * fill bar show where inside a block the estimate actually falls, instead of
+ * always spanning whole blocks.
+ */
+export interface ConditionPositionRange {
+  lo: number
+  hi: number
+}
 
 /**
  * What the `trail-condition` edge function returns: the finished verdict, not
@@ -34,6 +58,13 @@ export interface TrailConditionResponse {
     detail: string
     /** Measured rain over the last 10 days, in mm. */
     rain10dMm: number
+    /**
+     * Always present on the wire; null for `raining`, `snow`, `hard` and
+     * `unknown`, where there is no soil verdict to put a range around.
+     */
+    range: ConditionRange | null
+    /** Continuous companion to `range` — see `ConditionPositionRange`. */
+    positionRange?: ConditionPositionRange | null
   }
   /** Just enough for the status banner's rain-rule line. */
   rainRule: { raining: boolean; hoursSinceRain: number | null }

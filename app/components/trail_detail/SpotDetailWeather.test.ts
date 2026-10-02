@@ -1,9 +1,22 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
+import { reactive } from 'vue'
 import type { ConditionLevel, TrailConditionResponse } from '~/types/Weather'
 import SpotDetailWeather from './SpotDetailWeather.vue'
+import ConditionScale from './ConditionScale.vue'
+
+// Nuxt auto-imports the stores; stub them as the shared-store shapes the card reads.
+let fakeAuthStore: { isLoggedIn: boolean; getToken: () => Promise<string> }
+let fakeMapStore: { authModalOpen: boolean }
+vi.stubGlobal('useAuthStore', () => fakeAuthStore)
+vi.stubGlobal('useMapStore', () => fakeMapStore)
+
+beforeEach(() => {
+  fakeAuthStore = reactive({ isLoggedIn: true, getToken: async () => 'jwt' })
+  fakeMapStore = reactive({ authModalOpen: false })
+})
 
 // The card renders a finished view-model from the trail-condition function; the
 // model itself (levels, thresholds, headlines) lives server-side and is tested
@@ -26,7 +39,8 @@ function day(offset: number, overrides: Partial<StripDay> = {}): StripDay {
 
 function condition(overrides: Partial<TrailConditionResponse> = {}): TrailConditionResponse {
   return {
-    verdict: { level: 'damp', headline: 'Feucht, aber gut fahrbar', detail: '1,1 mm in den letzten 3 Tagen.', rain10dMm: 14.5 },
+    // range indices on the 5-level scale: 0 dusty, 1 dry, 2 prime, 3 damp, 4 wet.
+    verdict: { level: 'damp', headline: 'Feucht, aber gut fahrbar', detail: '1,1 mm in den letzten 3 Tagen.', rain10dMm: 14.5, range: { lo: 2, hi: 3 } },
     rainRule: { raining: false, hoursSinceRain: 30 },
     current: { temperature: 12.4, apparentTemperature: 9.6, icon: '⛅', windKmh: 13.2 },
     strip: [-2, -1, 0, 1, 2, 3].map((o) => day(o, o === -1 ? { precipitationMm: 13.4 } : {})),
@@ -36,7 +50,10 @@ function condition(overrides: Partial<TrailConditionResponse> = {}): TrailCondit
 }
 
 function withLevel(level: ConditionLevel, headline: string, extra: Partial<TrailConditionResponse> = {}) {
-  return condition({ verdict: { level, headline, detail: 'Detail', rain10dMm: 14.5 }, ...extra })
+  // The server sends no range where there is no soil verdict to put one around.
+  const soil = ['dusty', 'dry', 'prime', 'damp', 'wet'].includes(level)
+  const range = soil ? { lo: 2 as const, hi: 3 as const } : null
+  return condition({ verdict: { level, headline, detail: 'Detail', rain10dMm: 14.5, range }, ...extra })
 }
 
 describe('SpotDetailWeather — rendering the view-model', () => {
@@ -70,7 +87,7 @@ describe('SpotDetailWeather — rendering the view-model', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false } })
 
     const rainy = wrapper.findAll('.wx-day')[1]!
-    expect(rainy.text()).toContain('13,4')
+    expect(rainy.text()).toContain('13,4 mm')
     expect(rainy.find('.wx-bar').classes()).toContain('w3')
     const dry = wrapper.findAll('.wx-day')[0]!
     expect(dry.text()).toContain('0 mm')
@@ -123,16 +140,32 @@ describe('SpotDetailWeather — rendering the view-model', () => {
     expect(size('.wx-now-icon')).toBeGreaterThanOrEqual(26)
   })
 
-  it('does not dim the forecast days — riders plan trips around them', () => {
+  it('does not dim or hollow out the forecast bars — riders plan trips around them', () => {
     const source = readFileSync(resolve(__dirname, 'SpotDetailWeather.vue'), 'utf8')
-    const rules = [...source.matchAll(/([^{}]*\.wx-day\.forecast[^{}]*)\{([^}]*)\}/g)]
+    expect(source).not.toMatch(/\.wx-day\.forecast\s+\.wx-bar/)
+  })
 
-    expect(rules.length).toBeGreaterThan(0)
-    for (const [, , body] of rules) expect(body).not.toMatch(/opacity|filter\s*:/)
+  it('fills a forecast day\'s bar exactly like a measured one with the same rain', () => {
+    const wrapper = mount(SpotDetailWeather, {
+      props: { condition: condition({ strip: [-2, -1, 0, 1, 2, 3].map((o) => day(o, o === 1 ? { precipitationMm: 13.4 } : {})) }), loading: false },
+    })
+
+    const forecastRainy = wrapper.findAll('.wx-day')[3]!
+    expect(forecastRainy.classes()).toContain('forecast')
+    expect(forecastRainy.find('.wx-bar').classes()).toContain('w3')
   })
 })
 
 describe('SpotDetailWeather — levels', () => {
+  it('dry: olive badge, no trail-care nudge', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel('dry', 'Trocken'), loading: false } })
+
+    expect(wrapper.text()).toContain('Trocken')
+    expect(wrapper.text()).toContain('🍂')
+    expect(wrapper.find('[data-testid="weather-card"]').classes()).toContain('v-dry')
+    expect(wrapper.find('.wx-care').exists()).toBe(false)
+  })
+
   it('prime: green card, no trail-care nudge', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel('prime', 'Hero Dirt'), loading: false } })
 
@@ -157,7 +190,7 @@ describe('SpotDetailWeather — levels', () => {
     const card = wrapper.find('[data-testid="weather-card"]')
 
     expect(card.classes()).toContain('v-plain')
-    expect(card.classes().some((c) => ['v-prime', 'v-wet', 'v-damp', 'v-dust', 'v-snow'].includes(c))).toBe(false)
+    expect(card.classes().some((c) => ['v-prime', 'v-wet', 'v-damp', 'v-dust', 'v-dry', 'v-snow'].includes(c))).toBe(false)
     expect(wrapper.text()).not.toContain('Berechnete Angabe')
     expect(wrapper.findAll('.wx-day')).toHaveLength(6)
     expect(wrapper.find('[data-testid="rain-10d"]').text()).toContain('14,5 mm')
@@ -193,5 +226,107 @@ describe('SpotDetailWeather — levels', () => {
     expect(wrapper.find('[data-testid="weather-skeleton"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(false)
     expect(wrapper.text()).not.toContain('Hero Dirt')
+  })
+})
+
+describe('SpotDetailWeather — rider feedback entry', () => {
+  const LINK = 'Du bist gerade hier gefahren und weißt es besser?'
+  const spot = { spotType: 'trail', spotId: 't1' }
+  const link = (w: ReturnType<typeof mount>) => w.find('[data-testid="soil-feedback-link"]')
+
+  it('shows the read-only scale, labelled "Unsere Schätzung", with the model range highlighted', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, ...spot } })
+    const scale = wrapper.find('.cs')
+
+    expect(scale.exists()).toBe(true)
+    expect(scale.text()).toContain('Unsere Schätzung')
+    expect(scale.findAll('button')).toHaveLength(0)
+    expect(scale.findAll('.cs-tick').map((s) => s.classes().includes('on'))).toEqual([false, false, true, true, false])
+  })
+
+  it('shows the entry link beneath the scale, with exactly the agreed text', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, ...spot } })
+
+    expect(link(wrapper).exists()).toBe(true)
+    expect(link(wrapper).text()).toBe(LINK)
+    const html = wrapper.html()
+    expect(html.indexOf('cs-track')).toBeLessThan(html.indexOf('soil-feedback-link'))
+  })
+
+  it.each(['dusty', 'dry', 'prime', 'damp', 'wet'] as const)('is offered for a real %s verdict', (level) => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel(level, 'x'), loading: false, ...spot } })
+    expect(link(wrapper).exists()).toBe(true)
+  })
+
+  it.each(['snow', 'raining', 'hard'] as const)('has neither scale nor link for %s', (level) => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel(level, 'x'), loading: false, ...spot } })
+    expect(wrapper.find('[data-testid="weather-card"]').exists()).toBe(true)
+    expect(link(wrapper).exists()).toBe(false)
+    expect(wrapper.find('.cs').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain(LINK)
+  })
+
+  it('has neither for unknown (the card itself is not shown)', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel('unknown', ''), loading: false, ...spot } })
+    expect(link(wrapper).exists()).toBe(false)
+    expect(wrapper.find('.cs').exists()).toBe(false)
+  })
+
+  it('has neither when a soil level arrives without a range (backend not deployed yet)', () => {
+    const c = condition()
+    delete (c.verdict as { range?: unknown }).range
+    const wrapper = mount(SpotDetailWeather, { props: { condition: c, loading: false, ...spot } })
+    expect(link(wrapper).exists()).toBe(false)
+    expect(wrapper.find('.cs').exists()).toBe(false)
+  })
+
+  it('has neither in the locked teaser sample', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, sample: true, ...spot } })
+    expect(link(wrapper).exists()).toBe(false)
+    expect(wrapper.find('.cs').exists()).toBe(false)
+  })
+
+  it('has neither without a spot to report on', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false } })
+    expect(link(wrapper).exists()).toBe(false)
+  })
+
+  it('passes the continuous positionRange through to the read-only ConditionScale', () => {
+    const c = condition({ verdict: { ...condition().verdict, positionRange: { lo: 1.4, hi: 2.6 } } })
+    const wrapper = mount(SpotDetailWeather, { props: { condition: c, loading: false, ...spot } })
+
+    expect(wrapper.findComponent(ConditionScale).props('positionRange')).toEqual({ lo: 1.4, hi: 2.6 })
+  })
+
+  it('keeps working when positionRange is absent from the wire payload (optional field)', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, ...spot } })
+
+    expect(wrapper.findComponent(ConditionScale).props('positionRange')).toBeNull()
+  })
+
+  it('opens the feedback sheet for a logged-in rider', async () => {
+    const wrapper = mount(SpotDetailWeather, {
+      props: { condition: condition(), loading: false, ...spot },
+      global: { stubs: { teleport: true } },
+    })
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+
+    await link(wrapper).trigger('click')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
+
+    await wrapper.find('[data-testid="soil-close"]').trigger('click')
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
+  })
+
+  it('sends a logged-out visitor to the login flow instead of opening the sheet', async () => {
+    fakeAuthStore.isLoggedIn = false
+    const wrapper = mount(SpotDetailWeather, {
+      props: { condition: condition(), loading: false, ...spot },
+      global: { stubs: { teleport: true } },
+    })
+
+    await link(wrapper).trigger('click')
+    expect(fakeMapStore.authModalOpen).toBe(true)
+    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
   })
 })
