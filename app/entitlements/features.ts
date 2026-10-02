@@ -18,10 +18,6 @@ export const FEATURES = {
   // supabase/functions/trail-condition — one number, two copies; each repo's
   // tests pin it (see features.test.ts). What this entry still does in the
   // browser is UX only: what to render and whether to ask at all.
-  //
-  // Remaining caveat before the first payment: Open-Meteo's free tier is
-  // non-commercial, so a commercial licence is needed (the function reads the key
-  // from its OPEN_METEO_API_KEY secret — a secret change, not a code change).
   trail_condition: { minLevel: 1, label: 'Trail-Zustand' },
 
   // future feature keys go here — one line each
