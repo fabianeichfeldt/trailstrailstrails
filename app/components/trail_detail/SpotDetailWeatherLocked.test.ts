@@ -68,7 +68,7 @@ describe('SpotDetailWeatherLocked', () => {
 
       expect(text).toContain('3 €/Monat')
       expect(text).toContain('25 €/Jahr')
-      expect(text).toContain('Mit Supporter unterstützt du')
+      expect(text).toContain('Mit Supporter Plan unterstützt du')
     })
 
     it('offers a free trial as a real button, in readable text', () => {

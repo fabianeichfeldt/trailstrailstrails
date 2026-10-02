@@ -29,7 +29,7 @@
           <template v-if="!authStore.isLoggedIn">
             <strong>Wie ist der Trail gerade?</strong>
             <span class="wx-lock-hint">
-              Bodenzustand, Regen der letzten Tage und Wetter für jeden Spot. Damit du weißt, ob es sich lohnt, bevor du losfährst.
+              Bodenzustand, Regen der letzten Tage und Wetter für jeden Spot. Damit du vor dem Losfahren weißt ob es sich lohnt.
             </span>
             <button
               type="button"
@@ -40,7 +40,7 @@
               4 Wochen kostenlos testen
             </button>
             <small class="wx-lock-fine">
-              Danach 3 €/Monat oder 25 €/Jahr. Mit {{ plan }} unterstützt du ein unabhängiges Community-Projekt.
+              Danach 3 €/Monat oder 25 €/Jahr. Mit {{ plan }} Plan unterstützt du ein unabhängiges Community-Projekt.
             </small>
           </template>
           <template v-else>
