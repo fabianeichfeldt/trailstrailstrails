@@ -36,9 +36,10 @@ export type FeatureKey = keyof typeof FEATURES
  */
 export type FeatureAccess = 'checking' | 'allowed' | 'locked'
 
-// The seeded plans (supabase migration 20260923172739). Display only — the
-// levels themselves are what gate anything.
-const PLAN_NAMES: Record<number, string> = { 1: 'Plus', 2: 'Pro' }
+// The seeded plans (supabase migration 20260923172739, renamed to "Supporter"
+// by 20261002120000). Display only — the levels themselves are what gate
+// anything.
+const PLAN_NAMES: Record<number, string> = { 1: 'Supporter', 2: 'Pro' }
 
 export function planNameForLevel(level: number): string {
   return PLAN_NAMES[level] ?? `Stufe ${level}`

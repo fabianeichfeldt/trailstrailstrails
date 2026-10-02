@@ -15,26 +15,40 @@
 
       <!-- No purchase button on purpose: there is no billing flow to send anyone
            to yet, and a dead "Upgrade" link is worse than none. The only action
-           is for visitors who are logged out: every signup currently gets Plus
-           free (migration 20260926180000), so "register" is a promise we keep.
-           Logged-in users get no promo — they already signed up, so it would be
-           untrue for them. -->
+           is for visitors who are logged out, and it still just opens the free
+           sign-up modal — every signup currently gets a 6-month free grant
+           (migration 20260926180000), not the 4-week trial the copy below
+           describes. That mismatch is deliberate for now: the pitch states the
+           eventual pricing, but nothing routes anywhere else until a payment
+           provider exists. Logged-in users get no pitch or CTA — they already
+           signed up, so a "try it free" pitch would be untrue for them; they
+           keep the plain pill instead. -->
       <div class="wx-lock">
         <div class="wx-lock-pill">
           <span class="wx-lock-icon" aria-hidden="true">🔒</span>
-          <strong>{{ FEATURES.trail_condition.label }} ist eine {{ plan }}-Funktion</strong>
-          <span class="wx-lock-hint">
-            Bodenzustand und Wetter für jeden Spot.
-          </span>
-          <button
-            v-if="!authStore.isLoggedIn"
-            type="button"
-            class="wx-lock-cta"
-            data-testid="weather-locked-cta"
-            @click="mapStore.authModalOpen = true"
-          >
-            Für begrenzte Zeit kostenlos — jetzt registrieren
-          </button>
+          <template v-if="!authStore.isLoggedIn">
+            <strong>Wie ist der Trail gerade?</strong>
+            <span class="wx-lock-hint">
+              Bodenzustand, Regen der letzten Tage und Wetter für jeden Spot. Damit du weißt, ob es sich lohnt, bevor du losfährst.
+            </span>
+            <button
+              type="button"
+              class="wx-lock-cta"
+              data-testid="weather-locked-cta"
+              @click="mapStore.authModalOpen = true"
+            >
+              4 Wochen kostenlos testen
+            </button>
+            <small class="wx-lock-fine">
+              Danach 3 €/Monat oder 25 €/Jahr. Mit {{ plan }} unterstützt du ein unabhängiges Community-Projekt.
+            </small>
+          </template>
+          <template v-else>
+            <strong>{{ FEATURES.trail_condition.label }} ist eine {{ plan }}-Funktion</strong>
+            <span class="wx-lock-hint">
+              Bodenzustand und Wetter für jeden Spot.
+            </span>
+          </template>
         </div>
       </div>
     </div>
@@ -131,6 +145,12 @@ const sample = sampleTrailCondition(new Date())
   font-size: 12.5px;
   line-height: 1.45;
   color: #4a5568;
+}
+.wx-lock-fine {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8a96a8;
 }
 .wx-lock-cta {
   margin-top: 4px;

@@ -55,7 +55,7 @@ describe('useFeatureAccess', () => {
     expect(html).toContain('data-access="checking"')
   })
 
-  it('says "allowed" once mounted for a Plus user', async () => {
+  it('says "allowed" once mounted for a Supporter user', async () => {
     userRef.value = { id: 'u1' }
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(entitlementResponse(1)))
     await useSubscriptionStore().load()

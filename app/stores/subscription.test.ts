@@ -121,7 +121,7 @@ describe('useSubscriptionStore', () => {
       expect(store.accessFor('trail_condition')).toBe('checking')
     })
 
-    it('is "locked" for a free account and "allowed" from Plus up', async () => {
+    it('is "locked" for a free account and "allowed" from Supporter up', async () => {
       expect((await loadedAs(0)).accessFor('trail_condition')).toBe('locked')
       setActivePinia(createPinia())
       expect((await loadedAs(1)).accessFor('trail_condition')).toBe('allowed')

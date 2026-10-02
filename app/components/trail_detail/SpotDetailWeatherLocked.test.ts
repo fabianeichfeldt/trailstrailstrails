@@ -22,7 +22,7 @@ describe('SpotDetailWeatherLocked', () => {
     expect(sample.exists()).toBe(true)
     expect(sample.find('[data-testid="weather-sample"]').exists()).toBe(true)
     expect(sample.text()).toContain('Hero Dirt')
-    // The real strip, so the teaser looks like what a Plus user gets.
+    // The real strip, so the teaser looks like what a Supporter user gets.
     expect(sample.findAll('.wx-day')).toHaveLength(6)
   })
 
@@ -42,27 +42,42 @@ describe('SpotDetailWeatherLocked', () => {
     expect(sample.attributes('inert')).toBeDefined()
   })
 
-  it('says in plain readable text that this is a Plus feature', () => {
+  it('says in plain readable text that this is a Supporter feature', () => {
     const wrapper = mount(SpotDetailWeatherLocked)
     const overlay = wrapper.find('.wx-lock')
 
     expect(overlay.exists()).toBe(true)
-    // Plus is derived from the registry, not typed in here.
-    expect(overlay.text()).toContain('Plus')
+    // Supporter is derived from the registry, not typed in here.
+    expect(overlay.text()).toContain('Supporter')
     // (It used to also say "Beispielansicht"; the wording was shortened on purpose.)
     // The overlay itself is not hidden from anyone.
     expect(overlay.attributes('aria-hidden')).toBeUndefined()
   })
 
   describe('logged out', () => {
-    it('offers Plus free for a limited time, as a real button, in readable text', () => {
+    it('leads with the pitch headline and the fuller description, not the plain pill', () => {
+      const text = mount(SpotDetailWeatherLocked).find('.wx-lock').text()
+
+      expect(text).toContain('Wie ist der Trail gerade?')
+      expect(text).toContain('Bodenzustand, Regen der letzten Tage und Wetter für jeden Spot')
+      expect(text).not.toContain('ist eine Supporter-Funktion')
+    })
+
+    it('states the eventual price and the Supporter pitch in fine print', () => {
+      const text = mount(SpotDetailWeatherLocked).find('.wx-lock').text()
+
+      expect(text).toContain('3 €/Monat')
+      expect(text).toContain('25 €/Jahr')
+      expect(text).toContain('Mit Supporter unterstützt du')
+    })
+
+    it('offers a free trial as a real button, in readable text', () => {
       const cta = mount(SpotDetailWeatherLocked).find('[data-testid="weather-locked-cta"]')
 
       expect(cta.exists()).toBe(true)
       expect(cta.element.tagName).toBe('BUTTON')
       expect(cta.attributes('type')).toBe('button')
-      expect(cta.text()).toContain('Für begrenzte Zeit kostenlos')
-      expect(cta.text()).toContain('jetzt registrieren')
+      expect(cta.text()).toContain('4 Wochen kostenlos testen')
       // Inside the readable overlay, not the blurred decoration.
       expect(cta.element.closest('[aria-hidden="true"]')).toBeNull()
     })
@@ -72,10 +87,6 @@ describe('SpotDetailWeatherLocked', () => {
       await wrapper.find('[data-testid="weather-locked-cta"]').trigger('click')
 
       expect(fakeMapStore.authModalOpen).toBe(true)
-    })
-
-    it('keeps the "ist eine Plus-Funktion" pill', () => {
-      expect(mount(SpotDetailWeatherLocked).find('.wx-lock').text()).toContain('Trail-Zustand ist eine Plus-Funktion')
     })
   })
 
@@ -92,8 +103,11 @@ describe('SpotDetailWeatherLocked', () => {
       expect(wrapper.find('.wx-lock').text()).not.toContain('registrieren')
     })
 
-    it('still says in plain text that this is a Plus feature', () => {
-      expect(mount(SpotDetailWeatherLocked).find('.wx-lock').text()).toContain('ist eine Plus-Funktion')
+    it('keeps the plain "ist eine Supporter-Funktion" pill instead of the trial pitch', () => {
+      const text = mount(SpotDetailWeatherLocked).find('.wx-lock').text()
+
+      expect(text).toContain('Trail-Zustand ist eine Supporter-Funktion')
+      expect(text).not.toContain('Wie ist der Trail gerade?')
     })
   })
 
