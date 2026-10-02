@@ -109,7 +109,7 @@ const props = defineProps<{
   spotId?: string
 }>()
 
-const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'prime', 'damp', 'wet']
+const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
 
 // Shared stores only (see SpotDetailWeatherLocked.vue for the same login hand-off).
 const authStore = useAuthStore()
@@ -142,6 +142,7 @@ function onFeedbackClick() {
 
 const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
   dusty:   { cls: 'v-dust',  badge: '🧹' },
+  dry:     { cls: 'v-dry',   badge: '🍂' },
   prime:   { cls: 'v-prime', badge: '🤙' },
   damp:    { cls: 'v-damp',  badge: '💧' },
   wet:     { cls: 'v-wet',   badge: '⚠️' },
@@ -189,7 +190,7 @@ function barClass(mm: number): string {
 function formatMm(mm: number): string {
   if (mm < 0.05) return '0 mm'
   const rounded = mm.toFixed(1)
-  return (rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')
+  return `${(rounded.endsWith('.0') ? rounded.slice(0, -2) : rounded).replace('.', ',')} mm`
 }
 
 // Weighted towards what is coming: "has it dried out yet" is already answered
@@ -307,18 +308,9 @@ const strip = computed(() =>
   font-variant-numeric: tabular-nums;
 }
 
-/* Forecast bars are hollow: what already fell is measurement, what is coming
-   is a model guess, and the verdict above rests only on the former. Same
-   geometry either way so the baseline stays flat. Deliberately not dimmed —
-   the coming days are what a rider plans a trip around, so they get full
-   contrast and only the bar style says "prediction". */
-.wx-day.forecast .wx-bar {
-  background: transparent;
-  border: 1.5px solid #cfd8e3;
-}
-.wx-day.forecast .wx-bar.w1 { border-color: #90cdf4; }
-.wx-day.forecast .wx-bar.w2 { border-color: #4299e1; }
-.wx-day.forecast .wx-bar.w3 { border-color: #2b6cb0; }
+/* Forecast bars get the same solid fill as measured ones — no hollow/outline
+   treatment. The coming days are what a rider plans a trip around, so they
+   get full contrast; "measured vs. predicted" isn't worth losing that over. */
 
 /* Today is marked by label colour and an accent rule, deliberately not by a
    background box — a box changes the column's height and shifts the bar
@@ -394,6 +386,8 @@ const strip = computed(() =>
 /* ── Verdict variants ── */
 .v-dust  .wx-badge { background: #fefcbf; }
 .v-dust  .wx-verdict strong { color: #744210; }
+.v-dry   .wx-badge { background: #f5f7e0; }
+.v-dry   .wx-verdict strong { color: #6b6e1f; }
 .v-prime { border-color: #bbf7d0; }
 .v-prime .wx-badge { background: #f0faf5; }
 .v-prime .wx-verdict strong { color: #276749; }

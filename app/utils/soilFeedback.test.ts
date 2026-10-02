@@ -40,6 +40,12 @@ describe('nextRange', () => {
     const model = r(1, 2)
     expect(nextRange(r(3, 3), 3, model)).not.toBe(model)
   })
+
+  it('works at the new last segment (index 4, wet) introduced by the dry level', () => {
+    expect(nextRange(r(2, 3), 4, r(2, 3))).toEqual(r(4, 4))
+    expect(nextRange(r(4, 4), 4, r(2, 3))).toEqual(r(2, 3))
+    expect(nextRange(r(3, 3), 4, r(0, 1))).toEqual(r(3, 4))
+  })
 })
 
 describe('sameRange', () => {

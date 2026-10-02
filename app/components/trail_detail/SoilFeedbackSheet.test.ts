@@ -55,7 +55,7 @@ describe('SoilFeedbackSheet — structure', () => {
 
     expect(wrapper.find('[role="dialog"]').attributes('aria-modal')).toBe('true')
     expect(wrapper.find('[role="dialog"]').attributes('aria-labelledby')).toBeTruthy()
-    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, true, true, false])
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, true, true, false, false])
     expect(wrapper.findAll('.cs-hit')[0]!.element.tagName).toBe('BUTTON')
   })
 
@@ -153,7 +153,7 @@ describe('SoilFeedbackSheet — submitting', () => {
 
     expect(wrapper.emitted('close')).toBeUndefined()
     expect(wrapper.find('[data-testid="soil-error"]').text()).toContain('erneut')
-    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([true, false, false, false])
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([true, false, false, false, false])
     expect(action(wrapper).attributes('disabled')).toBeUndefined()
 
     fetchMock.mockResolvedValueOnce(json(200, { ok: true }))
@@ -200,7 +200,7 @@ describe('SoilFeedbackSheet — picking another ride time', () => {
     answer()
     await flushPromises()
 
-    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, false, true, true])
+    expect(ticks(wrapper).map((s) => s.classes().includes('on'))).toEqual([false, false, true, true, false])
     expect(action(wrapper).attributes('disabled')).toBeUndefined()
     expect(action(wrapper).text()).toBe('Stimmt so')
   })

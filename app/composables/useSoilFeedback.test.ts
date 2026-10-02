@@ -88,6 +88,13 @@ describe('useSoilFeedback — selection', () => {
     api.raining.value = true
     expect(api.changed.value).toBe(true)
   })
+
+  it('reaches the new last segment (index 4, wet) introduced by the dry level', () => {
+    const { api } = mountComposable({ lo: 2, hi: 3 })
+    api.tap(4)
+    expect(api.range.value).toEqual({ lo: 4, hi: 4 })
+    expect(api.changed.value).toBe(true)
+  })
 })
 
 describe('useSoilFeedback — refetch for the picked time', () => {

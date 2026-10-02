@@ -13,6 +13,7 @@
  */
 export type ConditionLevel =
   | 'dusty'
+  | 'dry'
   | 'prime'
   | 'damp'
   | 'wet'
@@ -21,8 +22,8 @@ export type ConditionLevel =
   | 'hard'
   | 'unknown'
 
-/** Position on the soil scale: 0 dusty, 1 prime, 2 damp, 3 wet. */
-export type ConditionIndex = 0 | 1 | 2 | 3
+/** Position on the soil scale: 0 dusty, 1 dry, 2 prime, 3 damp, 4 wet. */
+export type ConditionIndex = 0 | 1 | 2 | 3 | 4
 
 /**
  * The span of soil levels the model considers plausible across one spot

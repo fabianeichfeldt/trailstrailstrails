@@ -62,16 +62,17 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ select: [index: ConditionIndex] }>()
 
-const NAMES = ['Staubig', 'Perfekt', 'Feucht', 'Nass']
+const NAMES = ['Staubig', 'Trocken', 'Perfekt', 'Feucht', 'Schlammig']
 
 /** Avoids IEEE-754 float noise (e.g. `2.6 - 1.4` -> `1.2000000000000002`) leaking into the emitted CSS. */
 function round2(x: number): number {
   return Math.round(x * 100) / 100
 }
 
-// Sand-yellow → green → teal → blue: dry to wet, carried entirely by the fill
-// bar — the track itself is neutral, so this is the only colour on the scale.
-const COLORS = ['#f2c744', '#8bc34a', '#29b6b6', '#2f6fb0']
+// Sand-yellow → olive → green → teal → blue: dry to wet, carried entirely by
+// the fill bar — the track itself is neutral, so this is the only colour on
+// the scale.
+const COLORS = ['#f2c744', '#bfc547', '#8bc34a', '#29b6b6', '#2f6fb0']
 const QUARTER = 100 / NAMES.length
 
 function isOn(i: number): boolean {
