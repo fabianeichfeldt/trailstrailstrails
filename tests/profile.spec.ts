@@ -1,28 +1,5 @@
 import { test as baseTest } from '@playwright/test';
-import { expect, setupAllMocks, MOCK_SESSION, MOCK_USER, MOCK_GOOGLE_SESSION, MOCK_GOOGLE_USER } from './fixtures';
-
-/**
- * Sign in via the AuthModal that is embedded on the /profile page.
- * The modal is opened by clicking the "Anmelden" button on the not-logged-in banner.
- * After sign-in the Vue reactive state updates and the profile layout appears —
- * no page reload needed.
- *
- * Must be called AFTER the auth mocks are overridden for the test
- * and AFTER page.goto('/profile').
- */
-async function signInOnProfilePage(page: import('@playwright/test').Page) {
-  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }));
-  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }));
-
-  await page.locator('.not-logged-in button').click();  // "Anmelden" button
-  await page.locator('.auth-card input[autocomplete="email"]').fill('test@example.com');
-  await page.locator('.auth-card input[autocomplete="current-password"]').fill('password123');
-  await page.locator('.auth-card button[type="submit"]').click();
-  // Wait for modal to close — sign-in success
-  await expect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
-  // Wait for profile content to appear reactively
-  await expect(page.locator('.profile-layout')).toBeVisible({ timeout: 6000 });
-}
+import { expect, setupAllMocks, signInOnProfilePage, MOCK_SESSION, MOCK_USER, MOCK_GOOGLE_SESSION, MOCK_GOOGLE_USER } from './fixtures';
 
 // ── Not logged in ──────────────────────────────────────────────────────────────
 

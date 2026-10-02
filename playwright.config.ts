@@ -16,6 +16,15 @@ if (existsSync('.env.test')) {
 const supabaseUrl = process.env.TEST_SUPABASE_URL || process.env.NUXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.TEST_SUPABASE_KEY || process.env.NUXT_PUBLIC_SUPABASE_KEY || ''
 
+// Port is overridable because `reuseExistingServer` + a hardcoded 3000 is a
+// trap in this repo: work happens in git worktrees (see CLAUDE.md), and a
+// `nuxt dev` left running in the primary checkout will happily serve every
+// worktree's E2E run. The suite then passes or fails against code from a
+// completely different branch, with nothing in the output saying so.
+// Set E2E_PORT to give a worktree its own server.
+const PORT = process.env.E2E_PORT || '3000'
+const BASE_URL = `http://localhost:${PORT}`
+
 export default defineConfig({
   testDir: './tests',
   // CI boots a cold `nuxt dev` (reuseExistingServer is false there) and Vite
@@ -28,12 +37,12 @@ export default defineConfig({
   expect: { timeout: 15000 },
   globalSetup: './tests/global-setup.ts',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     browserName: 'chromium',
   },
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     // First cold `nuxt dev` boot on CI (install already done) can crawl past
     // 30s before it serves; give it room.
@@ -41,6 +50,7 @@ export default defineConfig({
     // Forward Supabase config to the dev server process so it connects to the
     // right instance (local or production) without mutating .env.local.
     env: {
+      PORT,
       ...(supabaseUrl && { NUXT_PUBLIC_SUPABASE_URL: supabaseUrl }),
       ...(supabaseKey && { NUXT_PUBLIC_SUPABASE_KEY: supabaseKey }),
     },

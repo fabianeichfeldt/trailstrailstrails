@@ -1,4 +1,4 @@
-import { test as base, Page } from '@playwright/test';
+import { test as base, expect as playwrightExpect, Page } from '@playwright/test';
 
 // slug === id in the fixtures so tests can keep navigating to /trails/t1 and
 // have it resolve straight through getTrailBySlug().
@@ -65,6 +65,43 @@ export const MOCK_GOOGLE_SESSION = {
 const TRAIL_DETAILS_MOCK = {
   data: { id: 'mock', rules: [], description: '', last_update: '2024-01-01', opening_hours: '', trail_description: '', photos: [], videos: [], likes: [] },
 };
+
+/**
+ * Response of the `trail-condition` edge function for the Trail-Zustand card:
+ * the finished view-model (two past days, today, three ahead), generated at run
+ * time so "today" in the strip matches the browser's today. The model and
+ * Open-Meteo live behind that function, so the browser never sees weather data.
+ *
+ * Mild and dry with 4mm two days ago, so the card renders its "Hero Dirt" state
+ * and no test has to care about it unless it wants to.
+ */
+function mockTrailCondition() {
+  const names = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
+  const strip = [-2, -1, 0, 1, 2, 3].map((offset) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + offset);
+    return {
+      date: d.toISOString().slice(0, 10),
+      weekday: names[d.getUTCDay()],
+      icon: '⛅',
+      precipitationMm: offset === -2 ? 4 : 0,
+      isToday: offset === 0,
+      isForecast: offset > 0,
+    };
+  });
+  return {
+    verdict: {
+      level: 'prime',
+      headline: 'Hero Dirt',
+      detail: 'Bester Zustand. Seit 48 Stunden kein Regen, Boden weitgehend abgetrocknet.',
+      rain10dMm: 4,
+    },
+    rainRule: { raining: false, hoursSinceRain: 48 },
+    current: { temperature: 12, apparentTemperature: 10, icon: '⛅', windKmh: 13 },
+    strip,
+    fetchedAt: new Date().toISOString(),
+  };
+}
 
 const MOCK_ACTIVITY = [
   { type: 'spot', trailId: 't3', name: 'Schotterpiste',       created_at: '2024-01-03' },
@@ -142,6 +179,9 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/trailradar.org/geo',         (route) => route.fulfill({ json: { lat: 48.1, lon: 11.5 } }));
   // Nominatim — empty by default so tests only see trail results, not place suggestions
   await page.route('**/nominatim.openstreetmap.org/**', (route) => route.fulfill({ json: [] }));
+  // Trail-Zustand card on /trails/[slug]: the edge function answers with the finished view-model
+  // (registered after the catch-all above, so it wins)
+  await page.route('**/functions/v1/trail-condition', (route) => route.fulfill({ json: mockTrailCondition() }));
   // OSM map tiles — abort; not needed for logic tests
   await page.route('**tile.openstreetmap.org/**',   (route) => route.abort());
   await page.route('**tile.tracestrack.com/**',   (route) => route.abort());
@@ -159,6 +199,35 @@ export async function setupAllMocks(page: Page): Promise<() => void> {
   const assertNoLeaks = await applySafetyNet(page); // lowest priority — must come first
   await setupApiMocks(page);                         // higher priority — overrides safety net
   return assertNoLeaks;
+}
+
+/**
+ * Sign in via the AuthModal embedded on the /profile page: the modal opens from the
+ * "Anmelden" button on the not-logged-in banner, and after sign-in the Vue reactive
+ * state updates — no page reload. Auth state therefore lives in memory, so a test
+ * that needs a signed-in user on another page must navigate client-side afterwards
+ * (see `navigateClientSide`), not with `page.goto`.
+ *
+ * Must be called AFTER `setupAllMocks(page)` and AFTER `page.goto('/profile')`. Mock
+ * anything the sign-in triggers (e.g. the entitlement RPC) BEFORE calling it.
+ */
+export async function signInOnProfilePage(page: Page) {
+  await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_SESSION }));
+  await page.route('**/auth/v1/user**',  (route) => route.fulfill({ json: MOCK_USER }));
+
+  await page.locator('.not-logged-in button').click();  // "Anmelden" button
+  await page.locator('.auth-card input[autocomplete="email"]').fill('test@example.com');
+  await page.locator('.auth-card input[autocomplete="current-password"]').fill('password123');
+  await page.locator('.auth-card button[type="submit"]').click();
+  // Wait for modal to close — sign-in success
+  await playwrightExpect(page.locator('.auth-card')).not.toBeVisible({ timeout: 6000 });
+  // Wait for profile content to appear reactively
+  await playwrightExpect(page.locator('.profile-layout')).toBeVisible({ timeout: 6000 });
+}
+
+/** SPA navigation through the Nuxt router, keeping in-memory state (e.g. a signed-in user). */
+export async function navigateClientSide(page: Page, path: string) {
+  await page.evaluate((to) => (window as unknown as { useNuxtApp: () => { $router: { push: (p: string) => Promise<void> } } }).useNuxtApp().$router.push(to), path);
 }
 
 /** Fixture: safety net + mocks + navigated to /map + networkidle. */
