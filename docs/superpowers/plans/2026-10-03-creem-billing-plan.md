@@ -42,7 +42,7 @@ Write the structural test first: `app/entitlements/billingMigration.test.ts` (sa
 - [ ] `billing_events` and `cancel_requests` exist with RLS enabled and **no** `CREATE POLICY` for them.
 - [ ] `can_start_checkout(uuid)` exists (SECURITY DEFINER, pinned search_path), uses `interval '14 days'`, returns the three reasons; `EXECUTE` revoked from `anon`/`authenticated` (service role only).
 - [ ] `get_my_checkout_eligibility()` exists, calls `can_start_checkout(auth.uid())`, granted to `authenticated`.
-- [ ] Seed: `UPDATE subscription_plans SET price_monthly_cents…, price_yearly_cents… WHERE id = 'plus'`; `plan_provider_prices` inserts for `creem_test` monthly/yearly. Live (`creem`) rows are **not** in this migration — they come with go-live (phase 6) as a separate migration.
+- [ ] Seed: `UPDATE subscription_plans SET price_monthly_cents…, price_yearly_cents… WHERE id = 'supporter'`; `plan_provider_prices` inserts for `creem_test` monthly/yearly. Live (`creem`) rows are **not** in this migration — they come with go-live (phase 6) as a separate migration.
 
 Then write the SQL per spec §1, prices + test product ids filled from phase 0.
 
@@ -84,7 +84,7 @@ Tests (each red first):
 - [ ] Signed with test secret → row written with `provider = 'creem_test'`; live secret → `'creem'`.
 - [ ] Same event id twice → second call 200, `upsert` called once.
 - [ ] Event id stored earlier but `processed_at` null (crashed run) → processed again.
-- [ ] `subscription.active` with `metadata.user_id` → upsert with `status active`, `plan_id 'plus'`, `current_period_end`, `provider_customer_id`, `customer_email`, `provider_updated_at`.
+- [ ] `subscription.active` with `metadata.user_id` → upsert with `status active`, `plan_id 'supporter'`, `current_period_end`, `provider_customer_id`, `customer_email`, `provider_updated_at`.
 - [ ] `subscription.scheduled_cancel` → `active` + `cancel_at_period_end = true`.
 - [ ] `subscription.past_due` → `past_due`; `subscription.expired` → `expired`; `subscription.canceled` → `canceled`.
 - [ ] Older event (created_at < stored `provider_updated_at`) → no upsert, still 200 + processed.
@@ -139,7 +139,7 @@ Mock `fetch`; assert URL (`FUNCTIONS/billing`, `REST/...`), headers (`userHeader
 - [ ] `cancelSubscription({ jwt })` and `cancelSubscription({ email, name })` (anon headers) → `ok/receivedAt`, 429 → `rate_limited`.
 - [ ] `getMySubscription(jwt)` → REST `subscriptions?status=in.(active,trialing,past_due)&order=created_at.desc&limit=1` → mapped `Subscription | null`.
 - [ ] `getCheckoutEligibility(jwt)` → RPC `get_my_checkout_eligibility` → `{ eligible, reason, eligibleFrom }`; failure → `{ eligible: false, reason: 'unknown' }` (fail closed for UX).
-- [ ] `getSupporterPrices()` → `subscription_plans?id=eq.plus` → `{ monthlyCents, yearlyCents, currency }`.
+- [ ] `getSupporterPrices()` → `subscription_plans?id=eq.supporter` → `{ monthlyCents, yearlyCents, currency }`.
 - [ ] Type `Subscription` in `app/types/Subscription.ts`.
 
 ## F3. `subscriptionStore` (+ extend `subscription.test.ts`)

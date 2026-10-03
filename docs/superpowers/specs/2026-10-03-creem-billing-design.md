@@ -6,7 +6,7 @@
 
 ## Summary
 
-Let users buy the **Supporter** plan (level 1, plan id `plus`) monthly or yearly through
+Let users buy the **Supporter** plan (level 1, plan id `supporter`) monthly or yearly through
 **Creem.io** (Merchant of Record), see which plan they are on, cancel it (incl. a
 §312k BGB "Verträge hier kündigen" flow), undo a scheduled cancellation, and manage
 invoices/payment method in Creem's hosted customer portal.
@@ -102,9 +102,9 @@ Callable by the service role (edge function) and by `authenticated` for its own 
 enforcement read one rule.
 
 ### 1.6 Seed data
-- `subscription_plans` row `plus`: set `price_monthly_cents`, `price_yearly_cents` (values
+- `subscription_plans` row `supporter`: set `price_monthly_cents`, `price_yearly_cents` (values
   supplied by the user before apply; migration carries clearly marked placeholders).
-- `plan_provider_prices`: four rows `plus × {creem, creem_test} × {monthly, yearly}` with
+- `plan_provider_prices`: four rows `supporter × {creem, creem_test} × {monthly, yearly}` with
   Creem product ids (filled in after the products exist in both Creem dashboards).
 
 After applying: regenerate `app/types/database.types.ts`.
@@ -136,7 +136,7 @@ allows `https://trailradar.org` + localhost dev origins.
 2. `mode: 'test'` honoured only if the caller is admin (`get_my_role()`); otherwise live.
 3. `can_start_checkout(uid)` → 409 `{ error: 'already_subscribed' }` or
    409 `{ error: 'grant_active', eligibleFrom }`.
-4. Product id from `plan_provider_prices (plus, provider, interval)`.
+4. Product id from `plan_provider_prices (supporter, provider, interval)`.
 5. Creem create checkout: `product_id`, `request_id` (uuid), `metadata.user_id`,
    customer email = account email, `success_url = ${SITE_URL}/supporter/danke`.
 6. → `200 { checkoutUrl }`.
@@ -174,7 +174,7 @@ Creem API failures → 502 `{ error: 'provider_error' }`, logged.
        neither → record `error`, Telegram alert, return 200 (manual fix, no retry loop).
      - skip the write if the event time < row's `provider_updated_at`.
      - status mapping (below), `current_period_end`, `provider_customer_id`,
-       `customer_email`, `plan_id = 'plus'`, `provider_updated_at = event time`.
+       `customer_email`, `plan_id = 'supporter'`, `provider_updated_at = event time`.
    - `refund.created`, `dispute.created` → Telegram ping only.
    - anything else → stored, no-op.
 4. Set `processed_at` → 200. Any exception → store in `error`, return 500 (Creem retries:
@@ -210,7 +210,7 @@ no throws for expected outcomes:
 - `resumeSubscription(jwt)`
 - `getMySubscription(jwt)` → newest live-or-scheduled `subscriptions` row (RLS: own rows) or `null`
 - `getCheckoutEligibility(jwt)` → RPC `get_my_checkout_eligibility`
-- `getSupporterPrices()` → `subscription_plans` row `plus` (anon read)
+- `getSupporterPrices()` → `subscription_plans` row `supporter` (anon read)
 
 ### 3.2 Store — `subscriptionStore` additions
 - `subscription: Subscription | null`, `eligibility`, loaded alongside the entitlement.
