@@ -50,9 +50,9 @@ ALTER TABLE public.subscriptions
   ADD COLUMN customer_email      text,       -- email used at Creem; may differ from the account email
   ADD COLUMN provider_updated_at timestamptz; -- event time of the last applied event; guards out-of-order delivery
 
+-- Not partial: PostgREST on_conflict can't target a partial index; NULL ids never collide anyway.
 CREATE UNIQUE INDEX subscriptions_provider_sub_id
-  ON public.subscriptions (provider, provider_subscription_id)
-  WHERE provider_subscription_id IS NOT NULL;
+  ON public.subscriptions (provider, provider_subscription_id);
 ```
 
 ### 1.2 `past_due` counts as live
