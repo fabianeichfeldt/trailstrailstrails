@@ -92,7 +92,7 @@ describe('/supporter page', () => {
   })
 
   it('grant_active: tells the user until when it is free and from when they can subscribe', () => {
-    subStore.entitlement = { planId: 'plus', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
+    subStore.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
     subStore.isEarlyAdopter = true
     subStore.eligibility = { eligible: false, reason: 'grant_active', eligibleFrom: '2027-02-19T12:00:00Z' }
     const w = mountPage()
@@ -101,7 +101,7 @@ describe('/supporter page', () => {
   })
 
   it('eligible with a grant still running: says billing starts immediately', () => {
-    subStore.entitlement = { planId: 'plus', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2026-10-10T12:00:00Z' }
+    subStore.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2026-10-10T12:00:00Z' }
     subStore.isEarlyAdopter = true
     const w = mountPage()
     expect(ctaButton(w).text()).toBe('Supporter werden — Abrechnung startet sofort')

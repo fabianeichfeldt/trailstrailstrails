@@ -83,11 +83,17 @@ describe('creem billing migration (structural)', () => {
     expect(code).toMatch(/REVOKE\s+(ALL|EXECUTE)\s+ON\s+FUNCTION\s+"?public"?\."?user_id_by_email"?\(text\)\s+FROM\s+PUBLIC\s*,\s*"?anon"?\s*,\s*"?authenticated"?/i)
   })
 
-  it('seeds plus prices and creem_test provider prices only (no live rows)', () => {
-    expect(code).toMatch(/UPDATE\s+"?public"?\."?subscription_plans"?\s+SET\s+"?price_monthly_cents"?[\s\S]*?"?price_yearly_cents"?[\s\S]*?WHERE\s+"?id"?\s*=\s*'plus'/i)
+  // The live plan id is 'supporter' (earlier repo seeds said 'plus'); abort instead of updating nothing.
+  it('refuses to run unless the supporter plan exists at level 1', () => {
+    expect(code).toMatch(/IF\s+NOT\s+EXISTS\s*\(\s*SELECT[\s\S]*?subscription_plans"?[\s\S]*?"?id"?\s*=\s*'supporter'[\s\S]*?"?level"?\s*=\s*1[\s\S]*?\)\s*THEN\s+RAISE\s+EXCEPTION/i)
+  })
+
+  it('seeds supporter prices and creem_test provider prices only (no live rows)', () => {
+    expect(code).toMatch(/UPDATE\s+"?public"?\."?subscription_plans"?\s+SET\s+"?price_monthly_cents"?[\s\S]*?"?price_yearly_cents"?[\s\S]*?WHERE\s+"?id"?\s*=\s*'supporter'/i)
     expect(code).toMatch(/INSERT\s+INTO\s+"?public"?\."?plan_provider_prices"?/i)
-    expect(code).toMatch(/'creem_test'\s*,\s*'monthly'/i)
-    expect(code).toMatch(/'creem_test'\s*,\s*'yearly'/i)
+    expect(code).toMatch(/'supporter'\s*,\s*'creem_test'\s*,\s*'monthly'/i)
+    expect(code).toMatch(/'supporter'\s*,\s*'creem_test'\s*,\s*'yearly'/i)
+    expect(code).not.toMatch(/'plus'/i)
     expect(code).not.toMatch(/'creem'\s*,/i)
     expect(sql).toMatch(/PLACEHOLDER/)
   })

@@ -32,11 +32,11 @@ function makeStore(over: any = {}) {
   return s
 }
 const sub = (o: any = {}) => ({
-  id: 's1', planId: 'plus', provider: 'creem', status: 'active',
+  id: 's1', planId: 'supporter', provider: 'creem', status: 'active',
   currentPeriodEnd: '2026-12-24T00:00:00Z', cancelAtPeriodEnd: false, hasCustomer: true,
   customerEmail: 'a@b.de', createdAt: '2026-10-01T00:00:00Z', ...o,
 })
-const supporterEnt = { planId: 'plus', level: 1, discountPercent: 0, earlyAdopterFreeUntil: null }
+const supporterEnt = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: null }
 const mountCard = () => mount(PlanCard, { global: { stubs: { NuxtLink } } })
 
 beforeEach(() => {
@@ -56,7 +56,7 @@ describe('PlanCard', () => {
   })
 
   it('grant running (>14 d): shows "Gratis bis" in de-DE and no buy link', () => {
-    store.entitlement = { planId: 'plus', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
+    store.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
     store.isEarlyAdopter = true
     const w = mountCard()
     expect(w.text()).toContain('Gratis bis 5.3.2027')
@@ -64,7 +64,7 @@ describe('PlanCard', () => {
   })
 
   it('grant ending within 14 d: shows the countdown and the buy link', () => {
-    store.entitlement = { planId: 'plus', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2026-10-10T12:00:00Z' }
+    store.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2026-10-10T12:00:00Z' }
     store.isEarlyAdopter = true
     store._eligible = true
     const w = mountCard()

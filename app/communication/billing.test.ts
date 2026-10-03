@@ -127,7 +127,7 @@ describe('cancelSubscription', () => {
 describe('getMySubscription', () => {
   it('queries the newest live subscription and maps the row', async () => {
     const fetch = stub(res(200, [{
-      id: 's1', plan_id: 'plus', provider: 'creem', status: 'active',
+      id: 's1', plan_id: 'supporter', provider: 'creem', status: 'active',
       current_period_end: '2026-11-03T00:00:00Z', cancel_at_period_end: true,
       provider_customer_id: 'cus_1', customer_email: 'a@b.de', created_at: '2026-10-01T00:00:00Z',
     }]))
@@ -141,7 +141,7 @@ describe('getMySubscription', () => {
     expect(url).toContain('limit=1')
     expect(opts.headers.Authorization).toBe('Bearer jwt-1')
     expect(r).toEqual({
-      id: 's1', planId: 'plus', provider: 'creem', status: 'active',
+      id: 's1', planId: 'supporter', provider: 'creem', status: 'active',
       currentPeriodEnd: '2026-11-03T00:00:00Z', cancelAtPeriodEnd: true,
       hasCustomer: true, customerEmail: 'a@b.de', createdAt: '2026-10-01T00:00:00Z',
     })
@@ -184,11 +184,11 @@ describe('getCheckoutEligibility', () => {
 })
 
 describe('getSupporterPrices', () => {
-  it('reads the plus plan with the anon key', async () => {
+  it('reads the supporter plan with the anon key', async () => {
     const fetch = stub(res(200, [{ price_monthly_cents: 300, price_yearly_cents: 3000, currency: 'EUR' }]))
     const r = await getSupporterPrices()
     const [url, opts] = fetch.mock.calls[0]
-    expect(url).toContain('subscription_plans?id=eq.plus&select=price_monthly_cents,price_yearly_cents,currency')
+    expect(url).toContain('subscription_plans?id=eq.supporter&select=price_monthly_cents,price_yearly_cents,currency')
     expect(opts.headers.Authorization).toBe(`Bearer ${anon}`)
     expect(r).toEqual({ monthlyCents: 300, yearlyCents: 3000, currency: 'EUR' })
   })

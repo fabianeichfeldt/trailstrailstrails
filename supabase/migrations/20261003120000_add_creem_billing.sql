@@ -154,13 +154,21 @@ REVOKE ALL ON FUNCTION "public"."user_id_by_email"(text) FROM PUBLIC, "anon", "a
 -- 5. Seed data
 -- =============================================================================
 
+-- The live plan id is 'supporter' (earlier repo seeds said 'plus'); abort rather than seed nothing.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM "public"."subscription_plans" WHERE "id" = 'supporter' AND "level" = 1) THEN
+    RAISE EXCEPTION 'subscription_plans needs a row id = ''supporter'' with level = 1 before this migration';
+  END IF;
+END $$;
+
 -- PLACEHOLDER: set real prices before applying
 UPDATE "public"."subscription_plans"
     SET "price_monthly_cents" = 299, "price_yearly_cents" = 2900
-    WHERE "id" = 'plus';
+    WHERE "id" = 'supporter';
 
 -- PLACEHOLDER: replace with the real Creem TEST-mode product ids before applying.
 -- Live ('creem') rows come with go-live as a separate migration.
 INSERT INTO "public"."plan_provider_prices" ("plan_id", "provider", "interval", "provider_price_id") VALUES
-    ('plus', 'creem_test', 'monthly', 'prod_TEST_MONTHLY_PLACEHOLDER'),
-    ('plus', 'creem_test', 'yearly',  'prod_TEST_YEARLY_PLACEHOLDER');
+    ('supporter', 'creem_test', 'monthly', 'prod_TEST_MONTHLY_PLACEHOLDER'),
+    ('supporter', 'creem_test', 'yearly',  'prod_TEST_YEARLY_PLACEHOLDER');

@@ -116,7 +116,7 @@ export async function getCheckoutEligibility(jwt: string): Promise<CheckoutEligi
 export async function getSupporterPrices(): Promise<SupporterPrices | null> {
   try {
     const res = await fetch(
-      `${REST}/subscription_plans?id=eq.plus&select=price_monthly_cents,price_yearly_cents,currency`,
+      `${REST}/subscription_plans?id=eq.supporter&select=price_monthly_cents,price_yearly_cents,currency`,
       { headers: anonHeaders() },
     )
     if (!res.ok) return null

@@ -101,7 +101,7 @@ describe('useSubscriptionStore', () => {
     async function loadedAs(level: number, earlyAdopterFreeUntil: string | null = null) {
       userRef.value = { id: 'u1' }
       vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([
-        { plan_id: level >= 2 ? 'pro' : level === 1 ? 'plus' : 'free', level, discount_percent: 0, early_adopter_free_until: earlyAdopterFreeUntil },
+        { plan_id: level >= 2 ? 'pro' : level === 1 ? 'supporter' : 'free', level, discount_percent: 0, early_adopter_free_until: earlyAdopterFreeUntil },
       ])))
       const store = useSubscriptionStore()
       await store.load()
@@ -150,7 +150,7 @@ describe('useSubscriptionStore', () => {
 
   describe('billing state', () => {
     const subRow = {
-      id: 's1', plan_id: 'plus', provider: 'creem', status: 'active',
+      id: 's1', plan_id: 'supporter', provider: 'creem', status: 'active',
       current_period_end: '2026-11-03T00:00:00Z', cancel_at_period_end: false,
       provider_customer_id: 'cus_1', customer_email: 'a@b.de', created_at: '2026-10-01T00:00:00Z',
     }
