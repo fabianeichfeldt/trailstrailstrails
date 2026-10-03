@@ -15,6 +15,15 @@ const nuxtConfig = readFileSync(join(ROOT, 'nuxt.config.ts'), 'utf8')
 // explicit prerender entry, every embed token 404s in production, for
 // every customer using the embed feature, not just the site's own demo
 // token used on trail detail pages.
+// The crawler may not find these (profile is client-gated; /supporter/danke is
+// only reached via Creem's external redirect, which would 404 on GitHub Pages),
+// and the §312k cancellation page must exist as static HTML — list explicitly.
+describe('Billing pages are in the explicit prerender route list', () => {
+  test.each(['/supporter', '/supporter/danke', '/kuendigen'])('%s is prerendered', (route) => {
+    expect(nuxtConfig).toContain(`'${route}',`)
+  })
+})
+
 describe('Embed token pages are included in the prerender route list', () => {
   test('nitro:config hook fetches embed_tokens and prerenders /embed/{token}', () => {
     expect(nuxtConfig).toMatch(/embed_tokens\?select=token&is_active=eq\.true/)
