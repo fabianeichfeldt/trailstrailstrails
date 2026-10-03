@@ -172,6 +172,8 @@ function entitlementRows(level: number) {
 baseTest('locks the Trail-Zustand card for a visitor who is not signed in, and never calls the trail-condition function', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   const weatherCalls = trackWeatherRequests(page);
+  // Inside the signup promo (SIGNUP_PROMO ends 30.11.2026), so the free-trial copy is shown.
+  await page.clock.setFixedTime(new Date('2026-11-20T12:00:00+01:00'));
   await page.goto('/trails/t1');
   await expect(page.locator('h1')).toHaveText('Flowtrail Tegernsee');
 

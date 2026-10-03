@@ -71,8 +71,22 @@ describe('SpotDetailWeatherLocked', () => {
       expect(text).toContain('Mit Supporter Plan unterstützt du')
     })
 
+    it('after the signup promo ended (1.12.2026) still offers sign-up, but no longer promises anything free', () => {
+      vi.useFakeTimers({ now: new Date('2026-12-01T09:00:00+01:00') })
+      try {
+        const cta = mount(SpotDetailWeatherLocked).find('[data-testid="weather-locked-cta"]')
+        expect(cta.exists()).toBe(true)
+        expect(cta.text()).toBe('Jetzt registrieren')
+        expect(mount(SpotDetailWeatherLocked).find('.wx-lock').text()).not.toMatch(/kostenlos|gratis|Danach/)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
     it('offers a free trial as a real button, in readable text', () => {
+      vi.useFakeTimers({ now: new Date('2026-11-20T12:00:00+01:00') })
       const cta = mount(SpotDetailWeatherLocked).find('[data-testid="weather-locked-cta"]')
+      vi.useRealTimers()
 
       expect(cta.exists()).toBe(true)
       expect(cta.element.tagName).toBe('BUTTON')

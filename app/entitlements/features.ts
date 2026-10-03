@@ -5,11 +5,10 @@ export const FEATURES = {
   // rain total and the status banner's live rain-rule line. Plus and up — which
   // takes in Pro and the early-adopter Pro grant.
   //
-  // Promotion: every signup gets a free 6-month grant (rolling per user, not a
-  // fixed end date; discount 0) via an AFTER INSERT trigger on auth.users, plus
-  // a one-time backfill — see supabase/migrations/20260926180000_grant_free_plus_on_signup.sql.
-  // The plan is chosen in SQL: lowest active level >= 1. The locked teaser
-  // (SpotDetailWeatherLocked) advertises this to logged-out visitors only.
+  // Promotion: see SIGNUP_PROMO below. The grant itself is made in SQL by the
+  // AFTER INSERT trigger on auth.users (grant_free_access; the live DB differs
+  // from migration 20260926180000). The locked teaser (SpotDetailWeatherLocked)
+  // advertises it to logged-out visitors only.
   //
   // Enforced server-side by the `trail-condition` edge function in
   // trailradar-backend: it checks the JWT and calls has_min_tier(REQUIRED_LEVEL)
@@ -22,6 +21,21 @@ export const FEATURES = {
 
   // future feature keys go here — one line each
 } as const
+
+/**
+ * Free Supporter access for new signups: 4 weeks for everyone who signs up by
+ * the end of 30.11.2026 (Berlin); existing users' grants end on 30.11. too.
+ * Copy only — the grant is made by grant_free_access() in the live DB, which
+ * must be changed in step with this.
+ */
+export const SIGNUP_PROMO = {
+  weeks: 4,
+  endsAt: new Date('2026-12-01T00:00:00+01:00'),
+} as const
+
+export function isSignupPromoActive(now: Date = new Date()): boolean {
+  return now < SIGNUP_PROMO.endsAt
+}
 
 export type FeatureKey = keyof typeof FEATURES
 

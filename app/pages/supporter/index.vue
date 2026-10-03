@@ -45,7 +45,7 @@
 
           <!-- Not logged in -->
           <template v-if="!authStore.isLoggedIn">
-            <p class="note">Mit der Registrierung bekommst du Trail-Zustand für die ersten 6 Monate gratis.</p>
+            <p v-if="promoActive" class="note">Mit der Registrierung bekommst du Trail-Zustand {{ SIGNUP_PROMO.weeks }} Wochen gratis.</p>
             <button type="button" class="cta" data-testid="supporter-cta" @click="mapStore.authModalOpen = true">
               Registrieren
             </button>
@@ -91,6 +91,7 @@
 
 <script setup lang="ts">
 import { getSupporterPrices, startCheckout, type BillingInterval } from '~/communication/billing'
+import { SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
 
 useHead({ title: 'Supporter werden – Trailradar' })
 
@@ -101,7 +102,12 @@ const isNative = useIsNativeApp()
 
 // Build-time value for the static HTML, refreshed on mount so a price change needs no rebuild.
 const { data: prices, refresh } = useAsyncData('supporter-prices', () => getSupporterPrices())
-onMounted(() => { refresh() })
+// Decided after mount: a prerender from before the promo's end must not freeze the promise into static HTML.
+const promoActive = ref(false)
+onMounted(() => {
+  refresh()
+  promoActive.value = isSignupPromoActive()
+})
 
 const interval = ref<BillingInterval>('monthly')
 const testMode = ref(false)

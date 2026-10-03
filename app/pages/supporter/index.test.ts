@@ -83,6 +83,25 @@ describe('/supporter page', () => {
     expect(ctaButton(w).exists()).toBe(true)
   })
 
+  it('logged out during the signup promo: promises 4 weeks free, not 6 months', async () => {
+    vi.useFakeTimers({ now: new Date('2026-11-20T12:00:00+01:00') })
+    authStore.isLoggedIn = false
+    const w = mountPage()
+    vi.useRealTimers()
+    await w.vm.$nextTick()
+    expect(w.text()).toContain('4 Wochen gratis')
+    expect(w.text()).not.toContain('6 Monate')
+  })
+
+  it('logged out after the signup promo ended: no free-period promise', () => {
+    vi.useFakeTimers({ now: new Date('2026-12-01T09:00:00+01:00') })
+    authStore.isLoggedIn = false
+    const w = mountPage()
+    vi.useRealTimers()
+    expect(w.text()).not.toMatch(/gratis/i)
+    expect(ctaButton(w).text()).toBe('Registrieren')
+  })
+
   it('logged out: "Registrieren" opens the auth modal', async () => {
     authStore.isLoggedIn = false
     const w = mountPage()
