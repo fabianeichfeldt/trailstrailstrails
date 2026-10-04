@@ -15,6 +15,11 @@ const nuxtConfig = readFileSync(join(ROOT, 'nuxt.config.ts'), 'utf8')
 // explicit prerender entry, every embed token 404s in production, for
 // every customer using the embed feature, not just the site's own demo
 // token used on trail detail pages.
+// Linked from the footer, but must never depend on the crawler: §5 DDG requires it to be reachable.
+test('/impressum is in the explicit prerender route list', () => {
+  expect(nuxtConfig).toContain(`'/impressum',`)
+})
+
 describe('Embed token pages are included in the prerender route list', () => {
   test('nitro:config hook fetches embed_tokens and prerenders /embed/{token}', () => {
     expect(nuxtConfig).toMatch(/embed_tokens\?select=token&is_active=eq\.true/)

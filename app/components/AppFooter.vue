@@ -7,7 +7,9 @@
       <NuxtLink to="/faq">FAQ</NuxtLink>
       <NuxtLink to="/about">Über mich</NuxtLink>
       <NuxtLink to="/support">Unterstützen</NuxtLink>
-      <NuxtLink to="/privacy">Datenschutz & Impressum</NuxtLink>
+      <NuxtLink to="/impressum">Impressum</NuxtLink>
+      <NuxtLink to="/privacy">Datenschutz</NuxtLink>
+      <NuxtLink to="/terms">AGB</NuxtLink>
       <a href="https://www.instagram.com/trailradar.germany" target="_blank" rel="noopener noreferrer">Instagram</a>
     </nav>
     <p class="copyright">© {{ year }} Trailradar</p>
