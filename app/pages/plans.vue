@@ -179,7 +179,7 @@ const savingPercent = computed(() => {
   border-radius: 999px;
   background: transparent;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #374151;
   cursor: pointer;
@@ -199,7 +199,7 @@ const savingPercent = computed(() => {
   display: grid;
   grid-template-columns: 1fr;
   gap: 1.25rem;
-  max-width: 820px;
+  max-width: 760px;
   margin: 0 auto;
 }
 
@@ -229,8 +229,8 @@ const savingPercent = computed(() => {
   font-weight: 700;
 }
 
-.plan-name { margin: 0; font-size: 1.35rem; }
-.plan-tagline { margin: 0.3rem 0 1rem; color: #6b7280; font-size: 0.92rem; }
+.plan-name { margin: 0; font-size: 1.15rem; }
+.plan-tagline { margin: 0.25rem 0 0.9rem; color: #6b7280; font-size: 0.85rem; }
 
 .plan-price {
   display: flex;
@@ -239,9 +239,9 @@ const savingPercent = computed(() => {
   gap: 0.2rem 0.5rem;
   margin-bottom: 1.2rem;
 }
-.plan-amount { font-size: 2.2rem; font-weight: 800; line-height: 1.1; color: #111827; }
-.plan-period { color: #4b5563; font-size: 0.95rem; }
-.plan-sub, .plan-vat { flex-basis: 100%; font-size: 0.8rem; color: #6b7280; }
+.plan-amount { font-size: 1.8rem; font-weight: 800; line-height: 1.1; color: #111827; }
+.plan-period { color: #4b5563; font-size: 0.85rem; }
+.plan-sub, .plan-vat { flex-basis: 100%; font-size: 0.75rem; color: #6b7280; }
 .plan-sub { color: #15803d; font-weight: 600; }
 
 .plan-features {
@@ -252,17 +252,17 @@ const savingPercent = computed(() => {
 }
 .plan-features li {
   position: relative;
-  padding: 0.35rem 0 0.35rem 1.7rem;
-  font-size: 0.95rem;
+  padding: 0.3rem 0 0.3rem 1.6rem;
+  font-size: 0.88rem;
   line-height: 1.45;
 }
 .plan-features li::before {
   content: '✓';
   position: absolute;
   left: 0;
-  top: 0.35rem;
-  width: 1.2rem;
-  height: 1.2rem;
+  top: 0.32rem;
+  width: 1.1rem;
+  height: 1.1rem;
   display: grid;
   place-items: center;
   border-radius: 50%;
@@ -286,7 +286,7 @@ const savingPercent = computed(() => {
   color: #fff;
   font: inherit;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 0.92rem;
   text-decoration: none;
   cursor: pointer;
   box-sizing: border-box;
@@ -297,17 +297,18 @@ const savingPercent = computed(() => {
   color: var(--color-primary);
   border: 1.5px solid var(--color-primary);
 }
-.plan-promo { margin: 0.75rem 0 0; font-size: 0.85rem; color: #15803d; text-align: center; }
+.plan-promo { margin: 0.75rem 0 0; font-size: 0.8rem; color: #15803d; text-align: center; }
 
-.native-note { max-width: 820px; margin: 1.5rem auto 0; text-align: center; color: #4b5563; }
+.native-note { max-width: 760px; margin: 1.5rem auto 0; text-align: center; color: #4b5563; }
 
-.facts { max-width: 820px; margin: 2.5rem auto 0; }
-.facts h2 { font-size: 1.1rem; margin: 0 0 0.6rem; }
+.facts { max-width: 760px; margin: 2.5rem auto 0; }
+.facts h2 { font-size: 1rem; margin: 0 0 0.6rem; }
 .facts ul { margin: 0; padding-left: 1.2rem; }
-.facts li { margin-bottom: 0.45rem; line-height: 1.5; }
-.facts-terms { margin-top: 0.8rem; font-size: 0.9rem; color: #4b5563; }
+.facts li { margin-bottom: 0.4rem; line-height: 1.5; font-size: 0.88rem; }
+.facts-terms { margin-top: 0.8rem; font-size: 0.82rem; color: #4b5563; }
 
 @media (min-width: 720px) {
   .plans { grid-template-columns: 1fr 1fr; }
+  .plan { padding: 1.4rem 1.3rem; }
 }
 </style>
