@@ -42,6 +42,7 @@
           </div>
 
           <p v-if="priceText" class="price" data-testid="price">{{ priceText }}</p>
+          <p v-if="priceText" class="price-note" data-testid="price-note">Endpreise inkl. MwSt.</p>
 
           <!-- Not logged in -->
           <template v-if="!authStore.isLoggedIn">
@@ -65,10 +66,13 @@
 
           <!-- Can buy -->
           <template v-else-if="canBuy">
-            <!-- LEGAL REVIEW: placeholder copy for the digital-content withdrawal notice -->
             <p class="withdrawal" data-testid="withdrawal-notice">
-              Mit dem Klick auf „Supporter werden“ stimmst du zu, dass die Leistung sofort beginnt.
-              Damit erlischt dein Widerrufsrecht, sobald die Leistung vollständig erbracht wurde.
+              Weiter geht es zu unserem Zahlungsanbieter Creem, bei dem du zahlungspflichtig bestellst. Es gelten
+              unsere <NuxtLink to="/terms#supporter">Nutzungsbedingungen</NuxtLink> und die
+              <a href="https://www.creem.io/buyer-terms" target="_blank" rel="noopener">Käuferbedingungen von Creem</a>.
+              Kündbar jederzeit zum Ende des Abrechnungszeitraums.
+              <template v-if="interval === 'yearly'">Nach dem ersten Jahr läuft das Abo monatlich weiter und ist monatlich kündbar.</template>
+              Nicht zufrieden? 14 Tage Geld-zurück.
             </p>
             <label v-if="authStore.isAdmin" class="test-mode">
               <input v-model="testMode" type="checkbox" data-testid="test-mode" />
@@ -184,7 +188,8 @@ async function onCheckout() {
 }
 .toggle-btn.active { background: #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
 
-.price { font-size: 1.3rem; font-weight: 700; margin: 0 0 1rem; overflow-wrap: anywhere; }
+.price { font-size: 1.3rem; font-weight: 700; margin: 0 0 0.2rem; overflow-wrap: anywhere; }
+.price-note { font-size: 0.8rem; color: #555; margin: 0 0 1rem; }
 .note { margin: 0 0 1rem; }
 .note.strong { font-weight: 700; font-size: 1.1rem; }
 .withdrawal { font-size: 0.8rem; color: #555; margin: 0 0 0.8rem; }

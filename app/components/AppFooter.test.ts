@@ -10,4 +10,16 @@ describe('AppFooter', () => {
     const link = w.findAll('a').find(a => a.text() === 'Verträge hier kündigen')
     expect(link?.attributes('href')).toBe('/kuendigen')
   })
+
+  it.each([
+    ['Impressum', '/impressum'],
+    ['Datenschutz', '/privacy'],
+    ['AGB', '/terms'],
+  ])('links "%s" to %s', (label, href) => {
+    const w = mount(AppFooter, {
+      global: { stubs: { NuxtLink: { props: ['to'], template: '<a :href="to"><slot /></a>' } } },
+    })
+    const link = w.findAll('a').find(a => a.text() === label)
+    expect(link?.attributes('href')).toBe(href)
+  })
 })

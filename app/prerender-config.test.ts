@@ -24,6 +24,11 @@ describe('Billing pages are in the explicit prerender route list', () => {
   })
 })
 
+// Linked from the footer, but must never depend on the crawler: §5 DDG requires it to be reachable.
+test('/impressum is in the explicit prerender route list', () => {
+  expect(nuxtConfig).toContain(`'/impressum',`)
+})
+
 describe('Embed token pages are included in the prerender route list', () => {
   test('nitro:config hook fetches embed_tokens and prerenders /embed/{token}', () => {
     expect(nuxtConfig).toMatch(/embed_tokens\?select=token&is_active=eq\.true/)

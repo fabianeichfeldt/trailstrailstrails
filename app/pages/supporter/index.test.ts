@@ -147,12 +147,27 @@ describe('/supporter page', () => {
     expect(w.find('[data-testid="price"]').exists()).toBe(false)
   })
 
-  it('shows the withdrawal notice (marked for legal review) above the buy button', () => {
+  it('shows the order notice above the buy button, linking our terms and Creem\'s buyer terms', () => {
     const w = mountPage()
     const notice = w.find('[data-testid="withdrawal-notice"]')
     expect(notice.exists()).toBe(true)
+    const links = notice.findAll('a').map(a => a.attributes('href'))
+    expect(links).toContain('/terms#supporter')
+    expect(links).toContain('https://www.creem.io/buyer-terms')
+    expect(notice.text()).toContain('14 Tage')
     const html = w.html()
     expect(html.indexOf('withdrawal-notice')).toBeLessThan(html.indexOf('supporter-cta'))
+  })
+
+  it('yearly: says the plan continues monthly after the first year', async () => {
+    const w = mountPage()
+    expect(w.find('[data-testid="withdrawal-notice"]').text()).not.toContain('ersten Jahr')
+    await w.find('[data-testid="interval-yearly"]').trigger('click')
+    expect(w.find('[data-testid="withdrawal-notice"]').text()).toContain('Nach dem ersten Jahr läuft das Abo monatlich weiter')
+  })
+
+  it('prices are labelled as gross prices', () => {
+    expect(mountPage().find('[data-testid="price-note"]').text()).toContain('inkl. MwSt.')
   })
 
   it('click starts the checkout with the selected interval and redirects to the checkout url', async () => {
