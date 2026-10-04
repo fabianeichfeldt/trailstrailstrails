@@ -15,7 +15,7 @@
           Fabian Eichfeldt<br>
           Margeretenweg 10<br>
           95447 Bayreuth<br>
-          E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><br>
+          E-Mail: <SupportEmail /><br>
           Weitere Angaben zum Anbieter findest du im <NuxtLink to="/impressum">Impressum</NuxtLink>.
         </p>
 
@@ -157,7 +157,7 @@
           <li>Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21 DSGVO),</li>
           <li>Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
         </ul>
-        <p>Schreibe dazu an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
+        <p>Schreibe dazu an <SupportEmail />.</p>
         <p>
           Außerdem hast du das Recht auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO), z.B. bei
           der für uns zuständigen: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18,
@@ -173,6 +173,7 @@
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Datenschutzerklärung',
   ogTitle: 'Datenschutzerklärung | Trailradar',

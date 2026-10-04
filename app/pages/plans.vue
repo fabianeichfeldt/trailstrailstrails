@@ -133,7 +133,7 @@
           <li>
             <i class="fa-solid fa-envelope" aria-hidden="true"></i>
             <span>
-              Fragen? Schreib an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>
+              Fragen? Schreib an <SupportEmail />
               oder über das <NuxtLink to="/kontakt">Kontaktformular</NuxtLink>.
             </span>
           </li>
@@ -148,6 +148,7 @@
 
 <script setup lang="ts">
 import { startCheckout } from '~/communication/billing'
+import SupportEmail from '~/components/SupportEmail.vue'
 import { getSupporterPrices } from '~/communication/plans'
 import { SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
 

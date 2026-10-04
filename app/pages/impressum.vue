@@ -22,7 +22,7 @@
       <section>
         <h2>Kontakt</h2>
         <p>
-          E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><br>
+          E-Mail: <SupportEmail /><br>
           Kontaktformular: <NuxtLink to="/kontakt">trailradar.org/kontakt</NuxtLink>
         </p>
       </section>
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Impressum',
   ogTitle: 'Impressum | Trailradar',

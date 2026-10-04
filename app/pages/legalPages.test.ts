@@ -15,6 +15,8 @@ const stubs = {
 }
 const mountPage = (page: object) => mount(page, { global: { stubs } })
 const hrefs = (w: ReturnType<typeof mountPage>) => w.findAll('a').map(a => a.attributes('href'))
+const emailsOutsideEmailOff = (html: string) =>
+  html.replace(/<!--email_off-->[\s\S]*?<!--email_on-->/g, '').match(/webmaster@trailradar\.org/g) ?? []
 
 describe('/impressum', () => {
   it('names the provider with address and contact, under § 5 DDG', () => {
@@ -99,4 +101,17 @@ describe('/terms', () => {
     expect(text).toContain('Vorsatz und grobe Fahrlässigkeit')
     expect(text).toContain('Leben, Körper oder Gesundheit')
   })
+})
+
+// Creem's account review reads "not yet bookable" as "product not ready for production".
+describe('Creem review: subscription reads as a regular offer', () => {
+  it.each([['/impressum', ImpressumPage], ['/privacy', PrivacyPage], ['/terms', TermsPage]])(
+    '%s has no pre-launch wording', (_path, page) => {
+      expect(mountPage(page).text()).not.toMatch(/in Vorbereitung|noch nicht buchbar|ab (seinem|dem) Start/)
+    })
+
+  it.each([['/impressum', ImpressumPage], ['/privacy', PrivacyPage], ['/terms', TermsPage]])(
+    '%s keeps every support e-mail out of Cloudflare obfuscation', (_path, page) => {
+      expect(emailsOutsideEmailOff(mountPage(page).html())).toEqual([])
+    })
 })

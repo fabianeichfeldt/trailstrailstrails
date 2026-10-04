@@ -234,4 +234,10 @@ describe('/plans — checkout', () => {
     await flushPromises()
     expect(billingCalls[0]!.body).toMatchObject({ action: 'checkout', interval: 'monthly', mode: 'test' })
   })
+
+  it('keeps the support e-mail out of Cloudflare obfuscation', async () => {
+    const html = (await mountPage()).html()
+    expect(html).toContain('<!--email_off--><a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><!--email_on-->')
+    expect(html.replace(/<!--email_off-->[\s\S]*?<!--email_on-->/g, '')).not.toContain('webmaster@trailradar.org')
+  })
 })
