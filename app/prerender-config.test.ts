@@ -25,7 +25,7 @@ describe('Billing pages are in the explicit prerender route list', () => {
 })
 
 // Linked from the footer, but must never depend on the crawler: §5 DDG requires it to be reachable.
-test.each(['/impressum', '/kontakt'])('%s is in the explicit prerender route list', (route) => {
+test.each(['/impressum', '/kontakt', '/plans'])('%s is in the explicit prerender route list', (route) => {
   expect(nuxtConfig).toContain(`'${route}',`)
 })
 

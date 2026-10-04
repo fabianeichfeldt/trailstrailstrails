@@ -79,6 +79,10 @@ describe('/terms', () => {
     expect(hrefs(w)).toContain('/impressum')
   })
 
+  it('points to the pricing page', () => {
+    expect(hrefs(mountPage(TermsPage))).toContain('/plans')
+  })
+
   it('yearly plan continues monthly and is cancellable monthly after the first year (§ 309 Nr. 9 BGB)', () => {
     const text = mountPage(TermsPage).text()
     expect(text).toMatch(/Nach Ablauf des ersten Jahres läuft das Jahres-Abo auf unbestimmte Zeit monatlich weiter/)
