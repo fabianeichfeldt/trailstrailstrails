@@ -46,7 +46,16 @@ describe('getMyEntitlement', () => {
       level: 2,
       discountPercent: 20,
       earlyAdopterFreeUntil: '2027-03-23T00:00:00Z',
+      crewRole: null,
     })
+  })
+
+  it('maps crew_role for a trailcrew or admin account', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([
+      { plan_id: 'supporter', level: 1, discount_percent: 0, early_adopter_free_until: null, crew_role: 'trailcrew' },
+    ])))
+
+    expect((await getMyEntitlement('token-123')).crewRole).toBe('trailcrew')
   })
 
   it('returns the free entitlement when the RPC returns no rows', async () => {

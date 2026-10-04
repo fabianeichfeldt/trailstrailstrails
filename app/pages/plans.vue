@@ -82,6 +82,10 @@
               <NuxtLink to="/profile" class="plan-btn plan-btn-ghost">Zu meinem Profil</NuxtLink>
             </template>
 
+            <p v-else-if="subStore.crewRole" class="plan-state">
+              Als {{ subStore.crewRole === 'admin' ? 'Admin' : 'Trailcrew' }} hast du Trail-Zustand dauerhaft gratis.
+            </p>
+
             <p v-else-if="subStore.eligibility?.reason === 'grant_active'" class="plan-state">
               Du hast Trail-Zustand noch gratis bis {{ fmt(subStore.entitlement.earlyAdopterFreeUntil) }}.
               Ab {{ fmt(subStore.eligibility.eligibleFrom) }} kannst du hier Supporter werden.

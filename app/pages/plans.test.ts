@@ -50,6 +50,7 @@ beforeEach(() => {
     subscription: null,
     eligibility: { eligible: true, reason: null, eligibleFrom: null },
     isEarlyAdopter: false,
+    crewRole: null,
     canBuy: (native: boolean) => authStore.isLoggedIn && !native && subStore.eligibility?.eligible === true,
   })
   isNative = ref(false)
@@ -157,6 +158,17 @@ describe('/plans — supporter states', () => {
     subStore.eligibility = { eligible: false, reason: 'grant_active', eligibleFrom: '2027-02-19T12:00:00Z' }
     const w = await mountPage()
     expect(supporter(w).text()).toContain('Du hast Trail-Zustand noch gratis bis 5.3.2027. Ab 19.2.2027 kannst du hier Supporter werden.')
+    expect(cta(w).exists()).toBe(false)
+  })
+
+  it('trailcrew: says it is free for them, no date and no buy button — even while a signup grant is running', async () => {
+    authStore.isLoggedIn = true
+    subStore.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: null, crewRole: 'trailcrew' }
+    subStore.crewRole = 'trailcrew'
+    subStore.eligibility = { eligible: false, reason: 'grant_active', eligibleFrom: '2026-11-17T12:00:00Z' }
+    const w = await mountPage()
+    expect(supporter(w).text()).toContain('Als Trailcrew hast du Trail-Zustand dauerhaft gratis.')
+    expect(supporter(w).text()).not.toContain('gratis bis')
     expect(cta(w).exists()).toBe(false)
   })
 

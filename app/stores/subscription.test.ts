@@ -51,7 +51,7 @@ describe('useSubscriptionStore', () => {
     const store = useSubscriptionStore()
     await store.load()
 
-    expect(store.entitlement).toEqual({ planId: 'pro', level: 2, discountPercent: 20, earlyAdopterFreeUntil: null })
+    expect(store.entitlement).toEqual({ planId: 'pro', level: 2, discountPercent: 20, earlyAdopterFreeUntil: null, crewRole: null })
   })
 
   it('hasFeature compares the current level against the feature minLevel', () => {
@@ -136,6 +136,14 @@ describe('useSubscriptionStore', () => {
       expect(store.isEarlyAdopter).toBe(true)
       expect(store.accessFor('trail_condition')).toBe('allowed')
     })
+  })
+
+  it('crewRole reflects whether access comes from the trailcrew/admin role', () => {
+    const store = useSubscriptionStore()
+    expect(store.crewRole).toBe(null)
+
+    store.entitlement.crewRole = 'trailcrew'
+    expect(store.crewRole).toBe('trailcrew')
   })
 
   it('isEarlyAdopter reflects only whether earlyAdopterFreeUntil is set', () => {
