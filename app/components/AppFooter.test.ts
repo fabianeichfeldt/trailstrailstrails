@@ -12,6 +12,7 @@ describe('AppFooter', () => {
   })
 
   it.each([
+    ['Kontakt', '/kontakt'],
     ['Impressum', '/impressum'],
     ['Datenschutz', '/privacy'],
     ['AGB', '/terms'],

@@ -8,6 +8,7 @@
       <NuxtLink to="/about">Über mich</NuxtLink>
       <NuxtLink to="/support">Unterstützen</NuxtLink>
       <NuxtLink to="/kuendigen">Verträge hier kündigen</NuxtLink>
+      <NuxtLink to="/kontakt">Kontakt</NuxtLink>
       <NuxtLink to="/impressum">Impressum</NuxtLink>
       <NuxtLink to="/privacy">Datenschutz</NuxtLink>
       <NuxtLink to="/terms">AGB</NuxtLink>
