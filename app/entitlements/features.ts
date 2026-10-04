@@ -23,6 +23,21 @@ export const FEATURES = {
   // future feature keys go here — one line each
 } as const
 
+/**
+ * Free Supporter access for new signups: 4 weeks for everyone who signs up by
+ * the end of 30.11.2026 (Berlin); existing users' grants end on 30.11. too.
+ * Copy only — the grant is made by grant_free_access() in the live DB, which
+ * must be changed in step with this.
+ */
+export const SIGNUP_PROMO = {
+  weeks: 4,
+  endsAt: new Date('2026-12-01T00:00:00+01:00'),
+} as const
+
+export function isSignupPromoActive(now: Date = new Date()): boolean {
+  return now < SIGNUP_PROMO.endsAt
+}
+
 export type FeatureKey = keyof typeof FEATURES
 
 /**

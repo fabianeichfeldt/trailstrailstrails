@@ -1,0 +1,313 @@
+<template>
+  <div>
+    <PageHero>
+      <h1>Preise &amp; Pläne</h1>
+      <p>Trailradar ist kostenlos. Mit Supporter bekommst du den Trail-Zustand – und hältst das Projekt am Laufen.</p>
+    </PageHero>
+
+    <main class="container">
+      <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
+
+      <div v-if="!isNative" class="interval-toggle" role="group" aria-label="Abrechnungszeitraum">
+        <button
+          type="button" data-testid="interval-monthly" class="toggle-btn"
+          :class="{ active: interval === 'monthly' }" :aria-pressed="interval === 'monthly'"
+          @click="interval = 'monthly'"
+        >Monatlich</button>
+        <button
+          type="button" data-testid="interval-yearly" class="toggle-btn"
+          :class="{ active: interval === 'yearly' }" :aria-pressed="interval === 'yearly'"
+          @click="interval = 'yearly'"
+        >
+          Jährlich <span v-if="savingPercent" class="toggle-save">−{{ savingPercent }} %</span>
+        </button>
+      </div>
+
+      <div class="plans">
+        <section class="plan" data-testid="plan-free">
+          <h2 class="plan-name">Free</h2>
+          <p class="plan-tagline">Alles, um offizielle Trails zu finden.</p>
+          <div v-if="!isNative" class="plan-price">
+            <span class="plan-amount">0 €</span>
+            <span class="plan-period">für immer</span>
+          </div>
+          <ul class="plan-features">
+            <li v-for="f in FREE_FEATURES" :key="f">{{ f }}</li>
+          </ul>
+          <template v-if="!isNative">
+            <NuxtLink v-if="authStore.isLoggedIn" to="/map" class="plan-btn plan-btn-secondary">Zur Karte</NuxtLink>
+            <button v-else type="button" class="plan-btn plan-btn-secondary" @click="mapStore.authModalOpen = true">
+              Kostenlos registrieren
+            </button>
+          </template>
+        </section>
+
+        <section class="plan plan-featured" data-testid="plan-supporter">
+          <span class="plan-badge">Mit Trail-Zustand</span>
+          <h2 class="plan-name">Supporter</h2>
+          <p class="plan-tagline">Für alle, die vor der Fahrt wissen wollen, wie der Trail ist.</p>
+          <div v-if="!isNative" class="plan-price">
+            <template v-if="prices">
+              <span class="plan-amount" data-testid="price">{{ priceMain }}</span>
+              <span class="plan-period">{{ interval === 'monthly' ? 'pro Monat' : 'pro Jahr' }}</span>
+              <span v-if="interval === 'yearly'" class="plan-sub">
+                entspricht {{ perMonthOfYearly }} pro Monat – du sparst {{ savingPercent }} %
+              </span>
+            </template>
+            <span v-else class="plan-period">Preis wird geladen …</span>
+            <span class="plan-vat">Endpreis inkl. MwSt.</span>
+          </div>
+          <ul class="plan-features">
+            <li class="plan-features-all">Alles aus Free</li>
+            <li v-for="f in SUPPORTER_FEATURES" :key="f">{{ f }}</li>
+          </ul>
+          <template v-if="!isNative">
+            <button type="button" class="plan-btn" disabled>Startet in Kürze</button>
+            <p v-if="promoActive" class="plan-promo">
+              Bis 30.11.: Registrieren und Trail-Zustand {{ SIGNUP_PROMO.weeks }} Wochen gratis testen.
+            </p>
+          </template>
+        </section>
+      </div>
+
+      <p v-if="isNative" class="native-note">Supporter kannst du auf trailradar.org abschließen.</p>
+
+      <section v-else class="facts">
+        <h2>Gut zu wissen</h2>
+        <ul>
+          <li><strong>Jederzeit kündbar</strong> zum Ende des Abrechnungszeitraums – mit einem Klick.</li>
+          <li>Das Jahres-Abo läuft nach dem ersten Jahr monatlich weiter und ist dann monatlich kündbar.</li>
+          <li><strong>14 Tage Geld-zurück</strong>, wenn du nicht zufrieden bist.</li>
+          <li>Bezahlung und Rechnung über unseren Zahlungsanbieter Creem. Alle Preise sind Endpreise inkl. MwSt.</li>
+          <li>
+            Fragen? Schreib an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>
+            oder über das <NuxtLink to="/kontakt">Kontaktformular</NuxtLink>.
+          </li>
+        </ul>
+        <p class="facts-terms">
+          Alle Details stehen in den <NuxtLink to="/terms#supporter">Nutzungsbedingungen</NuxtLink>.
+        </p>
+      </section>
+    </main>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { getSupporterPrices } from '~/communication/plans'
+import { SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
+
+useSeoMeta({
+  title: 'Preise & Pläne',
+  ogTitle: 'Preise & Pläne | Trailradar',
+  description: 'Trailradar ist kostenlos. Supporter bringt den Trail-Zustand: Bodenzustand und Wetter für jeden Spot.',
+  ogUrl: 'https://trailradar.org/plans',
+  ogSiteName: 'Trailradar.org',
+  ogLocale: 'de_DE',
+})
+useHead({
+  link: [{ rel: 'canonical', href: 'https://trailradar.org/plans' }],
+})
+
+const FREE_FEATURES = [
+  'Karte aller offiziellen MTB-Trails, Bikeparks und Dirtparks',
+  'Spot-Details mit Status, Regeln und Öffnungszeiten',
+  'GPX-Touren mit Höhenprofil',
+  'Fotos, Likes und Kommentare',
+  'Neue Spots eintragen',
+]
+
+const SUPPORTER_FEATURES = [
+  'Trail-Zustand für jeden Spot: Wie fahrbar ist der Boden gerade – von staubig bis schlammig?',
+  'Regen der letzten 10 Tage und Wetter-Vorschau, Tag für Tag',
+  'Aktuelles Wetter am Spot',
+  'Live-Hinweis, ob eine Regensperre gerade greift',
+  'Du unterstützt ein unabhängiges, werbefreies Projekt',
+]
+
+const authStore = useAuthStore()
+const mapStore = useMapStore()
+const isNative = useIsNativeApp()
+
+// Build-time value for the static HTML, refreshed on mount so a price change needs no rebuild.
+const { data: prices, refresh } = useAsyncData('supporter-prices', () => getSupporterPrices())
+// Decided after mount: a prerender from before the promo's end must not freeze it into static HTML.
+const promoActive = ref(false)
+onMounted(() => {
+  refresh()
+  promoActive.value = isSignupPromoActive()
+})
+
+const interval = ref<'monthly' | 'yearly'>('monthly')
+
+function money(cents: number, currency: string): string {
+  return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(cents / 100)
+}
+
+const priceMain = computed(() => {
+  const p = prices.value
+  if (!p) return ''
+  return money(interval.value === 'monthly' ? p.monthlyCents : p.yearlyCents, p.currency)
+})
+
+const perMonthOfYearly = computed(() => {
+  const p = prices.value
+  return p ? money(p.yearlyCents / 12, p.currency) : ''
+})
+
+// Rounded down so the page never promises more than the real saving.
+const savingPercent = computed(() => {
+  const p = prices.value
+  if (!p || !p.monthlyCents) return 0
+  return Math.max(0, Math.floor((1 - p.yearlyCents / (p.monthlyCents * 12)) * 100))
+})
+</script>
+
+<style scoped>
+.interval-toggle {
+  display: flex;
+  gap: 0.3rem;
+  width: fit-content;
+  margin: 0 auto 1.5rem;
+  padding: 0.25rem;
+  background: #eceeed;
+  border-radius: 999px;
+}
+.toggle-btn {
+  min-height: 44px;
+  padding: 0 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+}
+.toggle-btn.active { background: #fff; color: #111827; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
+.toggle-save {
+  margin-left: 0.3rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 1.6rem 1.4rem;
+  background: #fff;
+  border: 1px solid #e3e6e4;
+  border-radius: 20px;
+  box-sizing: border-box;
+}
+.plan-featured {
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 10px 30px rgba(43, 108, 176, 0.12);
+}
+.plan-badge {
+  position: absolute;
+  top: -0.8rem;
+  left: 1.4rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.plan-name { margin: 0; font-size: 1.35rem; }
+.plan-tagline { margin: 0.3rem 0 1rem; color: #6b7280; font-size: 0.92rem; }
+
+.plan-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.5rem;
+  margin-bottom: 1.2rem;
+}
+.plan-amount { font-size: 2.2rem; font-weight: 800; line-height: 1.1; color: #111827; }
+.plan-period { color: #4b5563; font-size: 0.95rem; }
+.plan-sub, .plan-vat { flex-basis: 100%; font-size: 0.8rem; color: #6b7280; }
+.plan-sub { color: #15803d; font-weight: 600; }
+
+.plan-features {
+  flex: 1;
+  margin: 0 0 1.4rem;
+  padding: 0;
+  list-style: none;
+}
+.plan-features li {
+  position: relative;
+  padding: 0.35rem 0 0.35rem 1.7rem;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+.plan-features li::before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  top: 0.35rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #15803d;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.plan-features .plan-features-all { font-weight: 700; }
+
+.plan-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  font-size: 1rem;
+  text-decoration: none;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.plan-btn:disabled { background: #cbd5e1; color: #475569; cursor: default; }
+.plan-btn-secondary {
+  background: #fff;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+}
+.plan-promo { margin: 0.75rem 0 0; font-size: 0.85rem; color: #15803d; text-align: center; }
+
+.native-note { max-width: 820px; margin: 1.5rem auto 0; text-align: center; color: #4b5563; }
+
+.facts { max-width: 820px; margin: 2.5rem auto 0; }
+.facts h2 { font-size: 1.1rem; margin: 0 0 0.6rem; }
+.facts ul { margin: 0; padding-left: 1.2rem; }
+.facts li { margin-bottom: 0.45rem; line-height: 1.5; }
+.facts-terms { margin-top: 0.8rem; font-size: 0.9rem; color: #4b5563; }
+
+@media (min-width: 720px) {
+  .plans { grid-template-columns: 1fr 1fr; }
+}
+</style>
