@@ -170,5 +170,5 @@ UPDATE "public"."subscription_plans"
 -- PLACEHOLDER: replace with the real Creem TEST-mode product ids before applying.
 -- Live ('creem') rows come with go-live as a separate migration.
 INSERT INTO "public"."plan_provider_prices" ("plan_id", "provider", "interval", "provider_price_id") VALUES
-    ('supporter', 'creem_test', 'monthly', 'prod_TEST_MONTHLY_PLACEHOLDER'),
+    ('supporter', 'creem_test', 'monthly', 'prod_5cTHXKYAv5lnranCRrVSHU'),
     ('supporter', 'creem_test', 'yearly',  'prod_TEST_YEARLY_PLACEHOLDER');
