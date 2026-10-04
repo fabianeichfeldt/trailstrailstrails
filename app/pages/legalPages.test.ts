@@ -15,6 +15,8 @@ const stubs = {
 }
 const mountPage = (page: object) => mount(page, { global: { stubs } })
 const hrefs = (w: ReturnType<typeof mountPage>) => w.findAll('a').map(a => a.attributes('href'))
+const emailsOutsideEmailOff = (html: string) =>
+  html.replace(/<!--email_off-->[\s\S]*?<!--email_on-->/g, '').match(/webmaster@trailradar\.org/g) ?? []
 
 describe('/impressum', () => {
   it('names the provider with address and contact, under § 5 DDG', () => {
@@ -75,17 +77,8 @@ describe('/terms', () => {
     const w = mountPage(TermsPage)
     expect(w.text()).toContain('Supporter-Abo')
     expect(w.text()).toContain('Armitage Labs OÜ')
-    expect(w.text()).toContain('Verträge hier kündigen')
+    expect(hrefs(w)).toContain('/kuendigen')
     expect(hrefs(w)).toContain('/impressum')
-  })
-
-  // /kuendigen ships with the billing branch; until then a link would 404.
-  it('marks the subscription as not yet bookable and links no billing page', () => {
-    for (const page of [TermsPage, PrivacyPage]) {
-      const w = mountPage(page)
-      expect(w.text()).toContain('in Vorbereitung und noch nicht buchbar')
-      expect(hrefs(w)).not.toContain('/kuendigen')
-    }
   })
 
   it('points to the pricing page', () => {
@@ -108,4 +101,17 @@ describe('/terms', () => {
     expect(text).toContain('Vorsatz und grobe Fahrlässigkeit')
     expect(text).toContain('Leben, Körper oder Gesundheit')
   })
+})
+
+// Creem's account review reads "not yet bookable" as "product not ready for production".
+describe('Creem review: subscription reads as a regular offer', () => {
+  it.each([['/impressum', ImpressumPage], ['/privacy', PrivacyPage], ['/terms', TermsPage]])(
+    '%s has no pre-launch wording', (_path, page) => {
+      expect(mountPage(page).text()).not.toMatch(/in Vorbereitung|noch nicht buchbar|ab (seinem|dem) Start/)
+    })
+
+  it.each([['/impressum', ImpressumPage], ['/privacy', PrivacyPage], ['/terms', TermsPage]])(
+    '%s keeps every support e-mail out of Cloudflare obfuscation', (_path, page) => {
+      expect(emailsOutsideEmailOff(mountPage(page).html())).toEqual([])
+    })
 })

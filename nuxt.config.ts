@@ -370,6 +370,8 @@ export default defineNuxtConfig({
         '/support',
         '/terms',
         '/reset-password',
+        '/supporter/danke',
+        '/kuendigen',
         '/trailradar-vs-komoot',
         '/trailradar-vs-trailforks',
         ...Object.keys(regions).map(slug => `/trails/${slug}`),

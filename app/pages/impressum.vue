@@ -22,7 +22,7 @@
       <section>
         <h2>Kontakt</h2>
         <p>
-          E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><br>
+          E-Mail: <SupportEmail /><br>
           Kontaktformular: <NuxtLink to="/kontakt">trailradar.org/kontakt</NuxtLink>
         </p>
       </section>
@@ -35,7 +35,7 @@
       <section>
         <h2>Zahlungsabwicklung</h2>
         <p>
-          Verkäufer des Supporter-Abos (in Vorbereitung) ist unser Zahlungsdienstleister Creem (Armitage Labs OÜ, Rotermanni 14,
+          Verkäufer des Supporter-Abos ist unser Zahlungsdienstleister Creem (Armitage Labs OÜ, Rotermanni 14,
           10111 Tallinn, Estland) als sogenannter Merchant of Record. Details findest du in den
           <NuxtLink to="/terms">Nutzungsbedingungen</NuxtLink>.
         </p>
@@ -60,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Impressum',
   ogTitle: 'Impressum | Trailradar',

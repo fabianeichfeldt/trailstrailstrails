@@ -49,6 +49,7 @@ import { showToast } from '~/utils/toast'
 
 const StubLink = { template: '<a><slot /></a>' }
 const StubPageHero = { template: '<div><slot /></div>' }
+const StubPlanCard = { template: '<section class="stub-plan-card" />' }
 
 function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
   const client = fakeClient(photosData)
@@ -57,7 +58,7 @@ function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
 
   return mount(ProfilePage, {
     global: {
-      stubs: { NuxtLink: StubLink, PageHero: StubPageHero },
+      stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard },
     },
   })
 }
@@ -74,6 +75,13 @@ describe('profile.vue — photo delete', () => {
     fakeMapStore = { authModalOpen: false }
     vi.mocked(confirmDialog).mockReset().mockResolvedValue(true)
     vi.mocked(showToast).mockReset()
+  })
+
+  it('mounts the plan card right after the profile header', () => {
+    const wrapper = mountProfile()
+    const children = Array.from(wrapper.find('.profile-layout').element.children)
+    const header = children.findIndex(el => el.classList.contains('profile-header'))
+    expect(children[header + 1]?.classList.contains('stub-plan-card')).toBe(true)
   })
 
   it('renders a delete button on every uploaded photo card', async () => {

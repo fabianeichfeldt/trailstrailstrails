@@ -66,7 +66,6 @@
         Vorgaben oder diese Nutzungsbedingungen verstoßen.</p>
 
       <h2 id="supporter">8. Supporter-Abo</h2>
-      <p class="pre-launch">Das Supporter-Abo ist in Vorbereitung und noch nicht buchbar. Die folgenden Regeln gelten ab seinem Start.</p>
       <h3>8.1 Leistung</h3>
       <p>Mit dem Supporter-Abo („TrailRadar Supporter“) schaltest du zusätzliche Funktionen in deinem
         Trailradar-Konto frei, derzeit die Funktion „Trail-Zustand“ (eine Einschätzung des Bodenzustands und
@@ -96,9 +95,9 @@
 
       <h3>8.4 Kündigung</h3>
       <p>Du kannst jederzeit zum Ende des laufenden Abrechnungszeitraums kündigen – mit einem Klick über
-        die Seite „Verträge hier kündigen“ (auch ohne Anmeldung, im Footer jeder Seite),
+        <NuxtLink to="/kuendigen">Verträge hier kündigen</NuxtLink> (auch ohne Anmeldung, im Footer jeder Seite),
         über dein Profil oder per E-Mail an
-        <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>. Den Eingang deiner Kündigung
+        <SupportEmail />. Den Eingang deiner Kündigung
         bestätigen wir dir mit Datum und Uhrzeit per E-Mail. Bis zum Ende des bezahlten Zeitraums kannst du alle
         Funktionen weiter nutzen und die Kündigung zurücknehmen. Das Recht zur Kündigung aus wichtigem Grund
         bleibt unberührt.</p>
@@ -109,7 +108,7 @@
       <p>Als Verbraucher hast du ein gesetzliches Widerrufsrecht, über das dich Creem als Verkäufer im
         Bestellvorgang belehrt. Unabhängig davon gilt bei uns: Bist du nicht zufrieden, erstatten wir dir den
         vollen Betrag deiner ersten Zahlung, wenn du uns innerhalb von 14 Tagen nach dem Kauf per E-Mail an
-        <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a> darum bittest. Mit der Erstattung
+        <SupportEmail /> darum bittest. Mit der Erstattung
         endet das Abo und der Zugang zu den Supporter-Funktionen.</p>
 
       <h3>8.6 Preisänderungen</h3>
@@ -158,6 +157,7 @@
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Nutzungsbedingungen',
   ogUrl: 'https://trailradar.org/terms',
@@ -171,6 +171,5 @@ useHead({
 
 <style scoped>
 h3 { font-size: 1em; margin: 1.2em 0 0.4em; }
-.pre-launch { font-style: italic; }
 .stand { margin-top: 2em; font-size: 0.85em; color: #666; }
 </style>

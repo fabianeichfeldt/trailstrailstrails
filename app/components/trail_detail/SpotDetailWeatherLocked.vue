@@ -16,11 +16,8 @@
       <!-- No purchase button on purpose: there is no billing flow to send anyone
            to yet, and a dead "Upgrade" link is worse than none. The only action
            is for visitors who are logged out, and it still just opens the free
-           sign-up modal — every signup currently gets a 6-month free grant
-           (migration 20260926180000), not the 4-week trial the copy below
-           describes. That mismatch is deliberate for now: the pitch states the
-           eventual pricing, but nothing routes anywhere else until a payment
-           provider exists. Logged-in users get no pitch or CTA — they already
+           sign-up modal — signups by 30.11.2026 get 4 weeks free (SIGNUP_PROMO);
+           after that the button only offers sign-up. Logged-in users get no pitch or CTA — they already
            signed up, so a "try it free" pitch would be untrue for them; they
            keep the plain pill instead. -->
       <div class="wx-lock">
@@ -37,10 +34,10 @@
               data-testid="weather-locked-cta"
               @click="mapStore.authModalOpen = true"
             >
-              4 Wochen kostenlos testen
+              {{ promoActive ? `${SIGNUP_PROMO.weeks} Wochen kostenlos testen` : 'Jetzt registrieren' }}
             </button>
             <small class="wx-lock-fine">
-              Danach 3 €/Monat oder 25 €/Jahr. Mit {{ plan }} Plan unterstützt du ein unabhängiges Community-Projekt.
+              {{ promoActive ? 'Danach 3 €/Monat' : '3 €/Monat' }} oder 25 €/Jahr. Mit {{ plan }} Plan unterstützt du ein unabhängiges Community-Projekt.
             </small>
           </template>
           <template v-else>
@@ -56,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { FEATURES, minPlanName } from '~/entitlements/features'
+import { FEATURES, minPlanName, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
 import { sampleTrailCondition } from '~/utils/sampleCondition'
 import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
 
@@ -73,6 +70,7 @@ const mapStore = useMapStore()
 // only ever renders after mount (access is "checking" while prerendering), so a
 // date-relative sample cannot mismatch the static HTML.
 const sample = sampleTrailCondition(new Date())
+const promoActive = isSignupPromoActive()
 </script>
 
 <style scoped>

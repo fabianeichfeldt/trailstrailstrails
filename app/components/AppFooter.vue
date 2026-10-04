@@ -8,17 +8,20 @@
       <NuxtLink to="/about">Über mich</NuxtLink>
       <NuxtLink to="/support">Unterstützen</NuxtLink>
       <NuxtLink to="/plans">Preise</NuxtLink>
+      <NuxtLink to="/kuendigen">Verträge hier kündigen</NuxtLink>
       <NuxtLink to="/kontakt">Kontakt</NuxtLink>
       <NuxtLink to="/impressum">Impressum</NuxtLink>
       <NuxtLink to="/privacy">Datenschutz</NuxtLink>
       <NuxtLink to="/terms">AGB</NuxtLink>
       <a href="https://www.instagram.com/trailradar.germany" target="_blank" rel="noopener noreferrer">Instagram</a>
     </nav>
+    <p class="footer-email">Support: <SupportEmail /></p>
     <p class="copyright">© {{ year }} Trailradar</p>
   </footer>
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 const year = new Date().getFullYear()
 </script>
 
@@ -52,6 +55,17 @@ const year = new Date().getFullYear()
 .page-footer nav :deep(a):hover {
   color: #fff;
   text-decoration-color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-email {
+  color: var(--color-footer-text);
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+.footer-email :deep(a) {
+  color: inherit;
+  text-underline-offset: 3px;
 }
 
 .copyright {

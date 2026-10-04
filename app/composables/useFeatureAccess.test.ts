@@ -25,7 +25,7 @@ function entitlementResponse(level: number) {
   return Promise.resolve({
     ok: true,
     status: 200,
-    json: () => Promise.resolve([{ plan_id: level ? 'plus' : 'free', level, discount_percent: 0, early_adopter_free_until: null }]),
+    json: () => Promise.resolve([{ plan_id: level ? 'supporter' : 'free', level, discount_percent: 0, early_adopter_free_until: null }]),
   })
 }
 

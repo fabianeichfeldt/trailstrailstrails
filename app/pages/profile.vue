@@ -34,6 +34,8 @@
           </div>
         </div>
 
+        <PlanCard />
+
         <!-- Profile form -->
         <section class="profile-section">
           <h3 class="section-title">Profil bearbeiten</h3>
@@ -160,6 +162,7 @@
 <script setup lang="ts">
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
+import PlanCard from '~/components/profile/PlanCard.vue'
 
 useSeoMeta({
   title: 'Mein Profil',

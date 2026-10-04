@@ -15,7 +15,7 @@
           Fabian Eichfeldt<br>
           Margeretenweg 10<br>
           95447 Bayreuth<br>
-          E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><br>
+          E-Mail: <SupportEmail /><br>
           Weitere Angaben zum Anbieter findest du im <NuxtLink to="/impressum">Impressum</NuxtLink>.
         </p>
 
@@ -69,7 +69,6 @@
         </p>
 
         <h2>Supporter-Abo & Zahlung (Creem)</h2>
-        <p class="pre-launch">Das Supporter-Abo ist in Vorbereitung und noch nicht buchbar. Dieser und der folgende Abschnitt gelten ab seinem Start.</p>
         <p>
           Das Supporter-Abo verkauft unser Zahlungsdienstleister Creem (Armitage Labs OÜ, Rotermanni 14,
           10111 Tallinn, Estland) als sogenannter Merchant of Record. Beim Kauf leiten wir dich zur Bestellseite
@@ -91,7 +90,7 @@
 
         <h2>Kündigung über „Verträge hier kündigen“</h2>
         <p>
-          Wenn du ein Abo über die Seite „Verträge hier kündigen“ kündigst,
+          Wenn du ein Abo über die Seite <NuxtLink to="/kuendigen">Verträge hier kündigen</NuxtLink> kündigst,
           speichern wir deinen Namen, deine E-Mail-Adresse, den Zeitpunkt des Eingangs und – nur zum Schutz vor
           Missbrauch – einen nicht umkehrbaren, täglich wechselnden Hash deiner IP-Adresse. Damit ordnen wir die
           Kündigung zu, bestätigen dir ihren Eingang und können ihn später nachweisen.
@@ -103,7 +102,7 @@
 
         <h2>E-Mail-Versand (Resend)</h2>
         <p>
-          Nachrichten aus dem Kontaktformular und – ab dem Start des Supporter-Abos – Bestätigungen zu deinem Abo,
+          Nachrichten aus dem Kontaktformular und Bestätigungen zu deinem Abo,
           insbesondere die Eingangsbestätigung deiner Kündigung, versenden wir über Resend (Resend, Inc., USA). Dabei
           verarbeitet Resend die beteiligten E-Mail-Adressen und den Inhalt der Nachricht. Resend ist unser
           Auftragsverarbeiter nach Art. 28 DSGVO; die Übermittlung in die USA erfolgt auf Grundlage von
@@ -158,7 +157,7 @@
           <li>Widerspruch gegen Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21 DSGVO),</li>
           <li>Widerruf einer Einwilligung mit Wirkung für die Zukunft (Art. 7 Abs. 3 DSGVO).</li>
         </ul>
-        <p>Schreibe dazu an <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a>.</p>
+        <p>Schreibe dazu an <SupportEmail />.</p>
         <p>
           Außerdem hast du das Recht auf Beschwerde bei einer Datenschutz-Aufsichtsbehörde (Art. 77 DSGVO), z.B. bei
           der für uns zuständigen: Bayerisches Landesamt für Datenschutzaufsicht (BayLDA), Promenade 18,
@@ -174,6 +173,7 @@
 </template>
 
 <script setup lang="ts">
+import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Datenschutzerklärung',
   ogTitle: 'Datenschutzerklärung | Trailradar',
@@ -197,7 +197,6 @@ section + section { margin-top: 1.5em; }
   margin-top: 1.8em;
 }
 :deep(.container h2:first-of-type) { margin-top: 0; }
-.pre-launch { font-style: italic; }
 .stand { margin-top: 2em; font-size: 0.85em; color: #666; }
 code {
   background: #f1f1f1;
