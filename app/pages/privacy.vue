@@ -58,8 +58,18 @@
           <NuxtLink to="/terms">Nutzungsbedingungen</NuxtLink>).
         </p>
 
+        <h2>Kontaktformular</h2>
+        <p>
+          Wenn du uns über das <NuxtLink to="/kontakt">Kontaktformular</NuxtLink> schreibst, verarbeiten wir deine
+          E-Mail-Adresse, deinen Namen (falls angegeben) und deine Nachricht, um dir zu antworten. Die Nachricht wird
+          uns per E-Mail über Resend (siehe unten) zugestellt; auf der Website selbst speichern wir sie nicht.
+          Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO, soweit deine Anfrage einen Vertrag betrifft, sonst
+          Art. 6 Abs. 1 lit. f DSGVO (Beantwortung von Anfragen). Wir löschen die Nachricht, sobald deine Anfrage
+          erledigt ist und keine Aufbewahrungspflicht besteht.
+        </p>
+
         <h2>Supporter-Abo & Zahlung (Creem)</h2>
-        <p class="pre-launch">Das Supporter-Abo ist in Vorbereitung und noch nicht buchbar. Dieser und die beiden folgenden Abschnitte gelten ab seinem Start.</p>
+        <p class="pre-launch">Das Supporter-Abo ist in Vorbereitung und noch nicht buchbar. Dieser und der folgende Abschnitt gelten ab seinem Start.</p>
         <p>
           Das Supporter-Abo verkauft unser Zahlungsdienstleister Creem (Armitage Labs OÜ, Rotermanni 14,
           10111 Tallinn, Estland) als sogenannter Merchant of Record. Beim Kauf leiten wir dich zur Bestellseite
@@ -91,12 +101,13 @@
           Art. 6 Abs. 1 lit. f DSGVO. Speicherdauer: drei Jahre zum Jahresende.
         </p>
 
-        <h2>E-Mails zu deinem Abo (Resend)</h2>
+        <h2>E-Mail-Versand (Resend)</h2>
         <p>
-          Bestätigungen zu deinem Abo – insbesondere die Eingangsbestätigung deiner Kündigung – versenden wir über
-          Resend (Resend, Inc., USA). Dabei verarbeitet Resend deine E-Mail-Adresse und den Inhalt der Nachricht.
-          Resend ist unser Auftragsverarbeiter nach Art. 28 DSGVO; die Übermittlung in die USA erfolgt auf Grundlage
-          von EU-Standardvertragsklauseln. Rechtsgrundlage: Art. 6 Abs. 1 lit. b und c DSGVO.
+          Nachrichten aus dem Kontaktformular und – ab dem Start des Supporter-Abos – Bestätigungen zu deinem Abo,
+          insbesondere die Eingangsbestätigung deiner Kündigung, versenden wir über Resend (Resend, Inc., USA). Dabei
+          verarbeitet Resend die beteiligten E-Mail-Adressen und den Inhalt der Nachricht. Resend ist unser
+          Auftragsverarbeiter nach Art. 28 DSGVO; die Übermittlung in die USA erfolgt auf Grundlage von
+          EU-Standardvertragsklauseln. Rechtsgrundlage: Art. 6 Abs. 1 lit. b, c und f DSGVO.
         </p>
 
         <h2>Trail-Zustand</h2>

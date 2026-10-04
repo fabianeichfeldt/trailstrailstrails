@@ -25,6 +25,11 @@ describe('/impressum', () => {
     expect(text).toContain('webmaster@trailradar.org')
   })
 
+  it('offers the contact form as second contact channel', () => {
+    const w = mountPage(ImpressumPage)
+    expect(hrefs(w)).toContain('/kontakt')
+  })
+
   it('has a back link to the map and its own canonical url', () => {
     useHead.mockClear()
     const w = mountPage(ImpressumPage)
@@ -46,6 +51,14 @@ describe('/privacy', () => {
     expect(text).toContain('Armitage Labs OÜ')
     expect(text).toContain('Resend')
     expect(text).toContain('Verträge hier kündigen')
+  })
+
+  it('covers the contact form, which is live already (not part of the pre-launch note)', () => {
+    const w = mountPage(PrivacyPage)
+    const section = w.findAll('h2').find(h => h.text().includes('Kontaktformular'))
+    expect(section).toBeTruthy()
+    expect(hrefs(w)).toContain('/kontakt')
+    expect(w.text()).toMatch(/Kontaktformular[\s\S]*Resend/)
   })
 
   it('lists every data-subject right incl. the complaint to the Bavarian authority', () => {

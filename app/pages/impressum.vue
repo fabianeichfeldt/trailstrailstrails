@@ -21,8 +21,10 @@
 
       <section>
         <h2>Kontakt</h2>
-        <!-- TODO before go-live: § 5 DDG needs a second fast contact channel besides email (phone or contact form). -->
-        <p>E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a></p>
+        <p>
+          E-Mail: <a href="mailto:webmaster@trailradar.org">webmaster@trailradar.org</a><br>
+          Kontaktformular: <NuxtLink to="/kontakt">trailradar.org/kontakt</NuxtLink>
+        </p>
       </section>
 
       <section>
