@@ -9,23 +9,28 @@
       <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
       <div v-if="!authStore.isLoggedIn" class="danke-box">
-        <p>Melde dich an, damit wir deine Freischaltung prüfen können.</p>
+        <span class="danke-icon" aria-hidden="true"><i class="fa-solid fa-user"></i></span>
+        <p class="danke-text">Melde dich an, damit wir deine Freischaltung prüfen können.</p>
         <button class="btn-primary" @click="mapStore.authModalOpen = true">Anmelden</button>
       </div>
 
-      <div v-else-if="state === 'success'" class="danke-box">
+      <div v-else-if="state === 'success'" class="danke-box danke-success">
+        <span class="danke-icon danke-icon-done" aria-hidden="true"><i class="fa-solid fa-check"></i></span>
         <h2>Danke! Trail-Zustand ist freigeschaltet.</h2>
+        <p class="danke-text">Öffne einen Spot auf der Karte – der Trail-Zustand steht jetzt direkt in den Details.</p>
         <NuxtLink to="/map" class="btn-primary">Zur Karte</NuxtLink>
       </div>
 
       <div v-else-if="state === 'timeout'" class="danke-box">
-        <p>Zahlung eingegangen — die Freischaltung dauert noch einen Moment.</p>
-        <p class="hint">Du kannst die Seite schließen; die Freischaltung passiert automatisch.</p>
+        <span class="danke-icon" aria-hidden="true"><i class="fa-solid fa-hourglass-half"></i></span>
+        <p class="danke-text danke-text-strong">Zahlung eingegangen — die Freischaltung dauert noch einen Moment.</p>
+        <p class="danke-text">Du kannst die Seite schließen; die Freischaltung passiert automatisch.</p>
         <NuxtLink to="/map" class="btn-primary">Zur Karte</NuxtLink>
       </div>
 
       <div v-else class="danke-box" aria-live="polite">
-        <p>Zahlung eingegangen — wir schalten dich gerade frei …</p>
+        <span class="danke-icon danke-icon-wait" aria-hidden="true"></span>
+        <p class="danke-text danke-text-strong">Zahlung eingegangen — wir schalten dich gerade frei …</p>
       </div>
     </main>
   </div>
@@ -86,28 +91,79 @@ onUnmounted(stop)
 </script>
 
 <style scoped>
+/* Same ink + trail green as the Supporter card on /plans. */
 .danke-box {
-  max-width: 32rem;
-  margin: 1.5rem auto;
-  padding: 1.5rem 1rem;
+  position: relative;
+  overflow: hidden;
+  max-width: 30rem;
+  margin: 1rem auto 2rem;
+  padding: 2.5rem 1.5rem 2rem;
+  border-radius: 24px;
+  background: var(--color-page-bg);
+  color: #f3f4f3;
   text-align: center;
 }
+.danke-box::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-radial-gradient(circle at 50% -30%, transparent 0 22px, rgba(88, 194, 125, 0.08) 22px 23px);
+  pointer-events: none;
+}
+.danke-box > * { position: relative; }
 
-.hint { color: var(--color-text-muted); font-size: 0.9rem; }
+.danke-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1.25rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d6dbd8;
+  font-size: 1.4rem;
+}
+.danke-icon-done { background: var(--color-page-accent); color: var(--color-page-bg); font-size: 1.7rem; }
+.danke-icon-wait {
+  background: none;
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--color-page-accent);
+  animation: danke-spin 0.9s linear infinite;
+}
+/* The one moment of motion: the check lands once the unlock is confirmed. */
+.danke-success .danke-icon-done { animation: danke-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+.container .danke-box h2 { margin: 0 0 0.6rem; font-size: 1.4rem; font-weight: 800; color: #fff; }
+.danke-box .danke-text { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.5; color: #a7aeaa; }
+.danke-box .danke-text-strong { font-size: 1rem; font-weight: 700; color: #fff; }
 
 .btn-primary {
-  display: inline-block;
-  min-height: 44px;
-  line-height: 44px;
-  padding: 0 1.5rem;
-  background: var(--color-primary);
-  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 1rem;
+  padding: 0 1.75rem;
   border: none;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-  cursor: pointer;
+  border-radius: 999px;
+  background: var(--color-page-accent);
+  color: var(--color-page-bg);
+  font: inherit;
+  font-weight: 800;
   text-decoration: none;
+  cursor: pointer;
+}
+.btn-primary:hover { background: #6fd292; text-decoration: none; }
+.btn-primary:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+@keyframes danke-spin { to { transform: rotate(360deg); } }
+@keyframes danke-pop {
+  from { transform: scale(0.4); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
-.btn-primary:hover { background: var(--color-primary-hover); }
+@media (prefers-reduced-motion: reduce) {
+  .danke-success .danke-icon-done { animation: none; }
+  .danke-icon-wait { animation-duration: 2.5s; }
+}
 </style>

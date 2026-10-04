@@ -135,4 +135,37 @@ describe('PlanCard', () => {
     expect(link.attributes('href')).toBe('/kuendigen')
     expect(link.text()).toBe('Verträge hier kündigen')
   })
+
+  it('status chip names the subscription state', () => {
+    const chip = () => mountCard().find('[data-testid="plan-chip"]')
+    expect(chip().exists()).toBe(false)
+
+    store.entitlement = supporterEnt
+    store.subscription = sub()
+    expect(chip().text()).toBe('Aktiv')
+
+    store.isCancelScheduled = true
+    expect(chip().text()).toBe('Gekündigt')
+
+    store.isPastDue = true
+    expect(chip().text()).toBe('Zahlung offen')
+  })
+
+  it('early adopter without subscription: "Gratis" chip', () => {
+    store.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
+    store.isEarlyAdopter = true
+    expect(mountCard().find('[data-testid="plan-chip"]').text()).toBe('Gratis')
+  })
+
+  it('subscribed: says since when, in de-DE month and year', () => {
+    store.entitlement = supporterEnt
+    store.subscription = sub({ createdAt: '2026-10-01T12:00:00Z' })
+    expect(mountCard().text()).toContain('Supporter seit Oktober 2026')
+  })
+
+  it('free: pitches the paid feature on the web, not in the native app', () => {
+    expect(mountCard().text()).toContain('wie fahrbar der Trail gerade ist')
+    isNative.value = true
+    expect(mountCard().text()).not.toContain('wie fahrbar der Trail gerade ist')
+  })
 })
