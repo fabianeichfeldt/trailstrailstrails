@@ -72,7 +72,8 @@
         Trailradar-Konto frei, derzeit die Funktion „Trail-Zustand“ (eine Einschätzung des Bodenzustands und
         Wetters für einen Spot). Mit deinem Beitrag unterstützt du außerdem Betrieb und Weiterentwicklung von
         Trailradar. Die Funktionen können wir weiterentwickeln; den Kern der bezahlten Leistung schränken wir
-        während eines bezahlten Zeitraums nicht zu deinem Nachteil ein.</p>
+        während eines bezahlten Zeitraums nicht zu deinem Nachteil ein. Preise und Leistungen im Überblick:
+        <NuxtLink to="/plans">Preise &amp; Pläne</NuxtLink>.</p>
 
       <h3>8.2 Kauf und Zahlung über Creem</h3>
       <p>Das Abo kaufst du über unseren Zahlungsdienstleister <strong>Creem</strong> (Armitage Labs OÜ,

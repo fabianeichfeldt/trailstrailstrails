@@ -7,6 +7,7 @@
       <NuxtLink to="/faq">FAQ</NuxtLink>
       <NuxtLink to="/about">Über mich</NuxtLink>
       <NuxtLink to="/support">Unterstützen</NuxtLink>
+      <NuxtLink to="/plans">Preise</NuxtLink>
       <NuxtLink to="/kontakt">Kontakt</NuxtLink>
       <NuxtLink to="/impressum">Impressum</NuxtLink>
       <NuxtLink to="/privacy">Datenschutz</NuxtLink>
