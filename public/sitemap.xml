@@ -2,3373 +2,3397 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://trailradar.org/</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://trailradar.org/map</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trailradar-vs-komoot</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trailradar-vs-trailforks</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/articles</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://trailradar.org/about</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/faq</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/support</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://trailradar.org/plans</loc>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/business</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://trailradar.org/impressum</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://trailradar.org/kontakt</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://trailradar.org/legal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://trailradar.org/privacy</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://trailradar.org/terms</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/allgaeu</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/berlin</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hamburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/muenchen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/koeln</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stuttgart</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/duesseldorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/leipzig</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dortmund</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/fraenkische-schweiz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/oberpfalz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schwarzwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schwaebische-alb</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/taunus</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/freiburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/odenwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rhoen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pfalz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bayerischerwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/nuernberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schweiz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/oesterreich</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/tschechien</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/tirol</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/innsbruck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/frankfurt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wiesbaden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/karlsruhe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/graz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/darmstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/augsburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wien</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/essen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mannheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/vorarlberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/saarbruecken</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/heidelberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kassel</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hallertau-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flow-forest-guenzburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-spaichingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bierstadttrails-kulmbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/duensberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikelaend-eberbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/falkenberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/skillarea-talstation-grubigbahn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailnetz-saarbruecken</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-trippstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bad-wuenneberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dimb-wuermtal-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/alb-gold-wadenbeisser</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/horaffen-trails-crailsheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/obermain-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/feen-bike-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wasa-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/teutofreun-de-trails-am-doerenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/swu-trail-blaustein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schillerlindetrail-und-dschungeltrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/slickrock-bike-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sellaronda-mtb-tour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stoneman-taurista</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gladiator-ride</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/beni-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/arzler-alm-hungerburg-stadtwald-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/redrock-mtb-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/buhlbach-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bucketride-spotguide-toskana</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/freeride-nussloch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/skillup-bikepark-augsburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/borderless-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/haffcamp-mtb-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/naturtrails-deidesheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wald-weit-flowtrails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hardt-lines-bad-kreuznach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/steinbrecher-trails-dossenheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/donnersberger-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-landstuhl</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ilmenau-trailpark-lindenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/klingenstein-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-park-driedorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/x-trail-schwarzenbruck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/heumoederntrails-treuchtlingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/baerenloch-trails-herrieden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-eibelstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-kreuzberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/baysf-trail-kreuth</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sandbergtrails-bopfingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailcenter-rabenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kammtrails-aschaffenburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/moemoea-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikemaster-trail-nagold</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbike-freiburg-e-v</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/woodpecker-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-stromberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-bad-orb</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-bad-endbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-ottweiler</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/zapfentrail-dischingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pluederhausen-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/single-trail-runde-sankt-englmar</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/statera-schwarzwaldtrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbiketouren-in-baiersbronn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/drop-koenigsfeld</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/lochentrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-boppard</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/habe-mtb</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/strommasten-downhill-ettlingen-karlsruhe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/saubadtrail-bad-waldsee</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/downhilltrail-teterow</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rv-adler-downhillstrecke-kothen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/klingentrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailground-brilon</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/haard-on-tour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-siegen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-weingarten</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-outdoor-park-bad-salzdetfurth</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/deisterfreun-de</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/esnos</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hometrail-krefeld</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hoheward-flow</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/monte-scherbelino</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gehrotrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailsurfers-baden-wuerttemberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-am-schweinsberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbike-touren-rund-um-heilbronn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gruene-hoelle-freisen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-schaerfshalde</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gravity-team-hoxberg-e-v</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-winterberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hoefletrail-herbolzheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-luenen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirt-force-bike-park-neubrandenburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hd-freeride-koenigstuhl</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/emser-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/panorama-bikepark-eschach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dav-bike-garden-kempten</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-mehring</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/winding-trails-herrenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trail-s-urbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/singletrail-parcours-hochspeyer</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-wutach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schellenberg-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-heidenloch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ebblwoi-und-handkaes</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/eisenwald-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/baerenleite-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hexenwald-trailpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/felsentrail-hornberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bundesligastrecke-freudenstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-ranch-trail-schonach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbikepark-attendorn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trailpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-fun-trails-am-doebraberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/spitztour-im-schoenbuch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/brammen-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gelaendefahrrad-aachen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/radlust-mtb-trail-waldmeister</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/huetti-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/querfeldein-zu-main-und-wein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailorado</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trail-laichingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/co1-collenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gr1-grasellenbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mil1-miltenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gh1-grossheubach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/fuchstrail-bensheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mi1-michelstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/erb1-erbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/go1-gorxheimertal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-messingschlager</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/3-eiben-kidspark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wexl-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailcenter-wien-hohewand-wiese</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trails-michelsberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/juratrails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schmausenbuck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-harz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-am-einkorn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/krater-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/zwei-schanzen-tour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/thanheim-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-habichtswald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/klostertrails-schiffenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hoherodskopf-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/from-dachs-till-dawn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/neuland-trails-in-immenstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailworks-fuerth</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-bad-tabarz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bartholomae-bike-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/heidenride-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-weisshauswald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/goetterhuettentrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/blackberry-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dav-bikepark-ueberlingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/winnenden-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bretten</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/la-trails-laufach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/urtrails-altmuehltal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/franztrail-tuebingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikezone-mt-bucherl</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dimb-himmelsleiter-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ig-heidenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/steinwald-trailrunde</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-tus-erfenbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-muehlberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hoellenberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/loerrach-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rock-n-rolla-trail-in-marquartstein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/uppertrails-roadlberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/uppertrails-pfenningberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailcenter-aesch-und-umliegende</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/spaetzle-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flaedle-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-mellrichstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailcenter-faaker-see</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/shared-trail-oberndorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-huertgenwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-hohenahr</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/brezeltrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wartburg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hansetrail-lemgo</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbike-strecke-berdorf-beaufort</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trails-heubach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/buchklingentrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/joesefle</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/devils-rock-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-mosbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hinanger-steig-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/steinedecktrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schwanner-warte</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/coal-chamber</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/back-to-the-roots</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/center-of-gravity</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/suntrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ebertrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-burgsinn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wellenzwerg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-im-neuen-gemeindewald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/frc-herten-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/eselstrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-kelkheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailparkweidlingbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wiener-wald-trails-nord</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ladda-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/harschbichl-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/my-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowtrail-feldberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-area-anninger</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/augsburg-trailcluster-schwarzbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/augsburg-trailcluster-lehenwaeldchen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/augsburg-trailcluster-mariengrotte</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dead-sailor-hochrheintrails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/frei-weg-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/br1</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trails-stadtwald-koblenz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/klinsky-enduro-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/klobouk-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/single-trek-pod-smrkem</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/fellbach-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/askoe-heuberg-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/uppertrails-linzerberg-trails-skillpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kelstrup-plantage-mtb</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/freeride-trassem</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-skill-center</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ahr-trail-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/foehrlenbergtrails-annweiler</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schweizuneben-trail-do-biker</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/volkeracho-do-biker</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sender-trail-area-judenburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailarea-goettweig</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/josiberg-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/farhndorfer-berg-trailwerk-weinviertel</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-stp-pyhra-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailzone-scheibbs-singletrail-blassenstein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailarea-urisee</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mucki-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-bremen-pusdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schaedelwaeg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/huebler-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hochbergtrail-s</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/zugerberg-trail-s</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/biketrail-elgg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bieltrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bremerloop</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/baerenried-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/korb-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hirschtrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/drecklochtrail-vierwegzeigertrail-osterhasi</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/anakondatrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/the-good-the-bad-and-the-ugly</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/brandwaldsteig</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/voralb-hero-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sc-melle-03-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trails-konstanz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/eggbergtrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-hochdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schill-hill-roter-trail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/haldetrails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pleinfeld-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-le-bois-vert</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trutnov-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trail-enduro-park-kralicak</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stoneman-miriquidi-mountainbike</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stoneman-arduenna</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/muehlwaldtrails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/basaburua-mtb</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ranzenpuffer-tour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/jaeger-spezial-tour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/am1</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/naheland-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikecentrum-smrciny-4-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/waitangi-mountain-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowpark-antoniustal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stoneman-dolomiti-mountain-bike</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-vlcka</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-arena-vysocina</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rychleby-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/singletrail-moravsky-kras</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-in-marinske</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sparkassen-trail-halde-norddeutschalnd</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/blockline</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/stoneman-glaciara-mountainbike</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bichl-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/singltrails-frymburk</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-wuelfershausen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-strecke-rottweil</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/luedenscheid-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-strecken-moemlingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schoppen-und-schlittentrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/3-laenderendurotrails-nauders</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trails-im-tannenwaeldchen-erfurt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hirschlachtrail</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bucketride-spotguide-finale-ligure</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-strecke-am-nfh-bielefeld</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/naturfreunde-plochingen-reichenbach-lichtenwald-e-v</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dav-trails-donauwoerth</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailcenter-bad-koenig</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/juraflow-b13-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ha-1</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mountainbike-rundstrecke-moenchberg-mb1</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-trails-burgkunstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mtb-kuelsheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/celtic-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/baermesenser-mtb-paeaedelscher</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bettelwurf-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://trailradar.org/trails/bikepark-homburg</loc>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-leogang</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-weitnau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-max-wild-arena-felderhalde-isny</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-kingdom-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-semmering</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-frammersbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-burladingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-todtnau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-hahnenklee</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/racepark-schulenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/burgenland-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/berwang-und-bichlbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/christopherus-family-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kronplatz-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-innsbruck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/singltrek-suchak</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/whistler-mountain-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-bad-kleinkirchheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-a-funpark-koprivna</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bellwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-brandnertal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/skate-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sacklpark-inzing</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-beerfelden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-ochsenkopf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-samerberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-olpe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-willingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-albstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/adventure-bikepark-bad-wildbad</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-oberammergau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/silvretta-bike-arena-ischgl-samnaun</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-osternohe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-geisskopf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-schoeneck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bad-hindelang</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-winterberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-braunlage</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-andreasberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bodetal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-oberhof</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schienerberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/black-mountain-bike-park-elstra</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-erbeskopf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-heidenheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rennsteig-bikearena-steinach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-hochproeller</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-lenggries</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-katzenkopf-leutasch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/green-hill-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-piesberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-arber</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-wissen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bad-marienberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikeparl-spicak</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-petzen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikecircus-saalbach-hinterglemm</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trail-area-turracher-hoehe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-plesivec</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trail-park-klinovec</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-aplerbeck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/od-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/freckenhorster-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-kliny</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikeparks-wunstorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/fieberbrunn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schoeckl-trail-area</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kirchberg-i-tirol</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-simonhoehe</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailarea-lermoos</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-mm</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/lipno-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-schladming</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/nieratz-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-jeschken-jested</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bukova-hora</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-dolni-morava</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dolomiti-paganella-bike</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-republic-soelden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-kalnica</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-koliba</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hli-arfjall-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/greenvalleys-mountain-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/hakuba-iwatake-mountainbike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-rokytnice</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-moninec</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/queenstown-bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-serfaus-fiss-ladis</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-flims-laax</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mottolino-bikepark-livigno</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/lac-blanc</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/la-bresse</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/zugspitzpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/biketrailpark-silva-trails</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-rhede</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-guntersblum</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-graen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-und-pumptrack-sonthofen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/newtec-pumptrack-ulm</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-lermoos</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-wittichenau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-reutte</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-galtuer</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-bad-tabarz</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-skatepark-berchtesgaden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-an-der-lenne</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-lennestadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-radolfzell</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-strassdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-stellung</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-burgwedel</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/flowpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-2</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-3</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/wavepark-achim-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirt-track-hassloch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-wurmlingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-enderndorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-weissenburg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-gunzenhausen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-da-kranichstein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/umstaedter-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bmx-und-skatepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-achim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-hochdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-litzendorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/nordic-park-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/urban-sports-park-in-salem</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikeparcour</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-duerrwiesen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/schafpark</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-coswig</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-maria-thann</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-hasenweiler</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikeplace-rot-an-der-rot</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/donau-bike-campus</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-ehrenfriedersdorf-by-radquartier-parks</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-oberwiesenthal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-waldeck</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-rosendorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-olbersdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-stribrnice</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-georgensgmuend</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-immenstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-weyarn</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-gerasdorf-g3</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-raunheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/gryfjan-bike-park</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/skate-und-bikepark-fuessen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-bad-saulgau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-4</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-oberstaufen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-mellau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/sputnik-dav-bikepark-lindau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-bernsdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-grossenhain</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-zwickau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-meerane</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mellowpark-velosolution-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-lissabonallee</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-rodewisch</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-hennigsdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-im-liberty-park-hellersdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/asphalt-pumptrack-rietschen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-auf-dem-holzhof-areal</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-oschatz-by-radquartier-parks</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-nove-mesto-na-morave</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-traunstein</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/skillpark-pumptrack-brixlegg-rattenberg</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-wildschoenau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/fahrtechnik-parcours-wildschoenau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/soeller-bike-saloon</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-westendorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-skill-area-brixen-im-thale</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-burgebrach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/torbole-parco-delle-busatte</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pump-track-massa-vecchia-by-velosolutions</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-arco</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/trailpark-werlte</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/rollsportanlage-ranstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-areal-dresden</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-karben</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-pappelau-hochstraess</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-hermaringen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-herbrechtingen</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-creutzwald</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-kirchdorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-eberstadt</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-und-dirtparks-roeslau</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtbike-griesheim-freizeitgelaende-sued</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/dirtpark-mittelhembach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-puschendorf</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-unterasbach</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/kammtrails-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-vellmar</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bike-park-boy-konen-cessange</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/ampfing</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/mettenheim</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-schmiedel</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/bikepark-dirtpark-mit-aspahlt-pumptrack</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-germering</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://trailradar.org/trails/pumptrack-nesselwaengle</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-10-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

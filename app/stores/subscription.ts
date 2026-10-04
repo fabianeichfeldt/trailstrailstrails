@@ -54,6 +54,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   }
 
   const isEarlyAdopter = computed(() => entitlement.value.earlyAdopterFreeUntil !== null)
+  const crewRole = computed(() => entitlement.value.crewRole)
 
   // UX only; the billing function re-checks. Native is passed in to keep Capacitor out of the store.
   function canBuy(isNative: boolean): boolean {
@@ -62,5 +63,5 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   const isCancelScheduled = computed(() => subscription.value?.cancelAtPeriodEnd === true)
   const isPastDue = computed(() => subscription.value?.status === 'past_due')
 
-  return { entitlement, subscription, eligibility, canBuy, isCancelScheduled, isPastDue, loaded, hasFeature, accessFor, isEarlyAdopter, load }
+  return { entitlement, subscription, eligibility, canBuy, isCancelScheduled, isPastDue, loaded, hasFeature, accessFor, isEarlyAdopter, crewRole, load }
 })

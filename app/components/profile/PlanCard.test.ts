@@ -24,6 +24,7 @@ function makeStore(over: any = {}) {
     isCancelScheduled: false,
     isPastDue: false,
     isEarlyAdopter: false,
+    crewRole: null,
     _eligible: false,
     canBuy: (native: boolean) => !native && s._eligible,
     load: vi.fn().mockResolvedValue(undefined),
@@ -155,6 +156,23 @@ describe('PlanCard', () => {
     store.entitlement = { planId: 'supporter', level: 1, discountPercent: 0, earlyAdopterFreeUntil: '2027-03-05T12:00:00Z' }
     store.isEarlyAdopter = true
     expect(mountCard().find('[data-testid="plan-chip"]').text()).toBe('Gratis')
+  })
+
+  it('trailcrew without subscription: "Gratis als Trailcrew", no end date, no buy link', () => {
+    store.entitlement = { ...supporterEnt, crewRole: 'trailcrew' }
+    store.crewRole = 'trailcrew'
+    store._eligible = true
+    const w = mountCard()
+    expect(w.text()).toContain('Gratis als Trailcrew')
+    expect(w.text()).not.toContain('Gratis bis')
+    expect(w.find('[data-testid="plan-chip"]').text()).toBe('Gratis')
+    expect(w.find('a[href="/plans"]').exists()).toBe(false)
+  })
+
+  it('admin without subscription: "Gratis als Admin"', () => {
+    store.entitlement = { ...supporterEnt, crewRole: 'admin' }
+    store.crewRole = 'admin'
+    expect(mountCard().text()).toContain('Gratis als Admin')
   })
 
   it('subscribed: says since when, in de-DE month and year', () => {

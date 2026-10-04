@@ -59,6 +59,8 @@ const planName = computed(() => {
   return level > 0 ? planNameForLevel(level) : 'Kostenlos'
 })
 
+const CREW_LABEL = { trailcrew: 'Trailcrew', admin: 'Admin' } as const
+
 function fmt(iso: string | null | undefined): string {
   return iso ? new Date(iso).toLocaleDateString('de-DE') : ''
 }
@@ -70,6 +72,7 @@ const statusLine = computed(() => {
     if (!date) return ''
     return subStore.isCancelScheduled ? `endet am ${date}` : `verlängert sich am ${date}`
   }
+  if (!sub && subStore.crewRole) return `Gratis als ${CREW_LABEL[subStore.crewRole]}`
   if (!sub && subStore.isEarlyAdopter) return `Gratis bis ${fmt(subStore.entitlement.earlyAdopterFreeUntil)}`
   return ''
 })
@@ -81,7 +84,7 @@ const chip = computed<{ label: string; tone: 'ok' | 'warn' | 'bad' } | null>(() 
   if (subStore.isPastDue) return { label: 'Zahlung offen', tone: 'bad' }
   if (subStore.isCancelScheduled) return { label: 'Gekündigt', tone: 'warn' }
   if (subStore.subscription) return { label: 'Aktiv', tone: 'ok' }
-  if (subStore.isEarlyAdopter) return { label: 'Gratis', tone: 'ok' }
+  if (subStore.crewRole || subStore.isEarlyAdopter) return { label: 'Gratis', tone: 'ok' }
   return null
 })
 
@@ -91,7 +94,8 @@ const memberSince = computed(() => {
   return `Supporter seit ${new Date(created).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })}`
 })
 
-const showBuy = computed(() => !subStore.subscription && subStore.canBuy(isNative.value))
+// Crew never needs to pay, so no upsell even once a signup grant has run out.
+const showBuy = computed(() => !subStore.subscription && !subStore.crewRole && subStore.canBuy(isNative.value))
 const showNativeHint = computed(() => isNative.value && !subStore.subscription)
 const showPitch = computed(() => !isPaid.value && !isNative.value)
 

@@ -5,9 +5,10 @@ export interface Entitlement {
   level: number
   discountPercent: number
   earlyAdopterFreeUntil: string | null
+  crewRole: 'trailcrew' | 'admin' | null  // set when access comes from the role, not a payment or grant
 }
 
-export const FREE_ENTITLEMENT: Entitlement = { planId: 'free', level: 0, discountPercent: 0, earlyAdopterFreeUntil: null }
+export const FREE_ENTITLEMENT: Entitlement = { planId: 'free', level: 0, discountPercent: 0, earlyAdopterFreeUntil: null, crewRole: null }
 
 export async function getMyEntitlement(jwt: string): Promise<Entitlement> {
   // Any failure — network down, a non-2xx, a body that is not a row list —
@@ -28,6 +29,7 @@ export async function getMyEntitlement(jwt: string): Promise<Entitlement> {
       level: row.level,
       discountPercent: row.discount_percent,
       earlyAdopterFreeUntil: row.early_adopter_free_until,
+      crewRole: row.crew_role ?? null,
     }
   } catch {
     return FREE_ENTITLEMENT
