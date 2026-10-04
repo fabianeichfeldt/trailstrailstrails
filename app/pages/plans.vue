@@ -172,10 +172,10 @@ const FREE_FEATURES = [
 ]
 
 const SUPPORTER_FEATURES = [
-  { icon: 'fa-mountain', text: 'Trail-Zustand für jeden Spot: Wie fahrbar ist der Boden gerade – von staubig bis schlammig?' },
-  { icon: 'fa-cloud-rain', text: 'Regen der letzten 10 Tage und Wetter-Vorschau, Tag für Tag' },
-  { icon: 'fa-temperature-half', text: 'Aktuelles Wetter am Spot' },
-  { icon: 'fa-road-barrier', text: 'Live-Hinweis, ob eine Regensperre gerade greift' },
+  { icon: 'fa-check', text: 'Trail-Zustand für jeden Spot: Wie fahrbar ist der Boden gerade – von staubig bis schlammig?' },
+  { icon: 'fa-check', text: 'Regen der letzten 10 Tage und Wetter-Vorschau, Tag für Tag' },
+  { icon: 'fa-check', text: 'Aktuelles Wetter am Spot' },
+  { icon: 'fa-check', text: 'Live-Hinweis, ob eine Regensperre gerade greift' },
   { icon: 'fa-heart', text: 'Du unterstützt ein unabhängiges, werbefreies Projekt' },
 ]
 
