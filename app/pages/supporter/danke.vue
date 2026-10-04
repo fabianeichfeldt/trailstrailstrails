@@ -99,7 +99,7 @@ onUnmounted(stop)
   margin: 1rem auto 2rem;
   padding: 2.5rem 1.5rem 2rem;
   border-radius: 24px;
-  background: var(--color-page-bg);
+  background: linear-gradient(150deg, var(--color-supporter-bg), var(--color-supporter-bg-end));
   color: #f3f4f3;
   text-align: center;
 }
@@ -107,7 +107,7 @@ onUnmounted(stop)
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-radial-gradient(circle at 50% -30%, transparent 0 22px, rgba(88, 194, 125, 0.08) 22px 23px);
+  background: repeating-radial-gradient(circle at 50% -30%, transparent 0 22px, rgba(255, 255, 255, 0.06) 22px 23px);
   pointer-events: none;
 }
 .danke-box > * { position: relative; }
@@ -134,7 +134,7 @@ onUnmounted(stop)
 .danke-success .danke-icon-done { animation: danke-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
 
 .container .danke-box h2 { margin: 0 0 0.6rem; font-size: 1.4rem; font-weight: 800; color: #fff; }
-.danke-box .danke-text { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.5; color: #a7aeaa; }
+.danke-box .danke-text { margin: 0 0 0.6rem; font-size: 0.92rem; line-height: 1.5; color: var(--color-supporter-muted); }
 .danke-box .danke-text-strong { font-size: 1rem; font-weight: 700; color: #fff; }
 
 .btn-primary {

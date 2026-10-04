@@ -132,14 +132,14 @@ async function onResume() {
   color: #1f2937;
 }
 .pass-paid {
-  background: var(--color-page-bg);
+  background: linear-gradient(150deg, var(--color-supporter-bg), var(--color-supporter-bg-end));
   color: #f3f4f3;
 }
 .pass-paid::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: repeating-radial-gradient(circle at 105% -20%, transparent 0 18px, rgba(88, 194, 125, 0.08) 18px 19px);
+  background: repeating-radial-gradient(circle at 105% -20%, transparent 0 18px, rgba(255, 255, 255, 0.06) 18px 19px);
   pointer-events: none;
 }
 .pass > * { position: relative; }
@@ -159,12 +159,12 @@ async function onResume() {
   white-space: nowrap;
 }
 .pass-chip::before { content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%; background: currentColor; }
-.pass-chip-ok { background: rgba(88, 194, 125, 0.16); color: var(--color-page-accent); }
+.pass-chip-ok { background: rgba(255, 255, 255, 0.12); color: var(--color-supporter-accent); }
 .pass-chip-warn { background: rgba(251, 191, 36, 0.16); color: #fbbf24; }
 .pass-chip-bad { background: rgba(248, 113, 113, 0.16); color: #f87171; }
 .pass:not(.pass-paid) .pass-chip-ok { background: #d9f2e1; color: #1f7a45; }
 
-.pass .pass-since { margin: 0.2rem 0 0; font-size: 0.82rem; color: #a7aeaa; }
+.pass .pass-since { margin: 0.2rem 0 0; font-size: 0.82rem; color: var(--color-supporter-muted); }
 .pass .plan-status { margin: 0.35rem 0 0; font-size: 0.92rem; color: #4b5563; }
 .pass-paid .plan-status { color: #d6dbd8; }
 .pass .pass-pitch { margin: 0.35rem 0 0; font-size: 0.88rem; line-height: 1.45; color: #4b5563; }
@@ -193,17 +193,17 @@ async function onResume() {
 .pass-paid .plan-btn { background: transparent; border-color: rgba(255, 255, 255, 0.35); color: #fff; }
 .pass-paid .plan-btn:hover { background: rgba(255, 255, 255, 0.08); }
 .pass-paid .plan-btn:focus-visible { outline-color: #fff; }
-.pass .plan-btn-primary { background: var(--color-page-bg); border-color: var(--color-page-bg); color: #fff; }
-.pass .plan-btn-primary:hover { background: #2a2e31; }
+.pass .plan-btn-primary { background: var(--color-supporter-bg); border-color: var(--color-supporter-bg); color: #fff; }
+.pass .plan-btn-primary:hover { background: var(--color-supporter-bg-end); }
 .pass-paid .plan-btn-primary { background: var(--color-page-accent); border-color: var(--color-page-accent); color: var(--color-page-bg); }
 .pass-paid .plan-btn-primary:hover { background: #6fd292; }
 /* Cancelling stays reachable but reads as the quiet option next to "Abo verwalten". */
 .pass .plan-cancel { border-color: transparent; background: transparent; color: #6b7280; }
-.pass-paid .plan-cancel { border-color: transparent; color: #a7aeaa; }
+.pass-paid .plan-cancel { border-color: transparent; color: var(--color-supporter-muted); }
 .pass .plan-cancel:hover { text-decoration: underline; border-color: transparent; background: transparent; }
 
 .pass .plan-hint { margin: 0.8rem 0 0; color: #6b7280; font-size: 0.88rem; }
-.pass-paid .plan-hint { color: #a7aeaa; }
+.pass-paid .plan-hint { color: var(--color-supporter-muted); }
 .plan-cancel-link {
   display: inline-flex; align-items: center; min-height: 44px;
   margin-top: 0.3rem; font-size: 0.8rem; color: #6b7280; text-decoration: underline;
