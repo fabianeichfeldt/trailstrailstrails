@@ -23,7 +23,7 @@
       <NuxtLink v-if="subStore.subscription && !subStore.isCancelScheduled" to="/kuendigen" class="plan-btn plan-cancel">
         Kündigen
       </NuxtLink>
-      <NuxtLink v-if="showBuy" to="/supporter" class="plan-btn plan-btn-primary">Supporter werden</NuxtLink>
+      <NuxtLink v-if="showBuy" to="/plans" class="plan-btn plan-btn-primary">Supporter werden</NuxtLink>
     </div>
 
     <p v-if="showNativeHint" class="plan-hint">Supporter kannst du auf trailradar.org abschließen.</p>

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import {
   startCheckout, openPortal, cancelSubscription, resumeSubscription,
-  getMySubscription, getCheckoutEligibility, getSupporterPrices,
+  getMySubscription, getCheckoutEligibility,
 } from './billing'
 import { anon } from '../anon'
 
@@ -180,25 +180,5 @@ describe('getCheckoutEligibility', () => {
     expect(await getCheckoutEligibility('j')).toEqual(closed)
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('x')))
     expect(await getCheckoutEligibility('j')).toEqual(closed)
-  })
-})
-
-describe('getSupporterPrices', () => {
-  it('reads the supporter plan with the anon key', async () => {
-    const fetch = stub(res(200, [{ price_monthly_cents: 300, price_yearly_cents: 3000, currency: 'EUR' }]))
-    const r = await getSupporterPrices()
-    const [url, opts] = fetch.mock.calls[0]
-    expect(url).toContain('subscription_plans?id=eq.supporter&select=price_monthly_cents,price_yearly_cents,currency')
-    expect(opts.headers.Authorization).toBe(`Bearer ${anon}`)
-    expect(r).toEqual({ monthlyCents: 300, yearlyCents: 3000, currency: 'EUR' })
-  })
-
-  it('is null when unavailable', async () => {
-    stub(res(200, []))
-    expect(await getSupporterPrices()).toBeNull()
-    stub(res(500, {}))
-    expect(await getSupporterPrices()).toBeNull()
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('x')))
-    expect(await getSupporterPrices()).toBeNull()
   })
 })

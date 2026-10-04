@@ -370,7 +370,6 @@ export default defineNuxtConfig({
         '/support',
         '/terms',
         '/reset-password',
-        '/supporter',
         '/supporter/danke',
         '/kuendigen',
         '/trailradar-vs-komoot',

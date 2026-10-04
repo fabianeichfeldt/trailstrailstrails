@@ -19,9 +19,3 @@ export interface CheckoutEligibility {
   reason: EligibilityReason | null
   eligibleFrom: string | null
 }
-
-export interface SupporterPrices {
-  monthlyCents: number
-  yearlyCents: number
-  currency: string
-}

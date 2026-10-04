@@ -51,7 +51,7 @@ describe('PlanCard', () => {
     store._eligible = true
     const w = mountCard()
     expect(w.text()).toContain('Kostenlos')
-    expect(w.find('a[href="/supporter"]').exists()).toBe(true)
+    expect(w.find('a[href="/plans"]').exists()).toBe(true)
     expect(w.text()).not.toContain('Abo verwalten')
   })
 
@@ -60,7 +60,7 @@ describe('PlanCard', () => {
     store.isEarlyAdopter = true
     const w = mountCard()
     expect(w.text()).toContain('Gratis bis 5.3.2027')
-    expect(w.find('a[href="/supporter"]').exists()).toBe(false)
+    expect(w.find('a[href="/plans"]').exists()).toBe(false)
   })
 
   it('grant ending within 14 d: shows the countdown and the buy link', () => {
@@ -69,7 +69,7 @@ describe('PlanCard', () => {
     store._eligible = true
     const w = mountCard()
     expect(w.text()).toContain('Gratis bis 10.10.2026')
-    expect(w.find('a[href="/supporter"]').exists()).toBe(true)
+    expect(w.find('a[href="/plans"]').exists()).toBe(true)
   })
 
   it('active: shows plan name and "verlängert sich am"', () => {
@@ -125,7 +125,7 @@ describe('PlanCard', () => {
     store._eligible = true
     const w = mountCard()
     expect(w.text()).toContain('Supporter kannst du auf trailradar.org abschließen.')
-    expect(w.find('a[href="/supporter"]').exists()).toBe(false)
+    expect(w.find('a[href="/plans"]').exists()).toBe(false)
     expect(w.text()).not.toMatch(/€/)
   })
 

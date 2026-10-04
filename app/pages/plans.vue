@@ -61,12 +61,48 @@
             <li class="plan-features-all">Alles aus Free</li>
             <li v-for="f in SUPPORTER_FEATURES" :key="f">{{ f }}</li>
           </ul>
-          <template v-if="!isNative">
-            <button type="button" class="plan-btn" disabled>Startet in Kürze</button>
-            <p v-if="promoActive" class="plan-promo">
-              Bis 30.11.: Registrieren und Trail-Zustand {{ SIGNUP_PROMO.weeks }} Wochen gratis testen.
+          <div v-if="!isNative" class="plan-cta">
+            <template v-if="!authStore.isLoggedIn">
+              <button type="button" class="plan-btn" data-testid="supporter-cta" @click="mapStore.authModalOpen = true">
+                Registrieren
+              </button>
+              <p v-if="promoActive" class="plan-promo">
+                Mit der Registrierung bekommst du Trail-Zustand {{ SIGNUP_PROMO.weeks }} Wochen gratis.
+              </p>
+            </template>
+
+            <template v-else-if="subStore.subscription">
+              <p class="plan-state plan-state-strong">Du bist Supporter ❤️</p>
+              <NuxtLink to="/profile" class="plan-btn plan-btn-secondary">Zu meinem Profil</NuxtLink>
+            </template>
+
+            <p v-else-if="subStore.eligibility?.reason === 'grant_active'" class="plan-state">
+              Du hast Trail-Zustand noch gratis bis {{ fmt(subStore.entitlement.earlyAdopterFreeUntil) }}.
+              Ab {{ fmt(subStore.eligibility.eligibleFrom) }} kannst du hier Supporter werden.
             </p>
-          </template>
+
+            <template v-else-if="canBuy">
+              <p class="plan-notice" data-testid="withdrawal-notice">
+                Weiter geht es zu unserem Zahlungsanbieter Creem, bei dem du zahlungspflichtig bestellst. Es gelten
+                unsere <NuxtLink to="/terms#supporter">Nutzungsbedingungen</NuxtLink> und die
+                <a href="https://www.creem.io/buyer-terms" target="_blank" rel="noopener">Käuferbedingungen von Creem</a>.
+                <template v-if="interval === 'yearly'">Nach dem ersten Jahr läuft das Abo monatlich weiter und ist monatlich kündbar.</template>
+                Nicht zufrieden? 14 Tage Geld-zurück.
+              </p>
+              <label v-if="authStore.isAdmin" class="plan-test-mode">
+                <input v-model="testMode" type="checkbox" data-testid="test-mode">
+                Testmodus
+              </label>
+              <button type="button" class="plan-btn" data-testid="supporter-cta" :disabled="busy" @click="onCheckout">
+                {{ subStore.isEarlyAdopter ? 'Supporter werden — Abrechnung startet sofort' : 'Supporter werden' }}
+              </button>
+              <p v-if="error" class="plan-error" role="alert">{{ error }}</p>
+            </template>
+
+            <p v-else class="plan-state">
+              {{ subStore.loaded ? 'Supporter werden ist für dich gerade nicht möglich.' : 'Wird geladen …' }}
+            </p>
+          </div>
         </section>
       </div>
 
@@ -93,6 +129,7 @@
 </template>
 
 <script setup lang="ts">
+import { startCheckout } from '~/communication/billing'
 import { getSupporterPrices } from '~/communication/plans'
 import { SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
 
@@ -126,6 +163,7 @@ const SUPPORTER_FEATURES = [
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()
+const subStore = useSubscriptionStore()
 const isNative = useIsNativeApp()
 
 // Build-time value for the static HTML, refreshed on mount so a price change needs no rebuild.
@@ -138,6 +176,34 @@ onMounted(() => {
 })
 
 const interval = ref<'monthly' | 'yearly'>('monthly')
+const testMode = ref(false)
+const busy = ref(false)
+const error = ref('')
+
+const canBuy = computed(() => subStore.canBuy(isNative.value))
+
+function fmt(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleDateString('de-DE') : ''
+}
+
+async function onCheckout() {
+  error.value = ''
+  busy.value = true
+  try {
+    const res = await startCheckout(await authStore.getToken(), interval.value, testMode.value ? 'test' : undefined)
+    if (res.ok) {
+      window.location.href = res.checkoutUrl
+    } else if (res.error === 'already_subscribed') {
+      error.value = 'Du hast bereits ein Abo.'
+    } else if (res.error === 'grant_active') {
+      error.value = `Dein Gratis-Zeitraum läuft noch.${res.eligibleFrom ? ` Ab ${fmt(res.eligibleFrom)} kannst du Supporter werden.` : ''}`
+    } else {
+      error.value = 'Das hat leider nicht geklappt. Bitte versuche es später noch einmal.'
+    }
+  } finally {
+    busy.value = false
+  }
+}
 
 function money(cents: number, currency: string): string {
   return new Intl.NumberFormat('de-DE', { style: 'currency', currency }).format(cents / 100)
@@ -297,6 +363,19 @@ const savingPercent = computed(() => {
   color: var(--color-primary);
   border: 1.5px solid var(--color-primary);
 }
+.plan-notice { margin: 0 0 0.8rem; font-size: 0.75rem; line-height: 1.45; color: #6b7280; }
+.plan-state { margin: 0 0 0.8rem; font-size: 0.88rem; color: #374151; }
+.plan-state-strong { font-weight: 700; font-size: 1rem; }
+.plan-error {
+  margin: 0.75rem 0 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  color: #b91c1c;
+  background: #fef2f2;
+  border-radius: 10px;
+}
+.plan-test-mode { display: flex; align-items: center; gap: 0.5rem; min-height: 44px; font-size: 0.82rem; }
+.plan-test-mode input { width: 20px; height: 20px; }
 .plan-promo { margin: 0.75rem 0 0; font-size: 0.8rem; color: #15803d; text-align: center; }
 
 .native-note { max-width: 760px; margin: 1.5rem auto 0; text-align: center; color: #4b5563; }

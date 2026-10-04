@@ -19,7 +19,7 @@ const nuxtConfig = readFileSync(join(ROOT, 'nuxt.config.ts'), 'utf8')
 // only reached via Creem's external redirect, which would 404 on GitHub Pages),
 // and the §312k cancellation page must exist as static HTML — list explicitly.
 describe('Billing pages are in the explicit prerender route list', () => {
-  test.each(['/supporter', '/supporter/danke', '/kuendigen'])('%s is prerendered', (route) => {
+  test.each(['/supporter/danke', '/kuendigen'])('%s is prerendered', (route) => {
     expect(nuxtConfig).toContain(`'${route}',`)
   })
 })
