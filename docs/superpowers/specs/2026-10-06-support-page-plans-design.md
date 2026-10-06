@@ -1,7 +1,7 @@
 # Support page rework — plans instead of PayPal & stickers
 
 **Date:** 2026-10-06
-**Status:** design approved, not implemented
+**Status:** implemented
 **Origin:** idea "rework support page" (local tracker)
 
 ## Goal
