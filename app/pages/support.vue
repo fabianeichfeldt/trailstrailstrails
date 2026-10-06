@@ -1,64 +1,78 @@
 <template>
   <div>
     <PageHero>
-      <h1>Trailradar lebt von der Community.</h1>
-      <p>Aus der Community. Für die Community. Und mit deiner Unterstützung.</p>
+      <h1 class="hero-title">Trailradar ist ein Feierabendprojekt.</h1>
+      <p>Gebaut von einem, der Vollzeit arbeitet, Mountainbike fährt und Trails baut – und mit deiner Unterstützung am Laufen bleibt.</p>
     </PageHero>
 
     <main class="container">
       <NuxtLink to="/map" class="back-link">← Zurück zur Karte</NuxtLink>
 
-      <section class="section">
-        <p class="lead">
-          Trailradar ist kein Konzernprojekt. Kein Startup mit Investoren.
-          Sondern ein Herzensprojekt – entstanden aus der Leidenschaft fürs Mountainbiken.
-        </p>
-        <p>
-          Damit legale Trails sichtbar werden. Damit Engagement gewürdigt wird.
-          Und damit wir als Community zeigen können, dass moderner Trailbau und Verantwortung zusammengehören.
-        </p>
-        <h2>Wie du Trailradar unterstützen kannst</h2>
-      </section>
-
-      <section class="section split">
+      <section class="split story">
         <div>
-          <h2>1. Neue Trails eintragen</h2>
-          <p>Die größte Unterstützung ist ganz einfach: Trage fehlende Trails ein oder aktualisiere
-            bestehende Informationen.</p>
-          <p>Jede neue Strecke macht Trailradar wertvoller für die gesamte MTB-Community.</p>
+          <p class="lead">
+            Hinter Trailradar steckt kein Konzern und kein Startup mit Investoren – sondern ich, Fabian,
+            Mountainbiker. Tagsüber habe ich einen ganz normalen Vollzeitjob. Abends und am Wochenende fahre ich
+            Mountainbike, schaufle bei den Bärenleite Trails in Bayreuth mit – und baue an Trailradar.
+          </p>
+          <p>
+            Trailradar ist werbefrei und unabhängig, und das soll so bleiben. Karte, Spots und Trails bleiben
+            kostenlos. Wer mehr will – oder einfach möchte, dass das Projekt weiterläuft – hat mit dem
+            Supporter-Plan eine Möglichkeit, mich zu unterstützen.
+          </p>
         </div>
-        <img :src="'/assets/trailbau.webp'" alt="Trailbau Community" />
+        <img :src="'/assets/trailbau.webp'" alt="Trailbau in der Community" />
       </section>
 
-      <section class="section">
-        <h2>2. Fehler melden & Inhalte verbessern</h2>
-        <p>Ein falscher Name, eine geänderte Streckenführung oder ein neuer Zustand? Sag Bescheid.
-          Trailradar soll aktuell und zuverlässig bleiben.</p>
+      <section class="contribution">
+        <h2>Wofür dein Beitrag ist</h2>
+        <ul class="facts-grid">
+          <li>
+            <i class="fa-solid fa-server" aria-hidden="true"></i>
+            <span>Server und Datenbank, auf denen Karte, Fotos und GPX-Touren laufen</span>
+          </li>
+          <li>
+            <i class="fa-solid fa-cloud-sun-rain" aria-hidden="true"></i>
+            <span>Wetter- und Bodendaten für den Trail-Zustand</span>
+          </li>
+          <li>
+            <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i>
+            <span>Gebühren für die App Stores und die Domain</span>
+          </li>
+          <li>
+            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            <span>Viele Abende nach Feierabend – statt auf dem Trail</span>
+          </li>
+        </ul>
       </section>
 
-      <section class="section">
-        <h2>3. Trailradar teilen</h2>
-        <p>Wenn dir Trailradar gefällt, teile es in deiner WhatsApp-Gruppe, in deinem Verein,
-          auf Instagram oder im Forum.</p>
-      </section>
+      <PlanCards />
+      <p v-if="!isNative" class="plans-details">
+        Kündigung, Geld-zurück &amp; Bezahlung – alle Details unter <NuxtLink to="/plans">Preise &amp; Pläne</NuxtLink>.
+      </p>
 
-      <section class="section split">
-        <img :src="'/assets/sticker.webp'" alt="Trailradar Sticker" />
-        <div>
-          <h2>4. Sticker für die Community</h2>
-          <p>Mittlerweile gibt es Trailradar-Aufkleber. Für dein Bike, dein Auto oder die Werkstattwand.</p>
-          <p>Gegen eine kleine Spende schicke ich dir gerne welche zu.
-            <a href="mailto:webmaster@trailradar.org">Schreib mir einfach.</a></p>
-        </div>
-      </section>
-
-      <section class="section support-box">
-        <h3>5. Kaffee für die nächste Nachtsession ☕</h3>
-        <p>Trailradar entsteht oft spät abends – nach der Arbeit, nach dem Ride. Wenn du das Projekt
-          direkt unterstützen möchtest, kannst du mir gerne ein kleines Dankeschön per PayPal dalassen.</p>
-        <a href="https://paypal.me/Trailradar" target="_blank" rel="noopener noreferrer" class="paypal-button">
-          Mit PayPal unterstützen
-        </a>
+      <section class="give-back">
+        <h2>Auch ohne Geld kannst du viel bewegen</h2>
+        <ul class="facts-grid">
+          <li>
+            <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+            <span>
+              <strong><NuxtLink to="/map">Trails eintragen</NuxtLink></strong> – fehlende Strecken ergänzen oder
+              Infos aktualisieren.
+            </span>
+          </li>
+          <li>
+            <i class="fa-solid fa-flag" aria-hidden="true"></i>
+            <span>
+              <strong>Fehler melden</strong> – falscher Name, neue Streckenführung, geänderter Zustand?
+              <NuxtLink to="/kontakt">Sag Bescheid</NuxtLink>.
+            </span>
+          </li>
+          <li>
+            <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
+            <span><strong>Teilen</strong> – in deiner WhatsApp-Gruppe, im Verein, auf Instagram oder im Forum.</span>
+          </li>
+        </ul>
       </section>
     </main>
 
@@ -72,9 +86,13 @@
 </template>
 
 <script setup lang="ts">
+import PlanCards from '~/components/plans/PlanCards.vue'
+
+const isNative = useIsNativeApp()
+
 useSeoMeta({
-  title: 'Support – Aus der Community, für die Community',
-  description: 'Unterstütze Trailradar – durch neue Trail-Einträge, Feedback, Teilen oder eine kleine Spende.',
+  title: 'Support – Trailradar unterstützen',
+  description: 'Trailradar ist ein Feierabendprojekt. Unterstütze es mit dem Supporter-Plan – oder mit neuen Trails, Feedback und Teilen.',
   ogUrl: 'https://trailradar.org/support',
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
@@ -85,46 +103,68 @@ useHead({
 </script>
 
 <style scoped>
-.section { margin-bottom: 3em; }
-
-.lead {
-  font-size: 1.2rem;
-  color: #444;
-}
+/* "Feierabendprojekt." is wider than a 375px viewport at hero size; lang="de" gives proper hyphenation. */
+.hero-title { hyphens: auto; }
 
 .split {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3rem;
   align-items: center;
+  margin-bottom: 3rem;
 }
-
 .split img {
   width: 100%;
   border-radius: 16px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
+.lead { font-size: 1.2rem; color: #444; }
 
-.support-box {
-  background: #f5f5f5;
-  padding: 2rem;
-  border-radius: 20px;
+.contribution, .give-back { max-width: 800px; margin: 0 auto 3rem; }
+.contribution h2, .give-back h2 { margin: 0 0 1.25rem; font-size: 1.15rem; font-weight: 800; }
+
+/* Same icon-tile look as the facts list on /plans, reused here for both info lists. */
+.facts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem 2rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-
-.support-box h3 { margin-top: 0; }
-
-.paypal-button {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.9rem 1.6rem;
-  background: var(--color-page-accent);
-  color: #000;
-  font-weight: 600;
-  border-radius: 999px;
-  text-decoration: none;
+.facts-grid li {
+  display: flex;
+  gap: 0.9rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #374151;
 }
+.facts-grid i {
+  flex: 0 0 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #eef0ef;
+  color: var(--color-page-bg);
+  font-size: 0.9rem;
+}
+.facts-grid strong { color: #111827; }
+.facts-grid a {
+  position: relative;
+  color: #1f7a45;
+  text-decoration: underline;
+}
+/* 44px tap target without breaking the sentence's line height. */
+.facts-grid a::after { content: ""; position: absolute; inset: -12px -4px; }
+
+.plans-details { max-width: 800px; margin: 1.75rem auto 0; text-align: center; font-size: 0.88rem; color: #6b7280; }
 
 @media (max-width: 900px) {
   .split { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 720px) {
+  .facts-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
