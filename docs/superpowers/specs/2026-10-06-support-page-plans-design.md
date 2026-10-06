@@ -47,7 +47,7 @@ Top to bottom:
    - Server und Datenbank, auf denen Karte, Fotos und GPX-Touren laufen
    - Wetter- und Bodendaten für den Trail-Zustand
    - Gebühren für die App Stores und die Domain
-   - Viele Abende nach Feierabend – statt auf dem Trail
+   - Viele Abende vor dem PC – statt auf dem Trail
 5. **`<PlanCards />`**, followed by one line (web only, hidden in native like the facts on `/plans`): „Kündigung, Geld-zurück & Bezahlung – alle Details unter [Preise & Pläne](/plans)."
 6. **„Auch ohne Geld kannst du viel bewegen"**
    - **Trails eintragen** – fehlende Strecken ergänzen oder Infos aktualisieren.

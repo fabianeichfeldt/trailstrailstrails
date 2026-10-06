@@ -31,7 +31,7 @@ Files: `app/pages/support.vue` (rewrite), `app/pages/support.test.ts` (new), `pu
 
 1. [x] Write `support.test.ts` first, copying the global-stub / fetch-mock setup of `app/pages/plans.test.ts` (stores, `useIsNativeApp`, `useAsyncData` stand-in, fetch mock for `/rest/v1/subscription_plans` and `/functions/v1/billing`, `NuxtLink`/`PageHero` stubs). **Do not stub `PlanCards`.** Tests:
    - story: text contains „Feierabendprojekt", „Vollzeitjob", „Bärenleite"
-   - cost list: four items (Server und Datenbank / Wetter- und Bodendaten / App Stores und die Domain / Abende nach Feierabend)
+   - cost list: four items (Server und Datenbank / Wetter- und Bodendaten / App Stores und die Domain / Abende vor dem PC)
    - no „PayPal", „paypal.me", „Sticker" anywhere in `w.html()`
    - plan cards: `plan-free` and `plan-supporter` exist; `price` contains `3,00` (non-breaking space before `€`) from the mocked `price_monthly_cents: 300`
    - checkout: logged in + eligible → click `supporter-cta` → one billing call with `Authorization: Bearer jwt-1`, `window.location.href` set to the returned Creem URL (copy the approach from the plans checkout test)

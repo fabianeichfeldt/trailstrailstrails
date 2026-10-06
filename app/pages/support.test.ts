@@ -83,7 +83,7 @@ describe('/support — page', () => {
     expect(text).toContain('Server und Datenbank')
     expect(text).toContain('Wetter- und Bodendaten')
     expect(text).toContain('App Stores und die Domain')
-    expect(text).toContain('Abende nach Feierabend')
+    expect(text).toContain('Abende vor dem PC')
   })
 
   it('never mentions PayPal or the sticker', async () => {

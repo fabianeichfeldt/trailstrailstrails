@@ -41,7 +41,7 @@
           </li>
           <li>
             <i class="fa-solid fa-moon" aria-hidden="true"></i>
-            <span>Viele Abende nach Feierabend – statt auf dem Trail</span>
+            <span>Viele Abende vor dem PC – statt auf dem Trail</span>
           </li>
         </ul>
       </section>
@@ -122,6 +122,7 @@ useHead({
 
 .contribution, .give-back { max-width: 800px; margin: 0 auto 3rem; }
 .contribution h2, .give-back h2 { margin: 0 0 1.25rem; font-size: 1.15rem; font-weight: 800; }
+.give-back { margin-top: 4rem; }
 
 /* Same icon-tile look as the facts list on /plans, reused here for both info lists. */
 .facts-grid {
