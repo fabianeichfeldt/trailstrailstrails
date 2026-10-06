@@ -40,7 +40,7 @@ Files: `app/pages/support.vue` (rewrite), `app/pages/support.test.ts` (new), `pu
    - „Auch ohne Geld" heading with the three items; back link `href="/map"`
 2. [x] Rewrite `support.vue` per spec §2 (copy is final — use it verbatim from the spec):
    - `PageHero` (H1 + sub), back link, `.split` story section with `<img :src="'/assets/trailbau.webp'" alt="Trailbau in der Community">`
-   - „Wofür dein Beitrag ist" `<ul>` with Font Awesome icons (`fa-server`, `fa-cloud-sun-rain`, `fa-mobile-screen`, `fa-moon`, `aria-hidden="true"`)
+   - „Wofür dein Beitrag ist" `<ul>` with Font Awesome icons (`fa-server`, `fa-cloud-sun-rain`, `fa-mobile-screen`, `fa-laptop`, `aria-hidden="true"`)
    - `<PlanCards />` then `<p v-if="!isNative" class="plans-details">Kündigung, Geld-zurück &amp; Bezahlung – alle Details unter <NuxtLink to="/plans">Preise &amp; Pläne</NuxtLink>.</p>`
    - „Auch ohne Geld kannst du viel bewegen" list (icons `fa-map-location-dot`, `fa-flag`, `fa-share-nodes`); „Trails eintragen" links to `/map`, „Sag Bescheid" to `/kontakt`
    - unchanged footer CTA

@@ -40,7 +40,7 @@
             <span>Gebühren für die App Stores und die Domain</span>
           </li>
           <li>
-            <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            <i class="fa-solid fa-laptop" aria-hidden="true"></i>
             <span>Viele Abende vor dem PC – statt auf dem Trail</span>
           </li>
         </ul>
