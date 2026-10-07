@@ -100,6 +100,13 @@ describe('SpotPanelComments', () => {
     expect(wrapper.get('.comments-count').text()).toContain('2 Kommentare')
   })
 
+  it('shows "Gelöschter Nutzer" for a comment whose author deleted their account', () => {
+    store.comments = [baseComment({ user_id: null, profiles: null })]
+    store.commentsExpanded = true
+    wrapper = mount(SpotPanelComments)
+    expect(wrapper.get('.comment-author').text()).toBe('Gelöschter Nutzer')
+  })
+
   it('appends a "+" to the count when more comments exist than the loaded page', () => {
     store.comments = [baseComment()]
     store.commentsHasMore = true

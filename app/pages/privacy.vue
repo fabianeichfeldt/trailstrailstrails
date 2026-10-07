@@ -140,7 +140,11 @@
 
         <h2>Speicherdauer & Löschung</h2>
         <ul>
-          <li>Dein Benutzerkonto kannst du jederzeit löschen. Ein laufendes Abo musst du vorher kündigen.</li>
+          <li>Dein Benutzerkonto kannst du jederzeit selbst unter „Mein Profil“ → „Konto löschen“ löschen. Ein
+            laufendes Abo musst du vorher kündigen.</li>
+          <li>Von dir hochgeladene Fotos, Kommentare und eingetragene Spots bleiben nach der Löschung erhalten, werden
+            aber nicht mehr mit dir verknüpft und als „Gelöschter Nutzer“ angezeigt. Möchtest du sie ebenfalls
+            entfernen, lösche sie vorher (Fotos in deinem Profil, Kommentare direkt am Spot) oder schreib uns.</li>
           <li>Nach der Löschung entfernen wir deine Kontodaten unverzüglich, soweit keine der oben genannten
             Aufbewahrungsfristen gilt.</li>
           <li>Backups werden automatisiert überschrieben.</li>

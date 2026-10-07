@@ -152,6 +152,12 @@ describe('SpotDetailPhotos', () => {
     })
   }
 
+  it('credits a photo whose uploader deleted their account to "Gelöschter Nutzer"', () => {
+    const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: null, profiles: null } as any) })
+    expect(wrapper.get('.photo-uploader').text()).toBe('von Gelöschter Nutzer')
+    expect(wrapper.find('.photo-delete-btn').exists()).toBe(false)
+  })
+
   it('shows the delete button when the photo creator matches the current user', () => {
     fakeAuthStore.userId = 'u1'
     const wrapper = mountPhotos({ trail: trail(), details: photoDetails({ creator: 'u1' }) })
