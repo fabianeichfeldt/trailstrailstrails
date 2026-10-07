@@ -23,7 +23,7 @@ also the legend.
 | Look | **L1 Earth** on the existing light/grey map, multiply blend; soft green glow on Hero Dirt. Activation = one radar-beam sweep + staggered badge pop-in. |
 | Free users | **Locked button + sample demo** on the real map ("Beispielansicht"), then a sheet. Never real data. |
 | `hard` verdict | **Removed everywhere.** Pumptracks are not assumed to be asphalt; every spot gets a soil verdict (spot card included). |
-| Data | **Precomputed snapshot**, refreshed at **06, 09, 12, 15, 18 Europe/Berlin**. |
+| Data | **Precomputed snapshot**, refreshed at **07, 12, 16 Europe/Berlin**. |
 
 Reference mockups (chosen variants, open directly in a browser — they are
 self-contained fragments, styles inline): `2026-10-07-soil-radar-mockups/`.
@@ -129,7 +129,7 @@ RLS enabled, **no policies for anon/authenticated** — service role only.
 ### Function `soil-snapshot-refresh` (internal)
 - Triggered **hourly** by pg_cron → pg_net POST with a shared-secret header
   (`SOIL_REFRESH_SECRET`); rejects anything else.
-- Gate: continue only if the current Europe/Berlin hour ∈ {6, 9, 12, 15, 18}
+- Gate: continue only if the current Europe/Berlin hour ∈ {7, 12, 16}
   (hourly trigger + in-function gate keeps DST correct without two schedules).
   Accept `?force=1` with the secret for manual runs.
 - Loads all approved spots from `trails`, `bike_parks`, `dirt_parks`.
@@ -177,8 +177,8 @@ data is requested only when it returns `allowed`.
 - `fetchSoilMap(accessToken, onForbidden?) → Promise<SoilMapResponse | null>`;
   never throws. Uses `FUNCTIONS` / `userHeaders()` from `http.ts`.
 - localStorage cache `tr_soil_v1` = `{ computedAt, data }`, valid until
-  `nextRunAfter(computedAt)` (pure helper: next of 06/09/12/15/18 Berlin, DST
-  aware, 18 → next day 06) plus a 10-minute grace for the job to finish.
+  `nextRunAfter(computedAt)` (pure helper: next of 07/12/16 Berlin, DST
+  aware, 16 → next day 07) plus a 10-minute grace for the job to finish.
 - 403 → clear cache, call `onForbidden`.
 - Network failure → return stale cache (caller marks it offline), else `null`.
 - Corrupt entry → drop it.
@@ -251,7 +251,7 @@ All read shared stores (`soilRadar`, `auth`, `map`); no local auth state.
 **Client (vitest, mock only at the HTTP boundary):**
 - `soilMap.test.ts`: token header, 403 → cache cleared + `onForbidden`, cache
   valid until next run, stale on network error, corrupt cache dropped.
-- `nextRunAfter`: all five slots, both DST switches, 18 → 06 next day.
+- `nextRunAfter`: all three slots, both DST switches, 16 → 07 next day.
 - `filtersStore.soilMatch`: raining→3, snow→4, missing→none, inclusive edges,
   full range matches missing.
 - `soilBadge`: glyph + colour per level, donut shares sum to 100 %.

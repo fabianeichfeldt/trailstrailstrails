@@ -1,5 +1,5 @@
 /** Hours (Europe/Berlin) at which the backend refreshes the soil snapshot. */
-export const SOIL_RUN_HOURS = [6, 9, 12, 15, 18]
+export const SOIL_RUN_HOURS = [7, 12, 16]
 
 const TZ = 'Europe/Berlin'
 const fmt = new Intl.DateTimeFormat('en-GB', {
@@ -21,7 +21,7 @@ function berlinToInstant(wall: number): number {
   return guess
 }
 
-/** First scheduled run strictly after `computedAt` (DST-aware; 18:xx -> next day 06:00). */
+/** First scheduled run strictly after `computedAt` (DST-aware; 16:xx -> next day 07:00). */
 export function nextRunAfter(computedAt: Date): Date {
   const t = computedAt.getTime()
   const day = new Date(wallMs(t))
