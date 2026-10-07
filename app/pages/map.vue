@@ -1,5 +1,5 @@
 <template>
-  <div class="map-page">
+  <div class="map-page" :class="{ 'soil-open': soilStore.enabled }">
     <!-- Mobile top bar background — gives burger + search a clean backing -->
     <div class="mobile-topbar" />
 
@@ -212,6 +212,11 @@ function flyToUserLocation() {
   display: none;
 }
 
+/* The full-width Boden-Radar panel would cover the FAB stack and map controls: lift them above it. */
+@media (max-width: 520px) {
+  .map-page.soil-open { --soil-lift: 144px; }
+}
+
 @media (max-width: 600px) {
   .mobile-topbar {
     position: absolute;
@@ -229,7 +234,7 @@ function flyToUserLocation() {
 .add-btn-wrapper {
   position: absolute;
   right: 10px;
-  bottom: calc(5.5em + env(safe-area-inset-bottom));
+  bottom: calc(5.5em + var(--soil-lift, 0px) + env(safe-area-inset-bottom));
   z-index: 1000;
 }
 
@@ -271,7 +276,7 @@ function flyToUserLocation() {
 .location-btn {
   position: absolute;
   right: 10px;
-  bottom: calc(8em + env(safe-area-inset-bottom));
+  bottom: calc(8em + var(--soil-lift, 0px) + env(safe-area-inset-bottom));
   z-index: 1000;
   background: #2b6cb0;
   color: white;

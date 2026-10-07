@@ -179,9 +179,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       return L.divIcon(ghost ? { ...o, className: `${o.className} soil-ghost`.trim() } : o)
     }
 
+    // GPX-view fallback pin: plain, because the soil chip already carries the verdict there.
     function createCustomIcon(trail: Trail) {
-      const level = soilLive() ? soilStore.verdictFor(trail.type, trail.id) : undefined
-      return pinIcon(trail.type, trail.approved, level, !!level && soilState(level) === 'ghost')
+      return L.divIcon(markerIconOptions(trail.type, trail.approved))
     }
 
     let soilLayer: SoilRadarLayer | null = null
@@ -246,7 +246,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         ...trailsStore.bikeparks,
         ...trailsStore.dirtparks,
       ]
-      const visible = filtersStore.apply(all)
+      // The sample demo replaces the real pins, or clusters would mix fake and real spots.
+      const visible = soilStore.enabled && soilStore.mode === 'sample' ? [] : filtersStore.apply(all)
       // Angle-based pop delays only for the intro render, or badges would re-pop on every re-render.
       const c = introDelays ? mymap.getCenter() : null
       const center = c && { lat: c.lat, lon: c.lng }
@@ -257,8 +258,10 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         const delay = center && level ? introDelayMs(center, { lat: trail.latitude, lon: trail.longitude }) : undefined
         const marker = L.marker([trail.latitude, trail.longitude], {
           icon: pinIcon(trail.type, trail.approved, level, ghost, delay),
-        }).addTo(currentLayer() as any)
+        })
+        // Registered before addTo: the cluster icon callback reads it while adding.
         markerSoil.set(marker, { type: trail.type, approved: trail.approved, level, ghost })
+        marker.addTo(currentLayer() as any)
 
         marker.on('click', () => {
           navigateToSpot(trail)
@@ -272,8 +275,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
           const delay = center ? introDelayMs(center, s) : undefined
           const marker = L.marker([s.lat, s.lon], {
             icon: pinIcon(s.t, true, s.lvl, ghost, delay), interactive: false, keyboard: false,
-          }).addTo(currentLayer() as any)
+          })
           markerSoil.set(marker, { type: s.t, approved: true, level: s.lvl, ghost })
+          marker.addTo(currentLayer() as any)
         }
       }
     }
@@ -298,7 +302,8 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         if (!opts) continue
         const ghost = soilState(s.lvl) === 'ghost'
         soilChips.push(L.marker([s.lat, s.lon], {
-          icon: L.divIcon(ghost ? { ...opts, className: `${opts.className} soil-ghost` } : opts),
+          // Anchored below the coordinate so the chip doesn't sit on the spot's own pin.
+          icon: L.divIcon({ ...opts, iconAnchor: [46, -4], className: ghost ? `${opts.className} soil-ghost` : opts.className }),
           interactive: false, keyboard: false,
         }).addTo(mymap))
       }

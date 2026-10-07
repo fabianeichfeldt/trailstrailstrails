@@ -62,6 +62,7 @@ baseTest('a Supporter turns the radar on: soil badges on the pins, panel and cou
   await expect(page.locator('.leaflet-marker-pane .soil-badge')).toHaveCount(4);
   await expect(page.locator('.leaflet-marker-pane .soil-badge-prime')).toHaveCount(1);
   await expect(page.locator('[data-testid="map-container"]')).toHaveClass(/soil-radar-on/);
+  await expect(page.locator('[data-testid="map-container"]')).toHaveClass(/leaflet-container/); // the radar class must not wipe Leaflet's
   await expect(page.locator('[data-testid="soil-counter"]')).toHaveText(/3 von 3 Spots/);
   await expect(page.locator('.soil-radar-canvas')).toBeAttached();
 

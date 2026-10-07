@@ -158,3 +158,6 @@
   .soil-badge-hero,
   .soil-badge-hero.soil-badge-pop { animation: none; }
 }
+
+/* Leaflet zoom control + attribution sit above the bottom panel on narrow screens. */
+.soil-radar-on .leaflet-bottom { margin-bottom: var(--soil-lift, 0px); }

@@ -59,8 +59,9 @@ watch(access, (a) => {
 .soil-radar-btn {
   position: absolute;
   right: 10px;
-  bottom: calc(8em + 52px + env(safe-area-inset-bottom));
+  bottom: calc(8em + 52px + var(--soil-lift, 0px) + env(safe-area-inset-bottom));
   z-index: 1000;
+  font-size: 1em; /* same em base as .location-btn so the stack lines up */
   min-width: 44px;
   min-height: 44px;
   padding: 0;

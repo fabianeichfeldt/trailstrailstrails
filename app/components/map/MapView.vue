@@ -3,7 +3,6 @@
     ref="mapEl"
     data-testid="map-container"
     class="map-container"
-    :class="{ 'map-grayscale': filtersStore.grayscaleMap, 'soil-radar-on': soilStore.enabled }"
   />
 </template>
 
@@ -30,6 +29,14 @@ const emit = defineEmits<{
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
+
+// classList, not a :class binding: Vue would overwrite the whole class attribute and wipe the `leaflet-*` classes Leaflet added.
+watchEffect(() => {
+  const el = mapEl.value
+  if (!el) return
+  el.classList.toggle('map-grayscale', filtersStore.grayscaleMap)
+  el.classList.toggle('soil-radar-on', soilStore.enabled)
+}, { flush: 'post' })
 const { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady, soilCounts, getCenter } = useTrailMap(mapEl)
 
 watch(nearbyConflict, (v) => {
