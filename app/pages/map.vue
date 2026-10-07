@@ -1,5 +1,5 @@
 <template>
-  <div class="map-page">
+  <div class="map-page" :class="{ 'soil-open': soilStore.enabled }">
     <!-- Mobile top bar background — gives burger + search a clean backing -->
     <div class="mobile-topbar" />
 
@@ -8,6 +8,7 @@
         @ready="onMapReady"
         @nearby-conflict="onNearbyConflict"
         @spot-picked="onSpotPicked"
+        @soil-counts="soilCounts = $event"
       />
 
       <SearchBar @open-trail="handleOpenTrail" @fly-to="handleFlyTo" />
@@ -27,6 +28,15 @@
       <button class="location-btn" @click="flyToUserLocation" aria-label="Meinen Standort anzeigen">
         <i class="fa-solid fa-location-crosshairs"></i>
       </button>
+
+      <SoilRadarButton @teaser="onSoilTeaser" />
+      <SoilRadarPanel
+        v-if="soilStore.enabled"
+        :match-count="soilCounts.matchCount"
+        :total-count="soilCounts.totalCount"
+      />
+      <SoilRadarLockedSheet v-if="soilSheetOpen" @close="closeSoilSheet" />
+      <p v-if="soilUnavailable" class="soil-notice" role="status">Boden-Radar gerade nicht verfügbar</p>
 
       <Drawer />
       <NearbyModal :conflict="nearbyConflict" />
@@ -61,8 +71,11 @@ useHead({
 const authStore = useAuthStore()
 const mapStore = useMapStore()
 const trailsStore = useTrailsStore()
+const soilStore = useSoilRadarStore()
+const soilAccess = useFeatureAccess('soil_radar')
 const route = useRoute()
 
+let getCenter: () => { lat: number; lon: number } | null = () => null
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number) => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
@@ -82,9 +95,15 @@ const flyToQuery = route.query.fly as string | undefined
 function onMapReady(handlers: {
   openTrail: (id: string) => void
   flyToPlace: (lat: number, lon: number) => void
+  getCenter: () => { lat: number; lon: number } | null
 }) {
   openTrail = handlers.openTrail
   flyToPlace = handlers.flyToPlace
+  getCenter = handlers.getCenter
+
+  // A persisted "on" brings its data back only once entitled; otherwise it flips off without the teaser.
+  restoringSoil = true
+  soilStore.restore(soilAccess).finally(() => { restoringSoil = false })
 
   // Open trail from query param — only after map is ready so openTrail is the real function
   if (trailIdFromQuery) {
@@ -105,6 +124,53 @@ function onMapReady(handlers: {
     if (!Number.isNaN(lat) && !Number.isNaN(lng)) flyToPlace(lat, lng)
   }
 }
+
+// ── Boden-Radar ─────────────────────────────────────────────────────────────
+const soilCounts = ref({ matchCount: 0, totalCount: 0 })
+const soilSheetOpen = ref(false)
+const soilUnavailable = ref(false)
+let restoringSoil = false
+let sheetTimer: ReturnType<typeof setTimeout> | null = null
+let noticeTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearSheetTimer() {
+  if (sheetTimer) clearTimeout(sheetTimer)
+  sheetTimer = null
+}
+
+// Free users get the sample sweep first; the sheet follows once they have seen it.
+function onSoilTeaser() {
+  if (soilStore.mode === 'sample') { soilSheetOpen.value = true; return }
+  soilStore.startSample(getCenter() ?? { lat: 51.163, lon: 10.447 })
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+  clearSheetTimer()
+  sheetTimer = setTimeout(() => { soilSheetOpen.value = true }, reduced ? 400 : 2000)
+}
+
+function closeSoilSheet() {
+  clearSheetTimer()
+  soilSheetOpen.value = false
+  soilStore.stopSample()
+}
+
+// 403 on a user-initiated enable: the entitlement is stale, so show the teaser (no sample, no data).
+watch(() => soilStore.forbidden, (f) => {
+  if (f && !restoringSoil) soilSheetOpen.value = true
+}, { flush: 'sync' })
+
+watch(() => soilStore.status, (st) => {
+  if (st !== 'error' || soilStore.forbidden || restoringSoil) return
+  soilUnavailable.value = true
+  if (noticeTimer) clearTimeout(noticeTimer)
+  noticeTimer = setTimeout(() => { soilUnavailable.value = false }, 4000)
+})
+
+// The auth modal would open beneath the sheet (z-index), so drop the sheet and sample first.
+watch(() => mapStore.authModalOpen, (open) => {
+  if (open && soilSheetOpen.value) closeSoilSheet()
+})
+
+onBeforeUnmount(() => { clearSheetTimer(); if (noticeTimer) clearTimeout(noticeTimer) })
 
 function handleOpenTrail(id: string) { openTrail(id) }
 function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
@@ -145,6 +211,11 @@ function flyToUserLocation() {
   display: none;
 }
 
+/* The full-width Boden-Radar panel would cover the FAB stack and map controls: lift them above it. */
+@media (max-width: 520px) {
+  .map-page.soil-open { --soil-lift: 144px; }
+}
+
 @media (max-width: 600px) {
   .mobile-topbar {
     position: absolute;
@@ -162,7 +233,7 @@ function flyToUserLocation() {
 .add-btn-wrapper {
   position: absolute;
   right: 10px;
-  bottom: calc(5.5em + env(safe-area-inset-bottom));
+  bottom: calc(5.5em + var(--soil-lift, 0px) + env(safe-area-inset-bottom));
   z-index: 1000;
 }
 
@@ -204,7 +275,7 @@ function flyToUserLocation() {
 .location-btn {
   position: absolute;
   right: 10px;
-  bottom: calc(8em + env(safe-area-inset-bottom));
+  bottom: calc(8em + var(--soil-lift, 0px) + env(safe-area-inset-bottom));
   z-index: 1000;
   background: #2b6cb0;
   color: white;
@@ -218,4 +289,19 @@ function flyToUserLocation() {
   display: flex; align-items: center; justify-content: center;
 }
 .location-btn:hover { background: #3182ce; }
+
+.soil-notice {
+  position: absolute;
+  left: 50%;
+  top: calc(70px + env(safe-area-inset-top));
+  transform: translateX(-50%);
+  z-index: 1200;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 99px;
+  background: rgba(26, 32, 53, 0.92);
+  color: #fff;
+  font: 600 13px system-ui, sans-serif;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
 </style>

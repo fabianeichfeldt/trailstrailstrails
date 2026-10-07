@@ -25,6 +25,16 @@ describe('trail_condition', () => {
   })
 })
 
+describe('soil_radar', () => {
+  it('is a Supporter feature, mirroring REQUIRED_LEVEL of the soil-map edge function', () => {
+    expect(FEATURES.soil_radar.minLevel).toBe(1)
+  })
+
+  it('has a German label for the teaser', () => {
+    expect(FEATURES.soil_radar.label).toBe('Boden-Radar')
+  })
+})
+
 describe('planNameForLevel', () => {
   it('names the seeded plans by level', () => {
     expect(planNameForLevel(1)).toBe('Supporter')
