@@ -131,6 +131,31 @@ baseTest('clusters turn into soil donuts while the radar is on', async ({ page }
   assertNoLeaks();
 });
 
+baseTest('a saved "on" from a previous Supporter shows nothing to a logged-out visitor', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  const soilCalls = trackSoilRequests(page);
+  await mockSoilMap(page);
+  // What a Supporter leaves behind on a shared browser: the preference and their cached snapshot.
+  await page.addInitScript((snapshot) => {
+    if (sessionStorage.getItem('seeded')) return;
+    sessionStorage.setItem('seeded', '1');
+    localStorage.setItem('soil-radar-enabled', '1');
+    localStorage.setItem('tr_soil_v2', JSON.stringify({ uid: 'previous-supporter', at: Date.now(), data: { ...snapshot, nextRunAt: new Date(Date.now() + 3600_000).toISOString() } }));
+  }, SNAPSHOT);
+  await page.goto('/map');
+  await page.waitForLoadState('networkidle');
+
+  await expect(page.locator('.soil-radar-btn.is-locked')).toBeVisible();
+  // Wait for the restore to settle before asserting absences, or they'd pass vacuously.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('soil-radar-enabled'))).toBe('0');
+  await expect(page.locator('[data-testid="soil-panel"]')).toHaveCount(0);
+  await expect(page.locator('.leaflet-marker-pane .soil-badge')).toHaveCount(0);
+  await expect(page.locator('[data-testid="soil-locked-sheet"]')).toHaveCount(0);
+  expect(soilCalls).toEqual([]);
+
+  assertNoLeaks();
+});
+
 baseTest('a logged-out visitor gets the sample view and the sheet, and nothing is requested', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   const soilCalls = trackSoilRequests(page);

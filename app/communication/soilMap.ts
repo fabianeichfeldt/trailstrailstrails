@@ -3,8 +3,8 @@ import { FUNCTIONS, userHeaders } from './http'
 
 /**
  * Boden-Radar snapshot from the `soil-map` edge function (the gate: JWT +
- * `has_min_tier`). The caller passes the access token; communication/ must not
- * reach into stores.
+ * `has_min_tier`). The caller passes the access token and user id; communication/
+ * must not reach into stores.
  */
 
 // v2: entries carry their fetch time and follow the backend's nextRunAt.
@@ -15,6 +15,8 @@ const GRACE_MS = 10 * 60 * 1000
 const FALLBACK_TTL_MS = 60 * 60 * 1000
 
 interface CacheEntry {
+  /** Owner — paid data must not outlive a logout on a shared browser. */
+  uid: string
   /** Fetch time (ms). */
   at: number
   data: SoilMapResponse
@@ -26,28 +28,29 @@ function isSoilMap(value: unknown): value is SoilMapResponse {
 }
 
 // No localStorage during prerender; it also throws in some private modes.
-function readCache(): CacheEntry | null {
-  if (typeof localStorage === 'undefined') return null
+function readCache(userId: string): CacheEntry | null {
+  if (!userId || typeof localStorage === 'undefined') return null
   try {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
     const entry = JSON.parse(raw) as CacheEntry
     if (typeof entry?.at !== 'number' || !isSoilMap(entry.data)) throw new Error('corrupt cache entry')
+    if (entry.uid !== userId) throw new Error('someone else\'s cache entry')
     return entry
   } catch {
-    clearCache()
+    clearSoilCache()
     return null
   }
 }
 
-function writeCache(data: SoilMapResponse): void {
-  if (typeof localStorage === 'undefined') return
+function writeCache(userId: string, data: SoilMapResponse): void {
+  if (!userId || typeof localStorage === 'undefined') return
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data } satisfies CacheEntry))
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ uid: userId, at: Date.now(), data } satisfies CacheEntry))
   } catch { /* quota or private mode — the fetch still succeeded */ }
 }
 
-function clearCache(): void {
+export function clearSoilCache(): void {
   if (typeof localStorage === 'undefined') return
   try { localStorage.removeItem(CACHE_KEY) } catch { /* nothing sensible left to do */ }
 }
@@ -66,23 +69,24 @@ function isFresh(entry: CacheEntry, now: number): boolean {
  */
 export async function fetchSoilMap(
   accessToken: string,
+  userId: string,
   onForbidden?: () => void,
 ): Promise<{ data: SoilMapResponse; offline: boolean } | null> {
-  const cached = readCache()
+  const cached = readCache(userId)
   if (cached && isFresh(cached, Date.now())) return { data: cached.data, offline: false }
 
   const stale = cached ? { data: cached.data, offline: true } : null
   try {
     const res = await fetch(`${FUNCTIONS}/soil-map`, { method: 'POST', headers: userHeaders(accessToken) })
     if (res.status === 403) {
-      clearCache()
+      clearSoilCache()
       onForbidden?.()
       return null
     }
     if (!res.ok) return stale
     const body: unknown = await res.json()
     if (!isSoilMap(body)) return stale
-    writeCache(body)
+    writeCache(userId, body)
     return { data: body, offline: false }
   } catch {
     return stale

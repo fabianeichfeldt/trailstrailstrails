@@ -1,4 +1,6 @@
-import { fetchSoilMap } from '~/communication/soilMap'
+import type { Ref } from 'vue'
+import { clearSoilCache, fetchSoilMap } from '~/communication/soilMap'
+import type { FeatureAccess } from '~/entitlements/features'
 import { SOIL_AXIS_MAX, type SoilMapResponse, type SoilMapSpot } from '~/types/SoilMap'
 import type { ConditionLevel } from '~/types/Weather'
 
@@ -64,7 +66,18 @@ function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
   return spots
 }
 
+function settled(access: Ref<FeatureAccess>): Promise<Exclude<FeatureAccess, 'checking'>> {
+  return new Promise((resolve) => {
+    const stop = watch(access, (a) => {
+      if (a === 'checking') return
+      queueMicrotask(() => stop())
+      resolve(a)
+    }, { immediate: true })
+  })
+}
+
 export const useSoilRadarStore = defineStore('soilRadar', () => {
+  const auth = useAuthStore()
   const enabled = ref(readEnabled())
   const mode = ref<'live' | 'sample'>('live')
   const data = ref<SoilMapResponse | null>(null)
@@ -105,8 +118,11 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
   async function fetchLive(): Promise<boolean> {
     status.value = 'loading'
     forbidden.value = false
-    const token = await useAuthStore().getToken()
-    const res = await fetchSoilMap(token, () => { forbidden.value = true })
+    const userId = await auth.getUserId()
+    const token = await auth.getToken()
+    const res = await fetchSoilMap(token, userId, () => { forbidden.value = true })
+    // Signed out or switched account mid-request: the answer belongs to the previous user.
+    if (userId !== auth.userId) return false
     if (!res) {
       status.value = 'error'
       return false
@@ -131,13 +147,37 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
     }
   }
 
-  /** For a restored `enabled`: loads the data, or switches the radar off when it can't be had. */
+  /** For a restored `enabled`: waits for the entitlement, then loads or silently switches off. */
+  async function restore(access: Ref<FeatureAccess>): Promise<void> {
+    // Read storage, not `enabled`: prerender has no localStorage, so the hydrated payload says false.
+    if (mode.value !== 'live' || !readEnabled()) return
+    if (await settled(access) === 'locked') {
+      enabled.value = false
+      writeEnabled(false)
+      return
+    }
+    enabled.value = true
+    return load()
+  }
+
   async function load(): Promise<void> {
     if (mode.value !== 'live' || !enabled.value || status.value === 'loading') return
     if (await fetchLive()) return
     enabled.value = false
     if (forbidden.value) writeEnabled(false)
   }
+
+  // Paid data and the "on" preference belong to whoever was signed in; '' → user is just auth resolving.
+  watch(() => auth.userId, (now, before) => {
+    if (!before || now === before || mode.value !== 'live') return
+    enabled.value = false
+    writeEnabled(false)
+    data.value = null
+    offline.value = false
+    forbidden.value = false
+    status.value = 'idle'
+    clearSoilCache()
+  })
 
   function setRange(lo: number, hi: number): void {
     const a = clamp(Math.min(lo, hi))
@@ -159,6 +199,6 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
 
   return {
     enabled, mode, data, range, status, offline, forbidden,
-    points, freshness, verdictFor, toggle, load, setRange, startSample, stopSample,
+    points, freshness, verdictFor, toggle, restore, setRange, startSample, stopSample,
   }
 })

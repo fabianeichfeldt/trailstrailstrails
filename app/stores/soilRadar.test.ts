@@ -1,14 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { nextTick } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
+import type { FeatureAccess } from '~/entitlements/features'
 import type { SoilMapResponse } from '~/types/SoilMap'
 
 // Boundary mocked: the fetch layer itself is covered by soilMap.test.ts.
 const fetchSoilMap = vi.fn()
-vi.mock('~/communication/soilMap', () => ({ fetchSoilMap: (...a: unknown[]) => fetchSoilMap(...a) }))
+const clearSoilCache = vi.fn()
+vi.mock('~/communication/soilMap', () => ({
+  fetchSoilMap: (...a: unknown[]) => fetchSoilMap(...a),
+  clearSoilCache: () => clearSoilCache(),
+}))
 
 const getToken = vi.fn()
-vi.stubGlobal('useAuthStore', () => ({ getToken }))
+function makeAuth() {
+  const a = reactive({ userId: 'u1', getToken, getUserId: async () => a.userId })
+  return a
+}
+// Fresh per test so watchers of earlier tests' stores don't react to this test's sign-outs.
+let auth = makeAuth()
+vi.stubGlobal('useAuthStore', () => auth)
 
 import { useSoilRadarStore } from './soilRadar'
 
@@ -28,7 +39,9 @@ function snapshot(computedAt = new Date().toISOString()): SoilMapResponse {
 beforeEach(() => {
   localStorage.clear()
   fetchSoilMap.mockReset()
+  clearSoilCache.mockReset()
   getToken.mockReset().mockResolvedValue('tok')
+  auth = makeAuth()
   setActivePinia(createPinia())
 })
 
@@ -47,7 +60,7 @@ describe('soilRadar store — live', () => {
     fetchSoilMap.mockResolvedValue({ data: snapshot(), offline: false })
     const s = useSoilRadarStore()
     await s.toggle()
-    expect(fetchSoilMap).toHaveBeenCalledWith('tok', expect.any(Function))
+    expect(fetchSoilMap).toHaveBeenCalledWith('tok', 'u1', expect.any(Function))
     expect(s.enabled).toBe(true)
     expect(s.status).toBe('ready')
     expect(s.points).toHaveLength(2)
@@ -83,7 +96,7 @@ describe('soilRadar store — live', () => {
   })
 
   it('a 403 sets forbidden and leaves the radar off', async () => {
-    fetchSoilMap.mockImplementation(async (_t: string, onForbidden: () => void) => { onForbidden(); return null })
+    fetchSoilMap.mockImplementation(async (_t: string, _u: string, onForbidden: () => void) => { onForbidden(); return null })
     const s = useSoilRadarStore()
     await s.toggle()
     expect(s.forbidden).toBe(true)
@@ -148,22 +161,92 @@ describe('soilRadar store — persistence', () => {
     }
   })
 
-  it('load() restores data for a persisted-enabled radar', async () => {
+  it('restore() loads data for a persisted-enabled radar once access is allowed', async () => {
     localStorage.setItem(ENABLED_KEY, '1')
     fetchSoilMap.mockResolvedValue({ data: snapshot(), offline: false })
+    const access = ref<FeatureAccess>('checking')
     const s = useSoilRadarStore()
-    await s.load()
+    const done = s.restore(access)
+    await nextTick()
+    expect(fetchSoilMap).not.toHaveBeenCalled()
+    access.value = 'allowed'
+    await done
     expect(s.points).toHaveLength(2)
     expect(s.enabled).toBe(true)
   })
 
-  it('load() drops a persisted-enabled radar that is no longer allowed', async () => {
+  it('restore() switches a persisted "on" off without a request once access is locked', async () => {
     localStorage.setItem(ENABLED_KEY, '1')
-    fetchSoilMap.mockImplementation(async (_t: string, onForbidden: () => void) => { onForbidden(); return null })
+    const access = ref<FeatureAccess>('checking')
     const s = useSoilRadarStore()
-    await s.load()
+    const done = s.restore(access)
+    access.value = 'locked'
+    await done
+    expect(fetchSoilMap).not.toHaveBeenCalled()
+    expect(s.enabled).toBe(false)
+    expect(s.forbidden).toBe(false)
+    expect(localStorage.getItem(ENABLED_KEY)).toBe('0')
+  })
+
+  it('restore() reads the saved "on" itself — the prerendered payload hydrates enabled=false', async () => {
+    localStorage.setItem(ENABLED_KEY, '1')
+    fetchSoilMap.mockResolvedValue({ data: snapshot(), offline: false })
+    const pinia = createPinia()
+    pinia.state.value.soilRadar = {
+      enabled: false, mode: 'live', data: null, range: { lo: 0, hi: 4 },
+      status: 'idle', offline: false, forbidden: false, sample: [],
+    }
+    setActivePinia(pinia)
+    const s = useSoilRadarStore()
+    expect(s.enabled).toBe(false)
+    await s.restore(ref<FeatureAccess>('allowed'))
+    expect(s.enabled).toBe(true)
+    expect(s.points).toHaveLength(2)
+  })
+
+  it('restore() drops a persisted-enabled radar the backend refuses', async () => {
+    localStorage.setItem(ENABLED_KEY, '1')
+    fetchSoilMap.mockImplementation(async (_t: string, _u: string, onForbidden: () => void) => { onForbidden(); return null })
+    const s = useSoilRadarStore()
+    await s.restore(ref<FeatureAccess>('allowed'))
     expect(s.enabled).toBe(false)
     expect(s.forbidden).toBe(true)
+  })
+})
+
+describe('soilRadar store — user change', () => {
+  it('sign-out drops the live data, the "on" preference and the cache', async () => {
+    fetchSoilMap.mockResolvedValue({ data: snapshot(), offline: false })
+    const s = useSoilRadarStore()
+    await s.toggle()
+    auth.userId = ''
+    await nextTick()
+    expect(s.enabled).toBe(false)
+    expect(s.data).toBeNull()
+    expect(s.points).toEqual([])
+    expect(s.status).toBe('idle')
+    expect(localStorage.getItem(ENABLED_KEY)).toBe('0')
+    expect(clearSoilCache).toHaveBeenCalled()
+  })
+
+  it('switching accounts resets as well', async () => {
+    fetchSoilMap.mockResolvedValue({ data: snapshot(), offline: false })
+    const s = useSoilRadarStore()
+    await s.toggle()
+    auth.userId = 'u2'
+    await nextTick()
+    expect(s.enabled).toBe(false)
+    expect(s.data).toBeNull()
+  })
+
+  it('auth resolving on page load (no user → user) keeps a restored "on"', async () => {
+    auth.userId = ''
+    localStorage.setItem(ENABLED_KEY, '1')
+    const s = useSoilRadarStore()
+    auth.userId = 'u1'
+    await nextTick()
+    expect(s.enabled).toBe(true)
+    expect(clearSoilCache).not.toHaveBeenCalled()
   })
 })
 

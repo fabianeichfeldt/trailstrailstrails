@@ -72,6 +72,7 @@ const authStore = useAuthStore()
 const mapStore = useMapStore()
 const trailsStore = useTrailsStore()
 const soilStore = useSoilRadarStore()
+const soilAccess = useFeatureAccess('soil_radar')
 const route = useRoute()
 
 let getCenter: () => { lat: number; lon: number } | null = () => null
@@ -100,11 +101,9 @@ function onMapReady(handlers: {
   flyToPlace = handlers.flyToPlace
   getCenter = handlers.getCenter
 
-  // A persisted "on" must bring its data back; a failed restore flips it off without the teaser.
-  if (soilStore.enabled) {
-    restoringSoil = true
-    soilStore.load().finally(() => { restoringSoil = false })
-  }
+  // A persisted "on" brings its data back only once entitled; otherwise it flips off without the teaser.
+  restoringSoil = true
+  soilStore.restore(soilAccess).finally(() => { restoringSoil = false })
 
   // Open trail from query param — only after map is ready so openTrail is the real function
   if (trailIdFromQuery) {
