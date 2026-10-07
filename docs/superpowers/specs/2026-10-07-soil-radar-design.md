@@ -148,6 +148,7 @@ RLS enabled, **no policies for anon/authenticated** — service role only.
   ```ts
   interface SoilMapResponse {
     computedAt: string            // newest computed_at
+    nextRunAt: string             // next scheduled refresh after the request (client cache expiry)
     spots: Array<{ t: 'trail' | 'bikepark' | 'dirtpark'; id: string;
                    lat: number; lon: number; lvl: ConditionLevel;
                    lo: number | null; hi: number | null }>
@@ -176,9 +177,10 @@ data is requested only when it returns `allowed`.
 ### `app/communication/soilMap.ts`
 - `fetchSoilMap(accessToken, onForbidden?) → Promise<SoilMapResponse | null>`;
   never throws. Uses `FUNCTIONS` / `userHeaders()` from `http.ts`.
-- localStorage cache `tr_soil_v1` = `{ computedAt, data }`, valid until
-  `nextRunAfter(computedAt)` (pure helper: next of 07/12/16 Berlin, DST
-  aware, 16 → next day 07) plus a 10-minute grace for the job to finish.
+- localStorage cache `tr_soil_v2` = `{ at, data }`, valid until the response's
+  `nextRunAt` plus a 10-minute grace for the job to finish. The run hours live
+  only in the backend (`_shared/soilSchedule.ts`); a response without
+  `nextRunAt` (older backend) is cached for one hour after the fetch.
 - 403 → clear cache, call `onForbidden`.
 - Network failure → return stale cache (caller marks it offline), else `null`.
 - Corrupt entry → drop it.
@@ -250,8 +252,10 @@ All read shared stores (`soilRadar`, `auth`, `map`); no local auth state.
 
 **Client (vitest, mock only at the HTTP boundary):**
 - `soilMap.test.ts`: token header, 403 → cache cleared + `onForbidden`, cache
-  valid until next run, stale on network error, corrupt cache dropped.
-- `nextRunAfter`: all three slots, both DST switches, 16 → 07 next day.
+  valid until `nextRunAt` + grace, 1 h fallback without it, stale on network
+  error, corrupt cache dropped.
+- Backend `_shared/soilSchedule.test.ts`: `nextRunAfter` for all three slots,
+  both DST switches, 16 → 07 next day.
 - `filtersStore.soilMatch`: raining→3, snow→4, missing→none, inclusive edges,
   full range matches missing.
 - `soilBadge`: glyph + colour per level, donut shares sum to 100 %.

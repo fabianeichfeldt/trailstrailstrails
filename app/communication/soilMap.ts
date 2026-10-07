@@ -1,6 +1,5 @@
 import type { SoilMapResponse } from '~/types/SoilMap'
 import { FUNCTIONS, userHeaders } from './http'
-import { nextRunAfter } from './soilSchedule'
 
 /**
  * Boden-Radar snapshot from the `soil-map` edge function (the gate: JWT +
@@ -8,12 +7,16 @@ import { nextRunAfter } from './soilSchedule'
  * reach into stores.
  */
 
-const CACHE_KEY = 'tr_soil_v1'
+// v2: entries carry their fetch time and follow the backend's nextRunAt.
+const CACHE_KEY = 'tr_soil_v2'
 // The backend job needs a moment after each slot before the new snapshot is readable.
 const GRACE_MS = 10 * 60 * 1000
+// Only for responses without `nextRunAt` (a backend from before that field).
+const FALLBACK_TTL_MS = 60 * 60 * 1000
 
 interface CacheEntry {
-  computedAt: string
+  /** Fetch time (ms). */
+  at: number
   data: SoilMapResponse
 }
 
@@ -29,7 +32,7 @@ function readCache(): CacheEntry | null {
     const raw = localStorage.getItem(CACHE_KEY)
     if (!raw) return null
     const entry = JSON.parse(raw) as CacheEntry
-    if (!isSoilMap(entry?.data)) throw new Error('corrupt cache entry')
+    if (typeof entry?.at !== 'number' || !isSoilMap(entry.data)) throw new Error('corrupt cache entry')
     return entry
   } catch {
     clearCache()
@@ -40,7 +43,7 @@ function readCache(): CacheEntry | null {
 function writeCache(data: SoilMapResponse): void {
   if (typeof localStorage === 'undefined') return
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ computedAt: data.computedAt, data } satisfies CacheEntry))
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data } satisfies CacheEntry))
   } catch { /* quota or private mode — the fetch still succeeded */ }
 }
 
@@ -49,8 +52,11 @@ function clearCache(): void {
   try { localStorage.removeItem(CACHE_KEY) } catch { /* nothing sensible left to do */ }
 }
 
+// The backend owns the schedule: cache until its next run (plus time for the job to finish).
 function isFresh(entry: CacheEntry, now: number): boolean {
-  return now <= nextRunAfter(new Date(entry.data.computedAt)).getTime() + GRACE_MS
+  const nextRun = Date.parse(entry.data.nextRunAt ?? '')
+  if (!Number.isNaN(nextRun)) return now <= nextRun + GRACE_MS
+  return now <= entry.at + FALLBACK_TTL_MS
 }
 
 /**

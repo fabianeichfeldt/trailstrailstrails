@@ -14,6 +14,8 @@ export interface SoilMapSpot {
 export interface SoilMapResponse {
   /** ISO instant: newest computed_at in the snapshot. */
   computedAt: string
+  /** ISO instant of the backend's next scheduled refresh; the client caches until then. */
+  nextRunAt?: string
   spots: SoilMapSpot[]
 }
 

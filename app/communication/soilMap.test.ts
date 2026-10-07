@@ -4,8 +4,9 @@ import { FUNCTIONS } from './http'
 import { fetchSoilMap } from './soilMap'
 
 // Only `fetch` is stubbed: nothing here reaches Supabase.
-function snapshot(computedAt = '2026-07-15T08:00:00.000Z'): SoilMapResponse {
-  return { computedAt, spots: [{ t: 'trail', id: 'a', lat: 47, lon: 11, lvl: 'prime', lo: 1, hi: 2 }] }
+// The backend says when its next refresh is; the client has no schedule of its own.
+function snapshot(computedAt = '2026-07-15T08:00:00.000Z', nextRunAt: string | undefined = '2026-07-15T10:00:00.000Z'): SoilMapResponse {
+  return { computedAt, nextRunAt, spots: [{ t: 'trail', id: 'a', lat: 47, lon: 11, lvl: 'prime', lo: 1, hi: 2 }] }
 }
 
 function respond(status: number, body: unknown = snapshot()) {
@@ -13,8 +14,9 @@ function respond(status: number, body: unknown = snapshot()) {
 }
 
 const realFetch = globalThis.fetch
-const KEY = 'tr_soil_v1'
-// snapshot() is computed 10:00 CEST -> next run 12:00 CEST (10:00Z), +10 min grace
+const KEY = 'tr_soil_v2'
+const CACHED_AT = Date.parse('2026-07-15T08:05:00Z')
+// snapshot().nextRunAt is 10:00Z; the entry stays valid 10 min longer (grace for the job)
 const BEFORE_EXPIRY = new Date('2026-07-15T10:09:00Z')
 const AFTER_EXPIRY = new Date('2026-07-15T10:11:00Z')
 
@@ -35,21 +37,23 @@ describe('fetchSoilMap — request', () => {
     expect(init.headers.Authorization).toBe('Bearer tok')
   })
 
-  it('returns the data, not offline, and caches it', async () => {
+  it('returns the data, not offline, and caches it with the fetch time', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(CACHED_AT)
     vi.stubGlobal('fetch', respond(200))
     const r = await fetchSoilMap('tok')
     expect(r).toEqual({ data: snapshot(), offline: false })
-    expect(JSON.parse(localStorage.getItem(KEY)!)).toEqual({ computedAt: snapshot().computedAt, data: snapshot() })
+    expect(JSON.parse(localStorage.getItem(KEY)!)).toEqual({ at: CACHED_AT, data: snapshot() })
   })
 })
 
 describe('fetchSoilMap — cache', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    localStorage.setItem(KEY, JSON.stringify({ computedAt: snapshot().computedAt, data: snapshot() }))
+    localStorage.setItem(KEY, JSON.stringify({ at: CACHED_AT, data: snapshot() }))
   })
 
-  it('serves a cache entry without fetching until the next run plus 10 minutes', async () => {
+  it('serves a cache entry without fetching until the backend\'s nextRunAt plus 10 minutes', async () => {
     vi.setSystemTime(BEFORE_EXPIRY)
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
@@ -63,6 +67,19 @@ describe('fetchSoilMap — cache', () => {
     const fetchMock = respond(200, fresh)
     vi.stubGlobal('fetch', fetchMock)
     expect((await fetchSoilMap('tok'))?.data).toEqual(fresh)
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('without nextRunAt (older backend) the entry is valid for one hour after the fetch', async () => {
+    const { nextRunAt: _, ...older } = snapshot()
+    localStorage.setItem(KEY, JSON.stringify({ at: CACHED_AT, data: older }))
+    const fetchMock = respond(200)
+    vi.stubGlobal('fetch', fetchMock)
+    vi.setSystemTime(CACHED_AT + 59 * 60_000)
+    await fetchSoilMap('tok')
+    expect(fetchMock).not.toHaveBeenCalled()
+    vi.setSystemTime(CACHED_AT + 61 * 60_000)
+    await fetchSoilMap('tok')
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 
