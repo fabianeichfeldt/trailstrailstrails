@@ -88,10 +88,6 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
   const forbidden = ref(false)
   const sample = ref<SoilMapSpot[]>([])
 
-  watch(range, (r) => {
-    try { localStorage.setItem(RANGE_KEY, JSON.stringify(r)) } catch { /* preference just won't persist */ }
-  }, { deep: true })
-
   const points = computed<SoilMapSpot[]>(() => mode.value === 'sample' ? sample.value : data.value?.spots ?? [])
 
   const index = computed(() => {
@@ -149,7 +145,8 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
 
   /** For a restored `enabled`: waits for the entitlement, then loads or silently switches off. */
   async function restore(access: Ref<FeatureAccess>): Promise<void> {
-    // Read storage, not `enabled`: prerender has no localStorage, so the hydrated payload says false.
+    // Read storage, not the refs: prerender has no localStorage, so the hydrated payload holds defaults.
+    range.value = readRange()
     if (mode.value !== 'live' || !readEnabled()) return
     if (await settled(access) === 'locked') {
       enabled.value = false
@@ -183,6 +180,8 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
     const a = clamp(Math.min(lo, hi))
     const b = clamp(Math.max(lo, hi))
     range.value = { lo: a, hi: b }
+    // Written here, not in a watch(): hydration's reset to the default would trigger it and overwrite storage.
+    try { localStorage.setItem(RANGE_KEY, JSON.stringify(range.value)) } catch { /* preference just won't persist */ }
   }
 
   function startSample(center: { lat: number; lon: number }): void {

@@ -204,6 +204,21 @@ describe('soilRadar store — persistence', () => {
     expect(s.points).toHaveLength(2)
   })
 
+  it('restore() brings back the saved range the prerendered payload reset, without overwriting it', async () => {
+    localStorage.setItem(RANGE_KEY, JSON.stringify({ lo: 1, hi: 3 }))
+    const pinia = createPinia()
+    pinia.state.value.soilRadar = {
+      enabled: false, mode: 'live', data: null, range: { lo: 0, hi: 4 },
+      status: 'idle', offline: false, forbidden: false, sample: [],
+    }
+    setActivePinia(pinia)
+    const s = useSoilRadarStore()
+    await nextTick()
+    expect(JSON.parse(localStorage.getItem(RANGE_KEY)!)).toEqual({ lo: 1, hi: 3 })
+    await s.restore(ref<FeatureAccess>('locked'))
+    expect(s.range).toEqual({ lo: 1, hi: 3 })
+  })
+
   it('restore() drops a persisted-enabled radar the backend refuses', async () => {
     localStorage.setItem(ENABLED_KEY, '1')
     fetchSoilMap.mockImplementation(async (_t: string, _u: string, onForbidden: () => void) => { onForbidden(); return null })
