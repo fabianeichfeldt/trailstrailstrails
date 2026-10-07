@@ -1,0 +1,81 @@
+<style>
+  .card-image{aspect-ratio:auto!important;display:block!important;padding:0!important}
+  .rv{position:relative;width:100%;height:360px;background:#e7e8ea;overflow:hidden}
+  .rv canvas{position:absolute;inset:0;width:100%;height:100%}
+  .rv .base{filter:none}
+  .pinx{position:absolute;width:9px;height:9px;border-radius:50%;background:#2d3748;border:2px solid #fff;transform:translate(-50%,-50%);box-shadow:0 1px 3px rgba(0,0,0,.4)}
+  .lg{position:absolute;left:10px;bottom:10px;right:10px;height:8px;border-radius:99px;
+      background:linear-gradient(90deg,#f2c14e,#9ccc65,#22c55e,#38bdf8,#6d4c41)}
+  .lgl{position:absolute;left:10px;right:10px;bottom:20px;display:flex;justify-content:space-between;font:600 10px system-ui;color:#333;text-shadow:0 0 3px #fff}
+  .zoomtag{position:absolute;top:8px;right:8px;font:600 10px system-ui;background:#fffc;padding:3px 7px;border-radius:6px}
+  .split2{display:grid;grid-template-columns:1fr 1fr;height:360px}
+  .split2 .rv{height:360px}
+</style>
+
+<h2>B · How should the soil radar be drawn?</h2>
+<p class="subtitle">Same 46 fake spots, same verdicts (a rain front sitting over the east). Real rendering on canvas. The difference is how honest the field is about places <em>without</em> spots.</p>
+
+<div class="cards">
+  <div class="card" data-choice="halo" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="rv" id="v1"><canvas class="base"></canvas><canvas class="fx"></canvas>
+      <div class="lgl"><span>staubig</span><span>prime</span><span>Matsch</span></div><div class="lg"></div></div></div>
+    <div class="card-body"><h3>B1 · Spot clouds</h3><p>Colour only grows out of real spots (~15 km) and fades to nothing between them. Dense regions merge into one cloud; empty land stays plain map. Honest and still radar-like.</p></div>
+  </div>
+
+  <div class="card" data-choice="full" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="rv" id="v2"><canvas class="base"></canvas><canvas class="fx"></canvas>
+      <div class="lgl"><span>staubig</span><span>prime</span><span>Matsch</span></div><div class="lg"></div></div></div>
+    <div class="card-body"><h3>B2 · Full radar with contours</h3><p>Interpolated everywhere, banded like a weather map with isolines. Maximum drama — but it paints a verdict over land where no trail exists.</p></div>
+  </div>
+
+  <div class="card" data-choice="adaptive" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="split2">
+      <div class="rv" id="v3a"><canvas class="base"></canvas><canvas class="fx"></canvas><div class="zoomtag">Zoom 7 · Region</div></div>
+      <div class="rv" id="v3b"><canvas class="base"></canvas><canvas class="fx"></canvas><div class="zoomtag">Zoom 11 · Spots</div></div>
+    </div></div>
+    <div class="card-body"><h3>B3 · Zoom-adaptive</h3><p>Zoomed out: the clouds (B1) as a "where is it dry this weekend" overview. Zoom in: the clouds condense into a glowing aura per spot, so you see the exact verdict for each spot.</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // colour ramp dusty(0) .. wet(4)
+  const stops=[[0,[242,193,78]],[1,[156,204,101]],[2,[34,197,94]],[3,[56,189,248]],[4,[109,76,65]]];
+  function col(v){v=Math.max(0,Math.min(4,v));for(let i=0;i<4;i++){const[a,ca]=stops[i],[b,cb]=stops[i+1];if(v<=b){const t=(v-a)/(b-a);return ca.map((c,k)=>Math.round(c+(cb[k]-c)*t))}}return stops[4][1]}
+  // deterministic RNG
+  let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  // clusters of spots, value driven by a rain front in the east
+  const clusters=[[.18,.3,9],[.32,.62,7],[.55,.25,6],[.7,.7,10],[.85,.4,6],[.45,.85,4],[.1,.75,4]];
+  const spots=[];
+  for(const[cx,cy,n]of clusters)for(let i=0;i<n;i++){const x=cx+(r()-.5)*.16,y=cy+(r()-.5)*.16;
+    const front=Math.max(0,Math.min(1,(x-.45)*2.4));const v=Math.max(0,Math.min(4,.8+front*3.2+(r()-.5)*.9));spots.push({x,y,v})}
+  function base(cv){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.fillStyle='#e7e8ea';c.fillRect(0,0,w,h);
+    c.fillStyle='#dfe1e2';for(let i=0;i<14;i++){c.beginPath();c.arc(((i*97)%100)/100*w,((i*53)%100)/100*h,40+(i*13)%60,0,7);c.fill()}
+    c.strokeStyle='#fff';c.lineWidth=2.2;for(let i=0;i<9;i++){c.beginPath();c.moveTo(((i*37)%100)/100*w,0);c.bezierCurveTo(((i*71)%100)/100*w,h*.3,((i*29)%100)/100*w,h*.7,((i*61)%100)/100*w,h);c.stroke()}
+    c.strokeStyle='#cfd2d4';c.lineWidth=1;c.setLineDash([4,4]);c.beginPath();c.moveTo(w*.05,h*.9);c.bezierCurveTo(w*.3,h*.5,w*.6,h*1.1,w*.95,h*.6);c.stroke();c.setLineDash([])}
+  function field(cv,{radius,full,contours,zoom=1,ox=0,oy=0,aura=false}){
+    const c=cv.getContext('2d'),w=cv.width,h=cv.height,step=3,img=c.createImageData(w,h),d=img.data;
+    const pts=spots.map(p=>({x:((p.x-ox)*zoom)*w,y:((p.y-oy)*zoom)*h,v:p.v}));const R=radius*w;
+    for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){let ws=0,vs=0,g=0,idw=0,idv=0;
+      for(const p of pts){const dx=x-p.x,dy=y-p.y,dd=dx*dx+dy*dy;const k=Math.exp(-dd/(2*R*R));ws+=k;vs+=k*p.v;g=Math.max(g,k);const iw=1/(dd+1)**1.5;idw+=iw;idv+=iw*p.v}
+      let v=full?idv/idw:vs/(ws||1);let a=full?.62:Math.min(.72,Math.pow(Math.min(1,ws*0.9),.8)*.72);
+      if(aura){a=Math.min(.8,g*1.1)}
+      if(contours){const band=v*2;if(Math.abs(band-Math.round(band))<.06)a=Math.min(.9,a+.25)}
+      const cc=col(v);for(let yy=0;yy<step;yy++)for(let xx=0;xx<step;xx++){const i=((y+yy)*w+(x+xx))*4;if(i>=d.length)continue;d[i]=cc[0];d[i+1]=cc[1];d[i+2]=cc[2];d[i+3]=a*255}}
+    c.putImageData(img,0,0);
+    return pts}
+  function render(id,opt,pins){const el=document.getElementById(id);const[b,f]=el.querySelectorAll('canvas');
+    for(const cv of[b,f]){cv.width=el.clientWidth;cv.height=el.clientHeight}
+    base(b);f.style.filter=opt.aura?'blur(2px)':'blur(5px)';f.style.mixBlendMode='multiply';
+    const pts=field(f,opt);
+    if(pins)for(const p of pts){if(p.x<0||p.y<0||p.x>f.width||p.y>f.height)continue;const e=document.createElement('div');e.className='pinx';e.style.left=p.x+'px';e.style.top=p.y+'px';
+      if(opt.aura&&p.v>1.5&&p.v<2.5){e.style.background='#16a34a';e.style.boxShadow='0 0 0 3px #22c55e66,0 0 18px 6px #22c55eaa'}el.appendChild(e)}}
+  function go(){
+    render('v1',{radius:.05},true);
+    render('v2',{radius:.05,full:true,contours:true},true);
+    render('v3a',{radius:.06},false);
+    render('v3b',{radius:.022,zoom:3.2,ox:.6,oy:.55,aura:true},true);
+  }
+  if(document.readyState==='complete')go();else window.addEventListener('load',go);
+})();
+</script>
