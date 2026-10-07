@@ -58,16 +58,16 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers() })
 
 describe('zoomOpacity', () => {
-  it('is 1 up to zoom 8 and fades linearly to 0.25 at zoom 14', () => {
+  it('is 1 up to zoom 8 and fades linearly to 0.1 at zoom 14', () => {
     expect(zoomOpacity(6)).toBe(1)
     expect(zoomOpacity(8)).toBe(1)
-    expect(zoomOpacity(11)).toBeCloseTo(0.625)
-    expect(zoomOpacity(14)).toBeCloseTo(0.25)
+    expect(zoomOpacity(11)).toBeCloseTo(0.55)
+    expect(zoomOpacity(14)).toBeCloseTo(0.1)
   })
 
   it('never fades out completely, however far you zoom in', () => {
-    expect(zoomOpacity(17)).toBeCloseTo(0.25)
-    expect(zoomOpacity(19)).toBeCloseTo(0.25)
+    expect(zoomOpacity(17)).toBeCloseTo(0.1)
+    expect(zoomOpacity(19)).toBeCloseTo(0.1)
   })
 })
 
@@ -134,7 +134,7 @@ describe('createSoilRadarLayer', () => {
     put.mockClear()
     map.zoom = 14
     map.fire('zoomend')
-    expect(Number(canvas.style.opacity)).toBeCloseTo(0.25)
+    expect(Number(canvas.style.opacity)).toBeCloseTo(0.1)
     expect(put).toHaveBeenCalled()
   })
 
