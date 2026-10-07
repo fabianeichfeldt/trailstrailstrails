@@ -28,7 +28,7 @@
         >
           <img alt="offizieller MTB Trail" :src="p.url" :class="{ active: i === activePhoto }" />
           <div class="photo-meta">
-            <span class="photo-uploader">von {{ p.profiles?.display_name || '' }}</span>
+            <span class="photo-uploader">von {{ authorName(p.profiles) }}</span>
             <span class="photo-date">{{ formatPhotoDate(p.created_at) }}</span>
           </div>
         </div>
@@ -59,6 +59,7 @@ import { showToast } from '~/utils/toast'
 import { bindPhotoLightbox } from '~/map/lightbox'
 import { confirmDialog } from '~/map/confirmDialog'
 import { canDeletePhoto } from '~/utils/canDeletePhoto'
+import { authorName } from '~/utils/authorName'
 import type { Trail } from '~/types/Trail'
 import type { TrailDetails } from '~/types/TrailDetails'
 import type { Photo } from '~/types/Photo'
