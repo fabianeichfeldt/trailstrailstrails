@@ -26,7 +26,7 @@
           {{ promoActive ? `Jetzt registrieren – ${SIGNUP_PROMO.weeks} Wochen kostenlos` : 'Jetzt registrieren' }}
         </button>
       </template>
-      <NuxtLink v-else to="/supporter" class="cta" data-testid="soil-locked-link">Supporter werden</NuxtLink>
+      <NuxtLink v-else to="/plans" class="cta" data-testid="soil-locked-link">Supporter werden</NuxtLink>
     </div>
   </div>
 </template>

@@ -33,11 +33,11 @@ describe('SoilRadarLockedSheet', () => {
     expect(w.get('[data-testid="soil-locked-cta"]').text()).toContain('registrieren')
   })
 
-  it('logged in: names it a Supporter feature and links to /supporter', () => {
+  it('logged in: names it a Supporter feature and links to /plans', () => {
     fakeAuthStore.isLoggedIn = true
     const w = mountSheet()
     expect(w.text()).toContain('Boden-Radar ist eine Supporter-Funktion')
-    expect(w.get('a[href="/supporter"]').exists()).toBe(true)
+    expect(w.get('a[href="/plans"]').exists()).toBe(true)
     expect(w.find('[data-testid="soil-locked-cta"]').exists()).toBe(false)
   })
 

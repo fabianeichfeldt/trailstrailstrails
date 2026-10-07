@@ -3,12 +3,15 @@
     ref="mapEl"
     data-testid="map-container"
     class="map-container"
-    :class="{ 'map-grayscale': filtersStore.grayscaleMap }"
+    :class="{ 'map-grayscale': filtersStore.grayscaleMap, 'soil-radar-on': soilStore.enabled }"
   />
 </template>
 
 <script setup lang="ts">
+import '../../css/soil_radar.css'
+
 const filtersStore = useFiltersStore()
+const soilStore = useSoilRadarStore()
 
 const props = defineProps<{
   onOpenTrail?: (id: string) => void
@@ -19,13 +22,15 @@ const emit = defineEmits<{
   ready: [{
     openTrail: (id: string) => void
     flyToPlace: (lat: number, lon: number) => void
+    getCenter: () => { lat: number; lon: number } | null
   }]
+  soilCounts: [{ matchCount: number; totalCount: number }]
   nearbyConflict: [{ trail: any; resolve: (proceed: boolean) => void }]
   spotPicked: [{ lat: number; lng: number; type: string }]
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
-const { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady } = useTrailMap(mapEl)
+const { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady, soilCounts, getCenter } = useTrailMap(mapEl)
 
 watch(nearbyConflict, (v) => {
   if (v) emit('nearbyConflict', v)
@@ -42,8 +47,10 @@ watch(addSpotPicked, (v) => {
 // actually callable), not a plain onMounted — see mapReady's comment in
 // useTrailMap.ts for the race that would otherwise cause.
 watch(mapReady, (ready) => {
-  if (ready) emit('ready', { openTrail, flyToPlace })
+  if (ready) emit('ready', { openTrail, flyToPlace, getCenter })
 })
+
+watch(soilCounts, c => emit('soilCounts', c), { immediate: true })
 </script>
 
 <style scoped>
@@ -60,5 +67,9 @@ watch(mapReady, (ready) => {
 }
 .map-grayscale :deep(.leaflet-marker-pane) {
   filter: grayscale(0.2);
+}
+/* Badge colours and glow must stay true while the radar is on. */
+.map-grayscale.soil-radar-on :deep(.leaflet-marker-pane) {
+  filter: none;
 }
 </style>

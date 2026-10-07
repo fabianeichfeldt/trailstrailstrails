@@ -367,3 +367,25 @@ describe('miniMap renderer (owns Leaflet, dynamically)', () => {
     expect(src).toContain('export function resolveShowGpx')
   })
 })
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boden-Radar map files stay free of app state
+// ─────────────────────────────────────────────────────────────────────────────
+describe('app/map/soil* files', () => {
+  const files = collectTs('app/map').filter(f => /\/soil[^/]*\.ts$/.test(f) && !f.endsWith('.test.ts'))
+
+  test('the soil map modules exist (guards the glob below)', () => {
+    expect(files.length).toBeGreaterThanOrEqual(4)
+  })
+
+  test('import no stores, composables or components (state is injected by useTrailMap)', () => {
+    const violations = files.filter(f =>
+      /from\s+['"]([~@]\/|\.\.?\/)+(stores|composables|components)\//.test(read(f)))
+    expect(violations).toEqual([])
+  })
+
+  test('never import leaflet at module level (injected / type-only)', () => {
+    const violations = files.filter(f => /^import\s+(?!type\b)[^\n]*from\s+['"]leaflet/m.test(read(f)))
+    expect(violations).toEqual([])
+  })
+})
