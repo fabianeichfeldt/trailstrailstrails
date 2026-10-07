@@ -50,6 +50,7 @@ import { showToast } from '~/utils/toast'
 const StubLink = { template: '<a><slot /></a>' }
 const StubPageHero = { template: '<div><slot /></div>' }
 const StubPlanCard = { template: '<section class="stub-plan-card" />' }
+const StubDeleteAccount = { template: '<section class="stub-delete-account" />' }
 
 function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
   const client = fakeClient(photosData)
@@ -58,7 +59,7 @@ function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
 
   return mount(ProfilePage, {
     global: {
-      stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard },
+      stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard, DeleteAccountSection: StubDeleteAccount },
     },
   })
 }
@@ -82,6 +83,13 @@ describe('profile.vue — photo delete', () => {
     const children = Array.from(wrapper.find('.profile-layout').element.children)
     const header = children.findIndex(el => el.classList.contains('profile-header'))
     expect(children[header + 1]?.classList.contains('stub-plan-card')).toBe(true)
+  })
+
+  it('mounts the delete-account section as the last section, after the photos', async () => {
+    const wrapper = mountProfile([PHOTO_ROW])
+    await flushPromises()
+    const children = Array.from(wrapper.find('.profile-layout').element.children)
+    expect(children.at(-1)?.classList.contains('stub-delete-account')).toBe(true)
   })
 
   it('renders a delete button on every uploaded photo card', async () => {

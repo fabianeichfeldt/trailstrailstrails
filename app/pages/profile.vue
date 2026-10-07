@@ -153,6 +153,8 @@
           </div>
         </section>
 
+        <DeleteAccountSection />
+
       </div>
     </main>
 
@@ -163,6 +165,7 @@
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
 import PlanCard from '~/components/profile/PlanCard.vue'
+import DeleteAccountSection from '~/components/profile/DeleteAccountSection.vue'
 
 useSeoMeta({
   title: 'Mein Profil',
