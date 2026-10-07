@@ -60,7 +60,7 @@ Deactivation: clouds fade, badges scale out (≈250 ms). With
 - Level mapping onto the 0–4 axis: `dusty 0, dry 1, prime 2, damp 3, wet 4`;
   `raining → 3` (colour feucht); `snow → 4` but rendered with a white frost
   tint; `unknown` / missing → no cloud.
-- Cloud opacity fades out between zoom 10 and 11 (`GPX_ZOOM_THRESHOLD = 11`).
+- Cloud opacity is 1 up to zoom 8, then fades linearly to a floor of 0.25 at zoom 14 and stays there — the clouds never vanish completely, they just get fainter the closer you zoom in.
 
 ### Pins (M2)
 - Pin unchanged (`markerIconOptions`), badge 17 px circle, 2 px white border,
@@ -206,7 +206,7 @@ store; the composable calls it, never reimplements it.
   shared palette; draw to canvas, upscale with CSS blur, `mix-blend-mode:
   multiply`.
 - Redraw on `moveend` / `zoomend`; CSS transform during zoom animation.
-- Opacity ramp zoom 10→11.
+- Opacity ramp: 1 up to zoom 8, linear to 0.25 at zoom 14, floor 0.25 beyond (`zoomOpacity`).
 - `playIntro()`: conic `mask-image` driven by an animated `@property --sweep`
   angle + beam overlay; resolves when done; no-op under reduced motion.
 

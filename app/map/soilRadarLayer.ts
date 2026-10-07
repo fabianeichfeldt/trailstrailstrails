@@ -1,5 +1,4 @@
 import type * as Leaflet from 'leaflet'
-import { GPX_ZOOM_THRESHOLD } from './gpxZoomThreshold'
 import { renderField, sigmaPx } from './soilField'
 
 export interface SoilPoint { lat: number; lon: number; axis: number; frost: boolean }
@@ -15,9 +14,15 @@ const PANE = 'soilRadarPane'
 const PAD = 0.25            // canvas overscan per side, so short pans don't show an edge
 const SWEEP_MS = 1600
 
-/** Clouds are fully opaque up to zoom 10 and gone at the GPX threshold (11). */
+export const FADE_START_ZOOM = 8
+export const FADE_END_ZOOM = 14
+// Never 0: zoomed into one spot the cloud stays as a faint tint instead of vanishing.
+export const MIN_ZOOM_OPACITY = 0.25
+
+/** Clouds are fully opaque up to zoom 8, then fade linearly to a floor at zoom 14. */
 export function zoomOpacity(zoom: number): number {
-  return Math.max(0, Math.min(1, GPX_ZOOM_THRESHOLD - zoom))
+  const t = Math.max(0, Math.min(1, (zoom - FADE_START_ZOOM) / (FADE_END_ZOOM - FADE_START_ZOOM)))
+  return 1 - t * (1 - MIN_ZOOM_OPACITY)
 }
 
 const prefersReducedMotion = () =>

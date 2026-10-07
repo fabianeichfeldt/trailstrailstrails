@@ -58,12 +58,16 @@ beforeEach(() => {
 afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers() })
 
 describe('zoomOpacity', () => {
-  it('is 1 up to zoom 10, 0 from zoom 11, linear between', () => {
+  it('is 1 up to zoom 8 and fades linearly to 0.25 at zoom 14', () => {
     expect(zoomOpacity(6)).toBe(1)
-    expect(zoomOpacity(10)).toBe(1)
-    expect(zoomOpacity(10.5)).toBeCloseTo(0.5)
-    expect(zoomOpacity(11)).toBe(0)
-    expect(zoomOpacity(14)).toBe(0)
+    expect(zoomOpacity(8)).toBe(1)
+    expect(zoomOpacity(11)).toBeCloseTo(0.625)
+    expect(zoomOpacity(14)).toBeCloseTo(0.25)
+  })
+
+  it('never fades out completely, however far you zoom in', () => {
+    expect(zoomOpacity(17)).toBeCloseTo(0.25)
+    expect(zoomOpacity(19)).toBeCloseTo(0.25)
   })
 })
 
@@ -121,20 +125,25 @@ describe('createSoilRadarLayer', () => {
     expect(put).toHaveBeenCalledTimes(3)
   })
 
-  it('hides and skips drawing when invisible or zoomed past the GPX threshold', () => {
+  it('stays drawn but fainter when zoomed into the GPX view', () => {
     const map = fakeMap()
     const layer = createSoilRadarLayer(map as never, L)
     layer.setPoints(pts)
     layer.setVisible(true)
     const canvas = map.panes.soilRadarPane!.querySelector('canvas')!
     put.mockClear()
-    map.zoom = 11
+    map.zoom = 14
     map.fire('zoomend')
-    expect(canvas.style.opacity).toBe('0')
-    expect(put).not.toHaveBeenCalled()
-    map.zoom = 10.5
-    map.fire('zoomend')
-    expect(canvas.style.opacity).toBe('0.5')
+    expect(Number(canvas.style.opacity)).toBeCloseTo(0.25)
+    expect(put).toHaveBeenCalled()
+  })
+
+  it('hides and skips drawing when invisible', () => {
+    const map = fakeMap()
+    const layer = createSoilRadarLayer(map as never, L)
+    layer.setPoints(pts)
+    layer.setVisible(true)
+    const canvas = map.panes.soilRadarPane!.querySelector('canvas')!
     layer.setVisible(false)
     put.mockClear()
     map.fire('moveend')
