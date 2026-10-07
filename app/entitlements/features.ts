@@ -19,6 +19,11 @@ export const FEATURES = {
   // browser is UX only: what to render and whether to ask at all.
   trail_condition: { minLevel: 1, label: 'Trail-Zustand' },
 
+  // Boden-Radar: the map layer showing soil state across all spots. Gated
+  // server-side by the `soil-map` edge function in trailradar-backend; its
+  // REQUIRED_LEVEL must equal this `minLevel` (pinned in features.test.ts).
+  soil_radar: { minLevel: 1, label: 'Boden-Radar' },
+
   // future feature keys go here — one line each
 } as const
 
