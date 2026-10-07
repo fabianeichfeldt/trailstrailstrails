@@ -25,6 +25,7 @@
   -webkit-mask-image: conic-gradient(from 0deg at 50% 50%, #000 var(--soil-sweep), transparent calc(var(--soil-sweep) + 1deg));
   mask-image: conic-gradient(from 0deg at 50% 50%, #000 var(--soil-sweep), transparent calc(var(--soil-sweep) + 1deg));
   animation: soil-sweep 1.6s cubic-bezier(.6, .05, .3, 1) forwards;
+  transition: none; /* the sweep is the reveal; no extra fade-in */
 }
 
 @keyframes soil-sweep {
