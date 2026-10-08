@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref } from 'vue'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 // Scoped to the "Hochgeladene Fotos" photo-delete feature only — this page
 // has no existing test file, and per the implementation plan this suite
@@ -57,12 +59,13 @@ const StubPageHero = { template: '<div><slot /></div>' }
 const StubPlanCard = { template: '<section class="stub-plan-card" />' }
 const StubDeleteAccount = { template: '<section class="stub-delete-account" />' }
 
-function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
+function mountProfile(photosData: unknown[] = [PHOTO_ROW], options: { attachTo?: HTMLElement } = {}) {
   const client = fakeClient(photosData)
   vi.stubGlobal('useSupabaseClient', () => client)
   vi.stubGlobal('useSupabaseUser', () => ref({ id: 'u1', email: 'rider@example.com' }))
 
   return mount(ProfilePage, {
+    ...options,
     global: {
       stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard, DeleteAccountSection: StubDeleteAccount, teleport: true },
     },
@@ -230,5 +233,36 @@ describe('profile.vue — photo copyright', () => {
 
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
     expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(true)
+  })
+})
+
+// Regression: photo_caroussel.css is global (imported unscoped by SpotDetailPhotos)
+// and its `.photo-meta` is an absolute overlay box. Once loaded, it dragged the
+// profile card's trail/date block on top of the copyright line.
+describe('profile.vue — photo card vs. global carousel styles', () => {
+  beforeEach(() => {
+    fakeAuthStore = {
+      isLoggedIn: true, nickname: 'TestRider', avatarUrl: '',
+      getUserId: vi.fn().mockResolvedValue('u1'),
+      deleteTrailPhoto: vi.fn().mockResolvedValue(undefined),
+    }
+    fakeMapStore = { authModalOpen: false }
+  })
+
+  it('keeps every element of a photo card in normal flow when photo_caroussel.css is loaded', async () => {
+    const style = document.createElement('style')
+    style.textContent = readFileSync(join(process.cwd(), 'app/css/photo_caroussel.css'), 'utf8')
+    document.head.appendChild(style)
+    try {
+      const wrapper = mountProfile([PHOTO_ROW], { attachTo: document.body })
+      await flushPromises()
+
+      const overlaid = wrapper.get('.photo-card').findAll('div, span')
+        .filter(el => getComputedStyle(el.element).position === 'absolute')
+      expect(overlaid.map(el => el.classes().join('.'))).toEqual([])
+      wrapper.unmount()
+    } finally {
+      style.remove()
+    }
   })
 })

@@ -145,7 +145,7 @@
               <button class="photo-delete-btn" aria-label="Foto löschen" @click="removePhoto(photo)">
                 <i class="fa-solid fa-trash"></i>
               </button>
-              <div class="photo-meta">
+              <div class="photo-card-meta">
                 <span>{{ photo.trailName }}</span>
                 <span>{{ formatDate(photo.created_at) }}</span>
               </div>
@@ -650,7 +650,8 @@ async function onUpdatePassword() {
   background: #fffbeb;
 }
 
-.photo-meta {
+/* Not .photo-meta: photo_caroussel.css styles that class globally as an overlay. */
+.photo-card-meta {
   padding: 0.4em 0.5em;
   display: flex;
   flex-direction: column;
