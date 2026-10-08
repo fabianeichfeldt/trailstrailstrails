@@ -7,12 +7,8 @@ type Fresh = { computedAt: string; stale: boolean; offline: boolean } | null
 let store: { range: { lo: number; hi: number }; mode: 'live' | 'sample'; freshness: Fresh; setRange: ReturnType<typeof vi.fn> }
 vi.stubGlobal('useSoilRadarStore', () => store)
 
-// Ramp is 400 px wide starting at x=0 so one axis step is 100 px.
-function mountPanel(props = { matchCount: 21, totalCount: 46 }) {
-  const w = mount(SoilRadarPanel, { props, attachTo: document.body })
-  w.get('[data-testid="soil-ramp"]').element.getBoundingClientRect = () =>
-    ({ left: 0, width: 400, right: 400, top: 0, height: 16, bottom: 16, x: 0, y: 0, toJSON() {} }) as DOMRect
-  return w
+function mountPanel() {
+  return mount(SoilRadarPanel, { attachTo: document.body })
 }
 
 beforeEach(() => {
@@ -26,56 +22,33 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('SoilRadarPanel', () => {
-  it('shows the five tick labels and the counter chip', () => {
+  it('says what the map shows, so a first-time viewer understands the legend', () => {
     const w = mountPanel()
-    const labels = w.findAll('.tick-label').map(t => t.text())
+    const title = w.get('[data-testid="soil-title"]')
+    expect(title.text()).toBe('Wie ist der Boden gerade?')
+    expect(w.get('[data-testid="soil-panel"]').attributes('aria-labelledby')).toBe(title.attributes('id'))
+  })
+
+  it('lists the five levels', () => {
+    const labels = mountPanel().findAll('.tick-label').map(t => t.text())
     expect(labels).toEqual(['Staubig', 'Trocken', 'Hero Dirt', 'Feucht', 'Schlammig'])
-    expect(w.get('[data-testid="soil-counter"]').text()).toBe('21 von 46 Spots')
   })
 
-  it('has two sliders with aria values', () => {
-    store.range = { lo: 1, hi: 3 }
-    const [lo, hi] = mountPanel().findAll('[role="slider"]')
-    expect(lo!.attributes('aria-valuemin')).toBe('0')
-    expect(lo!.attributes('aria-valuemax')).toBe('4')
-    expect(lo!.attributes('aria-valuenow')).toBe('1')
-    expect(hi!.attributes('aria-valuenow')).toBe('3')
-    expect(lo!.attributes('aria-valuetext')).toBe('Trocken')
-  })
-
-  it('arrow keys move a handle by one step', async () => {
-    const [lo, hi] = mountPanel().findAll('[role="slider"]')
-    await hi!.trigger('keydown', { key: 'ArrowLeft' })
-    expect(store.setRange).toHaveBeenLastCalledWith(0, 3)
-    await lo!.trigger('keydown', { key: 'ArrowRight' })
-    expect(store.setRange).toHaveBeenLastCalledWith(1, 3)
-  })
-
-  it('handles cannot cross', async () => {
-    store.range = { lo: 2, hi: 2 }
-    const [lo, hi] = mountPanel().findAll('[role="slider"]')
-    await lo!.trigger('keydown', { key: 'ArrowRight' })
-    await hi!.trigger('keydown', { key: 'ArrowLeft' })
-    expect(store.setRange).not.toHaveBeenCalled()
-  })
-
-  it('dragging a handle snaps to the nearest step', async () => {
+  it('is a legend only: no range sliders, no counter', () => {
     const w = mountPanel()
-    const hi = w.findAll('[role="slider"]')[1]!
-    await hi.trigger('pointerdown', { clientX: 400, pointerId: 1 })
-    await hi.trigger('pointermove', { clientX: 290, pointerId: 1 })
-    expect(store.setRange).toHaveBeenLastCalledWith(0, 3)
-    await hi.trigger('pointerup', { pointerId: 1 })
-    store.setRange.mockClear()
-    await hi.trigger('pointermove', { clientX: 100, pointerId: 1 })
-    expect(store.setRange).not.toHaveBeenCalled()
+    expect(w.findAll('[role="slider"]')).toHaveLength(0)
+    expect(w.find('[data-testid="soil-counter"]').exists()).toBe(false)
   })
 
-  it('tapping the ramp moves the nearest handle', async () => {
-    store.range = { lo: 0, hi: 4 }
-    const w = mountPanel()
-    await w.get('[data-testid="soil-ramp"]').trigger('pointerdown', { clientX: 90, pointerId: 1 })
-    expect(store.setRange).toHaveBeenLastCalledWith(1, 4)
+  it('clears a range narrowed earlier, since there is no slider left to undo it', () => {
+    store.range = { lo: 2, hi: 3 }
+    mountPanel()
+    expect(store.setRange).toHaveBeenCalledWith(0, 4)
+  })
+
+  it('leaves a full range alone', () => {
+    mountPanel()
+    expect(store.setRange).not.toHaveBeenCalled()
   })
 
   it('shows freshness in Berlin time', () => {
