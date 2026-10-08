@@ -50,7 +50,7 @@ async function disableClustering(page: Page) {
   await expect(page.locator('[data-testid="drawer"].open')).toHaveCount(0);
 }
 
-baseTest('a Supporter turns the radar on: soil badges on the pins, panel and counter', async ({ page }) => {
+baseTest('a Supporter turns the radar on: soil badges on the pins and the legend panel', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   const soilCalls = trackSoilRequests(page);
   await openMapAsSupporter(page);
@@ -63,7 +63,7 @@ baseTest('a Supporter turns the radar on: soil badges on the pins, panel and cou
   await expect(page.locator('.leaflet-marker-pane .soil-badge-prime')).toHaveCount(1);
   await expect(page.locator('[data-testid="map-container"]')).toHaveClass(/soil-radar-on/);
   await expect(page.locator('[data-testid="map-container"]')).toHaveClass(/leaflet-container/); // the radar class must not wipe Leaflet's
-  await expect(page.locator('[data-testid="soil-counter"]')).toHaveText(/3 von 3 Spots/);
+  await expect(page.locator('[data-testid="soil-title"]')).toHaveText('Wie ist der Boden gerade?');
   await expect(page.locator('.soil-radar-canvas')).toBeAttached();
 
   // Sent the user's token, nothing else.
@@ -79,37 +79,15 @@ baseTest('a Supporter turns the radar on: soil badges on the pins, panel and cou
   assertNoLeaks();
 });
 
-baseTest('dragging the range slider ghosts the pins outside it, and the counter follows', async ({ page }) => {
+baseTest('the panel is a legend only: no slider, and a range saved earlier no longer ghosts pins', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
+  await page.addInitScript(() => localStorage.setItem('soil-radar-range', JSON.stringify({ lo: 2, hi: 2 })));
   await openMapAsSupporter(page);
   await disableClustering(page);
   await page.locator('[data-testid="soil-radar-button"]').click();
+
   await expect(page.locator('.leaflet-marker-pane .soil-badge')).toHaveCount(4);
-  await expect(page.locator('.leaflet-marker-pane .soil-ghost')).toHaveCount(0);
-
-  // Pointer drag: lower handle from "staubig" (0) to "Hero" (2) ghosts dusty + dry.
-  const handle = page.locator('[data-testid="soil-panel"] [data-which="lo"]');
-  const ramp = page.locator('[data-testid="soil-ramp"]');
-  await handle.hover(); // waits for the panel slide-up to settle
-  const rb = (await ramp.boundingBox())!;
-  const hb = (await handle.boundingBox())!;
-  await page.mouse.down();
-  await page.mouse.move(rb.x + rb.width * 0.5, hb.y + hb.height / 2, { steps: 6 });
-  await page.mouse.up();
-
-  await expect(page.locator('.leaflet-marker-pane .soil-ghost')).toHaveCount(2);
-  await expect(page.locator('[data-testid="soil-counter"]')).toHaveText("1 von 3 Spots");
-  await expect(handle).toHaveAttribute('aria-valuenow', '2');
-
-  // Keyboard: the upper handle one step down (Matsch -> feucht) ghosts the wet pin too.
-  await page.locator('[data-testid="soil-panel"] [data-which="hi"]').focus();
-  await page.keyboard.press('ArrowLeft');
-  await expect(page.locator('.leaflet-marker-pane .soil-ghost')).toHaveCount(3);
-
-  // Back to the full range: nothing ghosted.
-  await page.locator('[data-testid="soil-panel"] [data-which="hi"]').press('End');
-  await page.locator('[data-testid="soil-panel"] [data-which="lo"]').focus();
-  await page.keyboard.press('Home');
+  await expect(page.locator('[data-testid="soil-panel"] [role="slider"]')).toHaveCount(0);
   await expect(page.locator('.leaflet-marker-pane .soil-ghost')).toHaveCount(0);
 
   assertNoLeaks();

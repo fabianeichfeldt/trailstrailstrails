@@ -8,7 +8,6 @@
         @ready="onMapReady"
         @nearby-conflict="onNearbyConflict"
         @spot-picked="onSpotPicked"
-        @soil-counts="soilCounts = $event"
       />
 
       <SearchBar @open-trail="handleOpenTrail" @fly-to="handleFlyTo" />
@@ -30,11 +29,7 @@
       </button>
 
       <SoilRadarButton @teaser="onSoilTeaser" />
-      <SoilRadarPanel
-        v-if="soilStore.enabled"
-        :match-count="soilCounts.matchCount"
-        :total-count="soilCounts.totalCount"
-      />
+      <SoilRadarPanel v-if="soilStore.enabled" />
       <SoilRadarLockedSheet v-if="soilSheetOpen" @close="closeSoilSheet" />
       <p v-if="soilUnavailable" class="soil-notice" role="status">Boden-Radar gerade nicht verfügbar</p>
 
@@ -126,7 +121,6 @@ function onMapReady(handlers: {
 }
 
 // ── Boden-Radar ─────────────────────────────────────────────────────────────
-const soilCounts = ref({ matchCount: 0, totalCount: 0 })
 const soilSheetOpen = ref(false)
 const soilUnavailable = ref(false)
 let restoringSoil = false
@@ -213,7 +207,7 @@ function flyToUserLocation() {
 
 /* The full-width Boden-Radar panel would cover the FAB stack and map controls: lift them above it. */
 @media (max-width: 520px) {
-  .map-page.soil-open { --soil-lift: 184px; }
+  .map-page.soil-open { --soil-lift: 140px; }
 }
 
 @media (max-width: 600px) {
