@@ -383,3 +383,25 @@ describe('SpotDetailWeather — rider feedback entry', () => {
     expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
   })
 })
+
+describe('SpotDetailWeather — Boden-Radar cross-link', () => {
+  const NuxtLink = { props: ['to'], template: '<a :href="to"><slot /></a>' }
+  const mountCard = (props: Record<string, unknown>) =>
+    mount(SpotDetailWeather, { props: { loading: false, ...props } as never, global: { stubs: { NuxtLink } } })
+
+  it('sends a rider on a muddy spot to the radar to find somewhere drier', () => {
+    const link = mountCard({ condition: withLevel('wet', 'Schlammig') }).get('[data-testid="soil-radar-link"]')
+    expect(link.attributes('href')).toBe('/map?radar=1')
+    expect(link.text()).toContain('wo es trockener ist')
+  })
+
+  it('invites comparing all spots when this one is fine', () => {
+    const link = mountCard({ condition: withLevel('prime', 'Hero Dirt') }).get('[data-testid="soil-radar-link"]')
+    expect(link.text()).toContain('Alle Spots vergleichen')
+  })
+
+  it('is not part of the locked teaser sample', () => {
+    const w = mountCard({ condition: withLevel('prime', 'Hero Dirt'), sample: true })
+    expect(w.find('[data-testid="soil-radar-link"]').exists()).toBe(false)
+  })
+})

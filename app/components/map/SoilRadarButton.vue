@@ -2,7 +2,7 @@
   <button
     type="button"
     class="soil-radar-btn"
-    :class="{ 'is-on': store.enabled, 'is-locked': access === 'locked', 'is-checking': access === 'checking' }"
+    :class="{ 'is-on': store.enabled, 'is-locked': access === 'locked', 'is-checking': access === 'checking', 'is-new': highlight && !store.enabled }"
     :aria-label="label"
     :aria-pressed="store.enabled ? 'true' : 'false'"
     :aria-busy="store.status === 'loading' ? 'true' : undefined"
@@ -20,6 +20,7 @@
 import IconRadar from '~/assets/icons/radar.svg'
 import IconLock from '~/assets/icons/lock.svg'
 
+defineProps<{ highlight?: boolean }>()
 const emit = defineEmits<{ teaser: [] }>()
 
 const store = useSoilRadarStore()
@@ -51,6 +52,9 @@ watch(access, (a) => {
   queued.value = false
   act(a)
 })
+
+// The intro callout and the /map?radar=1 deep link take the same path as a tap.
+defineExpose({ activate: onTap })
 </script>
 
 <style scoped>
@@ -96,7 +100,22 @@ watch(access, (a) => {
   align-items: center;
   justify-content: center;
 }
+/* Pulse until the radar has been tried once — the button alone was easy to miss. */
+.soil-radar-btn.is-new::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: soil-pulse 2s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes soil-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(22, 192, 96, 0.75); }
+  70% { box-shadow: 0 0 0 12px rgba(22, 192, 96, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(22, 192, 96, 0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .soil-radar-btn { transition: none; }
+  .soil-radar-btn.is-new::before { animation: none; box-shadow: 0 0 0 3px #16c060; }
 }
 </style>

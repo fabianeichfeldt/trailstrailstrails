@@ -84,6 +84,11 @@
           <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Spuren, die die Trailcrew von Hand reparieren muss.
         </span>
       </div>
+
+      <NuxtLink v-if="!sample" to="/map?radar=1" class="wx-radar-link" data-testid="soil-radar-link">
+        <IconRadar class="wx-radar-icon" width="16" height="16" aria-hidden="true" />
+        <span>{{ radarLinkText }}</span>
+      </NuxtLink>
     </div>
 
     <SoilFeedbackSheet
@@ -103,6 +108,7 @@ import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
 import { formatStand } from '~/utils/formatStand'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 import IconSpade from '~/assets/icons/spade.svg'
+import IconRadar from '~/assets/icons/radar.svg'
 
 // The condition arrives as a prop rather than being fetched here: the status
 // banner needs the same payload, and one page-level fetch beats two components
@@ -120,6 +126,14 @@ const props = defineProps<{
 }>()
 
 const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
+
+// Muddy here is exactly when "where else is it dry?" is the question the radar answers.
+const radarLinkText = computed(() => {
+  const l = props.condition?.verdict.level
+  return l === 'damp' || l === 'wet' || l === 'raining'
+    ? 'Zu nass hier? Im Boden-Radar siehst du, wo es trockener ist →'
+    : 'Alle Spots vergleichen: Wo ist der Boden heute am besten? →'
+})
 
 // Shared stores only (see SpotDetailWeatherLocked.vue for the same login hand-off).
 const authStore = useAuthStore()
@@ -390,6 +404,24 @@ const strip = computed(() =>
   text-decoration: underline;
   cursor: pointer;
 }
+
+.wx-radar-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: #1a2035;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.wx-radar-link:hover { background: #26304b; }
+.wx-radar-link:focus-visible { outline: 2px solid #2b6cb0; outline-offset: 2px; }
+.wx-radar-icon { flex-shrink: 0; color: #5be39a; }
 
 .wx-foot {
   display: flex;
