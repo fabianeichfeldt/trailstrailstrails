@@ -1,7 +1,7 @@
 <template>
   <section class="soil-panel" aria-labelledby="soil-title" data-testid="soil-panel">
-    <h2 id="soil-title" class="title" data-testid="soil-title">Bodenzustand an den Spots</h2>
-    <p class="subtitle" data-testid="soil-subtitle">Heute, geschätzt aus dem Wetter · Regler filtern</p>
+    <h2 id="soil-title" class="title" data-testid="soil-title">Wie ist der Boden gerade?</h2>
+    <p class="subtitle" data-testid="soil-subtitle">Geschätzt aus dem Wetter · Regler filtern</p>
     <div class="top">
       <span class="chip" data-testid="soil-counter">{{ matchCount }} von {{ totalCount }} Spots</span>
       <span v-if="store.mode === 'sample'" class="chip sample" data-testid="soil-sample-pill">Beispielansicht</span>
