@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { REST, userHeaders } from './http'
 import type { IAuthService } from '../auth/auth_service'
+import { normalizeCopyright } from '../utils/photoCopyright'
 
 async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<Blob> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
@@ -26,6 +27,7 @@ export async function uploadTrailPhoto(
   trailId: string,
   client: SupabaseClient,
   userId: string,
+  copyright?: string | null,
 ): Promise<string> {
   const filePath = `${trailId}/${crypto.randomUUID()}.webp`
   const resized = await transformImage(file, 1000, 0.8)
@@ -41,6 +43,7 @@ export async function uploadTrailPhoto(
     trail_id: trailId,
     url:      data.publicUrl,
     creator:  userId,
+    copyright: normalizeCopyright(copyright),
   })
   if (dbError) throw new Error('Photo record insert failed')
 
@@ -63,6 +66,22 @@ export async function deletePhoto(
   if (!path) return
   const { error: storageError } = await client.storage.from('trail-photos').remove([path])
   if (storageError) throw new Error('Photo file delete failed')
+}
+
+// RLS + a column grant limit this to the uploader's own row and the copyright column.
+export async function updatePhotoCopyright(
+  photoId: string | number,
+  copyright: string | null,
+  client: SupabaseClient,
+): Promise<string | null> {
+  const { data, error } = await client
+    .from('trail_photos')
+    .update({ copyright: normalizeCopyright(copyright) })
+    .eq('id', photoId)
+    .select('id, copyright')
+  if (error) throw new Error('Copyright update failed')
+  if (!data || data.length === 0) throw new Error('Copyright update failed: not permitted')
+  return data[0]?.copyright ?? null
 }
 
 // Precise trailcrew-assignment check (not "is trailcrew at all") — used to

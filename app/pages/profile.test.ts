@@ -22,11 +22,14 @@ const PHOTO_ROW = {
   created_at: '2026-01-01T00:00:00Z',
   trail_id: 't1',
   trails: { name: 'Flowtrail Tegernsee' },
+  copyright: null as string | null,
 }
+
+const selectedColumns: Record<string, string> = {}
 
 function fakeClient(photosData: unknown[] = [PHOTO_ROW]) {
   const from = vi.fn((table: string) => ({
-    select: () => ({
+    select: (cols: string) => (selectedColumns[table] = cols, {
       eq: () => Promise.resolve({
         data: table === 'trail_photos' ? photosData : [],
         error: null,
@@ -42,10 +45,12 @@ vi.stubGlobal('useMapStore', () => fakeMapStore)
 
 vi.mock('~/map/confirmDialog', () => ({ confirmDialog: vi.fn() }))
 vi.mock('~/utils/toast', () => ({ showToast: vi.fn() }))
+vi.mock('~/communication/photos', () => ({ updatePhotoCopyright: vi.fn() }))
 
 import ProfilePage from './profile.vue'
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
+import { updatePhotoCopyright } from '~/communication/photos'
 
 const StubLink = { template: '<a><slot /></a>' }
 const StubPageHero = { template: '<div><slot /></div>' }
@@ -136,5 +141,66 @@ describe('profile.vue — photo delete', () => {
 
     expect(wrapper.findAll('.photo-card')).toHaveLength(1)
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
+  })
+})
+
+describe('profile.vue — photo copyright', () => {
+  beforeEach(() => {
+    fakeAuthStore = {
+      isLoggedIn: true,
+      nickname: 'TestRider',
+      avatarUrl: '',
+      getUserId: vi.fn().mockResolvedValue('u1'),
+      deleteTrailPhoto: vi.fn().mockResolvedValue(undefined),
+    }
+    fakeMapStore = { authModalOpen: false }
+    vi.mocked(showToast).mockReset()
+    vi.mocked(updatePhotoCopyright).mockReset().mockImplementation(async (_id, value) => (value as string).trim() || null)
+  })
+
+  it('selects the copyright column for the uploaded photos', async () => {
+    mountProfile()
+    await flushPromises()
+    expect(selectedColumns.trail_photos).toMatch(/\bcopyright\b/)
+  })
+
+  it('prefills each photo card with its current copyright', async () => {
+    const wrapper = mountProfile([{ ...PHOTO_ROW, copyright: 'Max Muster' }])
+    await flushPromises()
+    expect((wrapper.get('.photo-card input[name="copyright"]').element as HTMLInputElement).value).toBe('Max Muster')
+  })
+
+  it('adds a forgotten copyright afterwards and saves it for that photo', async () => {
+    const wrapper = mountProfile([PHOTO_ROW])
+    await flushPromises()
+
+    await wrapper.get('.photo-card input[name="copyright"]').setValue('Max Muster')
+    await wrapper.get('.photo-card form').trigger('submit')
+    await flushPromises()
+
+    expect(updatePhotoCopyright).toHaveBeenCalledWith('p1', 'Max Muster', expect.anything())
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining('gespeichert'))
+  })
+
+  it('only offers the save button once the value was changed', async () => {
+    const wrapper = mountProfile([{ ...PHOTO_ROW, copyright: 'Max' }])
+    await flushPromises()
+    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(false)
+
+    await wrapper.get('.photo-card input[name="copyright"]').setValue('Moritz')
+    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(true)
+  })
+
+  it('shows an error toast and keeps the edit when saving fails', async () => {
+    vi.mocked(updatePhotoCopyright).mockRejectedValue(new Error('not permitted'))
+    const wrapper = mountProfile([PHOTO_ROW])
+    await flushPromises()
+
+    await wrapper.get('.photo-card input[name="copyright"]').setValue('Max')
+    await wrapper.get('.photo-card form').trigger('submit')
+    await flushPromises()
+
+    expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
+    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(true)
   })
 })

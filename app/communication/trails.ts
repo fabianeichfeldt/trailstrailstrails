@@ -43,7 +43,7 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
     fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
 
   const [trails, parks, dirtParks, details, photos] = await Promise.all([
@@ -106,7 +106,7 @@ export async function getTrailBySlug(slug: string): Promise<Record<string, any> 
   const id = base.id
   const [detailsRes, photosRes] = await Promise.all([
     fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
   const [details, photos] = await Promise.all([
     detailsRes.ok ? detailsRes.json() : [],

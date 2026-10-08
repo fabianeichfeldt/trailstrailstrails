@@ -11,5 +11,5 @@ export interface IAuthService {
   loggedIn: boolean
   resetPassword(email: string): Promise<void>;
   signInWithGoogle(): Promise<User>;
-  uploadTrailPhoto(file: File, trailId: string): Promise<string>;
+  uploadTrailPhoto(file: File, trailId: string, copyright?: string | null): Promise<string>;
 }

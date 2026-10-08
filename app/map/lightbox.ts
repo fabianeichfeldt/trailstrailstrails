@@ -2,6 +2,7 @@ interface LightboxPhoto {
   src: string;
   uploader: string;
   date: string;
+  copyright: string;
 }
 
 // ── Singleton state ──────────────────────────────────────────────────────────
@@ -22,7 +23,10 @@ function ensureOverlay(): HTMLElement {
     <button class="lbx-close" aria-label="Schließen">✕</button>
     <button class="lbx-nav lbx-prev" aria-label="Vorheriges">‹</button>
     <div class="lbx-stage">
-      <img class="lbx-img" alt="Trail-Foto" />
+      <div class="lbx-figure">
+        <img class="lbx-img" alt="Trail-Foto" />
+        <span class="lbx-copyright"></span>
+      </div>
       <div class="lbx-meta">
         <span class="lbx-uploader"></span>
         <span class="lbx-date"></span>
@@ -63,6 +67,9 @@ function render() {
   (overlay.querySelector('.lbx-img') as HTMLImageElement).src = p.src;
   overlay.querySelector('.lbx-uploader')!.textContent = p.uploader ? `von ${p.uploader}` : '';
   overlay.querySelector('.lbx-date')!.textContent = p.date;
+  const credit = overlay.querySelector('.lbx-copyright') as HTMLElement;
+  credit.textContent = p.copyright;
+  credit.hidden = !p.copyright;
   overlay.querySelector('.lbx-counter')!.textContent =
     photos.length > 1 ? `${index + 1} / ${photos.length}` : '';
   const showNav = photos.length > 1;
@@ -89,6 +96,7 @@ export function bindPhotoLightbox(container: HTMLElement) {
     src:      (wrap.querySelector('img') as HTMLImageElement)?.src ?? '',
     uploader: wrap.querySelector('.photo-uploader')?.textContent ?? '',
     date:     wrap.querySelector('.photo-date')?.textContent ?? '',
+    copyright: wrap.querySelector('.photo-copyright')?.textContent?.trim() ?? '',
   }));
 
   wraps.forEach((wrap, i) => {
