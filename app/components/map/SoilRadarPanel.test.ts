@@ -26,6 +26,14 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('SoilRadarPanel', () => {
+  it('says what the map shows, so a first-time viewer understands the legend', () => {
+    const w = mountPanel()
+    const title = w.get('[data-testid="soil-title"]')
+    expect(title.text()).toBe('Bodenzustand an den Spots')
+    expect(w.get('[data-testid="soil-subtitle"]').text()).toContain('Wetter')
+    expect(w.get('[data-testid="soil-panel"]').attributes('aria-labelledby')).toBe(title.attributes('id'))
+  })
+
   it('shows the five tick labels and the counter chip', () => {
     const w = mountPanel()
     const labels = w.findAll('.tick-label').map(t => t.text())

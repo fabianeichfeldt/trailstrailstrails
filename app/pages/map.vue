@@ -213,7 +213,7 @@ function flyToUserLocation() {
 
 /* The full-width Boden-Radar panel would cover the FAB stack and map controls: lift them above it. */
 @media (max-width: 520px) {
-  .map-page.soil-open { --soil-lift: 144px; }
+  .map-page.soil-open { --soil-lift: 184px; }
 }
 
 @media (max-width: 600px) {

@@ -1,5 +1,7 @@
 <template>
-  <section class="soil-panel" aria-label="Boden-Radar Filter" data-testid="soil-panel">
+  <section class="soil-panel" aria-labelledby="soil-title" data-testid="soil-panel">
+    <h2 id="soil-title" class="title" data-testid="soil-title">Bodenzustand an den Spots</h2>
+    <p class="subtitle" data-testid="soil-subtitle">Heute, geschätzt aus dem Wetter · Regler filtern</p>
     <div class="top">
       <span class="chip" data-testid="soil-counter">{{ matchCount }} von {{ totalCount }} Spots</span>
       <span v-if="store.mode === 'sample'" class="chip sample" data-testid="soil-sample-pill">Beispielansicht</span>
@@ -145,6 +147,17 @@ const freshText = computed(() => {
   font: 600 12px system-ui, sans-serif;
   color: #222;
   animation: panel-up 0.3s ease-out;
+}
+.title {
+  margin: 0 -26px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.subtitle {
+  margin: 2px -26px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4a5568;
 }
 .top {
   display: flex;
