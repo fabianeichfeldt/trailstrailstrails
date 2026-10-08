@@ -50,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { parseFlyQuery } from '~/map/flyHandlers'
 definePageMeta({ layout: 'map' })
 
 useSeoMeta({
@@ -72,7 +73,7 @@ const route = useRoute()
 
 let getCenter: () => { lat: number; lon: number } | null = () => null
 let openTrail = (_id: string) => {}
-let flyToPlace = (_lat: number, _lon: number) => {}
+let flyToPlace = (_lat: number, _lon: number, _zoom?: number) => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
 const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
@@ -85,11 +86,11 @@ const trailIdFromQuery = route.query.trail as string | undefined
 // links) — openTrail() flies the map to the spot's coordinates and zooms
 // in, staying on /map; only clicking the spot's own marker navigates to
 // its detail page (see useTrailMap.ts).
-const flyToQuery = route.query.fly as string | undefined
+const flyToQuery = parseFlyQuery(route.query.fly, route.query.zoom)
 
 function onMapReady(handlers: {
   openTrail: (id: string) => void
-  flyToPlace: (lat: number, lon: number) => void
+  flyToPlace: (lat: number, lon: number, zoom?: number) => void
   getCenter: () => { lat: number; lon: number } | null
 }) {
   openTrail = handlers.openTrail
@@ -112,12 +113,7 @@ function onMapReady(handlers: {
     }
   }
 
-  if (flyToQuery) {
-    const [latStr, lngStr] = flyToQuery.split(',')
-    const lat = parseFloat(latStr)
-    const lng = parseFloat(lngStr)
-    if (!Number.isNaN(lat) && !Number.isNaN(lng)) flyToPlace(lat, lng)
-  }
+  if (flyToQuery) flyToPlace(flyToQuery.lat, flyToQuery.lng, flyToQuery.zoom)
 }
 
 // ── Boden-Radar ─────────────────────────────────────────────────────────────
@@ -167,7 +163,7 @@ watch(() => mapStore.authModalOpen, (open) => {
 onBeforeUnmount(() => { clearSheetTimer(); if (noticeTimer) clearTimeout(noticeTimer) })
 
 function handleOpenTrail(id: string) { openTrail(id) }
-function handleFlyTo(lat: number, lon: number) { flyToPlace(lat, lon) }
+function handleFlyTo(lat: number, lon: number, zoom?: number) { flyToPlace(lat, lon, zoom) }
 
 function onSpotPicked(pick: { lat: number; lng: number; type: string }) {
   addSpotModal.lat = pick.lat

@@ -122,7 +122,7 @@ describe('SearchBar emits', () => {
     const rows = wrapper.findAll('.search-result-item')
     await rows[rows.length - 1].trigger('click')
 
-    expect(wrapper.emitted('flyTo')).toEqual([[47.71, 11.76]])
+    expect(wrapper.emitted('flyTo')).toEqual([[47.71, 11.76, 11]])
   })
 
   it('clears the input and dropdown after a pick', async () => {

@@ -61,7 +61,7 @@ withDefaults(defineProps<{
 
 const emit = defineEmits<{
   openTrail: [id: string]
-  flyTo: [lat: number, lon: number]
+  flyTo: [lat: number, lon: number, zoom: number | undefined]
 }>()
 
 const {
@@ -96,7 +96,7 @@ function scrollSelected() {
 
 function select(item: SpotSearchItem) {
   if (item.trailId) emit('openTrail', item.trailId)
-  else if (item.lat !== undefined) emit('flyTo', item.lat, item.lon!)
+  else if (item.lat !== undefined) emit('flyTo', item.lat, item.lon!, item.zoom)
   clear()
 }
 

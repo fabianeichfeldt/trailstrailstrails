@@ -19,11 +19,7 @@ import { deriveTrailStatus, type TrailStatusResult } from '~/types/TrailStatus'
 import { isDesktopViewport } from '~/utils/viewport'
 import { createTrailStatusSheet, buildTrailStatusContent } from '~/map/trailStatusSheet'
 import { registerBackHandler } from '~/utils/nativeBack'
-
-// Zoom level used when flying to a single spot (search result, `?trail=`
-// query param) — matches the level used for the same purpose in the
-// embedded map on app/pages/trails/[slug].vue.
-const FLY_TO_TRAIL_ZOOM = 11
+import { createMapFlyers } from '~/map/flyHandlers'
 
 export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const trailsStore = useTrailsStore()
@@ -35,7 +31,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   // Exposed for search bar
   const mapInstance = shallowRef<any>(null)
   const openTrailFn = ref<((id: string) => void) | null>(null)
-  const flyToFn = ref<((lat: number, lon: number) => void) | null>(null)
+  const flyToFn = ref<((lat: number, lon: number, zoom?: number) => void) | null>(null)
   // True once openTrailFn/flyToFn are actually callable — MapView.vue emits
   // 'ready' off this instead of its own onMounted, which otherwise fires
   // before the awaited leaflet imports/setup below reach the assignments
@@ -78,7 +74,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   const addSpotPicked = ref<{ lat: number; lng: number; type: string } | null>(null)
 
   function openTrail(id: string) { openTrailFn.value?.(id) }
-  function flyToPlace(lat: number, lon: number) { flyToFn.value?.(lat, lon) }
+  function flyToPlace(lat: number, lon: number, zoom?: number) { flyToFn.value?.(lat, lon, zoom) }
 
   // Every "open this spot" click on the map (marker, GPX line/tooltip,
   // parking pin) navigates away to /trails/[id] — so browser back would
@@ -596,12 +592,9 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // matching the marker-click behavior of not auto-navigating away.
     // Only an actual click on the spot's own marker (see the `marker.on
     // ('click', ...)` handlers above) opens its detail page.
-    openTrailFn.value = (id: string) => {
-      const trail = trailsStore.all.find(t => t.id === id)
-      if (!trail) return
-      mymap.flyTo([trail.latitude, trail.longitude], FLY_TO_TRAIL_ZOOM, { duration: 1.2 })
-    }
-    flyToFn.value = (lat, lon) => mymap.flyTo([lat, lon], 11, { duration: 1.2 })
+    const flyers = createMapFlyers(mymap, id => trailsStore.all.find(t => t.id === id))
+    openTrailFn.value = flyers.openTrail
+    flyToFn.value = flyers.flyToPlace
 
     // Initial location
     const { getApproxLocation } = await import('~/communication/location')

@@ -157,6 +157,7 @@
 </template>
 
 <script setup lang="ts">
+import { SPOT_ZOOM } from '~/map/zoomLevels'
 import { regions } from '@@/build/region'
 import IconSend from '~/assets/icons/send.svg'
 import SpotDetailHero from '~/components/trail_detail/SpotDetailHero.vue'
@@ -289,7 +290,7 @@ const bakedDetails = computed(() => bakedTrailDetails(trail.value))
 // same pattern it already uses for `trail` (see onMapReady there).
 const mapFlyToHref = computed(() => {
   if (!trailForStore.value) return '/map'
-  return `/map?fly=${trailForStore.value.latitude},${trailForStore.value.longitude}`
+  return `/map?fly=${trailForStore.value.latitude},${trailForStore.value.longitude}&zoom=${SPOT_ZOOM}`
 })
 
 const spotPanelStore = useSpotPanelStore()

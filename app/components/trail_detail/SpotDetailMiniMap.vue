@@ -23,7 +23,7 @@ import type { SpotParkingLot } from '~/communication/trails'
 import { createMiniMap, type MiniMapHandle, type MiniMapInput } from '~/map/miniMap'
 import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css'
 
-const SPOT_ZOOM = 11
+import { SPOT_ZOOM } from '~/map/zoomLevels'
 const FOCUS_ZOOM = 14
 
 const props = defineProps<{

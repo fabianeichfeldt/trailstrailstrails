@@ -11,6 +11,9 @@ export interface Place {
   display_name: string
   lat: string
   lon: string
+  /** Nominatim's classification, e.g. 'town', 'county' — drives the fly-to zoom. */
+  addresstype?: string
+  type?: string
 }
 
 const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search'
