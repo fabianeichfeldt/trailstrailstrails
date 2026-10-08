@@ -51,6 +51,7 @@ export default defineConfig({
     // right instance (local or production) without mutating .env.local.
     env: {
       PORT,
+      E2E: '1',
       ...(supabaseUrl && { NUXT_PUBLIC_SUPABASE_URL: supabaseUrl }),
       ...(supabaseKey && { NUXT_PUBLIC_SUPABASE_KEY: supabaseKey }),
     },

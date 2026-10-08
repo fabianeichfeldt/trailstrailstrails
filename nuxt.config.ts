@@ -46,7 +46,8 @@ export default defineNuxtConfig({
   // (they're srcDir-relative on Nuxt 3), so no dir.public override is
   // needed here — 'public' at the project root is already the default.
 
-  devtools: { enabled: true },
+  // Off under Playwright: the DevTools 4 dock fetches its logo from nuxt.com, tripping the E2E no-external-requests safety net.
+  devtools: { enabled: process.env.E2E !== '1' },
 
   experimental: {
     payloadExtraction: false,
