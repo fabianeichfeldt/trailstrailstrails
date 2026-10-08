@@ -48,6 +48,29 @@
   transform: scale(1);
 }
 
+/* Sized to the image so the copyright sits on the photo, not the letterbox */
+.lbx-figure {
+  position: relative;
+  display: inline-block;
+}
+.lbx-copyright {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  max-width: calc(100% - 16px);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+.lbx-copyright[hidden] { display: none; }
+
 /* Uploader / date strip below image */
 .lbx-meta {
   display: flex;

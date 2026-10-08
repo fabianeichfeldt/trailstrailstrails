@@ -2,6 +2,7 @@ export class Photo {
     id: string = "";
     url: string = "";
     created_at: string = "";
+    copyright: string | null = null;
     // null once the uploader deleted their account (FK ON DELETE SET NULL)
     creator: string | null = "";
     profiles: {

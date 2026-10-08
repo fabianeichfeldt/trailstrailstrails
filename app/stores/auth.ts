@@ -160,9 +160,9 @@ export const useAuthStore = defineStore('auth', () => {
     return data.publicUrl
   }
 
-  async function uploadTrailPhoto(file: File, trailId: string): Promise<string> {
+  async function uploadTrailPhoto(file: File, trailId: string, copyright?: string | null): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    return uploadTrailPhotoImpl(file, trailId, client, resolveUserId(user.value))
+    return uploadTrailPhotoImpl(file, trailId, client, resolveUserId(user.value), copyright)
   }
 
   async function deleteTrailPhoto(photo: { id: string | number; url: string }): Promise<void> {

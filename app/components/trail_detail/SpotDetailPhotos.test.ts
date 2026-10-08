@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { renderToString } from '@vue/server-renderer'
 import { createSSRApp, h } from 'vue'
 import type { Trail } from '~/types/Trail'
@@ -14,7 +14,7 @@ let fakeAuthStore: {
   isLoggedIn: boolean
   userId: string
   isAdmin: boolean
-  uploadTrailPhoto: (file: File, trailId: string) => Promise<string>
+  uploadTrailPhoto: (file: File, trailId: string, copyright?: string | null) => Promise<string>
   deleteTrailPhoto: (photo: { id: string | number; url: string }) => Promise<void>
 }
 let fakeMapStore: { authModalOpen: boolean }
@@ -26,6 +26,7 @@ vi.stubGlobal('useSpotPanelStore', () => fakeSpotPanelStore)
 vi.mock('~/map/lightbox', () => ({ bindPhotoLightbox: vi.fn() }))
 vi.mock('~/utils/toast', () => ({ showToast: vi.fn() }))
 vi.mock('~/map/confirmDialog', () => ({ confirmDialog: vi.fn() }))
+vi.stubGlobal('URL', Object.assign(URL, { createObjectURL: () => 'blob:preview', revokeObjectURL: () => {} }))
 
 import SpotDetailPhotos from './SpotDetailPhotos.vue'
 import { confirmDialog } from '~/map/confirmDialog'
@@ -52,7 +53,7 @@ function details(overrides: Partial<TrailDetails> = {}): TrailDetails {
 }
 
 function mountPhotos(props: { trail: Trail; details: TrailDetails }) {
-  return mount(SpotDetailPhotos, { props, global: { stubs: { ClientOnly: ClientOnlyClient } } })
+  return mount(SpotDetailPhotos, { props, global: { stubs: { ClientOnly: ClientOnlyClient, teleport: true } } })
 }
 
 describe('SpotDetailPhotos', () => {
@@ -65,6 +66,7 @@ describe('SpotDetailPhotos', () => {
       deleteTrailPhoto: vi.fn(async () => {}),
     }
     fakeMapStore = { authModalOpen: false }
+    localStorage.clear()
     fakeSpotPanelStore = { photosCanModerate: false }
     vi.mocked(confirmDialog).mockReset().mockResolvedValue(true)
     vi.mocked(showToast).mockReset()
@@ -104,18 +106,90 @@ describe('SpotDetailPhotos', () => {
     expect(wrapper.find('.photo-carousel').exists()).toBe(true)
   })
 
-  it('emits "uploaded" after a successful upload', async () => {
-    fakeAuthStore.isLoggedIn = true
-    const wrapper = mountPhotos({ trail: trail(), details: details() })
-
+  async function chooseFile(wrapper: ReturnType<typeof mountPhotos>) {
     const file = new File(['x'], 'photo.jpg', { type: 'image/jpeg' })
     const input = wrapper.find('input[type="file"]')
     Object.defineProperty(input.element, 'files', { value: [file] })
     await input.trigger('change')
-    await new Promise(r => setTimeout(r, 0))
+    return file
+  }
 
-    expect(fakeAuthStore.uploadTrailPhoto).toHaveBeenCalledWith(file, 't1')
+  it('asks for the copyright before uploading, instead of uploading right away', async () => {
+    fakeAuthStore.isLoggedIn = true
+    const wrapper = mountPhotos({ trail: trail(), details: details() })
+
+    await chooseFile(wrapper)
+
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(true)
+    expect(wrapper.find('.photo-copyright-dialog input[name="copyright"]').exists()).toBe(true)
+    expect(fakeAuthStore.uploadTrailPhoto).not.toHaveBeenCalled()
+  })
+
+  it('uploads with the entered copyright and emits "uploaded"', async () => {
+    fakeAuthStore.isLoggedIn = true
+    const wrapper = mountPhotos({ trail: trail(), details: details() })
+
+    const file = await chooseFile(wrapper)
+    await wrapper.find('.photo-copyright-dialog input[name="copyright"]').setValue('Max Muster')
+    await wrapper.find('.photo-copyright-dialog form').trigger('submit')
+    await flushPromises()
+
+    expect(fakeAuthStore.uploadTrailPhoto).toHaveBeenCalledWith(file, 't1', 'Max Muster')
     expect(wrapper.emitted('uploaded')).toBeTruthy()
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
+  })
+
+  it('still uploads when the copyright is left empty (it can be added later in the profile)', async () => {
+    fakeAuthStore.isLoggedIn = true
+    const wrapper = mountPhotos({ trail: trail(), details: details() })
+
+    const file = await chooseFile(wrapper)
+    await wrapper.find('.photo-copyright-dialog form').trigger('submit')
+    await flushPromises()
+
+    expect(fakeAuthStore.uploadTrailPhoto).toHaveBeenCalledWith(file, 't1', '')
+  })
+
+  it('cancelling the dialog does not upload', async () => {
+    fakeAuthStore.isLoggedIn = true
+    const wrapper = mountPhotos({ trail: trail(), details: details() })
+
+    await chooseFile(wrapper)
+    await wrapper.find('.photo-copyright-dialog .photo-copyright-cancel').trigger('click')
+    await flushPromises()
+
+    expect(fakeAuthStore.uploadTrailPhoto).not.toHaveBeenCalled()
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
+  })
+
+  // ── Copyright overlay ────────────────────────────────────────────────
+  it('overlays the copyright on a photo that has one', () => {
+    const wrapper = mountPhotos({
+      trail: trail(),
+      details: details({ photos: [{ id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01', copyright: 'Max Muster' } as any] }),
+    })
+    expect(wrapper.get('.photo-wrap .photo-copyright').text()).toBe('© Max Muster')
+  })
+
+  it('renders no copyright overlay for a photo without one', () => {
+    const wrapper = mountPhotos({
+      trail: trail(),
+      details: details({ photos: [{ id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01', copyright: null } as any] }),
+    })
+    expect(wrapper.find('.photo-copyright').exists()).toBe(false)
+  })
+
+  // The overlay must be in the prerendered HTML, not only after hydration.
+  it('includes the copyright overlay in the SSR markup', async () => {
+    const app = createSSRApp({
+      render: () => h(SpotDetailPhotos, {
+        trail: trail(),
+        details: details({ photos: [{ id: 'p1', url: 'https://example.com/1.jpg', created_at: '2024-01-01', copyright: 'Max Muster' } as any] }),
+      }),
+    })
+    app.component('ClientOnly', { setup: (_: unknown, { slots }: any) => () => slots.fallback?.() })
+    const html = await renderToString(app)
+    expect(html).toContain('© Max Muster')
   })
 
   // Regression: the page is prerendered (SSG) with no auth session, then
