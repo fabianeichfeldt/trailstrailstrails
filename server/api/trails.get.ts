@@ -8,7 +8,7 @@ export default defineEventHandler(async () => {
   const fields = 'id,slug,name,latitude,longitude,approved'
 
   const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${url}/rest/v1/trails?select=${fields}`, { headers }),
+    fetch(`${url}/rest/v1/trails?select=${fields}&visible=eq.true`, { headers }),
     fetch(`${url}/rest/v1/parks?select=${fields}`, { headers }),
     fetch(`${url}/rest/v1/dirt_parks?select=${fields}`, { headers }),
   ])

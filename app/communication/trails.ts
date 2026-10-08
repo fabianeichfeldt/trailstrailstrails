@@ -39,7 +39,7 @@ const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = 
 // time and in the browser afterwards, with no staleness window.
 export async function getTrailById(id: string): Promise<Record<string, any> | null> {
   const [trailsRes, parksRes, dirtRes, detailsRes, photosRes] = await Promise.all([
-    fetch(`${REST}/trails?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trails?id=eq.${id}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
@@ -81,7 +81,7 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
 // then falls back to getTrailById() to 301 a legacy id URL to its slug.
 export async function getTrailBySlug(slug: string): Promise<Record<string, any> | null> {
   const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])

@@ -393,7 +393,8 @@ export default defineNuxtConfig({
         // with its spot `type` the same way server/api/trails.get.ts does.
         const spotFields = 'id,slug,name,latitude,longitude,approved'
         const [r1, r2, r3, r4] = await Promise.all([
-          fetch(`${url}/rest/v1/trails?select=${spotFields}`, { headers: h }),
+          // Hidden trails (visible = false) get no page, sitemap/nearby entry or redirect stub.
+          fetch(`${url}/rest/v1/trails?select=${spotFields}&visible=eq.true`, { headers: h }),
           fetch(`${url}/rest/v1/parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/dirt_parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/trail_photos?select=trail_id,url&order=created_at.asc`, { headers: h }),

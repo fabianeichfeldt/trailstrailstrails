@@ -35,3 +35,8 @@ describe('Embed token pages are included in the prerender route list', () => {
     expect(nuxtConfig).toMatch(/prerender\.routes as string\[\]\)\.push\(`\/embed\/\$\{t\.token\}`\)/)
   })
 })
+
+// Hidden trails (visible = false) must get no prerendered page, sitemap entry, nearby entry or redirect stub.
+test('nitro:config hook fetches only visible trails', () => {
+  expect(nuxtConfig).toMatch(/rest\/v1\/trails\?select=\$\{spotFields\}&visible=eq\.true/)
+})
