@@ -211,6 +211,17 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
   await page.locator('.sm-section-header').filter({ hasText: 'Trails' }).locator('.sm-btn-add').click();
   await expect(page.locator('.sm-dropzone')).toBeVisible({ timeout: 4000 });
 
+  // DEM lookup goes through the backend; held open so the spinner can be asserted.
+  let releaseDem!: () => void;
+  const demReleased = new Promise<void>((resolve) => { releaseDem = resolve; });
+  const demRequests: Array<{ auth: string | undefined; points: [number, number][] }> = [];
+  await page.route('**/functions/v1/dem-elevation', async (route) => {
+    const { points } = route.request().postDataJSON() as { points: [number, number][] };
+    demRequests.push({ auth: route.request().headers()['authorization'], points });
+    await demReleased;
+    await route.fulfill({ json: { elevations: points.map((_, i) => 700 + i) } });
+  });
+
   // Upload a GPX file through the hidden file input
   const fileInput = page.locator('input[type="file"][accept=".gpx"][multiple]');
   await fileInput.setInputFiles({
@@ -219,9 +230,19 @@ baseTest('spotmanager: uploading a GPX file through the trail import view shows 
     buffer: Buffer.from(MINIMAL_GPX),
   });
 
+  await expect(page.locator('.sm-dropzone .sm-dem-spinner')).toBeVisible({ timeout: 4000 });
+  await expect(page.locator('.sm-pending-card')).toHaveCount(0);
+  releaseDem();
+
   // The pending card must appear — this requires processGpx to execute without error
   await expect(page.locator('.sm-pending-card')).toBeVisible({ timeout: 4000 });
   await expect(page.locator('.sm-card-stats')).toContainText('Punkte');
+  await expect(page.locator('.sm-dem-spinner')).toHaveCount(0);
+  // DEM succeeded, so no "elevation from GPX" warning.
+  await expect(page.locator('.sm-card-warn')).toHaveCount(0);
+  expect(demRequests).toHaveLength(1);
+  expect(demRequests[0]!.auth).toMatch(/^Bearer /);
+  expect(demRequests[0]!.points.length).toBeGreaterThan(0);
 
   assertNoLeaks();
 });

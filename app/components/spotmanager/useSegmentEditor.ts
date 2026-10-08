@@ -49,6 +49,8 @@ export function useSegmentEditor(opts: Options) {
   const uploadDragOver    = ref(false);
   const scrubberCanvas    = ref<HTMLCanvasElement | null>(null);
   const busy              = ref(false);
+  // True only while a dropped GPX is being DEM-processed (not during saves).
+  const processing        = ref(false);
 
   // ── Internal scrubber state ────────────────────────────────────────────────
   const distances    = ref<number[]>([]);
@@ -82,11 +84,13 @@ export function useSegmentEditor(opts: Options) {
   async function loadFile(file: File) {
     const content = await file.text();
     busy.value = true;
+    processing.value = true;
     let processed;
     try {
-      processed = await processGpx(content);
+      processed = await processGpx(content, await getToken());
     } finally {
       busy.value = false;
+      processing.value = false;
     }
     if (!processed) { alert('Ungültige GPX-Datei.'); return; }
 
@@ -290,7 +294,7 @@ export function useSegmentEditor(opts: Options) {
 
     for (const seg of pendingSegments.value) {
       try {
-        const result = await processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx, seg.name);
+        const result = await processSegment(segmentSource.value.rawPoints, seg.startIdx, seg.endIdx, seg.name, jwt);
         if (!result) continue;
         const gpxUrl = await uploadGpx(spotId.value, 'trails', `${seg.name}.gpx`, result.gpxContent, jwt);
         const newTrail = await upsertTrail({
@@ -397,6 +401,7 @@ export function useSegmentEditor(opts: Options) {
     uploadDragOver,
     scrubberCanvas,
     busy,
+    processing,
 
     // File input handlers
     onFileDrop,

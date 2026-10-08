@@ -239,9 +239,9 @@ export interface SegmentResult {
 // Replaces recorded GPX altitude with DEM-derived elevation (see DemElevation.ts).
 // Falls back to the existing smoothed-GPX-altitude behaviour if the lookup
 // fails (offline, rate-limited, API down) so an upload never gets blocked.
-async function correctElevation(points: GpxPoint[]): Promise<{ points: GpxPoint[]; demCorrected: boolean }> {
+async function correctElevation(points: GpxPoint[], jwt: string): Promise<{ points: GpxPoint[]; demCorrected: boolean }> {
   try {
-    const elevations = await fetchDemElevations(points.map(p => [p.lat, p.lng] as [number, number]));
+    const elevations = await fetchDemElevations(points.map(p => [p.lat, p.lng] as [number, number]), jwt);
     return {
       points: points.map((p, i) => ({ ...p, alt: Math.round(elevations[i]) })),
       demCorrected: true,
@@ -252,11 +252,11 @@ async function correctElevation(points: GpxPoint[]): Promise<{ points: GpxPoint[
   }
 }
 
-export async function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number, name = ''): Promise<SegmentResult | null> {
+export async function processSegment(rawPoints: GpxPoint[], startIdx: number, endIdx: number, name: string, jwt: string): Promise<SegmentResult | null> {
   const slice = rawPoints.slice(startIdx, endIdx + 1);
   if (slice.length === 0) return null;
   const thinned = rdp(slice, EPSILON_M);
-  const { points: corrected, demCorrected } = await correctElevation(thinned);
+  const { points: corrected, demCorrected } = await correctElevation(thinned, jwt);
   const stats = computeStats(corrected);
   const gpxPoints = corrected.map(p => [
     Math.round(p.lat * 1e6) / 1e6,
@@ -275,11 +275,11 @@ export async function processSegment(rawPoints: GpxPoint[], startIdx: number, en
   };
 }
 
-export async function processGpx(content: string): Promise<ProcessedGpx | null> {
+export async function processGpx(content: string, jwt: string): Promise<ProcessedGpx | null> {
   const { name, points } = parseGpx(content);
   if (points.length === 0) return null;
   const thinned = rdp(points, EPSILON_M);
-  const { points: corrected, demCorrected } = await correctElevation(thinned);
+  const { points: corrected, demCorrected } = await correctElevation(thinned, jwt);
   const stats = computeStats(corrected);
   const gpxPoints = corrected.map(p => [
     Math.round(p.lat * 1e6) / 1e6,
