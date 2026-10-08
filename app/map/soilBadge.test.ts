@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   SOIL_PALETTE, SOIL_FROST, SOIL_GLYPHS, SOIL_LABELS, axisColor, axisRgb, soilBadgeColor,
   soilBadgeHtml, markerWithSoilBadgeOptions, clusterDonutHtml, soilChipOptions,
@@ -30,9 +32,18 @@ describe('axisColor / axisRgb', () => {
 })
 
 describe('SOIL_GLYPHS', () => {
+  const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow'] as const
+
   it('has an svg for every renderable level', () => {
-    for (const l of ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow'] as const) {
-      expect(SOIL_GLYPHS[l]).toMatch(/^<svg[\s\S]*<\/svg>$/)
+    for (const l of LEVELS) expect(SOIL_GLYPHS[l]).toMatch(/^<svg[\s\S]*<\/svg>$/)
+  })
+
+  it('is built from app/assets/icons/soil/<level>.svg, styled for the badges', () => {
+    for (const l of LEVELS) {
+      const file = readFileSync(resolve(__dirname, `../assets/icons/soil/${l}.svg`), 'utf8')
+      const inner = file.slice(file.indexOf('>') + 1, file.lastIndexOf('</svg>')).trim()
+      expect(SOIL_GLYPHS[l], l).toContain(inner)
+      expect(SOIL_GLYPHS[l], l).toMatch(/^<svg class="soil-glyph" aria-hidden="true"/)
     }
   })
 })

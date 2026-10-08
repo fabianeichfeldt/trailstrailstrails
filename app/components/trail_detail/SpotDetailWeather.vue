@@ -79,10 +79,7 @@
 
       <div v-if="condition.verdict.level === 'wet'" class="wx-care">
         <!-- A spade: the damage gets fixed by hand. -->
-        <svg class="wx-care-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
-          <path d="M8.5 3h7M12 3v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
-          <path d="M7.5 11h9v4c0 3.2-2 5.6-4.5 7-2.5-1.4-4.5-3.8-4.5-7z" fill="currentColor" />
-        </svg>
+        <IconSpade class="wx-care-icon" width="16" height="16" aria-hidden="true" />
         <span>
           <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Spuren, die die Trailcrew von Hand reparieren muss.
         </span>
@@ -105,6 +102,7 @@ import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
 import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
 import { formatStand } from '~/utils/formatStand'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
+import IconSpade from '~/assets/icons/spade.svg'
 
 // The condition arrives as a prop rather than being fetched here: the status
 // banner needs the same payload, and one page-level fetch beats two components

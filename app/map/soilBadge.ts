@@ -10,16 +10,16 @@ const SOIL_SNOW_BADGE = '#7fa8cf'
 
 export type SoilLevel = 'dusty' | 'dry' | 'prime' | 'damp' | 'wet' | 'raining' | 'snow'
 
-const wrap = (inner: string) => `<svg class="soil-glyph" viewBox="0 0 24 24" aria-hidden="true">${inner}</svg>`
+// Raw strings, not components: Leaflet divIcons and v-html need plain markup.
+const RAW = import.meta.glob<string>('../assets/icons/soil/*.svg', { query: '?raw', import: 'default', eager: true })
+
+/** Badge styling hook + hidden from assistive tech; the label beside it carries the meaning. */
+const glyph = (level: SoilLevel) =>
+  RAW[`../assets/icons/soil/${level}.svg`]!.trim().replace(/^<svg\b/, '<svg class="soil-glyph" aria-hidden="true"')
 
 export const SOIL_GLYPHS: Record<SoilLevel, string> = {
-  dusty:   wrap('<path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>'),
-  dry:     wrap('<circle cx="12" cy="12" r="4.5" fill="#fff"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>'),
-  prime:   wrap('<path d="M12 2c.6 3.6 5.8 6.1 5.8 12a5.8 5.8 0 0 1-11.6 0c0-2.9 1.6-4.7 3-5.9-.1 2 .8 3.5 2.2 3.8-.6-3.4-.4-6.6.6-9.9z" fill="#fff"/>'),
-  damp:    wrap('<path d="M12 2.5C9 7 5.5 10.5 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10.5 15 7 12 2.5z" fill="#fff"/>'),
-  wet:     wrap('<path d="M2 17c2-2 4 2 6 0s4 2 6 0 4 2 6 0M5 11c1.5-1.5 3 1.5 4.5 0M14 11c1.5-1.5 3 1.5 4.5 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="6" r="2" fill="#fff"/>'),
-  raining: wrap('<path d="M7 14a4.5 4.5 0 1 1 1.2-8.8A5.5 5.5 0 0 1 18.5 8 3.5 3.5 0 0 1 17.5 14z" fill="#fff"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>'),
-  snow:    wrap('<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>'),
+  dusty: glyph('dusty'), dry: glyph('dry'), prime: glyph('prime'), damp: glyph('damp'),
+  wet: glyph('wet'), raining: glyph('raining'), snow: glyph('snow'),
 }
 
 /** The one label set for map chips, the radar legend and the spot page's condition scale. */

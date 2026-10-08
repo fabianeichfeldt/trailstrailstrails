@@ -23,9 +23,7 @@
       <div class="wx-lock">
         <div class="wx-lock-pill">
           <!-- Same padlock as the map's Boden-Radar button. -->
-          <svg class="wx-lock-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-            <path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" />
-          </svg>
+          <IconLock class="wx-lock-icon" width="22" height="22" aria-hidden="true" />
           <template v-if="!authStore.isLoggedIn">
             <strong>Wie ist der Trail gerade?</strong>
             <span class="wx-lock-hint">
@@ -59,6 +57,7 @@
 import { FEATURES, minPlanName, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
 import { sampleTrailCondition } from '~/utils/sampleCondition'
 import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
+import IconLock from '~/assets/icons/lock.svg'
 
 // Derived from the registry rather than typed here, so moving the feature to
 // another tier changes this card with it.
