@@ -240,6 +240,8 @@ baseTest('shows the weather-derived Trail-Zustand card between the status banner
   // The mock has 4mm two days ago and mild weather since — solidly grippy.
   await expect(card).toContainText('Hero Dirt');
   await expect(card).toContainText('Open-Meteo');
+  // When the weather was fetched, like the radar legend's "Stand".
+  await expect(card.locator('[data-testid="weather-fetched"]')).toHaveText(/^Stand (\p{L}{2} )?\d{2}:\d{2}$/u);
   expect(conditionRequests).toHaveLength(1);
   // The function looks the spot up itself: the browser sends its id, never coordinates.
   expect(JSON.parse(conditionRequests[0]!.postData() ?? '{}')).toEqual({ spotType: 'trail', spotId: 't1' });

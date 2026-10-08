@@ -105,6 +105,31 @@ describe('SpotDetailWeather — rendering the view-model', () => {
     expect(html.indexOf('data-testid="rain-10d"')).toBeLessThan(html.indexOf('class="wx-strip"'))
   })
 
+  it('says when the weather behind the verdict was fetched, in Berlin time like the radar legend', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-24T12:00:00Z'))
+    try {
+      const today = mount(SpotDetailWeather, { props: { condition: condition({ fetchedAt: '2026-09-24T10:00:00Z' }), loading: false } })
+      expect(today.find('[data-testid="weather-fetched"]').text()).toBe('Stand 12:00')
+      expect(today.find('.wx-foot').text()).toContain('Stand 12:00')
+
+      const older = mount(SpotDetailWeather, { props: { condition: condition({ fetchedAt: '2026-09-22T10:00:00Z' }), loading: false } })
+      expect(older.find('[data-testid="weather-fetched"]').text()).toBe('Stand Di 12:00')
+
+      // Asphalt has no "calculated" note, but the time still matters for the weather.
+      const hard = mount(SpotDetailWeather, { props: { condition: withLevel('hard', 'X', { fetchedAt: '2026-09-24T10:00:00Z' }), loading: false } })
+      expect(hard.find('[data-testid="weather-fetched"]').text()).toBe('Stand 12:00')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows no time on the made-up sample behind the locked teaser', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, sample: true } })
+    expect(wrapper.find('[data-testid="weather-fetched"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Stand')
+  })
+
   it('credits Open-Meteo with a link, on the same row as the "calculated" note', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false } })
 

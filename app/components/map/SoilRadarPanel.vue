@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { SOIL_PALETTE, SOIL_GLYPHS, SOIL_LABELS, axisColor } from '~/map/soilBadge'
+import { formatStand } from '~/utils/formatStand'
 
 defineProps<{ matchCount: number; totalCount: number }>()
 
@@ -116,20 +117,11 @@ function onKey(e: KeyboardEvent, h: Handle) {
   move(h, to[e.key]!)
 }
 
-// Berlin time throughout: riders read "15:00" as local, whatever the device zone.
-const TZ = 'Europe/Berlin'
-const timeFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false })
-const dayFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric' })
-const weekdayFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, weekday: 'short' })
-
 const freshText = computed(() => {
   const f = store.freshness
   if (!f) return ''
   if (f.stale) return 'Daten veraltet'
-  const at = new Date(f.computedAt)
-  const sameDay = dayFmt.format(at) === dayFmt.format(new Date())
-  const day = sameDay ? '' : `${weekdayFmt.format(at).replace('.', '')} `
-  return `Stand ${day}${timeFmt.format(at)}${f.offline ? ' · offline' : ''}`
+  return `${formatStand(f.computedAt)}${f.offline ? ' · offline' : ''}`
 })
 </script>
 

@@ -52,8 +52,10 @@
 
       <div class="wx-foot">
         <span>{{ footNote }}</span>
-        <!-- The credit is for Open-Meteo's data; a made-up sample has none. -->
-        <span v-if="!sample">
+        <!-- Time and credit describe real Open-Meteo data; a made-up sample has neither. -->
+        <span v-if="!sample" class="wx-source">
+          <span v-if="fetchedText" data-testid="weather-fetched">{{ fetchedText }}</span>
+          <span v-if="fetchedText" aria-hidden="true"> · </span>
           Wetter:
           <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a>
         </span>
@@ -101,6 +103,7 @@
 import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
 import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
 import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
+import { formatStand } from '~/utils/formatStand'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 
 // The condition arrives as a prop rather than being fetched here: the status
@@ -180,6 +183,9 @@ const footNote = computed(() =>
     ? ''
     : 'Berechnete Angabe · keine Trailcrew-Angabe',
 )
+
+// When the backend last pulled the weather, honest even when it serves an old answer.
+const fetchedText = computed(() => (props.condition ? formatStand(props.condition.fetchedAt) : ''))
 
 // The verdict rests on ten days of rain but the strip only draws two of them,
 // so the total is stated outright — it is what lets a rider check the claim
@@ -389,6 +395,7 @@ const strip = computed(() =>
 
 .wx-foot {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
@@ -397,6 +404,7 @@ const strip = computed(() =>
   color: #9aa5b4;
 }
 .wx-foot a { color: #9aa5b4; text-decoration: underline; }
+.wx-source { white-space: nowrap; }
 
 /* ── Verdict variants (the badge colour comes from soilBadge.ts, inline) ── */
 .v-dust  .wx-verdict strong { color: #744210; }
