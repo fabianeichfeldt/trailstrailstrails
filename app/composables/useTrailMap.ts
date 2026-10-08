@@ -507,25 +507,21 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         gpxLayers.push(marker)
       }
 
-      // Fallback layer for spots that have no GPX data — their marker stays
-      // visible in GPX view so the spot is never invisible to the user.
-      const fallbackLayer = L.layerGroup().addTo(mymap)
-      gpxLayers.push(fallbackLayer)
+      // Every spot keeps its pin in GPX view — it marks the spot centre, tracks or not.
+      const spotPinLayer = L.layerGroup().addTo(mymap)
+      gpxLayers.push(spotPinLayer)
 
       for (const trail of filtered) {
+        const marker = L.marker([trail.latitude, trail.longitude], {
+          icon: createCustomIcon(trail),
+        }).addTo(spotPinLayer)
+        marker.on('click', () => {
+          navigateToSpot(trail)
+        })
+
         const gpx = gpxCache.get(trail.id)
         const hasGpx = gpx && (gpx.trails.length > 0 || gpx.tours.length > 0)
-
-        if (!hasGpx) {
-          // Keep the marker for spots without any GPX tracks
-          const marker = L.marker([trail.latitude, trail.longitude], {
-            icon: createCustomIcon(trail),
-          }).addTo(fallbackLayer)
-          marker.on('click', () => {
-            navigateToSpot(trail)
-          })
-          continue
-        }
+        if (!hasGpx) continue
 
         // Tours first → lower z-order; trails second → win when stacked
         for (const t of gpx.tours) {
