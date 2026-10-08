@@ -1,5 +1,5 @@
 /** Zoom when centring on a single spot (opening it from search, `?trail=`, the spot page's mini-map). */
-export const SPOT_ZOOM = 12
+export const SPOT_ZOOM = 13
 /** Zoom for a town / city / village picked from search. */
 export const TOWN_ZOOM = 12
 /** Zoom for a district or larger area, and the default for "fly to this point". */

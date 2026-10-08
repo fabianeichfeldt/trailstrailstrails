@@ -10,14 +10,14 @@ function setup(spots: Array<{ id: string; latitude: number; longitude: number }>
 }
 
 describe('opening a spot on the map', () => {
-  it('centres on the spot at one level closer than the old region-like zoom 11', () => {
+  it('centres on the spot at two levels closer than the old region-like zoom 11', () => {
     const { map, openTrail } = setup([{ id: 'd1', latitude: 47.49, longitude: 10.72 }])
 
     openTrail('d1')
 
     const [center, zoom] = map.flyTo.mock.calls[0]
     expect(center).toEqual([47.49, 10.72])
-    expect(zoom).toBe(12)
+    expect(zoom).toBe(13)
   })
 
   it('does nothing for an unknown spot id', () => {
