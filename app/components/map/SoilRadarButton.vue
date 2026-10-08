@@ -9,18 +9,17 @@
     data-testid="soil-radar-button"
     @click="onTap"
   >
-    <svg class="radar-icon" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="4.5" />
-      <path d="M12 12 L19 7" />
-    </svg>
+    <IconRadar class="radar-icon" width="22" height="22" aria-hidden="true" />
     <span v-if="access === 'locked'" class="lock" aria-hidden="true">
-      <svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><path d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h1Zm2 0h6V8a3 3 0 0 0-6 0v2Z" /></svg>
+      <IconLock width="10" height="10" />
     </span>
   </button>
 </template>
 
 <script setup lang="ts">
+import IconRadar from '~/assets/icons/radar.svg'
+import IconLock from '~/assets/icons/lock.svg'
+
 const emit = defineEmits<{ teaser: [] }>()
 
 const store = useSoilRadarStore()

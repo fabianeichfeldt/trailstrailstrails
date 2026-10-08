@@ -389,3 +389,29 @@ describe('app/map/soil* files', () => {
     expect(violations).toEqual([])
   })
 })
+
+describe('Soil icons live as SVG files', () => {
+  const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow']
+  const ICONS = [
+    ...LEVELS.map(l => `app/assets/icons/soil/${l}.svg`),
+    'app/assets/icons/spade.svg', 'app/assets/icons/lock.svg', 'app/assets/icons/radar.svg',
+  ]
+  const USERS = [
+    'app/map/soilBadge.ts',
+    'app/components/trail_detail/SpotDetailWeather.vue',
+    'app/components/trail_detail/SpotDetailWeatherLocked.vue',
+    'app/components/map/SoilRadarButton.vue',
+    'app/components/map/SoilRadarPanel.vue',
+  ]
+
+  test('every soil glyph and UI icon has its own file under app/assets/icons', () => {
+    const missing = ICONS.filter(f => { try { return !read(f).trim().startsWith('<svg') } catch { return true } })
+    expect(missing).toEqual([])
+  })
+
+  test('the soil components and soilBadge.ts carry no inline <svg> drawings', () => {
+    // Shapes or a viewBox mean a drawing; adding a class to a loaded file's <svg> tag is fine.
+    const violations = USERS.filter(f => /<(path|circle|rect|line|polyline|polygon|ellipse)\s|<svg[^>]*viewBox/.test(read(f)))
+    expect(violations).toEqual([])
+  })
+})

@@ -28,7 +28,8 @@ afterEach(() => vi.useRealTimers())
 describe('SoilRadarPanel', () => {
   it('shows the five tick labels and the counter chip', () => {
     const w = mountPanel()
-    for (const l of ['staubig', 'trocken', 'Hero', 'feucht', 'Matsch']) expect(w.text()).toContain(l)
+    const labels = w.findAll('.tick-label').map(t => t.text())
+    expect(labels).toEqual(['Staubig', 'Trocken', 'Hero Dirt', 'Feucht', 'Schlammig'])
     expect(w.get('[data-testid="soil-counter"]').text()).toBe('21 von 46 Spots')
   })
 
@@ -39,7 +40,7 @@ describe('SoilRadarPanel', () => {
     expect(lo!.attributes('aria-valuemax')).toBe('4')
     expect(lo!.attributes('aria-valuenow')).toBe('1')
     expect(hi!.attributes('aria-valuenow')).toBe('3')
-    expect(lo!.attributes('aria-valuetext')).toBe('trocken')
+    expect(lo!.attributes('aria-valuetext')).toBe('Trocken')
   })
 
   it('arrow keys move a handle by one step', async () => {

@@ -52,7 +52,8 @@
 </template>
 
 <script setup lang="ts">
-import { SOIL_PALETTE, SOIL_GLYPHS, axisColor } from '~/map/soilBadge'
+import { SOIL_PALETTE, SOIL_GLYPHS, SOIL_LABELS, axisColor } from '~/map/soilBadge'
+import { formatStand } from '~/utils/formatStand'
 
 defineProps<{ matchCount: number; totalCount: number }>()
 
@@ -61,13 +62,8 @@ const store = useSoilRadarStore()
 const MAX = 4
 type Handle = 'lo' | 'hi'
 const HANDLES: Handle[] = ['lo', 'hi']
-const TICKS = [
-  { label: 'staubig', glyph: SOIL_GLYPHS.dusty },
-  { label: 'trocken', glyph: SOIL_GLYPHS.dry },
-  { label: 'Hero', glyph: SOIL_GLYPHS.prime },
-  { label: 'feucht', glyph: SOIL_GLYPHS.damp },
-  { label: 'Matsch', glyph: SOIL_GLYPHS.wet },
-]
+const TICKS = (['dusty', 'dry', 'prime', 'damp', 'wet'] as const)
+  .map(l => ({ label: SOIL_LABELS[l], glyph: SOIL_GLYPHS[l] }))
 const gradient = `linear-gradient(90deg, ${SOIL_PALETTE.join(', ')})`
 const pct = (v: number) => `${(v / MAX) * 100}%`
 
@@ -121,20 +117,11 @@ function onKey(e: KeyboardEvent, h: Handle) {
   move(h, to[e.key]!)
 }
 
-// Berlin time throughout: riders read "15:00" as local, whatever the device zone.
-const TZ = 'Europe/Berlin'
-const timeFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false })
-const dayFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, year: 'numeric', month: 'numeric', day: 'numeric' })
-const weekdayFmt = new Intl.DateTimeFormat('de-DE', { timeZone: TZ, weekday: 'short' })
-
 const freshText = computed(() => {
   const f = store.freshness
   if (!f) return ''
   if (f.stale) return 'Daten veraltet'
-  const at = new Date(f.computedAt)
-  const sameDay = dayFmt.format(at) === dayFmt.format(new Date())
-  const day = sameDay ? '' : `${weekdayFmt.format(at).replace('.', '')} `
-  return `Stand ${day}${timeFmt.format(at)}${f.offline ? ' · offline' : ''}`
+  return `${formatStand(f.computedAt)}${f.offline ? ' · offline' : ''}`
 })
 </script>
 
@@ -148,7 +135,8 @@ const freshText = computed(() => {
   box-sizing: border-box;
   max-width: 34em;
   margin: 0 auto;
-  padding: 12px 22px 12px;
+  /* Side padding fits half of "Schlammig", the widest end label, centred on its stop. */
+  padding: 12px 38px 12px;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.78);
   backdrop-filter: blur(14px);
@@ -163,7 +151,7 @@ const freshText = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin: 0 -10px 10px;
+  margin: 0 -26px 10px;
 }
 .chip {
   padding: 4px 10px;

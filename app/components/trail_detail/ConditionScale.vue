@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
 import type { ConditionIndex, ConditionPositionRange, ConditionRange } from '~/types/Weather'
+import { SOIL_LABELS, SOIL_PALETTE } from '~/map/soilBadge'
 
 /**
  * The four soil levels as one continuous scale, dry to wet: a single gradient
@@ -62,17 +63,16 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ select: [index: ConditionIndex] }>()
 
-const NAMES = ['Staubig', 'Trocken', 'Perfekt', 'Feucht', 'Schlammig']
+const NAMES = (['dusty', 'dry', 'prime', 'damp', 'wet'] as const).map(l => SOIL_LABELS[l])
 
 /** Avoids IEEE-754 float noise (e.g. `2.6 - 1.4` -> `1.2000000000000002`) leaking into the emitted CSS. */
 function round2(x: number): number {
   return Math.round(x * 100) / 100
 }
 
-// Sand-yellow → olive → green → teal → blue: dry to wet, carried entirely by
-// the fill bar — the track itself is neutral, so this is the only colour on
-// the scale.
-const COLORS = ['#f2c744', '#bfc547', '#8bc34a', '#29b6b6', '#2f6fb0']
+// The map's soil ramp, so a level has one colour everywhere. The track itself is
+// neutral; the fill bar carries the only colour on the scale.
+const COLORS = SOIL_PALETTE
 const QUARTER = 100 / NAMES.length
 
 function isOn(i: number): boolean {

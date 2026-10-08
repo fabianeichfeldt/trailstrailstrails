@@ -105,6 +105,31 @@ describe('SpotDetailWeather — rendering the view-model', () => {
     expect(html.indexOf('data-testid="rain-10d"')).toBeLessThan(html.indexOf('class="wx-strip"'))
   })
 
+  it('says when the weather behind the verdict was fetched, in Berlin time like the radar legend', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-09-24T12:00:00Z'))
+    try {
+      const today = mount(SpotDetailWeather, { props: { condition: condition({ fetchedAt: '2026-09-24T10:00:00Z' }), loading: false } })
+      expect(today.find('[data-testid="weather-fetched"]').text()).toBe('Stand 12:00')
+      expect(today.find('.wx-foot').text()).toContain('Stand 12:00')
+
+      const older = mount(SpotDetailWeather, { props: { condition: condition({ fetchedAt: '2026-09-22T10:00:00Z' }), loading: false } })
+      expect(older.find('[data-testid="weather-fetched"]').text()).toBe('Stand Di 12:00')
+
+      // Asphalt has no "calculated" note, but the time still matters for the weather.
+      const hard = mount(SpotDetailWeather, { props: { condition: withLevel('hard', 'X', { fetchedAt: '2026-09-24T10:00:00Z' }), loading: false } })
+      expect(hard.find('[data-testid="weather-fetched"]').text()).toBe('Stand 12:00')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows no time on the made-up sample behind the locked teaser', () => {
+    const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false, sample: true } })
+    expect(wrapper.find('[data-testid="weather-fetched"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Stand')
+  })
+
   it('credits Open-Meteo with a link, on the same row as the "calculated" note', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: condition(), loading: false } })
 
@@ -156,12 +181,40 @@ describe('SpotDetailWeather — rendering the view-model', () => {
   })
 })
 
+describe('SpotDetailWeather — level badge', () => {
+  const COLOURS = { dusty: '#e0a526', dry: '#8bbf3f', prime: '#16c060', damp: '#2ea8e6', wet: '#6d4c41', raining: '#2ea8e6', snow: '#7fa8cf' } as const
+
+  it('draws the map\'s SVG glyph on the map\'s level colour, never an emoji', () => {
+    for (const [level, colour] of Object.entries(COLOURS)) {
+      const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel(level as ConditionLevel, 'X'), loading: false } })
+      const badge = wrapper.find('.wx-badge')
+
+      expect(badge.find('svg').exists(), level).toBe(true)
+      expect(badge.text(), level).toBe('')
+      expect(badge.attributes('style'), level).toContain(colour)
+    }
+  })
+
+  it('hard (asphalt): no soil glyph, the badge mirrors the sky', () => {
+    const badge = mount(SpotDetailWeather, { props: { condition: withLevel('hard', 'X'), loading: false } }).find('.wx-badge')
+
+    expect(badge.find('svg').exists()).toBe(false)
+    expect(badge.text()).toBe('⛅')
+  })
+
+  it('wet: the trail-care nudge carries an SVG, not the 🌱 emoji', () => {
+    const care = mount(SpotDetailWeather, { props: { condition: withLevel('wet', 'Schlammig'), loading: false } }).find('.wx-care')
+
+    expect(care.find('svg').exists()).toBe(true)
+    expect(care.text()).not.toContain('🌱')
+  })
+})
+
 describe('SpotDetailWeather — levels', () => {
   it('dry: olive badge, no trail-care nudge', () => {
     const wrapper = mount(SpotDetailWeather, { props: { condition: withLevel('dry', 'Trocken'), loading: false } })
 
     expect(wrapper.text()).toContain('Trocken')
-    expect(wrapper.text()).toContain('🍂')
     expect(wrapper.find('[data-testid="weather-card"]').classes()).toContain('v-dry')
     expect(wrapper.find('.wx-care').exists()).toBe(false)
   })
