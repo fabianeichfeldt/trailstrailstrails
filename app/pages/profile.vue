@@ -146,7 +146,7 @@
                 <i class="fa-solid fa-trash"></i>
               </button>
               <div class="photo-card-meta">
-                <span>{{ photo.trailName }}</span>
+                <span class="photo-card-title" :title="photo.trailName">{{ photo.trailName }}</span>
                 <span>{{ formatDate(photo.created_at) }}</span>
               </div>
               <button
@@ -585,8 +585,12 @@ async function onUpdatePassword() {
   gap: 0.8em;
 }
 
+/* Column so the credit line sits at the bottom of every card in a row,
+   whatever the title length (grid items stretch to the row height). */
 .photo-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 10px;
   overflow: hidden;
   background: #f5f5f5;
@@ -613,13 +617,24 @@ async function onUpdatePassword() {
 .photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); }
 
 .photo-card img {
+  flex: none;
   width: 100%;
   height: 120px;
   object-fit: cover;
   display: block;
 }
 
+.photo-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
 .copyright-edit {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 0.4em;
@@ -652,6 +667,7 @@ async function onUpdatePassword() {
 
 /* Not .photo-meta: photo_caroussel.css styles that class globally as an overlay. */
 .photo-card-meta {
+  flex: 1;
   padding: 0.4em 0.5em;
   display: flex;
   flex-direction: column;
