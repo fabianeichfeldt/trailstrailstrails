@@ -39,7 +39,7 @@ baseTest('/map?trail= flies the live map to the spot\'s coordinates without navi
   await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
 
   await expect(page).toHaveURL(/\/map(\?|$)/);
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   // t1's fixture coordinates (tests/fixtures.ts)
   expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
@@ -55,7 +55,7 @@ baseTest('/map?trail= works for a bikepark', async ({ page }) => {
   await page.waitForTimeout(1500);
 
   await expect(page).toHaveURL(/\/map(\?|$)/);
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   // b1's fixture coordinates (tests/fixtures.ts)
   expect(flownTiles.some(t => Math.abs(t.lat - 47.68) < 0.05 && Math.abs(t.lng - 11.56) < 0.05)).toBe(true);
@@ -74,7 +74,7 @@ baseTest('/trails/[id] shows the trail name and a "View on map" link that flies 
   await page.goto('/trails/t1');
 
   await expect(page.locator('h1')).toContainText('Flowtrail Tegernsee');
-  await expect(page.locator('a[href="/map?fly=47.71,11.76"]').first()).toBeVisible();
+  await expect(page.locator('a[href="/map?fly=47.71,11.76&zoom=13"]').first()).toBeVisible();
   assertNoLeaks();
 });
 
@@ -120,7 +120,7 @@ baseTest('/trails/[id] renders an inline map centered on the trail\'s own coordi
   // ...centered on t1's fixture coordinates (47.71, 11.76) — well clear of
   // Salzburg (lat 47.8, lng 13.0), so a fallback-to-default regression is
   // unmistakable. SpotDetailMiniMap seeds data-fly with the spot centre.
-  await expect(miniMap).toHaveAttribute('data-fly', '47.71,11.76,11');
+  await expect(miniMap).toHaveAttribute('data-fly', '47.71,11.76,13');
 
   assertNoLeaks();
 });
@@ -187,7 +187,7 @@ test('selecting a search result flies the map to it without navigating', async (
   await expect(page).toHaveURL(/\/map$/);
   // Selecting a result clears the search UI (SearchBar.vue's select() calls clear())
   await expect(page.locator('[data-testid="search-results"]')).toBeHidden();
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);
 });
@@ -202,7 +202,7 @@ test('selecting a bikepark in search results flies the map to it without navigat
   await page.waitForTimeout(1500);
 
   await expect(page).toHaveURL(/\/map$/);
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   expect(flownTiles.some(t => Math.abs(t.lat - 47.68) < 0.05 && Math.abs(t.lng - 11.56) < 0.05)).toBe(true);
 });
@@ -215,7 +215,7 @@ test('selecting a second search result flies to it too, without ever leaving /ma
   await page.waitForTimeout(1500);
   await expect(page).toHaveURL(/\/map$/);
 
-  // Second spot is deliberately far from the first: at the z11 fly-to zoom
+  // Second spot is deliberately far from the first: at the z13 fly-to zoom
   // a nearby spot's tiles are already loaded, so no new tile requests fire.
   tileUrls.length = 0; // isolate the second selection's own tile requests
   await page.locator('[data-testid="search-input"]').fill('Waldpfad');
@@ -223,7 +223,7 @@ test('selecting a second search result flies to it too, without ever leaving /ma
   await page.waitForTimeout(1500);
 
   await expect(page).toHaveURL(/\/map$/);
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   expect(flownTiles.some(t => Math.abs(t.lat - 48.76) < 0.05 && Math.abs(t.lng - 11.42) < 0.05)).toBe(true);
 });
@@ -258,7 +258,7 @@ baseTest('clicking a trail marker navigates to its own page, and going back retu
   await expect(page).toHaveURL(/\/map\?trail=t1$/);
   await expect(page.locator('[data-testid="map-container"]')).toBeVisible();
   await page.waitForTimeout(1500); // let the flyTo animation finish and its tiles fire
-  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 11);
+  const flownTiles = tileUrls.map(decodeTileUrl).filter((t): t is NonNullable<typeof t> => t?.z === 13);
   expect(flownTiles.length).toBeGreaterThan(0);
   // t1's fixture coordinates (tests/fixtures.ts)
   expect(flownTiles.some(t => Math.abs(t.lat - 47.71) < 0.05 && Math.abs(t.lng - 11.76) < 0.05)).toBe(true);

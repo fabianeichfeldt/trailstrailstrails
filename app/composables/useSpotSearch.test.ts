@@ -131,6 +131,7 @@ describe('useSpotSearch — group assembly', () => {
       name: 'Freiburg',
       sub: 'Breisgau, Baden-Württemberg',
       lat: 47.99,
+      zoom: 11,
       lon: 7.84,
     })
   })
@@ -323,5 +324,28 @@ describe('useSpotSearch — selection and clearing', () => {
 
     expect(search.query.value).toBe('Flowtrail')
     expect(search.results.value).toEqual([])
+  })
+})
+
+describe('zoom for picked places', () => {
+  async function pick(displayName: string, extra: Record<string, string>) {
+    mockPlaces([{ display_name: displayName, lat: '47.49', lon: '10.72', ...extra }])
+    const search = useSpotSearch()
+    await search.runSearch('reutte')
+    await flushPromises()
+    return search.flatResults.value.find(i => i.lat !== undefined)!
+  }
+
+  it('a town is flown to one level closer (12) than a district', async () => {
+    expect((await pick('Reutte, Bezirk Reutte, Tirol, Österreich', { addresstype: 'town' })).zoom).toBe(12)
+    expect((await pick('Füssen, Bayern, Deutschland', { addresstype: 'city' })).zoom).toBe(12)
+  })
+
+  it('a district keeps its zoom (11)', async () => {
+    expect((await pick('Bezirk Reutte, Tirol, Österreich', { addresstype: 'county' })).zoom).toBe(11)
+  })
+
+  it('a result without type info keeps the old zoom (11)', async () => {
+    expect((await pick('Irgendwo', {})).zoom).toBe(11)
   })
 })

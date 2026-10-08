@@ -74,7 +74,7 @@ describe('SpotDetailMiniMap', () => {
   it('seeds data-fly with the spot centre once the map inits', async () => {
     const wrapper = mountMap()
     await flushPromises()
-    expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.71,11.76,11')
+    expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.71,11.76,13')
   })
 
   it('calls createMiniMap once on mount with interactive:true and the spot centre', async () => {
@@ -85,7 +85,7 @@ describe('SpotDetailMiniMap', () => {
     const [, input, options] = createMiniMap.mock.calls[0] as [unknown, any, any]
     expect(options.interactive).toBe(true)
     expect(input.center).toEqual([47.71, 11.76])
-    expect(input.zoom).toBe(11)
+    expect(input.zoom).toBe(13)
     // 1 tour + 2 trails
     expect(input.polylines).toHaveLength(3)
     expect(input.polylines.filter((p: any) => p.kind === 'tour')).toHaveLength(1)
@@ -125,7 +125,7 @@ describe('SpotDetailMiniMap', () => {
     expect(handle.setData.mock.calls[0][0].polylines).toHaveLength(3)
   })
 
-  it('flies to a focus target, and back to the spot at zoom 11 when focus clears', async () => {
+  it('flies to a focus target, and back to the spot at zoom 13 when focus clears', async () => {
     const wrapper = mountMap()
     await flushPromises()
 
@@ -134,8 +134,8 @@ describe('SpotDetailMiniMap', () => {
     expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.713,11.763,14')
 
     await wrapper.setProps({ focus: null })
-    expect(handle.flyTo).toHaveBeenLastCalledWith(47.71, 11.76, 11)
-    expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.71,11.76,11')
+    expect(handle.flyTo).toHaveBeenLastCalledWith(47.71, 11.76, 13)
+    expect(wrapper.get('[data-testid="spot-minimap"]').attributes('data-fly')).toBe('47.71,11.76,13')
   })
 
   it('honours an explicit focus zoom', async () => {

@@ -125,7 +125,18 @@ describe('MapTeaser — searching from the landing page', () => {
 
     await placeRow.trigger('click')
 
-    expect(push).toHaveBeenCalledWith('/map?fly=47.71,11.76')
+    expect(push).toHaveBeenCalledWith('/map?fly=47.71,11.76&zoom=11')
+  })
+
+  it('carries the one-level-closer zoom for a picked town to the map', async () => {
+    places = [{ display_name: 'Reutte, Bezirk Reutte, Tirol, Österreich', lat: '47.49', lon: '10.72', addresstype: 'town' }]
+    wrapper = mountTeaser()
+
+    await search(wrapper, 'Reutte')
+    const rows = wrapper.findAll('.search-result-item')
+    await rows[rows.length - 1].trigger('click')
+
+    expect(push).toHaveBeenCalledWith('/map?fly=47.49,10.72&zoom=12')
   })
 
   it('loads the spot lists lazily — nothing is fetched until the visitor searches', async () => {

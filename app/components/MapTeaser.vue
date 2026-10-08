@@ -57,8 +57,8 @@ function onOpenTrail(id: string) {
   router.push(`/map?trail=${id}`)
 }
 
-function onFlyTo(lat: number, lon: number) {
-  router.push(`/map?fly=${lat},${lon}`)
+function onFlyTo(lat: number, lon: number, zoom?: number) {
+  router.push(`/map?fly=${lat},${lon}${zoom ? `&zoom=${zoom}` : ''}`)
 }
 </script>
 
