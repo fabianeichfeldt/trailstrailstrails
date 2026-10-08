@@ -50,13 +50,19 @@
       </div>
     </div>
     <input ref="fileInput" type="file" accept="image/*" hidden @change="onFileChosen" />
-    <PhotoUploadDialog
-      v-if="pendingFile"
-      :file="pendingFile"
+    <PhotoCopyrightDialog
+      v-if="pendingFile && pendingPreview"
+      :src="pendingPreview"
+      title="Foto hochladen"
+      submit-label="Hochladen"
       :initial-copyright="lastCopyright()"
       @confirm="onUploadConfirmed"
       @cancel="pendingFile = null"
-    />
+    >
+      <template #hint>
+        Wird dauerhaft auf dem Foto eingeblendet. Du kannst es später in deinem Profil ergänzen oder ändern.
+      </template>
+    </PhotoCopyrightDialog>
   </section>
 </template>
 
@@ -71,7 +77,7 @@ import { authorName } from '~/utils/authorName'
 import type { Trail } from '~/types/Trail'
 import type { TrailDetails } from '~/types/TrailDetails'
 import type { Photo } from '~/types/Photo'
-import PhotoUploadDialog from './PhotoUploadDialog.vue'
+import PhotoCopyrightDialog from './PhotoCopyrightDialog.vue'
 
 // Split out of the former monolithic SpotDetailInfo.vue: photos are now
 // their own top-level page section, positioned right under the hero/status
@@ -100,6 +106,11 @@ const activePhotoObj = computed<Photo | undefined>(() => props.details.photos[ac
 const photosContainer = ref<HTMLElement | null>(null)
 const fileInput = ref<HTMLInputElement | null>(null)
 const pendingFile = ref<File | null>(null)
+const pendingPreview = ref<string | null>(null)
+watch(pendingFile, (file) => {
+  if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
+  pendingPreview.value = file ? URL.createObjectURL(file) : null
+})
 let carouselTimer: ReturnType<typeof setInterval> | null = null
 
 function formatPhotoDate(iso: string): string {
@@ -137,7 +148,10 @@ watch(() => props.details.photos, async (photos) => {
   await initPhotoUi(photos)
 }, { deep: false })
 
-onUnmounted(() => stopCarousel())
+onUnmounted(() => {
+  stopCarousel()
+  if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
+})
 
 const MAX_FILE_SIZE_MB = 8
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']

@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="photo-upload-dialog backdrop" @click.self="emit('cancel')">
+    <div class="photo-copyright-dialog backdrop" @click.self="emit('cancel')">
       <form
         ref="dialogEl"
         class="sheet"
@@ -12,14 +12,14 @@
         @submit.prevent="emit('confirm', copyright)"
       >
         <div class="sheet-head">
-          <h2 :id="titleId">Foto hochladen</h2>
-          <button type="button" class="sheet-close photo-upload-cancel" aria-label="Abbrechen" @click="emit('cancel')">
+          <h2 :id="titleId">{{ title }}</h2>
+          <button type="button" class="sheet-close photo-copyright-cancel" aria-label="Abbrechen" @click="emit('cancel')">
             <span aria-hidden="true">×</span>
           </button>
         </div>
 
         <div class="preview">
-          <img v-if="previewUrl" :src="previewUrl" alt="Vorschau" />
+          <img :src="src" alt="Vorschau" />
           <span v-if="previewCredit" class="photo-copyright">© {{ previewCredit }}</span>
         </div>
 
@@ -37,10 +37,10 @@
           />
         </label>
         <p class="sheet-hint">
-          Wird dauerhaft auf dem Foto eingeblendet. Du kannst es später in deinem Profil ergänzen oder ändern.
+          <slot name="hint">Wird dauerhaft auf dem Foto eingeblendet.</slot>
         </p>
 
-        <button type="submit" class="sheet-submit">Hochladen</button>
+        <button type="submit" class="sheet-submit" :disabled="busy">{{ submitLabel }}</button>
       </form>
     </div>
   </Teleport>
@@ -50,7 +50,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { COPYRIGHT_MAX_LENGTH, normalizeCopyright } from '~/utils/photoCopyright'
 
-const props = defineProps<{ file: File; initialCopyright?: string }>()
+// Shared by the upload flow (SpotDetailPhotos) and editing a credit later (profile).
+const props = defineProps<{ src: string; title: string; submitLabel: string; initialCopyright?: string; busy?: boolean }>()
 const emit = defineEmits<{ confirm: [copyright: string]; cancel: [] }>()
 
 const uid = Math.random().toString(36).slice(2, 8)
@@ -59,7 +60,6 @@ const inputId = `photo-upload-copyright-${uid}`
 
 const copyright = ref(props.initialCopyright ?? '')
 const previewCredit = computed(() => normalizeCopyright(copyright.value))
-const previewUrl = URL.createObjectURL(props.file)
 
 const dialogEl = ref<HTMLElement | null>(null)
 
@@ -72,7 +72,6 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   document.body.style.overflow = previousOverflow
-  URL.revokeObjectURL(previewUrl)
 })
 </script>
 
@@ -193,6 +192,10 @@ onBeforeUnmount(() => {
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
+}
+.sheet-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .sheet-submit:focus-visible {
   outline: 2px solid #1a2035;

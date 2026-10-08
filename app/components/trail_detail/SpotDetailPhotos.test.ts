@@ -120,8 +120,8 @@ describe('SpotDetailPhotos', () => {
 
     await chooseFile(wrapper)
 
-    expect(wrapper.find('.photo-upload-dialog').exists()).toBe(true)
-    expect(wrapper.find('.photo-upload-dialog input[name="copyright"]').exists()).toBe(true)
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(true)
+    expect(wrapper.find('.photo-copyright-dialog input[name="copyright"]').exists()).toBe(true)
     expect(fakeAuthStore.uploadTrailPhoto).not.toHaveBeenCalled()
   })
 
@@ -130,13 +130,13 @@ describe('SpotDetailPhotos', () => {
     const wrapper = mountPhotos({ trail: trail(), details: details() })
 
     const file = await chooseFile(wrapper)
-    await wrapper.find('.photo-upload-dialog input[name="copyright"]').setValue('Max Muster')
-    await wrapper.find('.photo-upload-dialog form').trigger('submit')
+    await wrapper.find('.photo-copyright-dialog input[name="copyright"]').setValue('Max Muster')
+    await wrapper.find('.photo-copyright-dialog form').trigger('submit')
     await flushPromises()
 
     expect(fakeAuthStore.uploadTrailPhoto).toHaveBeenCalledWith(file, 't1', 'Max Muster')
     expect(wrapper.emitted('uploaded')).toBeTruthy()
-    expect(wrapper.find('.photo-upload-dialog').exists()).toBe(false)
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
   })
 
   it('still uploads when the copyright is left empty (it can be added later in the profile)', async () => {
@@ -144,7 +144,7 @@ describe('SpotDetailPhotos', () => {
     const wrapper = mountPhotos({ trail: trail(), details: details() })
 
     const file = await chooseFile(wrapper)
-    await wrapper.find('.photo-upload-dialog form').trigger('submit')
+    await wrapper.find('.photo-copyright-dialog form').trigger('submit')
     await flushPromises()
 
     expect(fakeAuthStore.uploadTrailPhoto).toHaveBeenCalledWith(file, 't1', '')
@@ -155,11 +155,11 @@ describe('SpotDetailPhotos', () => {
     const wrapper = mountPhotos({ trail: trail(), details: details() })
 
     await chooseFile(wrapper)
-    await wrapper.find('.photo-upload-dialog .photo-upload-cancel').trigger('click')
+    await wrapper.find('.photo-copyright-dialog .photo-copyright-cancel').trigger('click')
     await flushPromises()
 
     expect(fakeAuthStore.uploadTrailPhoto).not.toHaveBeenCalled()
-    expect(wrapper.find('.photo-upload-dialog').exists()).toBe(false)
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
   })
 
   // ── Copyright overlay ────────────────────────────────────────────────

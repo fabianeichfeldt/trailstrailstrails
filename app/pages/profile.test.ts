@@ -64,7 +64,7 @@ function mountProfile(photosData: unknown[] = [PHOTO_ROW]) {
 
   return mount(ProfilePage, {
     global: {
-      stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard, DeleteAccountSection: StubDeleteAccount },
+      stubs: { NuxtLink: StubLink, PageHero: StubPageHero, PlanCard: StubPlanCard, DeleteAccountSection: StubDeleteAccount, teleport: true },
     },
   })
 }
@@ -164,43 +164,71 @@ describe('profile.vue — photo copyright', () => {
     expect(selectedColumns.trail_photos).toMatch(/\bcopyright\b/)
   })
 
-  it('prefills each photo card with its current copyright', async () => {
+  it('shows the credit as a compact line on the card, without an open input', async () => {
     const wrapper = mountProfile([{ ...PHOTO_ROW, copyright: 'Max Muster' }])
     await flushPromises()
-    expect((wrapper.get('.photo-card input[name="copyright"]').element as HTMLInputElement).value).toBe('Max Muster')
+
+    expect(wrapper.get('.photo-card .copyright-edit').text()).toContain('© Max Muster')
+    expect(wrapper.find('.photo-card input').exists()).toBe(false)
+  })
+
+  it('flags a photo without credit so a forgotten one stands out', async () => {
+    const wrapper = mountProfile([PHOTO_ROW, { ...PHOTO_ROW, id: 'p2', copyright: 'Max' }])
+    await flushPromises()
+
+    const [missing, set] = wrapper.findAll('.photo-card .copyright-edit')
+    expect(missing!.classes()).toContain('missing')
+    expect(missing!.text()).toContain('Copyright ergänzen')
+    expect(set!.classes()).not.toContain('missing')
+  })
+
+  it('opens the dialog prefilled with the current credit', async () => {
+    const wrapper = mountProfile([{ ...PHOTO_ROW, copyright: 'Max Muster' }])
+    await flushPromises()
+
+    await wrapper.get('.photo-card .copyright-edit').trigger('click')
+
+    expect((wrapper.get('.photo-copyright-dialog input[name="copyright"]').element as HTMLInputElement).value).toBe('Max Muster')
   })
 
   it('adds a forgotten copyright afterwards and saves it for that photo', async () => {
     const wrapper = mountProfile([PHOTO_ROW])
     await flushPromises()
 
-    await wrapper.get('.photo-card input[name="copyright"]').setValue('Max Muster')
-    await wrapper.get('.photo-card form').trigger('submit')
+    await wrapper.get('.photo-card .copyright-edit').trigger('click')
+    await wrapper.get('.photo-copyright-dialog input[name="copyright"]').setValue('Max Muster')
+    await wrapper.get('.photo-copyright-dialog form').trigger('submit')
     await flushPromises()
 
     expect(updatePhotoCopyright).toHaveBeenCalledWith('p1', 'Max Muster', expect.anything())
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('gespeichert'))
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
+    expect(wrapper.get('.photo-card .copyright-edit').text()).toContain('© Max Muster')
   })
 
-  it('only offers the save button once the value was changed', async () => {
+  it('closes without saving when the credit was not changed', async () => {
     const wrapper = mountProfile([{ ...PHOTO_ROW, copyright: 'Max' }])
     await flushPromises()
-    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(false)
 
-    await wrapper.get('.photo-card input[name="copyright"]').setValue('Moritz')
-    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(true)
+    await wrapper.get('.photo-card .copyright-edit').trigger('click')
+    await wrapper.get('.photo-copyright-dialog form').trigger('submit')
+    await flushPromises()
+
+    expect(updatePhotoCopyright).not.toHaveBeenCalled()
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(false)
   })
 
-  it('shows an error toast and keeps the edit when saving fails', async () => {
+  it('shows an error toast and keeps the dialog open when saving fails', async () => {
     vi.mocked(updatePhotoCopyright).mockRejectedValue(new Error('not permitted'))
     const wrapper = mountProfile([PHOTO_ROW])
     await flushPromises()
 
-    await wrapper.get('.photo-card input[name="copyright"]').setValue('Max')
-    await wrapper.get('.photo-card form').trigger('submit')
+    await wrapper.get('.photo-card .copyright-edit').trigger('click')
+    await wrapper.get('.photo-copyright-dialog input[name="copyright"]').setValue('Max')
+    await wrapper.get('.photo-copyright-dialog form').trigger('submit')
     await flushPromises()
 
     expect(showToast).toHaveBeenCalledWith(expect.stringContaining('fehlgeschlagen'))
-    expect(wrapper.find('.photo-card .copyright-save').exists()).toBe(true)
+    expect(wrapper.find('.photo-copyright-dialog').exists()).toBe(true)
   })
 })

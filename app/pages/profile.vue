@@ -145,34 +145,34 @@
               <button class="photo-delete-btn" aria-label="Foto löschen" @click="removePhoto(photo)">
                 <i class="fa-solid fa-trash"></i>
               </button>
-              <span v-if="photo.copyright" class="photo-copyright">© {{ photo.copyright }}</span>
               <div class="photo-meta">
                 <span>{{ photo.trailName }}</span>
                 <span>{{ formatDate(photo.created_at) }}</span>
               </div>
-              <form class="copyright-form" @submit.prevent="saveCopyright(photo)">
-                <input
-                  v-model="photo.copyrightDraft"
-                  name="copyright"
-                  type="text"
-                  :maxlength="COPYRIGHT_MAX_LENGTH"
-                  placeholder="© Copyright ergänzen"
-                  aria-label="Copyright"
-                  autocomplete="off"
-                />
-                <button
-                  v-if="isCopyrightDirty(photo)"
-                  type="submit"
-                  class="copyright-save"
-                  :class="{ loading: photo.savingCopyright }"
-                  aria-label="Copyright speichern"
-                >
-                  <i class="fa-solid fa-check"></i>
-                </button>
-              </form>
+              <button
+                type="button"
+                class="copyright-edit"
+                :class="{ missing: !photo.copyright }"
+                :aria-label="photo.copyright ? 'Copyright bearbeiten' : 'Copyright ergänzen'"
+                @click="editingPhoto = photo"
+              >
+                <span class="copyright-text">{{ photo.copyright ? `© ${photo.copyright}` : '© Copyright ergänzen' }}</span>
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
         </section>
+
+        <PhotoCopyrightDialog
+          v-if="editingPhoto"
+          :src="editingPhoto.url"
+          title="Copyright bearbeiten"
+          submit-label="Speichern"
+          :initial-copyright="editingPhoto.copyright ?? ''"
+          :busy="savingCopyright"
+          @confirm="saveCopyright"
+          @cancel="editingPhoto = null"
+        />
 
         <DeleteAccountSection />
 
@@ -188,7 +188,8 @@ import { showToast } from '~/utils/toast'
 import PlanCard from '~/components/profile/PlanCard.vue'
 import DeleteAccountSection from '~/components/profile/DeleteAccountSection.vue'
 import { updatePhotoCopyright } from '~/communication/photos'
-import { COPYRIGHT_MAX_LENGTH, normalizeCopyright } from '~/utils/photoCopyright'
+import { normalizeCopyright } from '~/utils/photoCopyright'
+import PhotoCopyrightDialog from '~/components/trail_detail/PhotoCopyrightDialog.vue'
 
 useSeoMeta({
   title: 'Mein Profil',
@@ -242,7 +243,7 @@ async function onRedeemCode() {
 interface BaseTrail { id: string; name: string; created_at: string }
 interface PhotoItem {
   id: string; url: string; created_at: string; trailName: string; trailID: string
-  copyright: string | null; copyrightDraft: string; savingCopyright: boolean
+  copyright: string | null
 }
 
 const createdTrails = ref<BaseTrail[]>([])
@@ -277,7 +278,7 @@ async function loadContributions() {
   photos.value = ((photosRes.data ?? []) as { id: string; url: string; created_at: string; trail_id: string; copyright: string | null; trails: { name: string } }[])
     .map(p => ({
       id: p.id, url: p.url, created_at: p.created_at, trailName: p.trails.name, trailID: p.trail_id,
-      copyright: p.copyright ?? null, copyrightDraft: p.copyright ?? '', savingCopyright: false,
+      copyright: p.copyright ?? null,
     }))
 }
 
@@ -294,22 +295,26 @@ async function removePhoto(photo: PhotoItem) {
   }
 }
 
-function isCopyrightDirty(photo: PhotoItem) {
-  return normalizeCopyright(photo.copyrightDraft) !== photo.copyright
-}
+const editingPhoto = ref<PhotoItem | null>(null)
+const savingCopyright = ref(false)
 
-async function saveCopyright(photo: PhotoItem) {
-  if (!isCopyrightDirty(photo) || photo.savingCopyright) return
-  photo.savingCopyright = true
+async function saveCopyright(value: string) {
+  const photo = editingPhoto.value
+  if (!photo || savingCopyright.value) return
+  if (normalizeCopyright(value) === photo.copyright) {
+    editingPhoto.value = null
+    return
+  }
+  savingCopyright.value = true
   try {
-    photo.copyright = await updatePhotoCopyright(photo.id, photo.copyrightDraft, client)
-    photo.copyrightDraft = photo.copyright ?? ''
+    photo.copyright = await updatePhotoCopyright(photo.id, value, client)
+    editingPhoto.value = null
     showToast('✅ Copyright gespeichert')
   } catch (err) {
     console.error('Failed to update photo copyright:', err)
     showToast('Speichern fehlgeschlagen 😢')
   } finally {
-    photo.savingCopyright = false
+    savingCopyright.value = false
   }
 }
 
@@ -614,52 +619,36 @@ async function onUpdatePassword() {
   display: block;
 }
 
-.photo-copyright {
-  position: absolute;
-  top: 0.5em;
-  left: 0.5em;
-  max-width: calc(100% - 4em);
-  padding: 2px 6px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-size: 0.65em;
+.copyright-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.5em;
+  border: none;
+  border-top: 1px solid #ececec;
+  background: transparent;
+  color: #555;
+  font: inherit;
+  font-size: 0.72em;
+  text-align: left;
+  cursor: pointer;
+}
+.copyright-edit .copyright-text {
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  pointer-events: none;
 }
-
-.copyright-form {
-  display: flex;
-  gap: 0.3em;
-  padding: 0 0.5em 0.5em;
+.copyright-edit i { flex: none; font-size: 0.9em; opacity: 0.5; }
+.copyright-edit:hover i { opacity: 1; }
+.copyright-edit.missing {
+  color: #b45309;
+  font-weight: 600;
+  background: #fffbeb;
 }
-
-.copyright-form input {
-  flex: 1;
-  min-width: 0;
-  min-height: 40px;
-  padding: 0 0.5em;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  /* 16px stops iOS Safari from zooming the page when the field is focused. */
-  font-size: 16px;
-  box-sizing: border-box;
-}
-
-.copyright-save {
-  flex: none;
-  width: 40px;
-  min-height: 40px;
-  border: none;
-  border-radius: 8px;
-  background: var(--color-primary);
-  color: #fff;
-  cursor: pointer;
-}
-.copyright-save:hover { background: var(--color-primary-hover); }
-.copyright-save.loading { opacity: 0.6; pointer-events: none; }
 
 .photo-meta {
   padding: 0.4em 0.5em;
