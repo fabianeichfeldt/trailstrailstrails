@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug } from './trails'
+import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug, getTrailById } from './trails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -239,5 +239,32 @@ describe('toElevationProfile', () => {
     const profile = toElevationProfile(points)
     const dists = profile.map(p => p.dist)
     expect(new Set(dists).size).toBe(dists.length)
+  })
+})
+
+// ── hidden trails (visible = false) ─────────────────────────────────────────
+
+describe('hidden trails on the detail page', () => {
+  const HIDDEN = { id: 'h1', slug: 'versteckt', name: 'Versteckter Trail', latitude: 48, longitude: 11, approved: true, visible: false }
+
+  // Behaves like PostgREST: `visible=eq.true` drops the hidden row.
+  function mockDb() {
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      const u = new URL(url)
+      const table = u.pathname.split('/rest/v1/')[1]
+      let rows: Record<string, unknown>[] = table === 'trails' ? [HIDDEN] : []
+      if (u.searchParams.get('visible') === 'eq.true') rows = rows.filter(r => r.visible === true)
+      return ok(rows)
+    }))
+  }
+
+  it('getTrailBySlug does not resolve a hidden trail', async () => {
+    mockDb()
+    expect(await getTrailBySlug('versteckt')).toBeNull()
+  })
+
+  it('getTrailById does not resolve a hidden trail', async () => {
+    mockDb()
+    expect(await getTrailById('h1')).toBeNull()
   })
 })
