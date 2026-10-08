@@ -19,7 +19,11 @@
          card is showing" stays a question the paywall tests can ask. -->
     <div class="card wx" :class="style.cls" :data-testid="sample ? 'weather-sample' : 'weather-card'">
       <div class="wx-top">
-        <div class="wx-badge">{{ badge }}</div>
+        <!-- Same glyph on the same colour as the map pin; asphalt has no soil verdict, so it mirrors the sky. -->
+        <div class="wx-badge" :style="badgeColor ? { background: badgeColor } : undefined">
+          <span v-if="glyph" class="wx-glyph" v-html="glyph" />
+          <template v-else>{{ condition.current.icon }}</template>
+        </div>
         <div class="wx-verdict">
           <strong>{{ condition.verdict.headline }}</strong>
           <span>{{ condition.verdict.detail }}</span>
@@ -72,7 +76,11 @@
       </div>
 
       <div v-if="condition.verdict.level === 'wet'" class="wx-care">
-        <span class="wx-care-icon" aria-hidden="true">🌱</span>
+        <!-- A spade: the damage gets fixed by hand. -->
+        <svg class="wx-care-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+          <path d="M8.5 3h7M12 3v8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" />
+          <path d="M7.5 11h9v4c0 3.2-2 5.6-4.5 7-2.5-1.4-4.5-3.8-4.5-7z" fill="currentColor" />
+        </svg>
         <span>
           <b>Trails schonen:</b> Bei diesem Zustand hinterlässt jede Fahrt Spuren, die die Trailcrew von Hand reparieren muss.
         </span>
@@ -92,6 +100,7 @@
 <script setup lang="ts">
 import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
 import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
+import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 
 // The condition arrives as a prop rather than being fetched here: the status
@@ -140,21 +149,24 @@ function onFeedbackClick() {
   sheetOpen.value = true
 }
 
-const LEVEL_STYLE: Record<ConditionLevel, { cls: string; badge: string }> = {
-  dusty:   { cls: 'v-dust',  badge: '🧹' },
-  dry:     { cls: 'v-dry',   badge: '🍂' },
-  prime:   { cls: 'v-prime', badge: '🤙' },
-  damp:    { cls: 'v-damp',  badge: '💧' },
-  wet:     { cls: 'v-wet',   badge: '⚠️' },
-  raining: { cls: 'v-damp',  badge: '☔' },
-  snow:    { cls: 'v-snow',  badge: '❄️' },
-  // A sealed surface gets no verdict colour — the badge just mirrors the sky.
-  hard:    { cls: 'v-plain', badge: '' },
-  unknown: { cls: '',        badge: '' },
+const LEVEL_STYLE: Record<ConditionLevel, { cls: string }> = {
+  dusty:   { cls: 'v-dust' },
+  dry:     { cls: 'v-dry' },
+  prime:   { cls: 'v-prime' },
+  damp:    { cls: 'v-damp' },
+  wet:     { cls: 'v-wet' },
+  raining: { cls: 'v-damp' },
+  snow:    { cls: 'v-snow' },
+  // A sealed surface gets no verdict colour.
+  hard:    { cls: 'v-plain' },
+  unknown: { cls: '' },
 }
 
-const style = computed(() => LEVEL_STYLE[props.condition?.verdict.level ?? 'unknown'])
-const badge = computed(() => style.value.badge || props.condition?.current.icon || '')
+const level = computed<ConditionLevel>(() => props.condition?.verdict.level ?? 'unknown')
+const style = computed(() => LEVEL_STYLE[level.value])
+const badgeColor = computed(() => soilBadgeColor(level.value))
+// Trusted static markup from soilBadge.ts, never user data.
+const glyph = computed(() => (badgeColor.value ? SOIL_GLYPHS[level.value as SoilLevel] : ''))
 
 // The strip and the 10-day rain total are shown in every state. Both used to be
 // hidden while raining, in snow and on asphalt on the grounds that the headline
@@ -234,6 +246,9 @@ const strip = computed(() =>
   line-height: 1;
   background: #f2f4f7;
 }
+
+.wx-glyph { display: block; width: 26px; height: 26px; }
+.wx-glyph :deep(svg) { display: block; width: 100%; height: 100%; }
 
 .wx-verdict {
   min-width: 0;
@@ -349,7 +364,7 @@ const strip = computed(() =>
   color: #822727;
   line-height: 1.45;
 }
-.wx-care-icon { font-size: 14px; line-height: 1; }
+.wx-care-icon { flex: none; }
 
 /* ── Model range + rider feedback entry ── */
 .wx-scale {
@@ -383,20 +398,15 @@ const strip = computed(() =>
 }
 .wx-foot a { color: #9aa5b4; text-decoration: underline; }
 
-/* ── Verdict variants ── */
-.v-dust  .wx-badge { background: #fefcbf; }
+/* ── Verdict variants (the badge colour comes from soilBadge.ts, inline) ── */
 .v-dust  .wx-verdict strong { color: #744210; }
-.v-dry   .wx-badge { background: #f5f7e0; }
 .v-dry   .wx-verdict strong { color: #6b6e1f; }
 .v-prime { border-color: #bbf7d0; }
-.v-prime .wx-badge { background: #f0faf5; }
+.v-prime .wx-badge { box-shadow: 0 0 0 2px rgba(22, 192, 96, 0.25), 0 0 10px 2px rgba(22, 192, 96, 0.45); }
 .v-prime .wx-verdict strong { color: #276749; }
-.v-damp  .wx-badge { background: #ebf4ff; }
 .v-damp  .wx-verdict strong { color: #1a365d; }
-.v-snow  .wx-badge { background: #eef4fb; }
 .v-snow  .wx-verdict strong { color: #1a365d; }
 .v-wet   { border-color: #fed7d7; }
-.v-wet   .wx-badge { background: #fff1f1; }
 .v-wet   .wx-verdict strong { color: #822727; }
 
 /* ── Skeleton (what SSR renders; the real value arrives on the client) ── */

@@ -4,7 +4,7 @@ import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import ConditionScale from './ConditionScale.vue'
 
-const LABELS = ['Staubig', 'Trocken', 'Perfekt', 'Feucht', 'Schlammig']
+const LABELS = ['Staubig', 'Trocken', 'Hero Dirt', 'Feucht', 'Schlammig']
 
 describe('ConditionScale — read-only', () => {
   it('draws one track with a fill positioned over the range and labelled ticks below it', () => {
@@ -42,7 +42,14 @@ describe('ConditionScale — read-only', () => {
 
     expect(wrapper.findAll('button')).toHaveLength(0)
     expect(wrapper.text()).toContain('Unsere Schätzung')
-    expect(wrapper.find('[role="img"]').attributes('aria-label')).toBe('Unsere Schätzung: Trocken bis Perfekt')
+    expect(wrapper.find('[role="img"]').attributes('aria-label')).toBe('Unsere Schätzung: Trocken bis Hero Dirt')
+  })
+
+  it('colours the fill with the map palette, so mud is brown here too', () => {
+    const fill = mount(ConditionScale, { props: { range: { lo: 4, hi: 4 } } }).find('.cs-fill')
+    expect(fill.attributes('style')).toContain('#6d4c41')
+    const span = mount(ConditionScale, { props: { range: { lo: 0, hi: 2 } } }).find('.cs-fill')
+    expect(span.attributes('style')).toContain('linear-gradient(90deg, #e0a526, #16c060)')
   })
 
   it('names a single-segment range once', () => {

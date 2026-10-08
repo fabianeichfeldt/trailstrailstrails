@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  SOIL_PALETTE, SOIL_FROST, SOIL_GLYPHS, axisColor, axisRgb,
+  SOIL_PALETTE, SOIL_FROST, SOIL_GLYPHS, SOIL_LABELS, axisColor, axisRgb, soilBadgeColor,
   soilBadgeHtml, markerWithSoilBadgeOptions, clusterDonutHtml, soilChipOptions,
 } from './soilBadge'
 import { markerIconOptions } from './markerIcon'
@@ -34,6 +34,29 @@ describe('SOIL_GLYPHS', () => {
     for (const l of ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow'] as const) {
       expect(SOIL_GLYPHS[l]).toMatch(/^<svg[\s\S]*<\/svg>$/)
     }
+  })
+})
+
+describe('SOIL_LABELS', () => {
+  it('is the one label set for chips, radar legend and condition scale', () => {
+    expect(SOIL_LABELS).toEqual({
+      dusty: 'Staubig', dry: 'Trocken', prime: 'Hero Dirt', damp: 'Feucht', wet: 'Schlammig',
+      raining: 'Regen', snow: 'Schnee',
+    })
+  })
+})
+
+describe('soilBadgeColor', () => {
+  it('is the palette colour per level, snow on its own darker tint', () => {
+    expect(soilBadgeColor('dusty')).toBe('#e0a526')
+    expect(soilBadgeColor('prime')).toBe('#16c060')
+    expect(soilBadgeColor('raining')).toBe('#2ea8e6')
+    expect(soilBadgeColor('wet')).toBe('#6d4c41')
+    expect(soilBadgeColor('snow')).toBe('#7fa8cf')
+  })
+  it('is null without a soil verdict', () => {
+    expect(soilBadgeColor('hard')).toBeNull()
+    expect(soilBadgeColor('unknown')).toBeNull()
   })
 })
 
@@ -117,5 +140,9 @@ describe('soilChipOptions', () => {
     expect(o.html).toContain('<svg')
     expect(o.iconSize[0]).toBeGreaterThan(0)
     expect(o.className).toContain('soil-chip-hit')
+  })
+  it('labels the chip from SOIL_LABELS', () => {
+    expect(soilChipOptions('wet')!.html).toContain('>Schlammig<')
+    expect(soilChipOptions('dusty')!.html).toContain('>Staubig<')
   })
 })

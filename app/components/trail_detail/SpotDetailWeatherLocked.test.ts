@@ -54,6 +54,14 @@ describe('SpotDetailWeatherLocked', () => {
     expect(overlay.attributes('aria-hidden')).toBeUndefined()
   })
 
+  it('marks the lock with the same SVG padlock as the map\'s radar button, not the 🔒 emoji', () => {
+    const icon = mount(SpotDetailWeatherLocked).find('.wx-lock-icon')
+
+    expect(icon.element.tagName.toLowerCase()).toBe('svg')
+    expect(icon.attributes('aria-hidden')).toBe('true')
+    expect(mount(SpotDetailWeatherLocked).find('.wx-lock').text()).not.toContain('🔒')
+  })
+
   describe('logged out', () => {
     it('leads with the pitch headline and the fuller description, not the plain pill', () => {
       const text = mount(SpotDetailWeatherLocked).find('.wx-lock').text()
