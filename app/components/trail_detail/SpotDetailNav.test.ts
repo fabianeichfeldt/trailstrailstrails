@@ -35,8 +35,14 @@ describe('SpotDetailNav', () => {
     expect(wrapper.find('a[href="#trails"]').exists()).toBe(true)
   })
 
-  it('hides Touren/Trails links for a bikepark/dirtpark spot', () => {
+  it('shows only the Trails link for a bikepark spot', () => {
     const wrapper = mount(SpotDetailNav, { props: { trail: trail({ type: 'bikepark' } as Partial<Trail>), parkingCount: 0 } })
+    expect(wrapper.find('a[href="#touren"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="#trails"]').exists()).toBe(true)
+  })
+
+  it('hides Touren/Trails links for a dirtpark spot', () => {
+    const wrapper = mount(SpotDetailNav, { props: { trail: trail({ type: 'dirtpark' } as Partial<Trail>), parkingCount: 0 } })
     expect(wrapper.find('a[href="#touren"]').exists()).toBe(false)
     expect(wrapper.find('a[href="#trails"]').exists()).toBe(false)
   })

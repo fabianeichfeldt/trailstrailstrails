@@ -512,13 +512,27 @@ describe('useSpotPanelStore', () => {
       expect(store.data).toEqual({ spotId: 's2', tours: [], trails: [] })
     })
 
-    it('fetches parking but not GPX tour/trail data for a non-trail spot', async () => {
+    it('fetches parking and GPX trail data for a bikepark', async () => {
       const store = useSpotPanelStore()
+      const parkTrail = { id: 'gt1', spotId: 'b1', name: 'Flowline', difficulty: 'blue', gpxPoints: [] } as unknown as MtbTrail
+      vi.mocked(getSpotGpxData).mockResolvedValue({ spotId: 'b1', tours: [], trails: [parkTrail] })
 
       store.load(trail('b1', 'bikepark'))
       await Promise.resolve()
+      await Promise.resolve()
 
       expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['b1'])
+      expect(getSpotGpxData).toHaveBeenCalledWith('b1')
+      expect(store.data?.trails).toEqual([parkTrail])
+    })
+
+    it('fetches parking but not GPX data for a dirtpark', async () => {
+      const store = useSpotPanelStore()
+
+      store.load(trail('d1', 'dirtpark'))
+      await Promise.resolve()
+
+      expect(fetchMultipleSpotParking).toHaveBeenCalledWith(['d1'])
       expect(getSpotGpxData).not.toHaveBeenCalled()
     })
   })

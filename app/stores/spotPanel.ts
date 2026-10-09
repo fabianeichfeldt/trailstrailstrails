@@ -1,4 +1,4 @@
-import type { Trail } from '~/types/Trail'
+import { hasGpx, type Trail } from '~/types/Trail'
 import { fetchMultipleSpotParking, getSpotGpxData, type SpotParkingLot } from '~/communication/trails'
 import {
   getComments,
@@ -166,9 +166,9 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
    * Loads `item` for the routed spot-detail page
    * (app/pages/trails/[slug].vue) — every section on that page is always
    * present in its long scroll, just populated once the per-spot fetches
-   * this kicks off resolve. loadSpotData() only applies to trail-type
-   * spots (bikeparks/dirtparks have no GPX tours/trails); loadParking()
-   * runs for every spot type.
+   * this kicks off resolve. loadSpotData() only runs for spot types
+   * with GPX sections (SPOT_GPX_SECTIONS); loadParking() runs for every
+   * spot type.
    */
   function load(item: Trail) {
     currentItem.value = item
@@ -182,7 +182,7 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     likeVisible.value = false
     data.value = null
     clearSelection()
-    if (item.type === 'trail') {
+    if (hasGpx(item.type)) {
       loadSpotData(item.id)
     }
     loadParking(item.id)

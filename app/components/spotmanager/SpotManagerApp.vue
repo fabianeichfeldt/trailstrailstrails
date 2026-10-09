@@ -161,8 +161,7 @@
             <i class="fas fa-chevron-right sm-details-arrow" />
           </button>
 
-          <template v-if="caps.gpx">
-          <div class="sm-section">
+          <div v-if="caps.tours" class="sm-section">
             <div class="sm-section-header">
               <h3>Touren <span class="sm-count">{{ tours.length }}</span></h3>
               <button class="sm-btn-add" @click="openSegmentUpload">
@@ -206,7 +205,7 @@
             </div>
           </div>
 
-          <div class="sm-section">
+          <div v-if="caps.trails" class="sm-section">
             <div class="sm-section-header">
               <h3>Trails <span class="sm-count">{{ trails.length }}</span></h3>
               <button class="sm-btn-add" @click="openImport()">
@@ -214,7 +213,7 @@
               </button>
             </div>
             <p v-if="trails.length === 0" class="sm-section-hint">
-              Einzelne Trails als GPX hochladen – oder aus einer Tour oben manuell herausschneiden.
+              Einzelne Trails als GPX hochladen<template v-if="caps.tours"> – oder aus einer Tour oben manuell herausschneiden</template>.
             </p>
             <div class="sm-items">
               <p v-if="trails.length === 0" class="sm-empty">Keine Trails</p>
@@ -254,7 +253,6 @@
               </div>
             </div>
           </div>
-          </template>
         </div>
 
         <!-- Import view -->
@@ -1167,8 +1165,8 @@ async function openSpot(spot: SpotRow) {
   try {
     const c = SPOT_CAPABILITIES[spot.type]
     const [t, to, d, pk] = await Promise.all([
-      c.gpx ? getSpotTrails(id) : Promise.resolve([]),
-      c.gpx ? getSpotTours(id) : Promise.resolve([]),
+      c.trails ? getSpotTrails(id) : Promise.resolve([]),
+      c.tours ? getSpotTours(id) : Promise.resolve([]),
       c.details === 'trail' ? getSpotDetails(id) : Promise.resolve(null),
       getSpotParking(id),
     ])

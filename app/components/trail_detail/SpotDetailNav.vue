@@ -1,7 +1,7 @@
 <template>
   <nav class="spot-detail-nav" aria-label="Abschnitte">
-    <a v-if="isTrail" class="spot-detail-nav-link" href="#touren">Touren</a>
-    <a v-if="isTrail" class="spot-detail-nav-link" href="#trails">Trails</a>
+    <a v-if="sections.tours" class="spot-detail-nav-link" href="#touren">Touren</a>
+    <a v-if="sections.trails" class="spot-detail-nav-link" href="#trails">Trails</a>
     <a v-if="parkingVisible" class="spot-detail-nav-link" href="#parking">Parkplätze</a>
     <a class="spot-detail-nav-link" href="#description">Info</a>
     <a class="spot-detail-nav-link" href="#comments">Kommentare</a>
@@ -9,7 +9,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Trail } from '~/types/Trail'
+import { SPOT_GPX_SECTIONS, type Trail } from '~/types/Trail'
 
 // Long-scroll replacement for SpotPanelTabs.vue's tab-switch bar — plain
 // anchor links into the page's sections instead of a `store.activeTab`
@@ -17,7 +17,7 @@ import type { Trail } from '~/types/Trail'
 // not tabs; sticky from page load, no scroll-position tracking).
 const props = defineProps<{ trail: Trail; parkingCount: number }>()
 
-const isTrail = computed(() => props.trail.type === 'trail')
+const sections = computed(() => SPOT_GPX_SECTIONS[props.trail.type])
 const parkingVisible = computed(() => props.parkingCount > 0)
 </script>
 
