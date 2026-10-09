@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { fetchMultipleSpotGpx, fetchMultipleSpotParking, toElevationProfile, getTrailBySlug, getTrailById } from './trails'
+import { bakedTrailDetails } from '../utils/bakedTrailDetails'
 
 function ok(body: unknown) {
   return Promise.resolve({
@@ -187,6 +188,72 @@ describe('getTrailBySlug', () => {
     for (const col of ['rules', 'trail_description', 'status_hint', 'status_until', 'access_type', 'rain_closed_hours']) {
       expect(detailsUrl).toContain(col)
     }
+  })
+})
+
+// ── bikepark details (bike_park_details) ────────────────────────────────────
+
+describe('spot details source per type', () => {
+  function routeFetch(tables: Record<string, unknown[] | 'fail'>) {
+    return vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
+      const rows = tables[table]
+      if (rows === 'fail') return err(500)
+      return ok(rows ?? [])
+    })
+  }
+  const park = { id: 'p-uuid', slug: 'bikepark-x', name: 'Bikepark X', latitude: 47, longitude: 12 }
+  const parkDetails = { id: 'p-uuid', status: 'open', opening_hours: 'Sa-So 9-17', trail_description: 'Lift + Trails', rules: [], last_update: '2026-09-30' }
+
+  it('getTrailBySlug: bikepark exposes opening_hours + trail_description via bakedTrailDetails', async () => {
+    const fetch = routeFetch({ parks: [park], bike_park_details: [parkDetails] })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailBySlug('bikepark-x')
+    expect(res).toMatchObject({ type: 'bikepark', opening_hours: 'Sa-So 9-17', trail_description: 'Lift + Trails' })
+    const baked = bakedTrailDetails(res)
+    expect(baked.opening_hours).toBe('Sa-So 9-17')
+    expect(baked.trail_description).toBe('Lift + Trails')
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+    expect(urls.find(u => u.includes('/bike_park_details'))).toContain('id=eq.p-uuid')
+  })
+
+  it('getTrailBySlug: trail still merges trail_details (regression)', async () => {
+    const fetch = routeFetch({
+      trails: [{ id: 't-uuid', slug: 'flow', name: 'Flow', latitude: 50, longitude: 8 }],
+      trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailBySlug('flow')
+    expect(res).toMatchObject({ type: 'trail', trail_description: 'Nice' })
+    expect(fetch.mock.calls.some(c => String(c[0]).includes('/bike_park_details'))).toBe(false)
+  })
+
+  it('getTrailById: bikepark exposes details, fetched only after the type is resolved', async () => {
+    const fetch = routeFetch({ parks: [park], bike_park_details: [parkDetails] })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailById('p-uuid')
+    expect(res).toMatchObject({ type: 'bikepark', opening_hours: 'Sa-So 9-17', trail_description: 'Lift + Trails' })
+    expect(bakedTrailDetails(res).opening_hours).toBe('Sa-So 9-17')
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+    const firstDetails = urls.findIndex(u => u.includes('/bike_park_details'))
+    expect(firstDetails).toBeGreaterThanOrEqual(3) // after trails/parks/dirt_parks
+  })
+
+  it('getTrailById: trail still merges trail_details (regression)', async () => {
+    vi.stubGlobal('fetch', routeFetch({
+      trails: [{ id: 't-uuid', name: 'Flow', latitude: 50, longitude: 8 }],
+      trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
+    }))
+    expect(await getTrailById('t-uuid')).toMatchObject({ type: 'trail', trail_description: 'Nice' })
+  })
+
+  it('a failed bike_park_details fetch degrades to empty details', async () => {
+    vi.stubGlobal('fetch', routeFetch({ parks: [park], bike_park_details: 'fail' }))
+    const res = await getTrailBySlug('bikepark-x')
+    expect(res).toMatchObject({ id: 'p-uuid', type: 'bikepark' })
+    expect(bakedTrailDetails(res).opening_hours).toBe('')
   })
 })
 

@@ -21,6 +21,33 @@ const TRAIL_DETAILS_BAKED_COLUMNS =
   'trail_id,rules,last_update,trail_description,status,status_until,status_hint,' +
   'access_type,donation_url,seasonal_from,seasonal_to,rain_policy,rain_closed_hours'
 
+// Per-type source of the details row merged into the spot payload. Trails and
+// dirtparks live in trail_details; bikeparks have their own bike_park_details.
+const SPOT_DETAILS_SOURCE: Record<Trail['type'], { table: string; idColumn: string; columns: string }> = {
+  trail:    { table: 'trail_details',     idColumn: 'trail_id', columns: TRAIL_DETAILS_BAKED_COLUMNS },
+  dirtpark: { table: 'trail_details',     idColumn: 'trail_id', columns: TRAIL_DETAILS_BAKED_COLUMNS },
+  bikepark: { table: 'bike_park_details', idColumn: 'id',       columns: 'status,status_hint,opening_hours,rules,trail_description,last_update' },
+}
+
+// Fetches the type-specific details row + photos for a resolved spot.
+// A failed fetch degrades to empty details/photos.
+async function fetchSpotExtras(id: string, type: Trail['type']): Promise<{ detail: Record<string, any> | undefined; photos: unknown[] }> {
+  const { table, idColumn, columns } = SPOT_DETAILS_SOURCE[type]
+  const select = columns.split(',').includes(idColumn) ? columns : `${idColumn},${columns}`
+  const [detailsRes, photosRes] = await Promise.all([
+    fetch(`${REST}/${table}?${idColumn}=eq.${id}&select=${select}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+  ])
+  const [details, photos] = await Promise.all([
+    detailsRes.ok ? detailsRes.json() : [],
+    photosRes.ok ? photosRes.json() : [],
+  ])
+  return {
+    detail: (details as Array<Record<string, any>>).find(d => d[idColumn] === id),
+    photos: Array.isArray(photos) ? photos : [],
+  }
+}
+
 // Maps trail type to the Supabase edge-function path and query-parameter name.
 // Adding a new type only requires adding a new entry here — callers stay unchanged.
 const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = {
@@ -38,20 +65,16 @@ const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = 
 // "Nicht gefunden" page. A direct REST call works identically at SSR/build
 // time and in the browser afterwards, with no staleness window.
 export async function getTrailById(id: string): Promise<Record<string, any> | null> {
-  const [trailsRes, parksRes, dirtRes, detailsRes, photosRes] = await Promise.all([
+  const [trailsRes, parksRes, dirtRes] = await Promise.all([
     fetch(`${REST}/trails?id=eq.${id}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
 
-  const [trails, parks, dirtParks, details, photos] = await Promise.all([
+  const [trails, parks, dirtParks] = await Promise.all([
     trailsRes.ok ? trailsRes.json() : [],
     parksRes.ok ? parksRes.json() : [],
     dirtRes.ok ? dirtRes.json() : [],
-    detailsRes.ok ? detailsRes.json() : [],
-    photosRes.ok ? photosRes.json() : [],
   ])
 
   // REST filters (?id=eq.<id>) already narrow real Supabase responses to at
@@ -68,8 +91,8 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
   }
   if (!base) return null
 
-  const detail = (details as Array<Record<string, any>>).find(d => d.trail_id === id)
-  return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
+  const { detail, photos } = await fetchSpotExtras(id, type)
+  return { ...base, ...(detail ?? {}), type, photos }
 }
 
 // Slug-based counterpart of getTrailById — the primary resolver for
@@ -104,17 +127,8 @@ export async function getTrailBySlug(slug: string): Promise<Record<string, any> 
   if (!base) return null
 
   const id = base.id
-  const [detailsRes, photosRes] = await Promise.all([
-    fetch(`${REST}/trail_details?trail_id=eq.${id}&select=${TRAIL_DETAILS_BAKED_COLUMNS}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-  ])
-  const [details, photos] = await Promise.all([
-    detailsRes.ok ? detailsRes.json() : [],
-    photosRes.ok ? photosRes.json() : [],
-  ])
-
-  const detail = (details as Array<Record<string, any>>).find(d => d.trail_id === id)
-  return { ...base, ...(detail ?? {}), type, photos: Array.isArray(photos) ? photos : [] }
+  const { detail, photos } = await fetchSpotExtras(id, type)
+  return { ...base, ...(detail ?? {}), type, photos }
 }
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
