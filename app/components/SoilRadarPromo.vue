@@ -1,18 +1,11 @@
 <template>
   <section class="soil-promo-outer" aria-labelledby="soil-promo-title" data-testid="soil-promo">
     <div class="soil-promo inner">
-      <div class="visual" aria-hidden="true">
-        <div class="scope">
-          <span class="ring r1" /><span class="ring r2" /><span class="ring r3" />
-          <span class="beam" />
-          <span
-            v-for="(b, i) in BLIPS"
-            :key="i"
-            class="blip"
-            :style="{ top: b.top, left: b.left, background: SOIL_PALETTE[b.lvl] }"
-            v-html="SOIL_GLYPHS[LEVELS[b.lvl]!]"
-          />
-        </div>
+      <div class="map" aria-hidden="true">
+        <!-- A real radar screenshot, not a mock: the soil clouds and cluster donuts are the pitch. -->
+        <img :src="'/assets/soil-radar-preview.webp'" alt="" class="map-img" width="900" height="1041" loading="lazy" data-testid="soil-promo-map">
+        <span class="sweep" />
+        <span class="osm">© OpenStreetMap-Mitwirkende</span>
       </div>
 
       <div class="copy">
@@ -45,72 +38,79 @@ import { SOIL_GLYPHS, SOIL_LABELS, SOIL_PALETTE } from '~/map/soilBadge'
 
 // Same order as SOIL_PALETTE: dusty → wet.
 const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet'] as const
-const BLIPS = [
-  { top: '22%', left: '30%', lvl: 2 }, { top: '35%', left: '64%', lvl: 1 },
-  { top: '60%', left: '22%', lvl: 3 }, { top: '68%', left: '58%', lvl: 2 },
-  { top: '46%', left: '44%', lvl: 0 }, { top: '18%', left: '55%', lvl: 4 },
-] as const
 const promoActive = isSignupPromoActive()
 </script>
 
 <style scoped>
 .soil-promo-outer { padding: 2rem 1rem; }
+/* Map on the left fades into the navy text panel on the right; stacks map-over-text on phones. */
 .soil-promo {
+  position: relative;
   max-width: 860px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 1.8rem;
-  align-items: center;
-  padding: 1.6rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  overflow: hidden;
   border-radius: 18px;
-  background: linear-gradient(140deg, #1a2035 0%, #22304a 100%);
+  background: #1a2035;
   color: #fff;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
 }
+.map {
+  position: relative;
+  min-height: 380px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, #000 60%, transparent);
+  mask-image: linear-gradient(90deg, #000 60%, transparent);
+}
+.map-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 40%;
+}
+/* Same conic sweep the live layer plays when it reveals the clouds. */
+.sweep {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, rgba(22, 192, 96, 0.35), rgba(22, 192, 96, 0) 60deg);
+  animation: promo-sweep 5s linear infinite;
+  pointer-events: none;
+}
+@keyframes promo-sweep { to { rotate: 360deg; } }
+.osm {
+  position: absolute;
+  left: 8px;
+  bottom: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.8);
+  color: #333;
+  font-size: 10px;
+}
+.copy { position: relative; padding: 1.8rem 1.6rem 1.8rem 0.6rem; align-self: center; }
+
 @media (max-width: 640px) {
-  .soil-promo { grid-template-columns: 1fr; gap: 1.2rem; padding: 1.3rem 1.1rem; }
-  .visual { max-width: 200px; margin: 0 auto; width: 100%; }
+  .soil-promo { grid-template-columns: 1fr; }
+  .map {
+    min-height: 0;
+    height: 240px;
+    -webkit-mask-image: linear-gradient(180deg, #000 65%, transparent);
+    mask-image: linear-gradient(180deg, #000 65%, transparent);
+  }
+  .copy { padding: 0.4rem 1.1rem 1.3rem; }
+  /* The bottom edge fades out here, so the credit moves up where it stays legible. */
+  .osm { left: auto; right: 8px; bottom: auto; top: 6px; }
 }
 
-.scope {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  overflow: hidden;
-  background: radial-gradient(circle, #24364f 0%, #182338 70%);
-  box-shadow: inset 0 0 0 2px rgba(91, 227, 154, 0.35);
-}
-.ring {
-  position: absolute;
-  inset: 0;
-  margin: auto;
-  border-radius: 50%;
-  border: 1px solid rgba(91, 227, 154, 0.22);
-}
-.r1 { width: 33%; height: 33%; }
-.r2 { width: 66%; height: 66%; }
-.r3 { width: 99%; height: 99%; }
-.beam {
-  position: absolute;
-  inset: 0;
-  background: conic-gradient(from 0deg, rgba(91, 227, 154, 0.45), rgba(91, 227, 154, 0) 70deg);
-  border-radius: 50%;
-  animation: promo-sweep 4s linear infinite;
-}
-.blip {
-  position: absolute;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-}
-.blip :deep(svg), .dot :deep(svg) { width: 14px; height: 14px; }
-@keyframes promo-sweep { to { transform: rotate(360deg); } }
+.dot :deep(svg) { width: 14px; height: 14px; }
 
 .tag {
   display: inline-block;
@@ -163,5 +163,5 @@ h2 { margin: 0.5rem 0 0.4rem; font-size: clamp(1.2rem, 3vw, 1.5rem); line-height
 .promo-cta:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 .copy > .fine { margin: 0.7rem 0 0; font-size: 0.75rem; color: #9aa6ba; }
 @media (max-width: 640px) { .promo-cta { width: 100%; box-sizing: border-box; } }
-@media (prefers-reduced-motion: reduce) { .beam { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sweep { animation: none; opacity: 0; } }
 </style>
