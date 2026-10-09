@@ -99,15 +99,15 @@ baseTest('the jump-nav links target the page\'s own sections', async ({ page }) 
   assertNoLeaks();
 });
 
-baseTest('hides the Touren/Trails jump-links and sections for a bikepark spot', async ({ page }) => {
+baseTest('shows the Trails section but no Touren for a bikepark spot', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/trails/b1');
 
   await expect(page.locator('h1')).toHaveText('Bikepark Lenggries');
   await expect(page.locator('a[href="#touren"]')).toHaveCount(0);
-  await expect(page.locator('a[href="#trails"]')).toHaveCount(0);
+  await expect(page.locator('a[href="#trails"]')).toBeVisible();
   await expect(page.locator('#touren')).toHaveCount(0);
-  await expect(page.locator('#trails')).toHaveCount(0);
+  await expect(page.locator('#trails')).toBeVisible();
 
   assertNoLeaks();
 });
