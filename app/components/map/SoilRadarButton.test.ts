@@ -70,3 +70,24 @@ describe('SoilRadarButton', () => {
     expect(w.attributes('aria-label')).toContain('Supporter')
   })
 })
+
+describe('SoilRadarButton — intro highlight', () => {
+  it('pulses while highlighted and the radar is off', async () => {
+    const w = mount(SoilRadarButton, { props: { highlight: true } })
+    expect(w.classes()).toContain('is-new')
+    store.enabled = true
+    await nextTick()
+    expect(w.classes()).not.toContain('is-new')
+  })
+
+  it('does not pulse by default', () => {
+    expect(mount(SoilRadarButton).classes()).not.toContain('is-new')
+  })
+
+  it('exposes activate(), which behaves like a tap', () => {
+    access.value = 'locked'
+    const w = mount(SoilRadarButton)
+    ;(w.vm as unknown as { activate: () => void }).activate()
+    expect(w.emitted('teaser')).toHaveLength(1)
+  })
+})

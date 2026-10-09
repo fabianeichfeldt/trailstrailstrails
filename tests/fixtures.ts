@@ -200,6 +200,8 @@ export async function setupApiMocks(page: Page) {
 export async function setupAllMocks(page: Page): Promise<() => void> {
   const assertNoLeaks = await applySafetyNet(page); // lowest priority — must come first
   await setupApiMocks(page);                         // higher priority — overrides safety net
+  // The one-time Boden-Radar callout would pop over the map mid-test; soil-radar-intro.spec.ts opts back in.
+  await page.addInitScript(() => { try { localStorage.setItem('soil-radar-intro-seen', '1') } catch { /* about:blank */ } });
   return assertNoLeaks;
 }
 

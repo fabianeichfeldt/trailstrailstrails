@@ -21,6 +21,8 @@
     <!-- Map teaser (hosts the real searchbar) -->
     <MapTeaser />
 
+    <SoilRadarPromo />
+
     <!-- Features -->
     <section class="features-section">
       <div class="features-grid inner">

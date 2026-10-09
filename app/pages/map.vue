@@ -28,7 +28,8 @@
         <i class="fa-solid fa-location-crosshairs"></i>
       </button>
 
-      <SoilRadarButton @teaser="onSoilTeaser" />
+      <SoilRadarButton ref="soilButton" :highlight="soilIntro.highlight.value" @teaser="onSoilTeaser" />
+      <SoilRadarIntro :show="soilIntro.show.value" @try="onSoilIntroTry" @dismiss="soilIntro.dismiss" />
       <SoilRadarPanel v-if="soilStore.enabled" />
       <SoilRadarLockedSheet v-if="soilSheetOpen" @close="closeSoilSheet" />
       <p v-if="soilUnavailable" class="soil-notice" role="status">Boden-Radar gerade nicht verfügbar</p>
@@ -99,7 +100,12 @@ function onMapReady(handlers: {
 
   // A persisted "on" brings its data back only once entitled; otherwise it flips off without the teaser.
   restoringSoil = true
-  soilStore.restore(soilAccess).finally(() => { restoringSoil = false })
+  soilStore.restore(soilAccess).finally(() => {
+    restoringSoil = false
+    // Deep link from the landing page / spot page: open the radar, unless restore already did.
+    if (route.query.radar === '1' && !soilStore.enabled) soilButton.value?.activate()
+    else soilIntro.start()
+  })
 
   // Open trail from query param — only after map is ready so openTrail is the real function
   if (trailIdFromQuery) {
@@ -120,6 +126,16 @@ function onMapReady(handlers: {
 const soilSheetOpen = ref(false)
 const soilUnavailable = ref(false)
 let restoringSoil = false
+const soilButton = ref<{ activate: () => void } | null>(null)
+const soilIntro = useSoilRadarIntro({
+  busy: () => soilSheetOpen.value || mapStore.authModalOpen || addSpotModal.open || !!nearbyConflict.value,
+  used: () => soilStore.enabled,
+})
+
+function onSoilIntroTry() {
+  soilIntro.dismiss()
+  soilButton.value?.activate()
+}
 let sheetTimer: ReturnType<typeof setTimeout> | null = null
 let noticeTimer: ReturnType<typeof setTimeout> | null = null
 
