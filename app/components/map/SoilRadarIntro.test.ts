@@ -8,7 +8,7 @@ describe('SoilRadarIntro', () => {
   it('pitches the radar with the "where to ride today" hook', () => {
     const w = mountIntro(true)
     expect(w.get('[data-testid="soil-intro"]').text()).toContain("Wo fährt's sich heute am besten?")
-    expect(w.text()).toMatch(/Regen, Wetter und Bodenart/)
+    expect(w.text()).toContain('Regen der letzten Tage, aktuellem Wetter und Bodenart')
   })
 
   it('renders nothing when hidden', () => {

@@ -19,6 +19,14 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('SoilRadarLockedSheet', () => {
+  it('explains what the sample showed in the landing page wording, without the removed dryness filter', () => {
+    const text = mountSheet().get('.hint').text()
+    expect(text).toContain('Das war eine Beispielansicht.')
+    expect(text).toContain('Regen der letzten Tage, aktuellem Wetter und Bodenart')
+    expect(text).toContain('wo gerade Hero Dirt wartet und wo du im Schlamm stecken bleibst')
+    expect(text).not.toContain('Trockenheit')
+  })
+
   it('logged out during the promo: offers free sign-up and opens the auth modal', async () => {
     const w = mountSheet()
     expect(w.text()).toContain('Für begrenzte Zeit kostenlos')

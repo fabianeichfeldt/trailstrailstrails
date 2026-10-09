@@ -17,8 +17,9 @@
         <template v-else>{{ promoActive ? 'Für begrenzte Zeit kostenlos' : `${FEATURES.soil_radar.label} für Supporter` }}</template>
       </h2>
       <p class="hint">
-        Das war eine Beispielansicht. Mit dem {{ FEATURES.soil_radar.label }} siehst du auf einen Blick, wo der Boden gerade
-        <strong>Hero Dirt</strong> ist, und filterst die Karte nach Trockenheit.
+        Das war eine Beispielansicht. Der {{ FEATURES.soil_radar.label }} legt den Bodenzustand aller Spots über die Karte –
+        berechnet aus Regen der letzten Tage, aktuellem Wetter und Bodenart. So siehst du auf einen Blick, wo gerade
+        <strong>Hero Dirt</strong> wartet und wo du im Schlamm stecken bleibst.
       </p>
 
       <template v-if="!loggedIn">

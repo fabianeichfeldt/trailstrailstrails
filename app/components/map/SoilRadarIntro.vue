@@ -13,8 +13,8 @@
       <span class="tag">Neu · {{ FEATURES.soil_radar.label }}</span>
       <h2 id="soil-intro-title">Wo fährt's sich heute am besten?</h2>
       <p id="soil-intro-text">
-        Der {{ FEATURES.soil_radar.label }} zeigt dir auf der Karte, wo der Boden gerade trocken ist –
-        berechnet aus Regen, Wetter und Bodenart für jeden Spot.
+        Der {{ FEATURES.soil_radar.label }} legt den Bodenzustand aller Spots über die Karte – berechnet aus
+        Regen der letzten Tage, aktuellem Wetter und Bodenart.
       </p>
       <div class="levels" aria-hidden="true">
         <span v-for="(l, i) in LEVELS" :key="l" class="level" :style="{ background: SOIL_PALETTE[i] }" v-html="SOIL_GLYPHS[l]" />
