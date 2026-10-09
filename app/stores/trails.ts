@@ -16,9 +16,10 @@ export const DIRTPARK_LIST_COLUMNS = `${SPOT_LIST_COLUMNS},pumptrack,dirtpark`
 // (`url.searchParams.set('select', columns)`), so the key we write into the
 // SW runtime cache in warmSwCaches() byte-matches the request the client
 // makes on a later load.
-function restUrl(base: string, table: string, columns: string): string {
+function restUrl(base: string, table: string, columns: string, filters: Record<string, string> = {}): string {
   const u = new URL(`${base}/rest/v1/${table}`)
   u.searchParams.set('select', columns)
+  for (const [k, v] of Object.entries(filters)) u.searchParams.append(k, v)
   return u.toString()
 }
 
@@ -47,7 +48,8 @@ export const useTrailsStore = defineStore('trails', () => {
     error.value = null
     try {
       const [trailsRes, parksRes, dirtRes] = await Promise.all([
-        anonClient.from('trails').select(SPOT_LIST_COLUMNS),
+        // Hidden trails (visible = false) stay reachable by URL but never reach the map/search.
+        anonClient.from('trails').select(SPOT_LIST_COLUMNS).eq('visible', true),
         anonClient.from('parks').select(SPOT_LIST_COLUMNS),
         anonClient.from('dirt_parks').select(DIRTPARK_LIST_COLUMNS),
       ])
@@ -98,7 +100,7 @@ export const useTrailsStore = defineStore('trails', () => {
     dirtData: unknown[] | null,
   ) {
     const entries: [string, string, unknown[] | null][] = [
-      [restUrl(supabaseUrl, 'trails', SPOT_LIST_COLUMNS),        'supabase-rest-trails',    trailsData],
+      [restUrl(supabaseUrl, 'trails', SPOT_LIST_COLUMNS, { visible: 'eq.true' }), 'supabase-rest-trails', trailsData],
       [restUrl(supabaseUrl, 'parks', SPOT_LIST_COLUMNS),         'supabase-rest-parks',     parksData],
       [restUrl(supabaseUrl, 'dirt_parks', DIRTPARK_LIST_COLUMNS), 'supabase-rest-dirtparks', dirtData],
     ]

@@ -2,9 +2,11 @@ export class Photo {
     id: string = "";
     url: string = "";
     created_at: string = "";
-    creator: string = "";
+    copyright: string | null = null;
+    // null once the uploader deleted their account (FK ON DELETE SET NULL)
+    creator: string | null = "";
     profiles: {
       display_name: string
       avatar_url: string
-    } = {display_name: "", avatar_url: ""};
+    } | null = {display_name: "", avatar_url: ""};
 }

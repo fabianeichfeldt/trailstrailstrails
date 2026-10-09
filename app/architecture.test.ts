@@ -220,6 +220,16 @@ describe('Communication layer has no UI concerns', () => {
     expect(src).not.toMatch(/export\s+const\s+createCustomIcon/)
   })
 
+  test('soilReports.ts goes through FUNCTIONS/userHeaders, with no hardcoded URL or upward imports', () => {
+    const src = read('app/communication/soilReports.ts')
+    expect(src).toMatch(/import\s*\{[^}]*\bFUNCTIONS\b[^}]*\}\s*from\s*['"]\.\/http['"]/)
+    expect(src).toMatch(/import\s*\{[^}]*\buserHeaders\b[^}]*\}\s*from\s*['"]\.\/http['"]/)
+    expect(src).toContain('${FUNCTIONS}/soil-report')
+    expect(src).not.toMatch(HARDCODED_URL_RE)
+    expect(src).not.toMatch(/https?:\/\//)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/)?(stores|composables|map)\//)
+  })
+
   test('communication/ does not import from stores/ or composables/', () => {
     const violations: string[] = []
     for (const file of collectTs('app/communication')) {
@@ -288,6 +298,46 @@ describe('trailTooltip utility (pure layer)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Trail condition — the model and the weather source stay server-side
+// ─────────────────────────────────────────────────────────────────────────────
+// The verdict ("Hero Dirt", "Schlammig", ...) is computed by the `trail-condition`
+// edge function (trailradar-backend), which also enforces the paid-tier gate.
+// If the model or a direct Open-Meteo call creeps back into the client bundle,
+// the gate is decorative again: anyone could read the model or skip the function.
+describe('trail condition (server-side only)', () => {
+  test('no client file imports the trail-condition model or weather codes', () => {
+    const violations: string[] = []
+    for (const file of collectTs('app')) {
+      if (/\.test\.ts$/.test(file)) continue
+      if (/from\s+['"][^'"]*\/(trailCondition|weatherCodes)['"]/.test(read(file))) violations.push(file)
+    }
+    expect(violations).toEqual([])
+  })
+
+  test('the client never calls the Open-Meteo API itself', () => {
+    const violations: string[] = []
+    for (const file of collectTs('app')) {
+      if (/\.test\.ts$/.test(file)) continue
+      // The attribution link (https://open-meteo.com/) is fine; an API URL is not.
+      if (/open-meteo\.com\/v1|api\.open-meteo/.test(read(file))) violations.push(file)
+    }
+    expect(violations).toEqual([])
+  })
+
+  test('the condition fetch stays client-only, so nuxt generate cannot bake it in', () => {
+    // A build-time fetch would freeze the build day's weather into the static
+    // HTML until the next deploy — the same failure class as the prerendered
+    // server/api route this project already shipped once.
+    const src = read('app/composables/useTrailCondition.ts')
+    expect(src).toMatch(/onMounted\(/)
+    // Matches the call, not the mention — the file's own doc comment names
+    // useAsyncData precisely to warn against it.
+    expect(src).not.toMatch(/\buseAsyncData\s*\(/)
+    expect(src).not.toMatch(/\buseFetch\s*\(/)
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Mini-map renderer — owns Leaflet, but only dynamically and only in a function
 // ─────────────────────────────────────────────────────────────────────────────
 // app/map/miniMap.ts is the read-only Leaflet renderer shared by the
@@ -322,5 +372,53 @@ describe('miniMap renderer (owns Leaflet, dynamically)', () => {
     expect(src).toContain('export async function createMiniMap')
     expect(src).toContain('export function orderPolylines')
     expect(src).toContain('export function resolveShowGpx')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Boden-Radar map files stay free of app state
+// ─────────────────────────────────────────────────────────────────────────────
+describe('app/map/soil* files', () => {
+  const files = collectTs('app/map').filter(f => /\/soil[^/]*\.ts$/.test(f) && !f.endsWith('.test.ts'))
+
+  test('the soil map modules exist (guards the glob below)', () => {
+    expect(files.length).toBeGreaterThanOrEqual(4)
+  })
+
+  test('import no stores, composables or components (state is injected by useTrailMap)', () => {
+    const violations = files.filter(f =>
+      /from\s+['"]([~@]\/|\.\.?\/)+(stores|composables|components)\//.test(read(f)))
+    expect(violations).toEqual([])
+  })
+
+  test('never import leaflet at module level (injected / type-only)', () => {
+    const violations = files.filter(f => /^import\s+(?!type\b)[^\n]*from\s+['"]leaflet/m.test(read(f)))
+    expect(violations).toEqual([])
+  })
+})
+
+describe('Soil icons live as SVG files', () => {
+  const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow']
+  const ICONS = [
+    ...LEVELS.map(l => `app/assets/icons/soil/${l}.svg`),
+    'app/assets/icons/spade.svg', 'app/assets/icons/lock.svg', 'app/assets/icons/radar.svg',
+  ]
+  const USERS = [
+    'app/map/soilBadge.ts',
+    'app/components/trail_detail/SpotDetailWeather.vue',
+    'app/components/trail_detail/SpotDetailWeatherLocked.vue',
+    'app/components/map/SoilRadarButton.vue',
+    'app/components/map/SoilRadarPanel.vue',
+  ]
+
+  test('every soil glyph and UI icon has its own file under app/assets/icons', () => {
+    const missing = ICONS.filter(f => { try { return !read(f).trim().startsWith('<svg') } catch { return true } })
+    expect(missing).toEqual([])
+  })
+
+  test('the soil components and soilBadge.ts carry no inline <svg> drawings', () => {
+    // Shapes or a viewBox mean a drawing; adding a class to a loaded file's <svg> tag is fine.
+    const violations = USERS.filter(f => /<(path|circle|rect|line|polyline|polygon|ellipse)\s|<svg[^>]*viewBox/.test(read(f)))
+    expect(violations).toEqual([])
   })
 })

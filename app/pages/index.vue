@@ -21,6 +21,8 @@
     <!-- Map teaser (hosts the real searchbar) -->
     <MapTeaser />
 
+    <SoilRadarPromo />
+
     <!-- Features -->
     <section class="features-section">
       <div class="features-grid inner">
@@ -113,7 +115,7 @@
               <IconShield />
             </div>
             <span class="qn-label">Datenschutz</span>
-            <span class="qn-sub">& Impressum</span>
+            <span class="qn-sub">Deine Daten bei uns</span>
           </NuxtLink>
 
           <NuxtLink to="/how-to-embed" class="qn-card">

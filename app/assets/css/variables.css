@@ -50,4 +50,10 @@
   --color-page-text: #ffffff;
   --color-page-accent: #58c27d;
   --color-page-muted: #939393;
+
+  /* Supporter surfaces (/plans, Mein Abo, /supporter/danke): forest green, softer than the page black. */
+  --color-supporter-bg: #1f3b2d;
+  --color-supporter-bg-end: #2b5a40;
+  --color-supporter-muted: #b3cbbd;
+  --color-supporter-accent: #8fe0ab;
 }

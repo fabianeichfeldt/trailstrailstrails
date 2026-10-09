@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { deletePhoto, isSpotAssignedToTrailcrew } from './photos'
+import { deletePhoto, isSpotAssignedToTrailcrew, uploadTrailPhoto, updatePhotoCopyright } from './photos'
 import type { IAuthService } from '../auth/auth_service'
 import { User } from '../auth/user'
 
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 // ── deletePhoto ──────────────────────────────────────────────────────────
 
@@ -60,6 +60,86 @@ describe('deletePhoto', () => {
     await expect(
       deletePhoto({ id: 1, url: 'https://x/trail-photos/t1/abc.webp' }, client),
     ).rejects.toThrow('Photo file delete failed')
+  })
+})
+
+// ── uploadTrailPhoto ─────────────────────────────────────────────────────
+
+function fakeUploadClient(insertError: unknown = null) {
+  const insert = vi.fn().mockResolvedValue({ error: insertError })
+  const upload = vi.fn().mockResolvedValue({ error: null })
+  const getPublicUrl = vi.fn(() => ({ data: { publicUrl: 'https://x/trail-photos/t1/new.webp' } }))
+  const client = { from: vi.fn(() => ({ insert })), storage: { from: vi.fn(() => ({ upload, getPublicUrl })) } }
+  return { client: client as any, insert, upload }
+}
+
+// jsdom never decodes images or encodes canvases — fake just enough for transformImage().
+function stubImagePipeline() {
+  vi.stubGlobal('Image', class {
+    width = 2000; height = 1000; onload: (() => void) | null = null
+    set src(_: string) { queueMicrotask(() => this.onload?.()) }
+  })
+  vi.stubGlobal('URL', { ...URL, createObjectURL: () => 'blob:x' })
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as any)
+  vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(cb => cb(new Blob(['x'])))
+}
+
+describe('uploadTrailPhoto', () => {
+  it('stores the normalized copyright on the photo row', async () => {
+    stubImagePipeline()
+    const { client, insert } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1', '  © Max  Muster ')
+
+    expect(insert).toHaveBeenCalledWith({ trail_id: 't1', url: 'https://x/trail-photos/t1/new.webp', creator: 'u1', copyright: 'Max Muster' })
+  })
+
+  it('stores null when no copyright was given', async () => {
+    stubImagePipeline()
+    const { client, insert } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
+
+    expect(insert).toHaveBeenCalledWith(expect.objectContaining({ copyright: null }))
+  })
+})
+
+// ── updatePhotoCopyright ─────────────────────────────────────────────────
+
+function fakeUpdateClient(opts: { data?: unknown[] | null; error?: unknown } = {}) {
+  const select = vi.fn().mockResolvedValue({ data: opts.data ?? [{ id: 1, copyright: 'Max' }], error: opts.error ?? null })
+  const eq = vi.fn(() => ({ select }))
+  const update = vi.fn(() => ({ eq }))
+  const from = vi.fn(() => ({ update }))
+  return { client: { from } as any, from, update, eq }
+}
+
+describe('updatePhotoCopyright', () => {
+  it('updates only the copyright column of that photo and returns the stored value', async () => {
+    const { client, from, update, eq } = fakeUpdateClient()
+
+    await expect(updatePhotoCopyright(1, ' (c) Max ', client)).resolves.toBe('Max')
+
+    expect(from).toHaveBeenCalledWith('trail_photos')
+    expect(update).toHaveBeenCalledWith({ copyright: 'Max' })
+    expect(eq).toHaveBeenCalledWith('id', 1)
+  })
+
+  it('clears the copyright with null for empty input', async () => {
+    const { client, update } = fakeUpdateClient({ data: [{ id: 1, copyright: null }] })
+
+    await expect(updatePhotoCopyright(1, '  ', client)).resolves.toBeNull()
+    expect(update).toHaveBeenCalledWith({ copyright: null })
+  })
+
+  it('throws when the update errors', async () => {
+    const { client } = fakeUpdateClient({ error: { message: 'boom' } })
+    await expect(updatePhotoCopyright(1, 'Max', client)).rejects.toThrow('Copyright update failed')
+  })
+
+  it('throws when RLS silently matched zero rows (not the uploader)', async () => {
+    const { client } = fakeUpdateClient({ data: [] })
+    await expect(updatePhotoCopyright(1, 'Max', client)).rejects.toThrow('not permitted')
   })
 })
 

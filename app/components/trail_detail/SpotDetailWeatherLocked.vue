@@ -1,0 +1,176 @@
+<template>
+  <!-- Same skeleton as the real card — label above, card below — so the page does
+       not jump when access resolves. -->
+  <section class="content-section spot-detail-weather" data-testid="weather-locked">
+    <div class="section-label">{{ FEATURES.trail_condition.label }}</div>
+
+    <div class="wx-locked">
+      <!-- The real card, fed a fixed good-weather sample and blurred. Decoration
+           only, and made up: hidden from assistive technology so a screen reader
+           never announces "Hero Dirt" as this spot's verdict, and inert so nothing
+           in it can be focused or clicked. -->
+      <div class="wx-sample-wrap" aria-hidden="true" inert>
+        <SpotDetailWeather :condition="sample" :loading="false" sample />
+      </div>
+
+      <!-- No purchase button on purpose: there is no billing flow to send anyone
+           to yet, and a dead "Upgrade" link is worse than none. The only action
+           is for visitors who are logged out, and it still just opens the free
+           sign-up modal — signups by 30.11.2026 get 4 weeks free (SIGNUP_PROMO);
+           after that the button only offers sign-up. Logged-in users get no pitch or CTA — they already
+           signed up, so a "try it free" pitch would be untrue for them; they
+           keep the plain pill instead. -->
+      <div class="wx-lock">
+        <div class="wx-lock-pill">
+          <!-- Same padlock as the map's Boden-Radar button. -->
+          <IconLock class="wx-lock-icon" width="22" height="22" aria-hidden="true" />
+          <template v-if="!authStore.isLoggedIn">
+            <strong>Wie ist der Trail gerade?</strong>
+            <span class="wx-lock-hint">
+              Bodenzustand, Regen der letzten Tage und Wetter für jeden Spot. Damit du vor dem Losfahren weißt ob es sich lohnt.
+            </span>
+            <button
+              type="button"
+              class="wx-lock-cta"
+              data-testid="weather-locked-cta"
+              @click="mapStore.authModalOpen = true"
+            >
+              {{ promoActive ? `${SIGNUP_PROMO.weeks} Wochen kostenlos testen` : 'Jetzt registrieren' }}
+            </button>
+            <small class="wx-lock-fine">
+              {{ promoActive ? 'Danach 3 €/Monat' : '3 €/Monat' }} oder 25 €/Jahr. Mit {{ plan }} Plan unterstützt du ein unabhängiges Community-Projekt.
+            </small>
+          </template>
+          <template v-else>
+            <strong>{{ FEATURES.trail_condition.label }} ist eine {{ plan }}-Funktion</strong>
+            <span class="wx-lock-hint">
+              Bodenzustand und Wetter für jeden Spot.
+            </span>
+          </template>
+        </div>
+      </div>
+    </div>
+  </section>
+</template>
+
+<script setup lang="ts">
+import { FEATURES, minPlanName, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
+import { sampleTrailCondition } from '~/utils/sampleCondition'
+import SpotDetailWeather from '~/components/trail_detail/SpotDetailWeather.vue'
+import IconLock from '~/assets/icons/lock.svg'
+
+// Derived from the registry rather than typed here, so moving the feature to
+// another tier changes this card with it.
+const plan = minPlanName('trail_condition')
+
+// Shared stores only. This card renders after mount (access is "checking"
+// while prerendering), so reading auth state cannot mismatch the static HTML.
+const authStore = useAuthStore()
+const mapStore = useMapStore()
+
+// Built once, locally: no request, and nothing about the spot in it. This card
+// only ever renders after mount (access is "checking" while prerendering), so a
+// date-relative sample cannot mismatch the static HTML.
+const sample = sampleTrailCondition(new Date())
+const promoActive = isSignupPromoActive()
+</script>
+
+<style scoped>
+/* Frames the blurred sample like a real card. The blur bleeds at its edges, so
+   the border has to belong to this wrapper, not to the sample inside it. */
+.wx-locked {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e4e9f0;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
+}
+
+.wx-sample-wrap {
+  /* Deliberately light: the colours, icons and bar chart read as a real weather
+     card, and most of the small text is legible. Tuned by eye (5px -> 4px ->
+     1.8px). The sample is made up, so nothing about the spot is revealed. */
+  filter: blur(1.8px);
+  pointer-events: none;
+  user-select: none;
+}
+/* The label lives outside the blur, and the sample's own frame would double the
+   wrapper's — so both are stripped from the sample. */
+.wx-sample-wrap :deep(.content-section) {
+  margin-bottom: 0;
+}
+.wx-sample-wrap :deep(.section-label) {
+  display: none;
+}
+.wx-sample-wrap :deep(.card) {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.wx-lock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8em;
+}
+/* A small solid pill rather than a wash over the whole card: the sample's
+   colours stay visible around it, and the hint is fully readable. */
+.wx-lock-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  max-width: 30em;
+  padding: 0.85em 1.3em;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e4e9f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 18px rgba(26, 32, 53, 0.12);
+}
+.wx-lock-icon {
+  flex: none;
+  color: #1a2035;
+}
+.wx-lock-pill strong {
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #1a2035;
+}
+.wx-lock-hint {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #4a5568;
+}
+.wx-lock-fine {
+  margin-top: 2px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8a96a8;
+}
+.wx-lock-cta {
+  margin-top: 4px;
+  min-height: 44px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1a5c3a;
+  background: #e6f4ec;
+  border: 1px solid #b7dcc6;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.wx-lock-cta:hover {
+  background: #d5ecdf;
+}
+.wx-lock-cta:focus-visible {
+  outline: 2px solid #1a5c3a;
+  outline-offset: 2px;
+}
+</style>

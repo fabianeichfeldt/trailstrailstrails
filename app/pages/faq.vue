@@ -16,6 +16,7 @@
           <li><a href="#missing">🔹 Warum fehlen manche Bikeparks/Trails?</a></li>
           <li><a href="#submit">🔹 Kann ich selbst Trails melden?</a></li>
           <li><a href="#trailcrew">🔹 Ich bin Trailbauer/-betreiber – kann ich meine Einträge selbst verwalten?</a></li>
+          <li><a href="#cancel">🔹 Wie kündige ich mein Supporter-Abo?</a></li>
           <li><a href="#packing-tour">🔹 Was sollte ich auf eine MTB-Tour mitnehmen?</a></li>
           <li><a href="#packing-park">🔹 Was sollte ich beim Bikeparkbesuch mitnehmen?</a></li>
         </ul>
@@ -55,6 +56,14 @@
           verifiziert haben, dass du der Ansprechpartner für den jeweiligen Trail-Spot bist, erhältst du einen
           Einladungscode. Trägst du diesen Code in deinem Trailradar-Profil ein, erhältst du Zugang zum
           Trailradar Spotmanager mit vollem Zugriff auf die dir zugewiesenen Spot(s).</p>
+      </div>
+
+      <div class="faq-item" id="cancel">
+        <h3>Wie kündige ich mein Supporter-Abo?</h3>
+        <p>Jederzeit mit einem Klick auf der Seite
+          <NuxtLink to="/kuendigen">Verträge hier kündigen</NuxtLink> – auch ohne Anmeldung. Die Kündigung wird zum
+          Ende des bezahlten Zeitraums wirksam; bis dahin behältst du alle Supporter-Vorteile.
+          Vor Ablauf kannst du die Kündigung auch wieder zurücknehmen.</p>
       </div>
 
       <div class="faq-item" id="packing-tour">

@@ -1,0 +1,163 @@
+/* Boden-Radar: map layer, pin badges, cluster donuts, GPX chips. */
+
+@property --soil-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* ---- cloud layer ---- */
+.soil-radar-pane { pointer-events: none; }
+
+.soil-radar-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  transform-origin: 0 0;
+  mix-blend-mode: multiply;
+  filter: blur(6px);
+  opacity: 0;
+  transition: opacity .35s ease;
+}
+
+.soil-radar-canvas.soil-sweep {
+  -webkit-mask-image: conic-gradient(from 0deg at 50% 50%, #000 var(--soil-sweep), transparent calc(var(--soil-sweep) + 1deg));
+  mask-image: conic-gradient(from 0deg at 50% 50%, #000 var(--soil-sweep), transparent calc(var(--soil-sweep) + 1deg));
+  animation: soil-sweep 1.6s cubic-bezier(.6, .05, .3, 1) forwards;
+  transition: none; /* the sweep is the reveal; no extra fade-in */
+}
+
+@keyframes soil-sweep {
+  from { --soil-sweep: 0deg; }
+  to   { --soil-sweep: 361deg; }
+}
+
+.soil-beam {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  height: 150%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  z-index: 450;
+  background: conic-gradient(from 0deg, transparent 0 340deg, rgba(34, 197, 94, .35) 360deg);
+  animation: soil-beam 1.6s cubic-bezier(.6, .05, .3, 1) forwards;
+}
+
+@keyframes soil-beam {
+  0%   { opacity: 1; transform: translate(-50%, -50%) rotate(0deg); }
+  90%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ---- pin badge (M2) ---- */
+.soil-marker { position: relative; width: 18px; height: 18px; }
+
+.soil-badge {
+  position: absolute;
+  left: 10px;
+  top: -10px;
+  width: 17px;
+  height: 17px;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  transition: transform .25s ease, opacity .25s ease;
+}
+
+.soil-badge .soil-glyph { width: 10px; height: 10px; display: block; }
+
+.soil-badge-pop {
+  transform: scale(0);
+  animation: soil-pop .45s cubic-bezier(.3, 1.6, .5, 1) forwards;
+}
+
+@keyframes soil-pop { to { transform: scale(1); } }
+
+.soil-badge-hero {
+  box-shadow: 0 0 0 2px rgba(22, 192, 96, .35), 0 0 12px 3px rgba(22, 192, 96, .75);
+  animation: soil-breathe 2.4s ease-in-out infinite;
+}
+
+/* pop + breathe together: pop first, then breathe. */
+.soil-badge-hero.soil-badge-pop {
+  animation: soil-pop .45s cubic-bezier(.3, 1.6, .5, 1) forwards, soil-breathe 2.4s ease-in-out .45s infinite;
+}
+
+@keyframes soil-breathe {
+  50% { box-shadow: 0 0 0 5px rgba(22, 192, 96, .2), 0 0 22px 7px rgba(22, 192, 96, .5); }
+}
+
+/* Spots outside the chosen range stay on the map but recede. */
+.soil-ghost { opacity: .35; filter: grayscale(.8); }
+
+/* ---- cluster donut ---- */
+.soil-donut {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+}
+
+.soil-donut::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.soil-donut-n {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  font: 800 13px system-ui, sans-serif;
+  color: #222;
+}
+
+.soil-donut-glow {
+  box-shadow: 0 0 0 3px rgba(22, 192, 96, .25), 0 0 20px 5px rgba(22, 192, 96, .5);
+}
+
+/* ---- GPX view chip ---- */
+.soil-chip-hit { display: flex; align-items: center; justify-content: center; }
+
+.soil-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px 0 6px;
+  border-radius: 99px;
+  border: 2px solid #fff;
+  box-sizing: border-box;
+  color: #fff;
+  font: 700 11px system-ui, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, .35);
+}
+
+.soil-chip .soil-glyph { width: 13px; height: 13px; flex: none; }
+.soil-chip-hero { box-shadow: 0 0 0 2px rgba(22, 192, 96, .35), 0 0 12px 3px rgba(22, 192, 96, .6); }
+
+/* ---- reduced motion: no sweep / pop / breathe, plain fades only ---- */
+@media (prefers-reduced-motion: reduce) {
+  .soil-radar-canvas.soil-sweep { animation: none; -webkit-mask-image: none; mask-image: none; }
+  .soil-beam { display: none; }
+  .soil-badge-pop { animation: none; transform: none; }
+  .soil-badge-hero,
+  .soil-badge-hero.soil-badge-pop { animation: none; }
+}
+
+/* Leaflet zoom control + attribution sit above the bottom panel on narrow screens. */
+.soil-radar-on .leaflet-bottom { margin-bottom: var(--soil-lift, 0px); }

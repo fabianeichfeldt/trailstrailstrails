@@ -1,4 +1,6 @@
 import type { Trail } from '~/types/Trail'
+import type { ConditionLevel } from '~/types/Weather'
+import { levelToAxis } from '~/types/SoilMap'
 
 const GRAYSCALE_KEY = 'map-grayscale'
 
@@ -39,5 +41,12 @@ export const useFiltersStore = defineStore('filters', () => {
     })
   }
 
-  return { showTrails, showBikeparks, showDirtparks, showPumptracks, useCluster, grayscaleMap, apply }
+  // 'none' = no soil verdict; the caller shows those only while the range is the full 0..4
+  function soilMatch(level: ConditionLevel | undefined, range: { lo: number; hi: number }): 'match' | 'ghost' | 'none' {
+    const axis = levelToAxis(level)
+    if (axis === null) return 'none'
+    return axis >= range.lo && axis <= range.hi ? 'match' : 'ghost'
+  }
+
+  return { showTrails, showBikeparks, showDirtparks, showPumptracks, useCluster, grayscaleMap, apply, soilMatch }
 })

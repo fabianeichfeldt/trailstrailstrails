@@ -34,6 +34,8 @@
           </div>
         </div>
 
+        <PlanCard />
+
         <!-- Profile form -->
         <section class="profile-section">
           <h3 class="section-title">Profil bearbeiten</h3>
@@ -143,13 +145,36 @@
               <button class="photo-delete-btn" aria-label="Foto löschen" @click="removePhoto(photo)">
                 <i class="fa-solid fa-trash"></i>
               </button>
-              <div class="photo-meta">
-                <span>{{ photo.trailName }}</span>
+              <div class="photo-card-meta">
+                <span class="photo-card-title" :title="photo.trailName">{{ photo.trailName }}</span>
                 <span>{{ formatDate(photo.created_at) }}</span>
               </div>
+              <button
+                type="button"
+                class="copyright-edit"
+                :class="{ missing: !photo.copyright }"
+                :aria-label="photo.copyright ? 'Copyright bearbeiten' : 'Copyright ergänzen'"
+                @click="editingPhoto = photo"
+              >
+                <span class="copyright-text">{{ photo.copyright ? `© ${photo.copyright}` : '© Copyright ergänzen' }}</span>
+                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
         </section>
+
+        <PhotoCopyrightDialog
+          v-if="editingPhoto"
+          :src="editingPhoto.url"
+          title="Copyright bearbeiten"
+          submit-label="Speichern"
+          :initial-copyright="editingPhoto.copyright ?? ''"
+          :busy="savingCopyright"
+          @confirm="saveCopyright"
+          @cancel="editingPhoto = null"
+        />
+
+        <DeleteAccountSection />
 
       </div>
     </main>
@@ -160,6 +185,11 @@
 <script setup lang="ts">
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
+import PlanCard from '~/components/profile/PlanCard.vue'
+import DeleteAccountSection from '~/components/profile/DeleteAccountSection.vue'
+import { updatePhotoCopyright } from '~/communication/photos'
+import { normalizeCopyright } from '~/utils/photoCopyright'
+import PhotoCopyrightDialog from '~/components/trail_detail/PhotoCopyrightDialog.vue'
 
 useSeoMeta({
   title: 'Mein Profil',
@@ -211,7 +241,10 @@ async function onRedeemCode() {
 }
 
 interface BaseTrail { id: string; name: string; created_at: string }
-interface PhotoItem { id: string; url: string; created_at: string; trailName: string; trailID: string }
+interface PhotoItem {
+  id: string; url: string; created_at: string; trailName: string; trailID: string
+  copyright: string | null
+}
 
 const createdTrails = ref<BaseTrail[]>([])
 const favoriteTrails = ref<BaseTrail[]>([])
@@ -231,7 +264,7 @@ async function loadContributions() {
     client.from('parks').select('id, name, created_at').eq('creator_id', uid),
     client.from('dirt_parks').select('id, name, created_at').eq('creator_id', uid),
     client.from('trail_favorites').select('trails(id, name, created_at)').eq('user_id', uid),
-    client.from('trail_photos').select('id, url, created_at, trail_id, trails(name)').eq('creator', uid),
+    client.from('trail_photos').select('id, url, created_at, trail_id, copyright, trails(name)').eq('creator', uid),
   ])
 
   createdTrails.value = [
@@ -242,8 +275,11 @@ async function loadContributions() {
 
   favoriteTrails.value = ((favRes.data ?? []) as { trails: BaseTrail }[]).map(r => r.trails)
 
-  photos.value = ((photosRes.data ?? []) as { id: string; url: string; created_at: string; trail_id: string; trails: { name: string } }[])
-    .map(p => ({ id: p.id, url: p.url, created_at: p.created_at, trailName: p.trails.name, trailID: p.trail_id }))
+  photos.value = ((photosRes.data ?? []) as { id: string; url: string; created_at: string; trail_id: string; copyright: string | null; trails: { name: string } }[])
+    .map(p => ({
+      id: p.id, url: p.url, created_at: p.created_at, trailName: p.trails.name, trailID: p.trail_id,
+      copyright: p.copyright ?? null,
+    }))
 }
 
 async function removePhoto(photo: PhotoItem) {
@@ -256,6 +292,29 @@ async function removePhoto(photo: PhotoItem) {
   } catch (err) {
     console.error('Failed to delete photo:', err)
     showToast('Löschen fehlgeschlagen 😢')
+  }
+}
+
+const editingPhoto = ref<PhotoItem | null>(null)
+const savingCopyright = ref(false)
+
+async function saveCopyright(value: string) {
+  const photo = editingPhoto.value
+  if (!photo || savingCopyright.value) return
+  if (normalizeCopyright(value) === photo.copyright) {
+    editingPhoto.value = null
+    return
+  }
+  savingCopyright.value = true
+  try {
+    photo.copyright = await updatePhotoCopyright(photo.id, value, client)
+    editingPhoto.value = null
+    showToast('✅ Copyright gespeichert')
+  } catch (err) {
+    console.error('Failed to update photo copyright:', err)
+    showToast('Speichern fehlgeschlagen 😢')
+  } finally {
+    savingCopyright.value = false
   }
 }
 
@@ -526,8 +585,12 @@ async function onUpdatePassword() {
   gap: 0.8em;
 }
 
+/* Column so the credit line sits at the bottom of every card in a row,
+   whatever the title length (grid items stretch to the row height). */
 .photo-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border-radius: 10px;
   overflow: hidden;
   background: #f5f5f5;
@@ -554,13 +617,57 @@ async function onUpdatePassword() {
 .photo-delete-btn:hover { background: rgba(220, 38, 38, 0.85); }
 
 .photo-card img {
+  flex: none;
   width: 100%;
   height: 120px;
   object-fit: cover;
   display: block;
 }
 
-.photo-meta {
+.photo-card-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.copyright-edit {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  width: 100%;
+  min-height: 40px;
+  padding: 0 0.5em;
+  border: none;
+  border-top: 1px solid #ececec;
+  background: transparent;
+  color: #555;
+  font: inherit;
+  font-size: 0.72em;
+  text-align: left;
+  cursor: pointer;
+}
+.copyright-edit .copyright-text {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.copyright-edit i { flex: none; font-size: 0.9em; opacity: 0.5; }
+.copyright-edit:hover i { opacity: 1; }
+.copyright-edit.missing {
+  color: #b45309;
+  font-weight: 600;
+  background: #fffbeb;
+}
+
+/* Not .photo-meta: photo_caroussel.css styles that class globally as an overlay. */
+.photo-card-meta {
+  flex: 1;
   padding: 0.4em 0.5em;
   display: flex;
   flex-direction: column;

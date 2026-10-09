@@ -36,7 +36,7 @@ async function fetchSpotExtras(id: string, type: Trail['type']): Promise<{ detai
   const select = columns.split(',').includes(idColumn) ? columns : `${idColumn},${columns}`
   const [detailsRes, photosRes] = await Promise.all([
     fetch(`${REST}/${table}?${idColumn}=eq.${id}&select=${select}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
   const [details, photos] = await Promise.all([
     detailsRes.ok ? detailsRes.json() : [],
@@ -66,7 +66,7 @@ const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = 
 // time and in the browser afterwards, with no staleness window.
 export async function getTrailById(id: string): Promise<Record<string, any> | null> {
   const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trails?id=eq.${id}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
@@ -104,7 +104,7 @@ export async function getTrailById(id: string): Promise<Record<string, any> | nu
 // then falls back to getTrailById() to 301 a legacy id URL to its slug.
 export async function getTrailBySlug(slug: string): Promise<Record<string, any> | null> {
   const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
     fetch(`${REST}/dirt_parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])

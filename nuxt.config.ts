@@ -46,7 +46,8 @@ export default defineNuxtConfig({
   // (they're srcDir-relative on Nuxt 3), so no dir.public override is
   // needed here — 'public' at the project root is already the default.
 
-  devtools: { enabled: true },
+  // Off under Playwright: the DevTools 4 dock fetches its logo from nuxt.com, tripping the E2E no-external-requests safety net.
+  devtools: { enabled: process.env.E2E !== '1' },
 
   experimental: {
     payloadExtraction: false,
@@ -362,11 +363,16 @@ export default defineNuxtConfig({
         '/articles',
         '/business',
         '/faq',
+        '/impressum',
+        '/kontakt',
         '/legal',
+        '/plans',
         '/privacy',
         '/support',
         '/terms',
         '/reset-password',
+        '/supporter/danke',
+        '/kuendigen',
         '/trailradar-vs-komoot',
         '/trailradar-vs-trailforks',
         ...Object.keys(regions).map(slug => `/trails/${slug}`),
@@ -388,7 +394,8 @@ export default defineNuxtConfig({
         // with its spot `type` the same way server/api/trails.get.ts does.
         const spotFields = 'id,slug,name,latitude,longitude,approved'
         const [r1, r2, r3, r4] = await Promise.all([
-          fetch(`${url}/rest/v1/trails?select=${spotFields}`, { headers: h }),
+          // Hidden trails (visible = false) get no page, sitemap/nearby entry or redirect stub.
+          fetch(`${url}/rest/v1/trails?select=${spotFields}&visible=eq.true`, { headers: h }),
           fetch(`${url}/rest/v1/parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/dirt_parks?select=${spotFields}`, { headers: h }),
           fetch(`${url}/rest/v1/trail_photos?select=trail_id,url&order=created_at.asc`, { headers: h }),
@@ -439,7 +446,10 @@ export default defineNuxtConfig({
           { path: '/about', priority: '0.6', changefreq: 'monthly' },
           { path: '/faq', priority: '0.6', changefreq: 'monthly' },
           { path: '/support', priority: '0.6', changefreq: 'monthly' },
+          { path: '/plans', priority: '0.6', changefreq: 'monthly' },
           { path: '/business', priority: '0.6', changefreq: 'monthly' },
+          { path: '/impressum', priority: '0.3', changefreq: 'yearly' },
+          { path: '/kontakt', priority: '0.3', changefreq: 'yearly' },
           { path: '/legal', priority: '0.3', changefreq: 'yearly' },
           { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
           { path: '/terms', priority: '0.3', changefreq: 'yearly' },

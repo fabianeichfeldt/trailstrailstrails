@@ -1,0 +1,108 @@
+<style>
+  .card-image{aspect-ratio:auto!important;display:block!important;padding:0!important}
+  @property --sweep{syntax:'<angle>';inherits:false;initial-value:0deg}
+  .lv{position:relative;height:380px;overflow:hidden;cursor:pointer}
+  .lv canvas{position:absolute;inset:0;width:100%;height:100%}
+  .lv .fx{-webkit-mask-image:conic-gradient(from 0deg at 50% 50%, #000 var(--sweep), transparent calc(var(--sweep) + 1deg));mask-image:conic-gradient(from 0deg at 50% 50%, #000 var(--sweep), transparent calc(var(--sweep) + 1deg))}
+  .lv.play .fx{animation:sweep 1.6s cubic-bezier(.6,.05,.3,1) forwards}
+  @keyframes sweep{from{--sweep:0deg}to{--sweep:361deg}}
+  .beam{position:absolute;left:50%;top:50%;width:150%;height:150%;transform:translate(-50%,-50%);opacity:0;pointer-events:none;border-radius:50%}
+  .lv.play .beam{animation:beam 1.6s cubic-bezier(.6,.05,.3,1) forwards}
+  @keyframes beam{0%{opacity:1;transform:translate(-50%,-50%) rotate(0deg)}90%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) rotate(360deg)}}
+  .pin{position:absolute;width:22px;height:26px;transform:translate(-50%,-100%)}
+  .pin .p{position:absolute;left:2px;top:6px;width:18px;height:18px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .pin .p::after{content:'';position:absolute;width:8px;height:8px;background:#fff;border-radius:50%;top:5px;left:5px}
+  .pin .b{position:absolute;left:12px;top:-4px;width:17px;height:17px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;box-shadow:0 1px 4px rgba(0,0,0,.35);transform:scale(0)}
+  .lv.play .pin .b{animation:pop .45s cubic-bezier(.3,1.6,.5,1) forwards}
+  @keyframes pop{to{transform:scale(1)}}
+  .pin .b svg{width:10px;height:10px}
+  .hud{position:absolute;left:10px;right:10px;bottom:10px;border-radius:16px;padding:10px 12px;font:600 10px system-ui}
+  .ramp{height:12px;border-radius:99px;margin-bottom:6px}
+  .lbl{display:flex;justify-content:space-between}
+  .replay{position:absolute;top:10px;right:10px;font:600 10px system-ui;padding:5px 9px;border-radius:99px}
+  /* themes */
+  #earth{background:#e7e8ea}
+  #earth .hud{background:rgba(255,255,255,.8);backdrop-filter:blur(12px);color:#333;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  #earth .replay{background:#fff;color:#333}
+  #earth .beam{background:conic-gradient(from 0deg, transparent 0 340deg, rgba(34,197,94,.35) 360deg)}
+  #neon{background:#0e1116}
+  #neon .hud{background:rgba(20,24,32,.7);backdrop-filter:blur(12px);color:#cfd6e0;box-shadow:0 0 0 1px rgba(255,255,255,.08),0 8px 30px rgba(0,0,0,.5)}
+  #neon .replay{background:#1d232d;color:#9fffc4;box-shadow:0 0 12px #39ff9455}
+  #neon .beam{background:conic-gradient(from 0deg, transparent 0 330deg, rgba(57,255,148,.45) 360deg)}
+  #neon .pin .b{border-color:#0e1116}
+  #thermal{background:#e7e8ea}
+  #thermal .hud{background:rgba(255,255,255,.8);backdrop-filter:blur(12px);color:#333;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+  #thermal .replay{background:#fff;color:#333}
+  #thermal .beam{background:conic-gradient(from 0deg, transparent 0 340deg, rgba(255,140,0,.35) 360deg)}
+</style>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="g0" viewBox="0 0 24 24"><path d="M3 9h11a3 3 0 1 0-3-3M3 15h15a3 3 0 1 1-3 3M3 12h7" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></symbol>
+  <symbol id="g1" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.5" fill="#fff"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></symbol>
+  <symbol id="g2" viewBox="0 0 24 24"><path d="M12 1.5l2.6 7.2 7.4.3-5.8 4.7 2 7.3L12 16.8 5.8 21l2-7.3L2 9l7.4-.3z" fill="#fff"/></symbol>
+  <symbol id="g3" viewBox="0 0 24 24"><path d="M12 2.5C9 7 5.5 10.5 5.5 14.5a6.5 6.5 0 0 0 13 0C18.5 10.5 15 7 12 2.5z" fill="#fff"/></symbol>
+  <symbol id="g4" viewBox="0 0 24 24"><path d="M2 17c2-2 4 2 6 0s4 2 6 0 4 2 6 0M5 11c1.5-1.5 3 1.5 4.5 0M14 11c1.5-1.5 3 1.5 4.5 0" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="12" cy="6" r="2" fill="#fff"/></symbol>
+</defs></svg>
+
+<h2>Look &amp; feel: palette, glow and the "switch on" moment</h2>
+<p class="subtitle">Click any map to replay the activation: a radar beam sweeps once around, painting the soil clouds behind it, then the soil badges pop onto the pins one by one. Pins use M2 (type pin + soil badge).</p>
+
+<div class="cards">
+  <div class="card" data-choice="earth" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="lv" id="earth"><canvas class="base"></canvas><canvas class="fx"></canvas><div class="beam"></div><div class="replay">↻ nochmal</div>
+      <div class="hud"><div class="ramp"></div><div class="lbl"><span>staubig</span><span>trocken</span><span>Hero</span><span>feucht</span><span>Matsch</span></div></div></div></div>
+    <div class="card-body"><h3>L1 · Earth (light map)</h3><p>Natural ground colours on the existing light, grey map: sand → olive → vivid green Hero → cool blue → mud brown. Calm, credible and matches the current app. Glow is soft.</p></div>
+  </div>
+
+  <div class="card" data-choice="neon" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="lv" id="neon"><canvas class="base"></canvas><canvas class="fx"></canvas><div class="beam"></div><div class="replay">↻ nochmal</div>
+      <div class="hud"><div class="ramp"></div><div class="lbl"><span>staubig</span><span>trocken</span><span>Hero</span><span>feucht</span><span>Matsch</span></div></div></div></div>
+    <div class="card-body"><h3>L2 · Night radar (dark map)</h3><p>Switching the layer on fades the map to dark; the soil clouds glow additively like a radar screen, Hero Dirt in electric green. Maximum wow and a clear "you're in Supporter mode" signal, but a big visual jump from the normal map.</p></div>
+  </div>
+
+  <div class="card" data-choice="thermal" onclick="toggleSelect(this)">
+    <div class="card-image"><div class="lv" id="thermal"><canvas class="base"></canvas><canvas class="fx"></canvas><div class="beam"></div><div class="replay">↻ nochmal</div>
+      <div class="hud"><div class="ramp"></div><div class="lbl"><span>staubig</span><span>trocken</span><span>Hero</span><span>feucht</span><span>Matsch</span></div></div></div></div>
+    <div class="card-body"><h3>L3 · Hot = go (light map)</h3><p>Inverts the logic: the better the dirt, the hotter the colour. Hero Dirt burns orange-gold, mud is cold violet-grey. Instantly reads as "go there", but dusty-vs-hero is less intuitive.</p></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const PAL={
+    earth:{stops:['#e0a526','#8bbf3f','#16c060','#2ea8e6','#6d4c41'],blend:'multiply',alpha:.7,blur:6,dark:false},
+    neon:{stops:['#ffb020','#b6ff3b','#39ff94','#22d3ee','#a14dff'],blend:'screen',alpha:.85,blur:8,dark:true},
+    thermal:{stops:['#f6c445','#ff8a2a','#ff3d2e','#7c8db5','#5b4a7a'],blend:'multiply',alpha:.7,blur:6,dark:false},
+  };
+  // Thermal: "hero" hottest — remap so index 2 is hottest red-orange.
+  const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+  function col(st,v){v=Math.max(0,Math.min(4,v));const i=Math.min(3,Math.floor(v)),t=v-i,a=hex(st[i]),b=hex(st[i+1]);return a.map((c,k)=>Math.round(c+(b[k]-c)*t))}
+  let s=5;const r=()=>(s=(s*16807)%2147483647)/2147483647;
+  const clusters=[[.2,.25,7],[.3,.55,7],[.65,.22,6],[.7,.55,8],[.85,.4,5],[.45,.75,5]];
+  const spots=[];for(const[cx,cy,n]of clusters)for(let i=0;i<n;i++){const x=cx+(r()-.5)*.18,y=cy+(r()-.5)*.16;
+    const front=Math.max(0,Math.min(1,(x-.45)*2.4));spots.push({x,y,v:Math.max(0,Math.min(4,1.1+front*3+(r()-.5)*1.2)),type:['#3b82f6','#3b82f6','#10b981','#b91794'][Math.floor(r()*4)]})}
+  function base(cv,dark){const c=cv.getContext('2d'),w=cv.width,h=cv.height;c.fillStyle=dark?'#0e1116':'#e7e8ea';c.fillRect(0,0,w,h);
+    c.fillStyle=dark?'#141922':'#dfe1e2';for(let i=0;i<12;i++){c.beginPath();c.arc(((i*97)%100)/100*w,((i*53)%100)/100*h,30+(i*13)%55,0,7);c.fill()}
+    c.strokeStyle=dark?'#232b37':'#fff';c.lineWidth=2;for(let i=0;i<8;i++){c.beginPath();c.moveTo(((i*37)%100)/100*w,0);c.bezierCurveTo(((i*71)%100)/100*w,h*.3,((i*29)%100)/100*w,h*.7,((i*61)%100)/100*w,h);c.stroke()}}
+  function build(id){const el=document.getElementById(id),P=PAL[id],[b,f]=el.querySelectorAll('canvas');
+    for(const cv of[b,f]){cv.width=el.clientWidth;cv.height=el.clientHeight}base(b,P.dark);
+    f.style.filter=`blur(${P.blur}px)`;f.style.mixBlendMode=P.blend;
+    el.querySelector('.ramp').style.background=`linear-gradient(90deg,${P.stops.join(',')})`;
+    const c=f.getContext('2d'),w=f.width,h=f.height,step=3,img=c.createImageData(w,h),d=img.data,R=.075*w;
+    const pts=spots.map(p=>({...p,x:p.x*w,y:p.y*h}));
+    for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){let ws=0,vs=0;for(const p of pts){const dx=x-p.x,dy=y-p.y,k=Math.exp(-(dx*dx+dy*dy)/(2*R*R));ws+=k;vs+=k*p.v}
+      const v=vs/(ws||1),a=Math.min(P.alpha,Math.pow(Math.min(1,ws*.9),.8)*P.alpha),cc=col(P.stops,v);
+      for(let yy=0;yy<step;yy++)for(let xx=0;xx<step;xx++){const i=((y+yy)*w+(x+xx))*4;if(i>=d.length)continue;d[i]=cc[0];d[i+1]=cc[1];d[i+2]=cc[2];d[i+3]=a*255}}
+    c.putImageData(img,0,0);
+    const cx=w/2,cy=h/2;
+    for(const p of pts){const lvl=Math.round(p.v),cc=P.stops[lvl];const e=document.createElement('div');e.className='pin';e.style.left=p.x+'px';e.style.top=p.y+'px';
+      const ang=(Math.atan2(p.x-cx,-(p.y-cy))*180/Math.PI+360)%360; // match sweep angle
+      const glow=lvl===2?`box-shadow:0 0 0 2px ${cc}55,0 0 14px 4px ${cc}cc;`:'';
+      e.innerHTML=`<div class="p" style="background:${p.type}"></div><div class="b" style="background:${cc};${glow}animation-delay:${(ang/360)*1.3+.1}s"><svg><use href="#g${lvl}"/></svg></div>`;
+      el.insertBefore(e,el.querySelector('.beam'))}
+    const play=()=>{el.classList.remove('play');void el.offsetWidth;el.classList.add('play')};
+    el.addEventListener('click',e=>{e.stopPropagation();play()});setTimeout(play,400)}
+  function go(){['earth','neon','thermal'].forEach(build)}
+  if(document.readyState==='complete')go();else window.addEventListener('load',go);
+})();
+</script>

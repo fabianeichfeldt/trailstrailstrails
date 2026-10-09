@@ -8,7 +8,7 @@
     <div v-if="store.comments.length" class="comments-list">
       <div v-for="c in store.comments" :key="c.id" class="comment-row" :data-comment-id="c.id">
         <div class="comment-meta">
-          <span class="comment-author">{{ c.profiles?.display_name || 'Anonym' }}</span>
+          <span class="comment-author">{{ authorName(c.profiles, 'Anonym') }}</span>
           <span class="comment-date">{{ formatDate(c.created_at) }}</span>
         </div>
         <p class="comment-text">{{ c.comment_text }}</p>
@@ -55,6 +55,7 @@
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
 import { formatDate } from '~/utils/formatDate'
+import { authorName } from '~/utils/authorName'
 import type { Comment } from '~/types/Comment'
 import type { IAuthService } from '~/auth/auth_service'
 
@@ -94,7 +95,7 @@ async function loadMore() {
 }
 
 function reply(c: Comment) {
-  const author = c.profiles?.display_name || 'Anonym'
+  const author = authorName(c.profiles, 'Anonym')
   text.value = `@${author} ${text.value}`.trimStart()
   nextTick(() => textareaEl.value?.focus())
 }

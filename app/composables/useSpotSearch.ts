@@ -3,6 +3,7 @@
 // vitest, where there is no Nuxt to inject them.
 import { computed, ref } from 'vue'
 import { searchPlaces } from '~/communication/places'
+import { zoomForPlace } from '~/map/zoomLevels'
 
 // All the searchbar's behaviour: debounce, name scoring, group assembly,
 // keyboard highlight and the stale-response guard. It used to live inline in
@@ -23,6 +24,8 @@ export interface SpotSearchItem {
   /** Set for a place result — the coordinates to fly to. */
   lat?: number
   lon?: number
+  /** Set for a place result — how close to fly (towns closer than districts). */
+  zoom?: number
 }
 
 export interface SpotSearchGroup {
@@ -116,7 +119,7 @@ export function useSpotSearch() {
         label: 'Orte & Regionen',
         items: places.map((p, i) => {
           const { name, sub } = placeParts(p.display_name)
-          return { key: `place-${i}`, icon: '📍', name, sub, lat: parseFloat(p.lat), lon: parseFloat(p.lon) }
+          return { key: `place-${i}`, icon: '📍', name, sub, lat: parseFloat(p.lat), lon: parseFloat(p.lon), zoom: zoomForPlace(p) }
         }),
       })
     }

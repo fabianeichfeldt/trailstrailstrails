@@ -271,8 +271,9 @@
             @dragleave="isDragOver = false"
             @drop.prevent="onDrop"
           >
-            <i class="fas fa-cloud-upload-alt sm-drop-icon" />
-            <p v-if="busy">Höhendaten werden ermittelt …</p>
+            <div v-if="gpxProcessing" class="sm-spinner sm-spinner-sm sm-dem-spinner" role="status" aria-label="Höhendaten werden ermittelt" />
+            <i v-else class="fas fa-cloud-upload-alt sm-drop-icon" />
+            <p v-if="gpxProcessing">Höhendaten werden ermittelt …</p>
             <p v-else>GPX-Dateien hier ablegen</p>
             <label class="sm-btn-secondary sm-drop-browse" :class="{ 'sm-btn-disabled': busy }">
               <i class="fas fa-folder-open" /> Durchsuchen
@@ -338,11 +339,13 @@
             @dragleave="uploadDragOver = false"
             @drop.prevent="onSegmentFileDrop"
           >
-            <i class="fas fa-route sm-drop-icon" />
-            <p>GPX-Datei hier ablegen</p>
-            <label class="sm-btn-secondary sm-drop-browse">
+            <div v-if="segmentProcessing" class="sm-spinner sm-spinner-sm sm-dem-spinner" role="status" aria-label="Höhendaten werden ermittelt" />
+            <i v-else class="fas fa-route sm-drop-icon" />
+            <p v-if="segmentProcessing">Höhendaten werden ermittelt …</p>
+            <p v-else>GPX-Datei hier ablegen</p>
+            <label class="sm-btn-secondary sm-drop-browse" :class="{ 'sm-btn-disabled': segmentProcessing }">
               <i class="fas fa-folder-open" /> Durchsuchen
-              <input type="file" accept=".gpx" hidden @change="onSegmentFileInput" />
+              <input type="file" accept=".gpx" hidden :disabled="segmentProcessing" @change="onSegmentFileInput" />
             </label>
           </div>
           <div class="sm-import-footer">
@@ -434,7 +437,7 @@
           <label class="sm-file-label">GPX ersetzen (optional)
             <input type="file" accept=".gpx" :disabled="busy" @change="onEditGpx" />
           </label>
-          <div v-if="editGpxInfo" class="sm-gpx-info">{{ editGpxInfo }}</div>
+          <div v-if="editGpxInfo" class="sm-gpx-info"><span v-if="gpxProcessing" class="sm-spinner sm-spinner-inline sm-dem-spinner" role="status" />{{ editGpxInfo }}</div>
 
           <div class="sm-edit-status-section">
             <span class="sm-label">Status</span>
@@ -482,7 +485,7 @@
           <label class="sm-file-label">GPX ersetzen (optional)
             <input type="file" accept=".gpx" :disabled="busy" @change="onEditGpx" />
           </label>
-          <div v-if="editGpxInfo" class="sm-gpx-info">{{ editGpxInfo }}</div>
+          <div v-if="editGpxInfo" class="sm-gpx-info"><span v-if="gpxProcessing" class="sm-spinner sm-spinner-inline sm-dem-spinner" role="status" />{{ editGpxInfo }}</div>
           <div class="sm-form-actions">
             <button class="sm-btn-secondary" @click="cancelEdit">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveTourEdit">
@@ -863,6 +866,8 @@ const loading = ref(true)
 const accessError = ref('')
 const helpOpen = ref(false)
 const busy = ref(false)
+// Separate from `busy` (which also covers saves) — drives the DEM spinner only.
+const gpxProcessing = ref(false)
 
 // ── Mobile bottom-sheet resize ────────────────────────────────────────────────
 const sheetHeightVh = ref(DEFAULT_SHEET_VH)
@@ -1059,7 +1064,7 @@ const segmentEditor = useSegmentEditor({
 const {
   segmentName, segmentDifficulty, segmentDirection,
   pendingSegments, saveAsTour, tourName, tourDirection,
-  uploadDragOver, scrubberCanvas, busy: segmentBusy,
+  uploadDragOver, scrubberCanvas, busy: segmentBusy, processing: segmentProcessing,
   onFileDrop: onSegmentFileDrop,
   onFileInput: onSegmentFileInput,
   scrubberPointerDown, scrubberPointerMove, scrubberPointerUp, scrubberPointerLeave,
@@ -1312,9 +1317,10 @@ async function onEditGpx(e: Event) {
   if (!file) return
   const content = await file.text()
   busy.value = true
+  gpxProcessing.value = true
   editGpxInfo.value = 'Höhendaten werden ermittelt …'
   try {
-    const processed = await processGpx(content)
+    const processed = await processGpx(content, await authStore.getToken())
     if (!processed) { editGpxInfo.value = ''; return }
     editNewGpx.value = processed
     const heightNote = processed.demCorrected ? '' : ' · Höhe: GPX (DEM nicht erreichbar)'
@@ -1324,6 +1330,7 @@ async function onEditGpx(e: Event) {
     mapView.value?.fitTo('edit-preview')
   } finally {
     busy.value = false
+    gpxProcessing.value = false
   }
 }
 
@@ -1455,11 +1462,12 @@ function onFileInput(e: Event) {
 
 async function handleFiles(files: File[]) {
   busy.value = true
+  gpxProcessing.value = true
   try {
     for (const file of files) {
       if (!file.name.toLowerCase().endsWith('.gpx')) continue
       const content = await file.text()
-      const processed = await processGpx(content)
+      const processed = await processGpx(content, await authStore.getToken())
       if (!processed) continue
 
       const key = `pending-${crypto.randomUUID()}`
@@ -1474,6 +1482,7 @@ async function handleFiles(files: File[]) {
     if (pending.value.length > 0) mapView.value?.fitAll()
   } finally {
     busy.value = false
+    gpxProcessing.value = false
   }
 }
 
@@ -2056,6 +2065,8 @@ function ddmmToMmdd(ddmm: string): string | undefined {
 
 /* ── Misc ─────────────────────────────────────────────────────────── */
 .sm-spinner { width: 32px; height: 32px; margin: 40px auto; border: 3px solid #e0e0e0; border-top-color: #0077cc; border-radius: 50%; animation: sm-spin .7s linear infinite; }
+.sm-spinner-sm { width: 28px; height: 28px; margin: 0 auto; }
+.sm-spinner-inline { display: inline-block; width: 14px; height: 14px; margin: 0 6px -2px 0; border-width: 2px; }
 @keyframes sm-spin { to { transform: rotate(360deg); } }
 /* .sm-center-msg/.sm-error live in spotmanager-shared.css */
 .sm-muted { font-size: 12px; color: #aaa; }

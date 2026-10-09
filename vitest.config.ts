@@ -1,9 +1,11 @@
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
+import svgLoader from 'vite-svg-loader';
 
 export default defineConfig({
-  plugins: [vue()],
+  // Same svg handling as nuxt.config.ts, so `import Icon from '~/assets/icons/x.svg'` is a component here too.
+  plugins: [vue(), svgLoader({ defaultImport: 'component' })],
   resolve: {
     alias: {
       // Mirrors Nuxt's `~/` -> `srcDir` alias (see nuxt.config.ts `srcDir: 'app'`)
@@ -19,7 +21,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
-    include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'build/**/*.test.ts'],
+    include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'build/**/*.test.ts', 'scripts/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
   },
 });
