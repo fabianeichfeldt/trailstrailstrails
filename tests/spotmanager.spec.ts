@@ -468,7 +468,7 @@ baseTest('spotmanager: breadcrumb trail reflects nesting and jumps directly to a
 
 // ── Bikepark spots ───────────────────────────────────────────────────────────
 
-baseTest('spotmanager: admin opens a bikepark and gets the bikepark editor, not trail sections', async ({ page }) => {
+baseTest('spotmanager: admin opens a bikepark and gets the bikepark editor plus Trails, no Touren', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   await page.goto('/spotmanager');
   await page.waitForLoadState('networkidle');
@@ -488,7 +488,8 @@ baseTest('spotmanager: admin opens a bikepark and gets the bikepark editor, not 
 
   const titles = page.locator('.sm-details-banner-title');
   await expect(titles).toHaveText(['Spot-Details', 'Parkplätze'], { timeout: 6000 });
-  await expect(page.locator('.sm-section-header').filter({ hasText: /Touren|Trails/ })).toHaveCount(0);
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Touren' })).toHaveCount(0);
+  await expect(page.locator('.sm-section-header').filter({ hasText: 'Trails' })).toBeVisible();
 
   await page.locator('.sm-details-banner').filter({ hasText: 'Spot-Details' }).click();
   const editor = page.locator('.sd-editor.bpe');

@@ -10,8 +10,11 @@ describe('SPOT_CAPABILITIES', () => {
   it('only trail and bikepark are manageable', () => {
     expect(TYPES.filter(t => SPOT_CAPABILITIES[t].manageable)).toEqual(['trail', 'bikepark']);
   });
-  it('only trail has gpx', () => {
-    expect(TYPES.filter(t => SPOT_CAPABILITIES[t].gpx)).toEqual(['trail']);
+  it('trail and bikepark have GPX trails', () => {
+    expect(TYPES.filter(t => SPOT_CAPABILITIES[t].trails)).toEqual(['trail', 'bikepark']);
+  });
+  it('only trail has GPX tours', () => {
+    expect(TYPES.filter(t => SPOT_CAPABILITIES[t].tours)).toEqual(['trail']);
   });
   it('details kind is trail, bikepark or null', () => {
     for (const t of TYPES) expect(['trail', 'bikepark', null]).toContain(SPOT_CAPABILITIES[t].details);

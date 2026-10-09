@@ -86,12 +86,12 @@
            list right) from tablet width up — see .explore-grid below. -->
       <div class="explore-grid">
         <div class="explore-list">
-          <section v-if="trailForStore.type === 'trail'" id="touren" class="content-section card">
+          <section v-if="SPOT_GPX_SECTIONS[trailForStore.type].tours" id="touren" class="content-section card">
             <h2>Touren</h2>
             <SpotPanelToursTab />
           </section>
 
-          <section v-if="trailForStore.type === 'trail'" id="trails" class="content-section card">
+          <section v-if="SPOT_GPX_SECTIONS[trailForStore.type].trails" id="trails" class="content-section card">
             <h2>Trails</h2>
             <SpotPanelTrailsTab />
           </section>
@@ -180,7 +180,7 @@ import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
 import { toSocialImage, OG_FALLBACK_IMAGE } from '~/utils/socialImage'
 import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
 import { TrailDetails } from '~/types/TrailDetails'
-import type { Trail } from '~/types/Trail'
+import { SPOT_GPX_SECTIONS, type Trail } from '~/types/Trail'
 import type { NearbySpot } from '@@/build/nearby'
 import type { IAuthService } from '~/auth/auth_service'
 
