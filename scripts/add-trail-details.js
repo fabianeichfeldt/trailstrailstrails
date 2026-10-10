@@ -186,14 +186,13 @@ async function processParking(trail) {
   const trails = readJsonl(path.join(__dirname, INPUT_FILE));
 
   for (const trail of trails) {
-    const trailcrewAssigned = await hasTrailcrew(trail.trail_id);
-
-    if (trailcrewAssigned) {
-      console.log(`[${trail.trail_id}] ${trail.name} — trailcrew assigned, skipping trail_details`);
-    } else {
-      await upsertTrailDetails(trail);
+    // Trailcrew-managed spots are maintained in the SpotManager — scraper data must not overwrite them.
+    if (await hasTrailcrew(trail.trail_id)) {
+      console.log(`[${trail.trail_id}] ${trail.name} — trailcrew assigned, skipping spot (details + parking)`);
+      continue;
     }
 
+    await upsertTrailDetails(trail);
     await processParking(trail);
   }
 })();
