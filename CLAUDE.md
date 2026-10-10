@@ -73,6 +73,7 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 
 ### Tests must stay green
 - **Always run `npm test` before reporting work done.** All unit tests must pass.
+- **Test hooks are quiet by design** (`.claude/hooks/run-tests.sh`): after each `.ts`/`.vue` edit only the related tests run (silent on pass, short summary on fail); the full unit suite runs once at the end of the turn (`Stop`). E2E is CI-only — do not re-add a full `npm test` to a per-edit hook.
 - Playwright E2E: run `npm run test:e2e` when touching map interaction, auth flow, or add-spot flow.
 - **Every bug fix and every new feature needs a corresponding test.** If you add a function, add a unit test. If you add a user flow, extend the Playwright spec.
 - The architecture tests in `app/architecture.test.ts` enforce structural invariants — if you change architecture, update those tests to match the new target, don't just delete the assertion.
