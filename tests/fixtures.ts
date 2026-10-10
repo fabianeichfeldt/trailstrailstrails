@@ -233,7 +233,10 @@ export async function signInOnProfilePage(page: Page) {
 
 /** SPA navigation through the Nuxt router, keeping in-memory state (e.g. a signed-in user). */
 export async function navigateClientSide(page: Page, path: string) {
-  await page.evaluate((to) => (window as unknown as { useNuxtApp: () => { $router: { push: (p: string) => Promise<void> } } }).useNuxtApp().$router.push(to), path);
+  // Don't return push()'s promise from evaluate: on a cold CI dev server Chromium can GC it unsettled
+  // ("Resulting promise was garbage collected"); wait for the route on the Playwright side instead.
+  await page.evaluate((to) => { void (window as unknown as { useNuxtApp: () => { $router: { push: (p: string) => Promise<void> } } }).useNuxtApp().$router.push(to); }, path);
+  await page.waitForURL((url) => url.pathname === path.split('?')[0]);
 }
 
 /** Fixture: safety net + mocks + navigated to /map + networkidle. */
