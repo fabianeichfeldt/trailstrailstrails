@@ -170,6 +170,7 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/rest/v1/trailcrew_spots**',  (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/invitation_codes**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/bike_park_details**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/dirt_park_details**', (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_details**',    (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/subscriptions**',    (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/subscription_plans**', (route) => route.fulfill({ json: [] }));

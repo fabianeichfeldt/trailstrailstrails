@@ -11,9 +11,11 @@ async function signInOnSpotmanagerPage(
   page: import('@playwright/test').Page,
   rpcResponse: 'trailcrew' | 'admin' | null = null,
   parksJson: unknown[] = [],
+  dirtParksJson: unknown[] = [],
 ) {
-  // Default fixtures serve a bikepark; keep it out of the list unless a test opts in
+  // Default fixtures serve a bikepark and dirtparks; keep them out of the list unless a test opts in
   await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: parksJson }));
+  await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: dirtParksJson }));
   // Override RPC BEFORE sign-in so the auth store watcher picks it up
   await page.route('**/rest/v1/rpc/**', (route) =>
     route.fulfill({ json: rpcResponse }),
@@ -143,6 +145,7 @@ baseTest('spotmanager loads trailcrew spots for Google OAuth user using user.id 
     route.fulfill({ json: [{ id: 'spot-google-1', name: 'Flowtrail Google Test' }] }),
   );
   await page.route('**/rest/v1/parks**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/dirt_parks**', (route) => route.fulfill({ json: [] }));
 
   // Sign in with the Google session (sub !== id)
   await page.route('**/auth/v1/token**', (route) => route.fulfill({ json: MOCK_GOOGLE_SESSION }));
@@ -493,9 +496,55 @@ baseTest('spotmanager: admin opens a bikepark and gets the bikepark editor plus 
 
   await page.locator('.sm-details-banner').filter({ hasText: 'Spot-Details' }).click();
   const editor = page.locator('.sd-editor.bpe');
+  await expect(editor.getByTestId('park-kind')).toHaveCount(0);
   await expect(editor).toBeVisible({ timeout: 6000 });
   await expect(editor).toContainText('Öffnungszeiten');
   await expect(editor).not.toContainText(/Regen|Nacht/);
+
+  assertNoLeaks();
+});
+
+// ── Dirtpark spots ───────────────────────────────────────────────────────────
+
+baseTest('spotmanager: admin opens a dirtpark, gets the park editor without GPX and picks pumptrack / dirt-jumps', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await page.goto('/spotmanager');
+  await page.waitForLoadState('networkidle');
+
+  await page.route('**/rest/v1/trails**', (route) => route.fulfill({ json: [] }));
+  await page.route('**/rest/v1/parking**', (route) => route.fulfill({ json: [] }));
+  const upserts: unknown[] = [];
+  await page.route('**/rest/v1/dirt_park_details**', (route) => {
+    if (route.request().method() === 'POST') {
+      upserts.push(route.request().postDataJSON());
+      return route.fulfill({ json: [route.request().postDataJSON()] });
+    }
+    return route.fulfill({ json: [] });
+  });
+
+  await signInOnSpotmanagerPage(page, 'admin', [], [
+    { id: 'dirt-1', name: 'Pumptrack Isar', latitude: 48.1, longitude: 11.5, approved: true, url: '', pumptrack: true, dirtpark: false },
+  ]);
+  await expect(page.locator('.sm-shell')).toBeVisible({ timeout: 8000 });
+
+  const row = page.locator('.sm-spot-btn:not(.sm-embed-btn)');
+  await expect(row).toHaveCount(1, { timeout: 6000 });
+  await expect(row.locator('.sm-type-badge')).toHaveText('Dirtpark');
+  await row.click();
+
+  await expect(page.locator('.sm-details-banner-title')).toHaveText(['Spot-Details', 'Parkplätze'], { timeout: 6000 });
+  await expect(page.locator('.sm-section-header').filter({ hasText: /Touren|Trails/ })).toHaveCount(0);
+
+  await page.locator('.sm-details-banner').filter({ hasText: 'Spot-Details' }).click();
+  const kind = page.getByTestId('park-kind');
+  await expect(kind.getByRole('button', { name: 'Pumptrack' })).toHaveAttribute('aria-pressed', 'true');
+  await kind.getByRole('button', { name: 'Dirt-Jumps' }).click();
+
+  const rpc = page.waitForRequest('**/rest/v1/rpc/set_dirtpark_kind');
+  await page.locator('.sd-editor.bpe .sm-btn-primary').click();
+  expect((await rpc).postDataJSON()).toEqual({ p_spot_id: 'dirt-1', p_pumptrack: true, p_dirtpark: true });
+  await expect(page.locator('.sm-details-banner-title').first()).toBeVisible({ timeout: 6000 });
+  expect(upserts).toHaveLength(1);
 
   assertNoLeaks();
 });
