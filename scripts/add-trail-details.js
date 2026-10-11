@@ -1,9 +1,21 @@
+/**
+ * Imports scraped trail_details (+ parking) from the trail-scraper output.
+ *
+ *   DRY_RUN=1 node --env-file=.env add-trail-details.js   → writes nothing; review.md lists every field change
+ *   node --env-file=.env add-trail-details.js             → applies; changes.jsonl records the before-values
+ *   node --env-file=.env revert-trail-details.js <run-dir> → undoes an applied run
+ *
+ * Each run gets its own folder under scripts/backups/trail-details/ (gitignored).
+ * Trailcrew-managed spots are skipped entirely — they are maintained in the SpotManager.
+ */
 const fs = require('fs');
 const path = require('path');
+const { createClient, applyDetails, pickDetailFields, formatReview } = require('./trail-details-lib');
 
 const SUPABASE_URL = 'https://ixafegmxkadbzhxmepsd.supabase.co';
 const service_role_key = process.env.SUPABASE_SERVICE_KEY;
-const INPUT_FILE = '../../trail-scraper/trail_analysis.jsonl';
+const INPUT_FILE = process.env.TRAIL_DETAILS_INPUT || path.join(__dirname, '../../trail-scraper/trail_analysis.jsonl');
+const DRY_RUN = process.env.DRY_RUN === '1';
 
 const NOMINATIM_URL = 'https://nominatim.openstreetmap.org/search';
 const NOMINATIM_USER_AGENT = 'TrailRadar-DataImport/1.0';
@@ -19,6 +31,8 @@ const spotCoordsCache = new Map();
 if (!service_role_key) {
   throw new Error('SUPABASE_SERVICE_KEY env var is required');
 }
+
+const client = createClient({ url: SUPABASE_URL, key: service_role_key });
 
 function supabaseHeaders(extra = {}) {
   return {
@@ -39,33 +53,6 @@ function readJsonl(filePath) {
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function hasTrailcrew(spotId) {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/trailcrew_spots?select=user_id&spot_id=eq.${encodeURIComponent(spotId)}&limit=1`,
-    { headers: supabaseHeaders() },
-  );
-  if (!res.ok) throw new Error(`trailcrew_spots lookup failed: ${res.status} ${await res.text()}`);
-  const rows = await res.json();
-  return rows.length > 0;
-}
-
-async function upsertTrailDetails(trail) {
-  const { name: _name, confidence: _confidence, gps_links: _gpsLinks, parking: _parking, ...fields } = trail;
-
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/trail_details`, {
-    method: 'POST',
-    headers: supabaseHeaders({ Prefer: 'resolution=merge-duplicates' }),
-    body: JSON.stringify(fields),
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    console.error(`[${trail.trail_id}] ${trail.name} — trail_details ${response.status}: ${text}`);
-  } else {
-    console.log(`[${trail.trail_id}] ${trail.name} — trail_details ok`);
-  }
 }
 
 async function getSpotCoords(spotId) {
@@ -121,41 +108,22 @@ async function geocode(query, bias) {
   return match;
 }
 
-async function existingParkingNames(spotId) {
-  const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/parking?select=name&spot_id=eq.${encodeURIComponent(spotId)}`,
-    { headers: supabaseHeaders() },
-  );
-  if (!res.ok) return new Set();
-  const rows = await res.json();
-  return new Set(rows.map(r => r.name));
-}
-
-async function insertParking(spotId, name, lat, lng) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/parking`, {
-    method: 'POST',
-    headers: supabaseHeaders({ Prefer: 'return=minimal' }),
-    body: JSON.stringify({ spot_id: spotId, name, lat, lng }),
-  });
-
-  if (!res.ok) {
-    console.error(`  [parking] ${name} — ${res.status}: ${await res.text()}`);
-  } else {
-    console.log(`  [parking] ${name} — ok`);
-  }
-}
-
-async function processParking(trail) {
+// Returns the names that would be / were added; real runs push the new row ids into entry.parking_ids.
+async function processParking(trail, entry) {
   const items = trail.parking || [];
-  if (items.length === 0) return;
+  const added = [];
+  if (items.length === 0) return added;
 
-  const existingNames = await existingParkingNames(trail.trail_id);
+  const existingNames = await client.parkingNames(trail.trail_id);
 
   for (const item of items) {
     const name = item.name || 'Parkplatz';
+    if (existingNames.has(name)) continue;
 
-    if (existingNames.has(name)) {
-      console.log(`  [parking] ${name} — already exists, skipping`);
+    if (DRY_RUN) {
+      // Geocoding is skipped in dry runs (1 req/s Nominatim limit); the name is enough to review.
+      const hasCoords = item.latitude != null && item.longitude != null;
+      added.push(hasCoords ? name : `${name} (coords via geocoding: ${item.address || item.name || '—'})`);
       continue;
     }
 
@@ -178,21 +146,54 @@ async function processParking(trail) {
       continue;
     }
 
-    await insertParking(trail.trail_id, name, lat, lng);
+    try {
+      entry.parking_ids.push(await client.insertParking({ spot_id: trail.trail_id, name, lat, lng }));
+      added.push(name);
+      console.log(`  [parking] ${name} — ok`);
+    } catch (err) {
+      console.error(`  [parking] ${name} — ${err.message}`);
+    }
   }
+  return added;
 }
 
 (async () => {
-  const trails = readJsonl(path.join(__dirname, INPUT_FILE));
+  const trails = readJsonl(INPUT_FILE);
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const runDir = path.join(__dirname, 'backups', 'trail-details', `${stamp}${DRY_RUN ? '-dry' : ''}`);
+  fs.mkdirSync(runDir, { recursive: true });
+  const logFile = path.join(runDir, 'changes.jsonl');
 
+  const dropped = new Set(trails.flatMap(t => pickDetailFields(t).dropped));
+  console.log(`${DRY_RUN ? 'DRY RUN — nothing is written. ' : ''}${trails.length} spots → ${runDir}`);
+  console.log(`Ignored input keys (no trail_details column): ${[...dropped].join(', ')}\n`);
+
+  const entries = [];
   for (const trail of trails) {
-    // Trailcrew-managed spots are maintained in the SpotManager — scraper data must not overwrite them.
-    if (await hasTrailcrew(trail.trail_id)) {
-      console.log(`[${trail.trail_id}] ${trail.name} — trailcrew assigned, skipping spot (details + parking)`);
-      continue;
+    let entry;
+    try {
+      entry = await applyDetails(client, trail, { dryRun: DRY_RUN });
+    } catch (err) {
+      entry = { trail_id: trail.trail_id, name: trail.name, action: 'error', error: err.message };
     }
 
-    await upsertTrailDetails(trail);
-    await processParking(trail);
+    if (entry.action !== 'skipped_trailcrew' && entry.action !== 'error') {
+      entry.parking_ids ??= [];
+      entry.parking = await processParking(trail, entry);
+    }
+
+    const fields = Object.keys(entry.changes ?? {});
+    console.log(`[${entry.trail_id}] ${entry.name} — ${entry.action}${fields.length ? `: ${fields.join(', ')}` : ''}${entry.parking?.length ? ` (+${entry.parking.length} parking)` : ''}${entry.error ? ` — ${entry.error}` : ''}`);
+
+    entries.push(entry);
+    // Appended per spot so a crashed run still leaves a complete undo log for everything written so far.
+    if (!DRY_RUN && (entry.changes || entry.parking_ids?.length)) fs.appendFileSync(logFile, JSON.stringify(entry) + '\n');
   }
+
+  const title = `trail_details ${DRY_RUN ? 'dry run' : 'import'} ${stamp}`;
+  fs.writeFileSync(path.join(runDir, 'review.md'), formatReview(entries, { title }));
+  fs.writeFileSync(path.join(runDir, 'summary.json'), JSON.stringify(entries, null, 2));
+
+  console.log(`\nReview: ${path.join(runDir, 'review.md')}`);
+  if (!DRY_RUN) console.log(`Undo:   npm run revert-trail-details -- ${runDir}`);
 })();
