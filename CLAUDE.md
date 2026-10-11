@@ -88,6 +88,7 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 ### Ask, don't assume
 - If the intended design or architectural target for a task is unclear, **ask before implementing**. A wrong assumption costs more to undo than a 30-second clarification.
 - This applies especially to: new user flows, new API endpoints, changes that span multiple layers, and anything that touches the filter/marker pipeline.
+- **Log decisions in Notion.** When the user confirms a design/architecture decision or reverses an earlier one, add a row to the Notion "Trailradar Decision Log" (data source `collection://e3b6aa7d-3748-4cbc-a10b-9c7779cd71c0`): Decision, Date, Area, Status, Why, Rejected alternatives, Source (spec/PR link). Mark a reversed entry `Superseded`. CLAUDE.md keeps only the current rule; the history lives there. No Notion MCP in the session → mention the decision in the final summary instead.
 
 ### Code comments
 - Keep comments short and precise — one line, stating the non-obvious *why*, not the *what*. If it needs a paragraph, put it in the PR description instead.
