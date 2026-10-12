@@ -5,6 +5,26 @@
       <h3>Spot-Details</h3>
     </div>
 
+    <div v-if="caps.parkKind" class="sd-section" data-testid="park-kind">
+      <div class="sd-section-label"><i class="fas fa-shapes" /> Art</div>
+      <div class="sd-status-grid">
+        <button
+          v-for="k in KINDS"
+          :key="k.key"
+          type="button"
+          class="sd-status-card"
+          :class="{ active: kind[k.key] }"
+          :aria-pressed="kind[k.key]"
+          style="--status-color:#8d6e63"
+          @click="kind[k.key] = !kind[k.key]"
+        >
+          <i class="fas sd-status-icon" :class="k.icon" />
+          <span>{{ k.label }}</span>
+        </button>
+      </div>
+      <span v-if="kindError" class="sd-field-error" role="alert">{{ kindError }}</span>
+    </div>
+
     <div class="sd-section">
       <div class="sd-section-label"><i class="fas fa-circle-half-stroke" /> Status</div>
       <div class="sd-status-grid">
@@ -30,7 +50,7 @@
 
     <div class="sd-section">
       <div class="sd-section-label"><i class="fas fa-align-left" /> Beschreibung</div>
-      <textarea v-model="description" class="sd-textarea" placeholder="Allgemeine Infos zum Bikepark…" />
+      <textarea v-model="description" class="sd-textarea" :placeholder="`Allgemeine Infos zum ${caps.label}…`" />
       <div class="sd-char-hint" :class="{ 'is-over': descTooLong }">{{ description.length }}/{{ MAX_DESC }}</div>
       <span v-if="descTooLong" class="sd-field-error" role="alert">Die Beschreibung darf höchstens {{ MAX_DESC }} Zeichen lang sein.</span>
     </div>
@@ -52,18 +72,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import type { SpotRow, BikeParkDetailsRow, SpotStatus } from '~/spot_manager/Api'
-import { upsertBikeParkDetails, setSpotWebsite } from '~/spot_manager/Api'
+import { ref, reactive, computed } from 'vue'
+import type { SpotRow, ParkDetailsRow, SpotStatus, DirtParkKind } from '~/spot_manager/Api'
+import { upsertParkDetails, setSpotWebsite, setDirtParkKind } from '~/spot_manager/Api'
 import { normalizeWebsiteUrl } from '~/spot_manager/spotWebsite'
+import { SPOT_CAPABILITIES, type ParkDetailsTable } from '~/spot_manager/spotTypes'
 import SpotWebsiteField from './SpotWebsiteField.vue'
 import SpotInvitationCodes from './SpotInvitationCodes.vue'
 
-const props = defineProps<{ spot: SpotRow; details: BikeParkDetailsRow | null; jwt: string }>()
+const props = defineProps<{ spot: SpotRow; details: ParkDetailsRow | null; jwt: string }>()
 const emit = defineEmits<{
   cancel: []
-  saved: [details: BikeParkDetailsRow, url: string]
+  saved: [details: ParkDetailsRow, spotPatch: { url: string } & Partial<DirtParkKind>]
 }>()
+
+const caps = computed(() => SPOT_CAPABILITIES[props.spot.type])
 
 const MAX_DESC = 2000
 const OPTIONS = [
@@ -75,6 +98,13 @@ const OPTIONS = [
 const status = ref<SpotStatus | null>(props.details?.status ?? null)
 const openingHours = ref(props.details?.opening_hours ?? '')
 const description = ref(props.details?.trail_description ?? '')
+// A spot can be both; the map filters on each flag separately.
+const KINDS = [
+  { key: 'pumptrack' as const, icon: 'fa-wave-square', label: 'Pumptrack' },
+  { key: 'dirtpark' as const, icon: 'fa-mountain', label: 'Dirt-Jumps' },
+]
+const kind = reactive<DirtParkKind>({ pumptrack: !!props.spot.pumptrack, dirtpark: !!props.spot.dirtpark })
+const kindError = ref('')
 const website = ref(props.spot.url ?? '')
 const websiteError = ref('')
 const saveError = ref('')
@@ -85,21 +115,33 @@ const descTooLong = computed(() => description.value.length > MAX_DESC)
 async function save() {
   saveError.value = ''
   websiteError.value = ''
+  kindError.value = ''
   const site = normalizeWebsiteUrl(website.value)
   if (!site.ok) { websiteError.value = site.error; return }
   if (descTooLong.value) return
+  if (caps.value.parkKind && !kind.pumptrack && !kind.dirtpark) {
+    kindError.value = 'Mindestens eine Art auswählen.'
+    return
+  }
 
   busy.value = true
   try {
-    const row: BikeParkDetailsRow = {
+    const row: ParkDetailsRow = {
       id: props.spot.id,
       status: status.value,
       opening_hours: openingHours.value.trim() || null,
       trail_description: description.value.trim() || null,
     }
-    const saved = await upsertBikeParkDetails(row, props.jwt)
+    const saved = await upsertParkDetails(caps.value.detailsTable as ParkDetailsTable, row, props.jwt)
     if (site.url !== (props.spot.url ?? '')) await setSpotWebsite(props.spot.id, site.url, props.jwt)
-    emit('saved', saved ?? row, site.url)
+    if (!caps.value.parkKind) {
+      emit('saved', saved ?? row, { url: site.url })
+      return
+    }
+    if (kind.pumptrack !== !!props.spot.pumptrack || kind.dirtpark !== !!props.spot.dirtpark) {
+      await setDirtParkKind(props.spot.id, { ...kind }, props.jwt)
+    }
+    emit('saved', saved ?? row, { url: site.url, ...kind })
   } catch (e) {
     saveError.value = e instanceof Error ? e.message : 'Speichern fehlgeschlagen'
   } finally {

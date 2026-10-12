@@ -191,7 +191,7 @@ describe('getTrailBySlug', () => {
   })
 })
 
-// ── bikepark details (bike_park_details) ────────────────────────────────────
+// ── park details (bike_park_details / dirt_park_details) ────────────────────────────────────
 
 describe('spot details source per type', () => {
   function routeFetch(tables: Record<string, unknown[] | 'fail'>) {
@@ -247,6 +247,21 @@ describe('spot details source per type', () => {
       trail_details: [{ trail_id: 't-uuid', trail_description: 'Nice' }],
     }))
     expect(await getTrailById('t-uuid')).toMatchObject({ type: 'trail', trail_description: 'Nice' })
+  })
+
+  it('getTrailBySlug: dirtpark exposes status + description from dirt_park_details', async () => {
+    const dirt = { id: 'd-uuid', slug: 'pumptrack-muc', name: 'Pumptrack', latitude: 48, longitude: 11, pumptrack: true, dirtpark: false }
+    const fetch = routeFetch({
+      dirt_parks: [dirt],
+      dirt_park_details: [{ id: 'd-uuid', status: 'closed', opening_hours: 'tagsüber', trail_description: 'Asphalt-Pumptrack' }],
+    })
+    vi.stubGlobal('fetch', fetch)
+    const res = await getTrailBySlug('pumptrack-muc')
+    expect(res).toMatchObject({ type: 'dirtpark', status: 'closed', opening_hours: 'tagsüber', trail_description: 'Asphalt-Pumptrack' })
+    expect(bakedTrailDetails(res).trail_description).toBe('Asphalt-Pumptrack')
+    const urls = fetch.mock.calls.map(c => String(c[0]))
+    expect(urls.some(u => u.includes('/trail_details'))).toBe(false)
+    expect(urls.find(u => u.includes('/dirt_park_details'))).toContain('id=eq.d-uuid')
   })
 
   it('a failed bike_park_details fetch degrades to empty details', async () => {

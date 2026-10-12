@@ -21,12 +21,13 @@ const TRAIL_DETAILS_BAKED_COLUMNS =
   'trail_id,rules,last_update,trail_description,status,status_until,status_hint,' +
   'access_type,donation_url,seasonal_from,seasonal_to,rain_policy,rain_closed_hours'
 
-// Per-type source of the details row merged into the spot payload. Trails and
-// dirtparks live in trail_details; bikeparks have their own bike_park_details.
+// Per-type source of the details row merged into the spot payload. Trails live
+// in trail_details; bike- and dirtparks have their own *_park_details tables.
+const PARK_DETAILS_COLUMNS = 'status,status_hint,opening_hours,rules,trail_description,last_update'
 const SPOT_DETAILS_SOURCE: Record<Trail['type'], { table: string; idColumn: string; columns: string }> = {
   trail:    { table: 'trail_details',     idColumn: 'trail_id', columns: TRAIL_DETAILS_BAKED_COLUMNS },
-  dirtpark: { table: 'trail_details',     idColumn: 'trail_id', columns: TRAIL_DETAILS_BAKED_COLUMNS },
-  bikepark: { table: 'bike_park_details', idColumn: 'id',       columns: 'status,status_hint,opening_hours,rules,trail_description,last_update' },
+  dirtpark: { table: 'dirt_park_details', idColumn: 'id',       columns: PARK_DETAILS_COLUMNS },
+  bikepark: { table: 'bike_park_details', idColumn: 'id',       columns: PARK_DETAILS_COLUMNS },
 }
 
 // Fetches the type-specific details row + photos for a resolved spot.
