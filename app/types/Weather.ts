@@ -35,7 +35,7 @@ export interface ConditionRange {
 }
 
 /**
- * Continuous companion to `ConditionRange`: same dusty(0)..wet(3) axis, but as
+ * Continuous companion to `ConditionRange`: same dusty(0)..wet(4) axis, but as
  * a float position rather than a snapped index — lets the read-only card's
  * fill bar show where inside a block the estimate actually falls, instead of
  * always spanning whole blocks.

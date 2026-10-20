@@ -26,13 +26,12 @@
 
 <script setup lang="ts">
 import { FEATURES } from '~/entitlements/features'
-import { SOIL_PALETTE, SOIL_GLYPHS } from '~/map/soilBadge'
+import { SOIL_GLYPHS } from '~/map/soilBadge'
+import { SOIL_PALETTE, SOIL_SCALE as LEVELS } from '~/types/soilScale'
 
 defineProps<{ show: boolean }>()
 const emit = defineEmits<{ try: []; dismiss: [] }>()
 
-// Same order as SOIL_PALETTE: dusty → wet.
-const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet'] as const
 </script>
 
 <style scoped>

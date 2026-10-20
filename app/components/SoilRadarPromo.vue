@@ -34,10 +34,9 @@
 
 <script setup lang="ts">
 import { FEATURES, SIGNUP_PROMO, isSignupPromoActive, minPlanName } from '~/entitlements/features'
-import { SOIL_GLYPHS, SOIL_LABELS, SOIL_PALETTE } from '~/map/soilBadge'
+import { SOIL_GLYPHS } from '~/map/soilBadge'
+import { SOIL_LABELS, SOIL_PALETTE, SOIL_SCALE as LEVELS } from '~/types/soilScale'
 
-// Same order as SOIL_PALETTE: dusty → wet.
-const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet'] as const
 const promoActive = isSignupPromoActive()
 </script>
 
