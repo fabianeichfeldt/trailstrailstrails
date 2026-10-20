@@ -1,7 +1,8 @@
 import type * as Leaflet from 'leaflet'
 import { renderField, sigmaPx } from './soilField'
+import type { SoilPoint } from './markerPresentation'
 
-export interface SoilPoint { lat: number; lon: number; axis: number; frost: boolean }
+export type { SoilPoint }
 
 export interface SoilRadarLayer {
   setPoints(points: SoilPoint[]): void

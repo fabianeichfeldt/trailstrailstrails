@@ -453,6 +453,29 @@ describe('app/map/soil* files', () => {
   })
 })
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Marker presentation: pure view model, useTrailMap only applies it to Leaflet
+// ─────────────────────────────────────────────────────────────────────────────
+describe('app/map/markerPresentation.ts', () => {
+  const src = read('app/map/markerPresentation.ts')
+
+  test('imports no leaflet (not even type-only), stores, composables or components', () => {
+    expect(src).not.toMatch(/from\s+['"]leaflet/)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/|\.\.?\/)+(stores|composables|components)\//)
+  })
+
+  test('soil range matching lives here, not in the filters store', () => {
+    expect(src).toMatch(/export function soilMatch\(/)
+    expect(read('app/stores/filters.ts')).not.toMatch(/soilMatch/)
+  })
+
+  test('useTrailMap takes pin icons / ghosting from the module instead of inlining soil rules', () => {
+    const map = read('app/composables/useTrailMap.ts')
+    expect(map).toMatch(/from '~\/map\/markerPresentation'/)
+    expect(map, 'soil rules must not be re-derived in the composable').not.toMatch(/soilMarkerState|soilMatch|markerWithSoilBadgeOptions/)
+  })
+})
+
 describe('Soil icons live as SVG files', () => {
   const LEVELS = ['dusty', 'dry', 'prime', 'damp', 'wet', 'raining', 'snow']
   const ICONS = [
