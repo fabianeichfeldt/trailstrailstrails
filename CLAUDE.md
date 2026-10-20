@@ -156,12 +156,12 @@ app/anon.ts
 - Must not import from `stores/`.
 
 ### Adding a new spot type
-Every per-type fact (base table, details table/endpoint, labels, GPX sections, marker category, filter toggle, add-spot endpoint, SpotManager capabilities) lives in the `SPOT_TYPES` registry, `app/types/SpotTypes.ts`. It has no imports, so `server/` (incl. the `_embed` Worker) reads it via `@@/app/types/SpotTypes`.
-1. Add a row to `SPOT_TYPES` (and its type to `SpotType`) — the resolver (`resolveSpot` in `communication/trails.ts`), list fetches, filters, marker icon, hero label, SpotManager picker, activity feed, profile and embed all read it.
+Every per-type fact (base table, details table/endpoint, labels, GPX sections, marker category, filter toggle, add-spot endpoint, SpotManager capabilities) lives in the `SPOT_TYPES` registry, `app/types/SpotTypes.ts`. It has no imports, so `server/` reads it via `@@/app/types/SpotTypes`.
+1. Add a row to `SPOT_TYPES` (and its type to `SpotType`) — the resolver (`resolveSpot` in `communication/trails.ts`), list fetches, filters, marker icon, hero label, SpotManager picker, activity feed, profile and the Nuxt `_embed` route all read it.
 2. Add the interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
 3. Add a visibility toggle ref to `stores/filters.ts` (named by the row's `filterKey`) and a `.map-pin-<markerCategory>` style; the store field + list in `stores/trails.ts` if the map lists it.
 4. Extend the table-driven test in `app/types/SpotTypes.test.ts`. `app/architecture.test.ts` forbids raw spot-table literals outside the registry.
-`server/routes/_embed/[token].get.ts` is a manually-deployed Worker — redeploy it after registry changes.
+5. The deployed `/_embed` Worker is the hand-maintained `cloudflare/embed-worker.js`, which does **not** read the registry: add the type to its `TABLE` and its wildcard fetches, then deploy the Worker manually.
 
 ### Open/Closed pattern for trail type dispatch
 ```typescript

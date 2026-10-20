@@ -1,5 +1,5 @@
 import type { Trail } from '~/types/Trail'
-import { SPOT_TYPES } from '~/types/SpotTypes'
+import { SPOT_TYPES, isSpotType } from '~/types/SpotTypes'
 import type { ConditionLevel } from '~/types/Weather'
 import { levelToAxis } from '~/types/SoilMap'
 
@@ -32,8 +32,8 @@ export const useFiltersStore = defineStore('filters', () => {
   function apply(items: Trail[]): Trail[] {
     const flags = { showTrails, showBikeparks, showDirtparks, showPumptracks }
     return items.filter(t => {
+      if (!isSpotType(t.type)) return true
       const def = SPOT_TYPES[t.type]
-      if (!def) return true
       const key = def.pumptrackFilterKey && (t as { pumptrack?: boolean }).pumptrack ? def.pumptrackFilterKey : def.filterKey
       return flags[key].value
     })

@@ -35,7 +35,7 @@ describe('SPOT_TYPES registry', () => {
     beforeEach(() => {
       vi.stubGlobal('fetch', vi.fn(async (url: string) => {
         const path = String(url).split('/rest/v1/')[1] ?? ''
-        const table = path.split('?')[0]
+        const table = path.split('?')[0] ?? ''
         // Mocks ignore eq filters on purpose, like tests/fixtures.ts
         const rows: Record<string, unknown[]> = {
           [e.table]: [row],
@@ -81,5 +81,31 @@ describe('SPOT_TYPES registry', () => {
       ;(s as any)[SPOT_TYPES[type].filterKey] = false
       expect(s.apply([item])).toHaveLength(0)
     })
+  })
+
+  it('pumptrack dirtparks follow showPumptracks, not showDirtparks', () => {
+    setActivePinia(createPinia())
+    const s = useFiltersStore()
+    const pump = { id: 'p', type: 'dirtpark', pumptrack: true } as never
+    s.showDirtparks = false
+    expect(s.apply([pump])).toHaveLength(1)
+    s.showDirtparks = true
+    s.showPumptracks = false
+    expect(s.apply([pump])).toHaveLength(0)
+  })
+
+  it('filter keeps rows with an unknown type instead of throwing', () => {
+    setActivePinia(createPinia())
+    const s = useFiltersStore()
+    expect(s.apply([{ id: 'x', type: 'constructor' } as never])).toHaveLength(1)
+  })
+
+  it('resolveSpot: trail wins a slug clash', async () => {
+    const row = { id: 'clash', slug: 'same-slug' }
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => {
+      const table = (String(url).split('/rest/v1/')[1] ?? '').split('?')[0]
+      return { ok: true, json: async () => (table === 'trails' || table === 'parks' ? [row] : []) }
+    }))
+    expect(await resolveSpot('slug', 'same-slug')).toMatchObject({ type: 'trail' })
   })
 })

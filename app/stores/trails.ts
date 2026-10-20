@@ -11,7 +11,7 @@ import type { SingleTrail, BikePark, DirtPark, Trail } from '~/types/Trail'
 export const SPOT_LIST_COLUMNS = 'id,slug,name,latitude,longitude,approved'
 // dirt_parks additionally carries the pumptrack/dirtpark flags that
 // filtersStore.apply() branches on.
-export const DIRTPARK_LIST_COLUMNS = `${SPOT_LIST_COLUMNS},${SPOT_TYPES.dirtpark.extraListColumns}`
+export const DIRTPARK_LIST_COLUMNS = `${SPOT_LIST_COLUMNS},pumptrack,dirtpark`
 
 // Build a PostgREST URL exactly the way @supabase/postgrest-js does
 // (`url.searchParams.set('select', columns)`), so the key we write into the

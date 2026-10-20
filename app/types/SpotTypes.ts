@@ -1,5 +1,5 @@
-// The one place that knows what a spot type is. No imports: also bundled into
-// the separately-deployed /_embed Cloudflare Worker via `@@/app/types/SpotTypes`.
+// The one place that knows what a spot type is. No imports, so server/ can read it
+// via `@@/app/types/SpotTypes`. The deployed /_embed Worker (cloudflare/embed-worker.js) does NOT.
 // A new spot type = one row here (+ its interface in Trail.ts).
 export type SpotType = 'trail' | 'bikepark' | 'dirtpark'
 
@@ -7,7 +7,6 @@ export interface SpotTypeDef {
   type: SpotType
   table: 'trails' | 'parks' | 'dirt_parks'            // base row (list + resolve)
   visibleOnly: boolean                                // base table has a `visible` flag that hides rows
-  extraListColumns: string                            // columns beyond the common list columns
   label: string                                       // short badge (SpotManager picker)
   eyebrow: string                                     // spot-detail hero eyebrow
   detailsTable: 'trail_details' | 'bike_park_details' | 'dirt_park_details'
@@ -32,7 +31,7 @@ const PARK_DETAILS_COLUMNS = 'status,status_hint,opening_hours,rules,trail_descr
 
 export const SPOT_TYPES: Record<SpotType, SpotTypeDef> = {
   trail: {
-    type: 'trail', table: 'trails', visibleOnly: true, extraListColumns: '',
+    type: 'trail', table: 'trails', visibleOnly: true,
     label: 'Trail', eyebrow: 'Trail',
     detailsTable: 'trail_details', detailsIdColumn: 'trail_id',
     detailsColumns: TRAIL_DETAILS_BAKED_COLUMNS, detailsKind: 'trail',
@@ -43,7 +42,7 @@ export const SPOT_TYPES: Record<SpotType, SpotTypeDef> = {
     parkKind: false, manageable: true,
   },
   bikepark: {
-    type: 'bikepark', table: 'parks', visibleOnly: false, extraListColumns: '',
+    type: 'bikepark', table: 'parks', visibleOnly: false,
     label: 'Bikepark', eyebrow: 'Bikepark',
     detailsTable: 'bike_park_details', detailsIdColumn: 'id',
     detailsColumns: PARK_DETAILS_COLUMNS, detailsKind: 'park',
@@ -54,7 +53,7 @@ export const SPOT_TYPES: Record<SpotType, SpotTypeDef> = {
     parkKind: false, manageable: true,
   },
   dirtpark: {
-    type: 'dirtpark', table: 'dirt_parks', visibleOnly: false, extraListColumns: 'pumptrack,dirtpark',
+    type: 'dirtpark', table: 'dirt_parks', visibleOnly: false,
     label: 'Dirtpark', eyebrow: 'Dirtpark / Pumptrack',
     detailsTable: 'dirt_park_details', detailsIdColumn: 'id',
     detailsColumns: PARK_DETAILS_COLUMNS, detailsKind: 'park',
