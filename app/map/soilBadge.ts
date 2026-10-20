@@ -1,14 +1,11 @@
 import type { ConditionLevel } from '../types/Weather'
+import { SOIL_PALETTE, SOIL_LABELS, isSoilMapLevel, soilAxis, type SoilLevel } from '../types/soilScale'
 import { markerIconOptions, type MarkerIconOptions } from './markerIcon'
 
-/** L1 "Earth" ramp, axis 0..4: dusty → dry → prime → damp → wet. */
-export const SOIL_PALETTE = ['#e0a526', '#8bbf3f', '#16c060', '#2ea8e6', '#6d4c41'] as const
 export const SOIL_FROST = '#e8f4ff'
 const SOIL_UNKNOWN = '#c9ccd0'
 // White glyph needs a darker ground than the frost tint of the clouds.
 const SOIL_SNOW_BADGE = '#7fa8cf'
-
-export type SoilLevel = 'dusty' | 'dry' | 'prime' | 'damp' | 'wet' | 'raining' | 'snow'
 
 // Raw strings, not components: Leaflet divIcons and v-html need plain markup.
 const RAW = import.meta.glob<string>('../assets/icons/soil/*.svg', { query: '?raw', import: 'default', eager: true })
@@ -20,21 +17,6 @@ const glyph = (level: SoilLevel) =>
 export const SOIL_GLYPHS: Record<SoilLevel, string> = {
   dusty: glyph('dusty'), dry: glyph('dry'), prime: glyph('prime'), damp: glyph('damp'),
   wet: glyph('wet'), raining: glyph('raining'), snow: glyph('snow'),
-}
-
-/** The one label set for map chips, the radar legend and the spot page's condition scale. */
-export const SOIL_LABELS: Record<SoilLevel, string> = {
-  dusty: 'Staubig', dry: 'Trocken', prime: 'Hero Dirt', damp: 'Feucht',
-  wet: 'Schlammig', raining: 'Regen', snow: 'Schnee',
-}
-
-// Badge colour = palette index; raining shares damp's colour.
-const LEVEL_BUCKET: Record<SoilLevel, number> = {
-  dusty: 0, dry: 1, prime: 2, damp: 3, wet: 4, raining: 3, snow: 4,
-}
-
-function isSoilLevel(level: ConditionLevel): level is SoilLevel {
-  return level in LEVEL_BUCKET
 }
 
 const hex = (h: string): [number, number, number] =>
@@ -56,17 +38,17 @@ export function axisColor(axis: number): string {
 }
 
 function badgeBackground(level: SoilLevel): string {
-  return level === 'snow' ? SOIL_SNOW_BADGE : SOIL_PALETTE[LEVEL_BUCKET[level]]!
+  return level === 'snow' ? SOIL_SNOW_BADGE : SOIL_PALETTE[soilAxis(level)!]!
 }
 
 /** Ground colour behind a level's white glyph; null for levels without a soil verdict. */
 export function soilBadgeColor(level: ConditionLevel): string | null {
-  return isSoilLevel(level) ? badgeBackground(level) : null
+  return isSoilMapLevel(level) ? badgeBackground(level) : null
 }
 
 /** Soil badge circle for a pin; '' for levels without a soil verdict. */
 export function soilBadgeHtml(level: ConditionLevel, opts: { delayMs?: number } = {}): string {
-  if (!isSoilLevel(level)) return ''
+  if (!isSoilMapLevel(level)) return ''
   const cls = ['soil-badge', `soil-badge-${level}`]
   if (level === 'prime') cls.push('soil-badge-hero')
   let style = `background:${badgeBackground(level)};`
@@ -89,10 +71,10 @@ export function markerWithSoilBadgeOptions(
 
 /** Cluster icon: donut of the children's soil shares, child count in the middle. */
 export function clusterDonutHtml(levels: ConditionLevel[]): string {
-  const counts = [0, 0, 0, 0, 0]
+  const counts = SOIL_PALETTE.map(() => 0)
   let unknown = 0
   for (const l of levels) {
-    if (isSoilLevel(l)) counts[LEVEL_BUCKET[l]]!++
+    if (isSoilMapLevel(l)) counts[soilAxis(l)!]!++
     else unknown++
   }
   const segs: string[] = []
@@ -113,7 +95,7 @@ export function clusterDonutHtml(levels: ConditionLevel[]): string {
 
 /** Glyph + label chip shown on a GPX track in the zoomed-in view; null without a verdict. */
 export function soilChipOptions(level: ConditionLevel): MarkerIconOptions | null {
-  if (!isSoilLevel(level)) return null
+  if (!isSoilMapLevel(level)) return null
   const hero = level === 'prime' ? ' soil-chip-hero' : ''
   return {
     html: `<div class="soil-chip soil-chip-${level}${hero}" style="background:${badgeBackground(level)}">${SOIL_GLYPHS[level]}<span>${SOIL_LABELS[level]}</span></div>`,

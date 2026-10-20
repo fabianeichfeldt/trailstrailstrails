@@ -23,13 +23,14 @@
 </template>
 
 <script setup lang="ts">
-import { SOIL_PALETTE, SOIL_GLYPHS, SOIL_LABELS, axisColor } from '~/map/soilBadge'
+import { SOIL_GLYPHS, axisColor } from '~/map/soilBadge'
+import { SOIL_PALETTE, SOIL_LABELS, SOIL_SCALE, SOIL_AXIS_MAX } from '~/types/soilScale'
 import { formatStand } from '~/utils/formatStand'
 
 const store = useSoilRadarStore()
 
-const MAX = 4
-const TICKS = (['dusty', 'dry', 'prime', 'damp', 'wet'] as const)
+const MAX = SOIL_AXIS_MAX
+const TICKS = SOIL_SCALE
   .map(l => ({ label: SOIL_LABELS[l], glyph: SOIL_GLYPHS[l] }))
 const gradient = `linear-gradient(90deg, ${SOIL_PALETTE.join(', ')})`
 const pct = (v: number) => `${(v / MAX) * 100}%`

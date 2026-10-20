@@ -104,7 +104,8 @@
 <script setup lang="ts">
 import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
 import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
-import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
+import { SOIL_GLYPHS, soilBadgeColor } from '~/map/soilBadge'
+import { isSoilVerdict, type SoilLevel } from '~/types/soilScale'
 import { formatStand } from '~/utils/formatStand'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 import IconSpade from '~/assets/icons/spade.svg'
@@ -125,8 +126,6 @@ const props = defineProps<{
   spotId?: string
 }>()
 
-const SOIL_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
-
 // Muddy here is exactly when "where else is it dry?" is the question the radar answers.
 const radarLinkText = computed(() => {
   const l = props.condition?.verdict.level
@@ -144,7 +143,7 @@ const sheetOpen = ref(false)
 const feedbackRange = computed<ConditionRange | null>(() => {
   const v = props.condition?.verdict
   if (props.sample || !props.spotType || !props.spotId || !v) return null
-  if (!SOIL_LEVELS.includes(v.level)) return null
+  if (!isSoilVerdict(v.level)) return null
   return v.range ?? null
 })
 
@@ -152,7 +151,7 @@ const feedbackRange = computed<ConditionRange | null>(() => {
 const feedbackPositionRange = computed<ConditionPositionRange | null>(() => {
   const v = props.condition?.verdict
   if (props.sample || !props.spotType || !props.spotId || !v) return null
-  if (!SOIL_LEVELS.includes(v.level)) return null
+  if (!isSoilVerdict(v.level)) return null
   return v.positionRange ?? null
 })
 
