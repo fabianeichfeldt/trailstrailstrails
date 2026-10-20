@@ -209,6 +209,7 @@ else { ... }
 | `app/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
 | `app/stores/auth.ts` | Auth state + auth operations only |
 | `app/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
+| `app/composables/useSpotDetail.ts` | Everything `trails/[slug].vue` loads for one spot: slug→id 301, post-mount refresh, live per-spot loads with stale guards, reset on navigation — the page only lays out sections |
 | `app/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
 | `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
 | `app/map/miniMap.ts` | Read-only Leaflet mini-map renderer (`createMiniMap()` → `{ flyTo, setData, destroy }`) — shared by the spot-detail page and the third-party embed page; dynamic-imports `leaflet`, no store/composable deps |

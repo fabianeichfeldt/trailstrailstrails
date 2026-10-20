@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
+import { flushPromises } from '@vue/test-utils'
 
 // Mocked at the module boundary — never hit a real Supabase URL in tests
 // (CLAUDE.md's test mandate).
@@ -422,6 +423,7 @@ describe('useSpotPanelStore', () => {
       const store = useSpotPanelStore()
       const result = spotData()
       vi.mocked(getSpotGpxData).mockResolvedValue(result)
+      store.currentItem = trail('s1')
 
       await store.loadSpotData('s1')
 
@@ -449,6 +451,22 @@ describe('useSpotPanelStore', () => {
       expect(store.data).toEqual(spotData({ spotId: 'existing' }))
       expect(warnSpy).toHaveBeenCalled()
       warnSpy.mockRestore()
+    })
+
+    it('drops a late response for a spot the page has already moved away from', async () => {
+      const store = useSpotPanelStore()
+      let resolveFirst!: (d: SpotMtbData) => void
+      vi.mocked(getSpotGpxData)
+        .mockImplementationOnce(() => new Promise(r => { resolveFirst = r }))
+        .mockResolvedValueOnce(spotData({ spotId: 's2' }))
+
+      store.load(trail('s1'))
+      store.load(trail('s2'))
+      await flushPromises()
+      resolveFirst(spotData({ spotId: 's1' }))
+      await flushPromises()
+
+      expect(store.data?.spotId).toBe('s2')
     })
   })
 
