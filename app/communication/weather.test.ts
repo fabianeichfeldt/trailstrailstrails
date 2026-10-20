@@ -70,7 +70,7 @@ describe('fetchTrailCondition — at (verdict for a past instant)', () => {
     localStorage.setItem(KEY, JSON.stringify({ uid: 'u1', at: Date.now(), data: condition() }))
 
     const past = new Date(Date.now() - 3600_000).toISOString()
-    const result = await fetchTrailCondition('trail', 't1', 'jwt', undefined, past)
+    const result = await fetchTrailCondition('trail', 't1', 'jwt', past)
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ spotType: 'trail', spotId: 't1', at: past })
@@ -87,7 +87,7 @@ describe('fetchTrailCondition — at (verdict for a past instant)', () => {
 
   it('returns null on a 400 (out-of-window `at`)', async () => {
     vi.stubGlobal('fetch', respond(400, { error: 'bad at' }))
-    expect(await fetchTrailCondition('trail', 't1', 'jwt', undefined, new Date().toISOString())).toBeNull()
+    expect(await fetchTrailCondition('trail', 't1', 'jwt', new Date().toISOString())).toBeNull()
   })
 })
 
@@ -115,17 +115,6 @@ describe('fetchTrailCondition — responses', () => {
   it('returns null when a 200 body is not a view-model', async () => {
     vi.stubGlobal('fetch', respond(200, { hello: 'world' }))
     expect(await fetchTrailCondition('trail', 't1', 'jwt')).toBeNull()
-  })
-
-  it('reports a 403 through onForbidden, and only a 403', async () => {
-    const onForbidden = vi.fn()
-    vi.stubGlobal('fetch', respond(403, {}))
-    await fetchTrailCondition('trail', 't1', 'jwt', onForbidden)
-    expect(onForbidden).toHaveBeenCalledTimes(1)
-
-    vi.stubGlobal('fetch', respond(502, {}))
-    await fetchTrailCondition('trail', 't1', 'jwt', onForbidden)
-    expect(onForbidden).toHaveBeenCalledTimes(1)
   })
 })
 

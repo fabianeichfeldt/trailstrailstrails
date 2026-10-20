@@ -55,11 +55,9 @@ export async function fetchTrailCondition(
   spotType: string,
   spotId: string,
   accessToken: string,
-  onForbidden?: () => void,
   at?: string,
 ): Promise<TrailConditionResponse | null> {
   const res = await requestTrailCondition(accessToken, { spotType, spotId }, at)
-  if (res.kind === 'forbidden') onForbidden?.()
   return res.kind === 'ok' ? res.data : null
 }
 

@@ -81,7 +81,6 @@ export function useSoilFeedback(
       spot.spotType,
       spot.spotId,
       await auth.getToken(),
-      undefined,
       observedIso(),
     )
     if (mySeq !== seq) return
