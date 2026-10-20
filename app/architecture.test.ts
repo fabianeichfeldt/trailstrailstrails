@@ -353,6 +353,14 @@ describe('paid features go through the gated-fetch module', () => {
   test('paid-feature communication files keep no cache of their own', () => {
     expect(adapters.filter(f => /localStorage/.test(read(f)))).toEqual([])
   })
+
+  test('a sign-out sweeps every paid feature\'s cache, gate or no gate', () => {
+    const sweep = read('app/plugins/paidCacheSweep.client.ts')
+    for (const file of adapters) {
+      const name = read(file).match(/export const (\w+):\s*GatedAdapter</)?.[1]
+      expect(sweep, `${file}'s adapter`).toMatch(new RegExp(`\\b${name}\\b`))
+    }
+  })
 })
 
 // ─────────────────────────────────────────────────────────────────────────────

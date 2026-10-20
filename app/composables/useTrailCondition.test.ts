@@ -19,8 +19,6 @@ vi.stubGlobal('useSubscriptionStore', () => ({ accessFor: () => access.value }))
 
 import { useTrailCondition } from './useTrailCondition'
 
-const KEY_T1 = 'tr_wx_v3_trail_t1'
-
 function condition(level: TrailConditionResponse['verdict']['level'] = 'prime'): TrailConditionResponse {
   return {
     verdict: { level, headline: 'h', detail: 'd', rain10dMm: 1 },
@@ -125,16 +123,16 @@ describe('useTrailCondition', () => {
 })
 
 describe('useTrailCondition — paid data and its owner', () => {
-  it('signing out drops the card from the page and from storage', async () => {
+  // Storage is swept app-wide, gate or no gate: plugins/paidCacheSweep.client.test.ts.
+  it('signing out drops the card from the page', async () => {
     const wrapper = mount(probe(() => ({ spotType: 'trail', spotId: 't1' })))
     await flushPromises()
-    expect(localStorage.getItem(KEY_T1)).not.toBeNull()
+    expect(wrapper.attributes('data-level')).toBe('prime')
 
     auth.userId = ''
     access.value = 'locked'
     await flushPromises()
 
-    expect(localStorage.getItem(KEY_T1)).toBeNull()
     expect(wrapper.attributes('data-level')).toBe('')
   })
 

@@ -179,25 +179,15 @@ describe('gated fetch — cache', () => {
 })
 
 describe('gated fetch — user change', () => {
-  it('sign-out drops the data and sweeps the feature\'s cache', async () => {
+  // Storage is swept app-wide, gate or no gate: plugins/paidCacheSweep.client.test.ts.
+  it('sign-out drops the data', async () => {
     const g = make()
     await g.load('a')
-    localStorage.setItem('other_key', 'kept')
 
     env.userId = ''
     env.access = 'locked'
 
     expect(g.data.value).toBeNull()
-    expect(localStorage.getItem('test_a')).toBeNull()
-    expect(localStorage.getItem('other_key')).toBe('kept')
-  })
-
-  it('auth resolving on page load (no user → user) keeps the cache', async () => {
-    env.userId = ''
-    make()
-    localStorage.setItem('test_a', JSON.stringify({ uid: 'u1', at: Date.now(), data: { id: 'a', v: 1 } }))
-    env.userId = 'u1'
-    expect(localStorage.getItem('test_a')).not.toBeNull()
   })
 })
 

@@ -67,6 +67,20 @@ function removeKey(key: string): void {
   try { storage()?.removeItem(key) } catch { /* nothing sensible left to do */ }
 }
 
+/** Removes every cache entry under these prefixes (see plugins/paidCacheSweep.client.ts). */
+export function sweepCaches(prefixes: readonly string[]): void {
+  const s = storage()
+  if (!s) return
+  try {
+    const keys: string[] = []
+    for (let i = 0; i < s.length; i++) {
+      const k = s.key(i)
+      if (k && prefixes.some(p => k.startsWith(p))) keys.push(k)
+    }
+    keys.forEach(removeKey)
+  } catch { /* nothing sensible left to do */ }
+}
+
 export function createGatedFetch<P, T>(adapter: GatedAdapter<P, T>, deps: GatedDeps): GatedFetch<P, T> {
   const mounted = ref(false)
   const phase = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
@@ -105,19 +119,6 @@ export function createGatedFetch<P, T>(adapter: GatedAdapter<P, T>, deps: GatedD
     try {
       storage()?.setItem(key, JSON.stringify({ uid, at: Date.now(), data: value } satisfies GatedEntry<T>))
     } catch { /* quota or private mode — the fetch still succeeded */ }
-  }
-
-  function clearCache(): void {
-    const s = storage()
-    if (!s) return
-    try {
-      const keys: string[] = []
-      for (let i = 0; i < s.length; i++) {
-        const k = s.key(i)
-        if (k?.startsWith(adapter.cachePrefix)) keys.push(k)
-      }
-      keys.forEach(removeKey)
-    } catch { /* nothing sensible left to do */ }
   }
 
   function reset(): void {
@@ -159,7 +160,7 @@ export function createGatedFetch<P, T>(adapter: GatedAdapter<P, T>, deps: GatedD
       if (superseded()) return 'superseded'
       if (res.kind === 'forbidden') {
         // A downgraded user keeps nothing they no longer pay for.
-        clearCache()
+        sweepCaches([adapter.cachePrefix])
         data.value = null
         offline.value = false
         phase.value = 'idle'
@@ -180,10 +181,9 @@ export function createGatedFetch<P, T>(adapter: GatedAdapter<P, T>, deps: GatedD
   }
 
   // Paid data belongs to whoever was signed in; '' → user is just auth resolving on page load.
+  // Storage is swept app-wide by plugins/paidCacheSweep.client.ts, gate or no gate.
   watch(deps.userId, (now, before) => {
-    if (!before || now === before) return
-    reset()
-    clearCache()
+    if (before && now !== before) reset()
   }, { flush: 'sync' })
 
   // A fresh entitlement (e.g. an upgrade) gets to ask again after an earlier 403.

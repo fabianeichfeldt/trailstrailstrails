@@ -247,7 +247,8 @@ describe('soilRadar store — persistence', () => {
 })
 
 describe('soilRadar store — user change', () => {
-  it('sign-out drops the live data, the "on" preference and the cache', async () => {
+  // The cache is swept app-wide: plugins/paidCacheSweep.client.test.ts.
+  it('sign-out drops the live data and the "on" preference', async () => {
     answer(snapshot())
     const s = useSoilRadarStore()
     await s.toggle()
@@ -258,7 +259,6 @@ describe('soilRadar store — user change', () => {
     expect(s.points).toEqual([])
     expect(s.status).toBe('idle')
     expect(localStorage.getItem(ENABLED_KEY)).toBe('0')
-    expect(localStorage.getItem(CACHE_KEY)).toBeNull()
   })
 
   it('an answer that arrives after an account switch is dropped, not shown', async () => {
