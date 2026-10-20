@@ -132,12 +132,11 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   const selectedItemId = ref<string | null>(null)
   const selectedItemKind = ref<'tour' | 'trail' | null>(null)
 
-  // No guard against the panel moving to a different spot mid-fetch — a
-  // stale response just overwrites `data` for whatever spot is current when
-  // it resolves, same risk as an unguarded fetch anywhere else in this file.
   async function loadSpotData(spotId: string) {
     try {
-      data.value = await getSpotGpxData(spotId)
+      const result = await getSpotGpxData(spotId)
+      if (currentItem.value?.id !== spotId) return // page moved to another spot mid-fetch
+      data.value = result
     } catch (err) {
       console.warn('Failed to fetch spot GPX data:', err)
     }
@@ -157,10 +156,15 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   }
 
   // isLiked/likeVisible back the hero's like button (SpotDetailHero.vue).
-  // Populated by SpotDetailInfo.vue's live-details refresh, not
-  // independently — the like button stays hidden until that resolves.
+  // Set by useSpotDetail's live-details refresh via applyLikes() — the like
+  // button stays hidden until that resolves.
   const isLiked = ref(false)
   const likeVisible = ref(false)
+
+  function applyLikes(likes: { user_id: string }[] | undefined, userId: string) {
+    isLiked.value = !!userId && !!likes?.some(l => l.user_id === userId)
+    likeVisible.value = true
+  }
 
   /**
    * Loads `item` for the routed spot-detail page
@@ -213,6 +217,7 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
     clearSelection,
     isLiked,
     likeVisible,
+    applyLikes,
     load,
   }
 })

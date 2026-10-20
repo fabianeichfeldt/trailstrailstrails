@@ -15,7 +15,7 @@ async function openTrailPage(page: import('@playwright/test').Page) {
 // Signs in on the current page (started at /map by the test fixture) BEFORE
 // navigating to the trail page, same ordering as comments.spec.ts's signIn
 // — so the auth store already has a resolved identity by the time
-// trails/[slug].vue's onMounted calls loadLiveSpotData()/loadPhotoModeration().
+// useSpotDetail's post-mount start() calls loadPhotoModeration().
 // `role` controls what get_my_role() (the RPC) returns, exactly like
 // spotmanager.spec.ts's signInOnSpotmanagerPage.
 async function signIn(page: import('@playwright/test').Page, role: 'trailcrew' | 'admin' | null = null) {

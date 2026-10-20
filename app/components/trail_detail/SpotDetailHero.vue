@@ -42,7 +42,7 @@ import { likeTrail, dislikeTrail } from '~/communication/trails'
 import { share } from '~/communication/share'
 import { copyToClipboard } from '~/utils/clipboard'
 import { shareTrail } from '~/map/spot_panel/spotPanelShare'
-import type { IAuthService } from '~/auth/auth_service'
+import { useAuthService } from '~/composables/useAuthService'
 
 // Hero for the routed spot-detail page — replaces SpotPanelHeader.vue's
 // role inside the deleted panel (title row + org link + like/share
@@ -60,30 +60,13 @@ const typeLabel = computed(() => {
   return 'Trail'
 })
 
-function authServiceAdapter(): IAuthService {
-  return {
-    loggedIn: authStore.isLoggedIn,
-    async getUser() {
-      return {
-        id: authStore.userId,
-        email: '',
-        nickname: authStore.nickname,
-        accessToken: await authStore.getToken(),
-        avatarUrl: authStore.avatarUrl,
-        avatarHTML: '',
-        isAdmin: authStore.isAdmin,
-        isTrailcrew: authStore.isTrailcrew,
-      }
-    },
-  } as IAuthService
-}
+const authService = useAuthService()
 
 async function handleLike() {
   if (!authStore.isLoggedIn) {
     mapStore.authModalOpen = true
     return
   }
-  const authService = authServiceAdapter()
   if (store.isLiked) {
     await dislikeTrail(props.trail.id, authService)
     store.isLiked = false
