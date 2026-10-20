@@ -4,18 +4,22 @@ import { reactive, ref, nextTick } from 'vue'
 import type { FeatureAccess } from '~/entitlements/features'
 import SoilRadarButton from './SoilRadarButton.vue'
 
-// Nuxt auto-imports; stub them as the shared shapes the button reads.
+// Nuxt auto-import; stubbed as the store shape the button reads (access comes from the store's gate).
 const access = ref<FeatureAccess>('allowed')
-let store: { enabled: boolean; status: string; toggle: ReturnType<typeof vi.fn> }
-vi.stubGlobal('useFeatureAccess', () => access)
+let store: { enabled: boolean; status: string; access: FeatureAccess; toggle: ReturnType<typeof vi.fn>; attach: ReturnType<typeof vi.fn> }
 vi.stubGlobal('useSoilRadarStore', () => store)
 
 beforeEach(() => {
   access.value = 'allowed'
-  store = reactive({ enabled: false, status: 'idle', toggle: vi.fn() })
+  store = reactive({ enabled: false, status: 'idle', access, toggle: vi.fn(), attach: vi.fn() }) as unknown as typeof store
 })
 
 describe('SoilRadarButton', () => {
+  it('attaches the store\'s gate once mounted, so access can leave "checking"', () => {
+    mount(SoilRadarButton)
+    expect(store.attach).toHaveBeenCalledOnce()
+  })
+
   it('toggles the store when allowed', async () => {
     const w = mount(SoilRadarButton)
     await w.get('button').trigger('click')
