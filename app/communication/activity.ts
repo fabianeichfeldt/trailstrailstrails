@@ -1,4 +1,5 @@
 import { REST, anonHeaders } from './http'
+import { SPOT_TYPE_LIST } from '../types/SpotTypes'
 
 export type ActivityType = 'spot' | 'photo' | 'gpx'
 
@@ -24,10 +25,9 @@ async function fetchList<T>(query: string): Promise<T[]> {
 
 /** Builds the "recent activity" feed from spot/photo/GPX timestamps — there is no dedicated activity table. */
 export async function getRecentActivity(): Promise<ActivityItem[]> {
-  const [trails, parks, dirtParks, photos, gpxTrails, gpxTours] = await Promise.all([
-    fetchList<SpotRow>(`trails?select=id,name,created_at&approved=eq.true&order=created_at.desc&limit=${LIST_LIMIT}`),
-    fetchList<SpotRow>(`parks?select=id,name,created_at&approved=eq.true&order=created_at.desc&limit=${LIST_LIMIT}`),
-    fetchList<SpotRow>(`dirt_parks?select=id,name,created_at&approved=eq.true&order=created_at.desc&limit=${LIST_LIMIT}`),
+  const [spotGroups, photos, gpxTrails, gpxTours] = await Promise.all([
+    Promise.all(SPOT_TYPE_LIST.map(def =>
+      fetchList<SpotRow>(`${def.table}?select=id,name,created_at&approved=eq.true&order=created_at.desc&limit=${LIST_LIMIT}`))),
     fetchList<LinkedRow>(`trail_photos?select=id,created_at,trails(id,name,approved)&order=created_at.desc&limit=${LIST_LIMIT}`),
     fetchList<LinkedRow>(`spot_gpx_trails?select=id,created_at,trails(id,name,approved)&order=created_at.desc&limit=${LIST_LIMIT}`),
     fetchList<LinkedRow>(`spot_gpx_tours?select=id,created_at,trails(id,name,approved)&order=created_at.desc&limit=${LIST_LIMIT}`),
@@ -35,9 +35,7 @@ export async function getRecentActivity(): Promise<ActivityItem[]> {
 
   const items: ActivityItem[] = []
 
-  for (const t of trails) items.push({ type: 'spot', trailId: t.id, name: t.name, created_at: t.created_at })
-  for (const p of parks) items.push({ type: 'spot', trailId: p.id, name: p.name, created_at: p.created_at })
-  for (const d of dirtParks) items.push({ type: 'spot', trailId: d.id, name: d.name, created_at: d.created_at })
+  for (const s of spotGroups.flat()) items.push({ type: 'spot', trailId: s.id, name: s.name, created_at: s.created_at })
 
   for (const p of photos) {
     if (!p.trails?.approved) continue

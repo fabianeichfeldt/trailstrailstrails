@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { SPOT_TYPES } from '~/types/SpotTypes'
 import type { SingleTrail, BikePark, DirtPark, Trail } from '~/types/Trail'
 
 // Only the columns the map actually reads: marker position + styling
@@ -10,7 +11,7 @@ import type { SingleTrail, BikePark, DirtPark, Trail } from '~/types/Trail'
 export const SPOT_LIST_COLUMNS = 'id,slug,name,latitude,longitude,approved'
 // dirt_parks additionally carries the pumptrack/dirtpark flags that
 // filtersStore.apply() branches on.
-export const DIRTPARK_LIST_COLUMNS = `${SPOT_LIST_COLUMNS},pumptrack,dirtpark`
+export const DIRTPARK_LIST_COLUMNS = `${SPOT_LIST_COLUMNS},${SPOT_TYPES.dirtpark.extraListColumns}`
 
 // Build a PostgREST URL exactly the way @supabase/postgrest-js does
 // (`url.searchParams.set('select', columns)`), so the key we write into the
@@ -26,7 +27,7 @@ function restUrl(base: string, table: string, columns: string, filters: Record<s
 export const useTrailsStore = defineStore('trails', () => {
   const client = useSupabaseClient() as SupabaseClient
 
-  // Anon-only client for public tables — parks/dirt_parks have no RLS policy for
+  // Anon-only client for public tables — park tables have no RLS policy for
   // the authenticated role, so the session client returns 0 rows when logged in.
   const { public: { supabase: sbConfig } } = useRuntimeConfig()
   const anonClient = createClient(sbConfig.url, sbConfig.key, {
@@ -49,9 +50,9 @@ export const useTrailsStore = defineStore('trails', () => {
     try {
       const [trailsRes, parksRes, dirtRes] = await Promise.all([
         // Hidden trails (visible = false) stay reachable by URL but never reach the map/search.
-        anonClient.from('trails').select(SPOT_LIST_COLUMNS).eq('visible', true),
-        anonClient.from('parks').select(SPOT_LIST_COLUMNS),
-        anonClient.from('dirt_parks').select(DIRTPARK_LIST_COLUMNS),
+        anonClient.from(SPOT_TYPES.trail.table).select(SPOT_LIST_COLUMNS).eq('visible', true),
+        anonClient.from(SPOT_TYPES.bikepark.table).select(SPOT_LIST_COLUMNS),
+        anonClient.from(SPOT_TYPES.dirtpark.table).select(DIRTPARK_LIST_COLUMNS),
       ])
       // Rows are hydrated with only SPOT_LIST_COLUMNS — enough for every map /
       // search / filter consumer (all of which read just position, id, slug,
@@ -100,9 +101,9 @@ export const useTrailsStore = defineStore('trails', () => {
     dirtData: unknown[] | null,
   ) {
     const entries: [string, string, unknown[] | null][] = [
-      [restUrl(supabaseUrl, 'trails', SPOT_LIST_COLUMNS, { visible: 'eq.true' }), 'supabase-rest-trails', trailsData],
-      [restUrl(supabaseUrl, 'parks', SPOT_LIST_COLUMNS),         'supabase-rest-parks',     parksData],
-      [restUrl(supabaseUrl, 'dirt_parks', DIRTPARK_LIST_COLUMNS), 'supabase-rest-dirtparks', dirtData],
+      [restUrl(supabaseUrl, SPOT_TYPES.trail.table, SPOT_LIST_COLUMNS, { visible: 'eq.true' }), 'supabase-rest-trails', trailsData],
+      [restUrl(supabaseUrl, SPOT_TYPES.bikepark.table, SPOT_LIST_COLUMNS),         'supabase-rest-parks',     parksData],
+      [restUrl(supabaseUrl, SPOT_TYPES.dirtpark.table, DIRTPARK_LIST_COLUMNS), 'supabase-rest-dirtparks', dirtData],
     ]
     await Promise.all(entries.map(async ([url, cacheName, data]) => {
       if (!data) return

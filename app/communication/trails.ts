@@ -1,5 +1,6 @@
 import { REST, FUNCTIONS, anonHeaders, userHeaders } from './http'
 import { Trail } from '../types/Trail'
+import { SPOT_TYPES, SPOT_TYPE_LIST, visibleFilter, type SpotType } from '../types/SpotTypes'
 import { TrailDetails } from '../types/TrailDetails'
 import type { IAuthService } from '../auth/auth_service'
 import { SpotMtbData, MtbTrail, MtbTour, ElevationPoint } from '../types/MtbTypes'
@@ -11,29 +12,10 @@ function fallbackDetails(trail: Trail): TrailDetails {
 const DETAILS_TTL = 5 * 60 * 1000
 const detailsCache = new Map<string, { data: TrailDetails; ts: number }>()
 
-// The trail_details columns bakedTrailDetails() (app/utils/bakedTrailDetails.ts)
-// actually reads to seed the anti-flash/SEO render. Everything else on the row
-// (opening_hours_text, affected_trail_ids, rain_window_*, night_* — all
-// SpotManager-only) never reaches the detail page, and the genuinely dynamic
-// fields are refreshed post-mount by getTrailDetails() anyway. Keep this in
-// sync with bakedTrailDetails() — see docs/db-egress-reduction-plan.md P1-1.
-const TRAIL_DETAILS_BAKED_COLUMNS =
-  'trail_id,rules,last_update,trail_description,status,status_until,status_hint,' +
-  'access_type,donation_url,seasonal_from,seasonal_to,rain_policy,rain_closed_hours'
-
-// Per-type source of the details row merged into the spot payload. Trails live
-// in trail_details; bike- and dirtparks have their own *_park_details tables.
-const PARK_DETAILS_COLUMNS = 'status,status_hint,opening_hours,rules,trail_description,last_update'
-const SPOT_DETAILS_SOURCE: Record<Trail['type'], { table: string; idColumn: string; columns: string }> = {
-  trail:    { table: 'trail_details',     idColumn: 'trail_id', columns: TRAIL_DETAILS_BAKED_COLUMNS },
-  dirtpark: { table: 'dirt_park_details', idColumn: 'id',       columns: PARK_DETAILS_COLUMNS },
-  bikepark: { table: 'bike_park_details', idColumn: 'id',       columns: PARK_DETAILS_COLUMNS },
-}
-
 // Fetches the type-specific details row + photos for a resolved spot.
 // A failed fetch degrades to empty details/photos.
-async function fetchSpotExtras(id: string, type: Trail['type']): Promise<{ detail: Record<string, any> | undefined; photos: unknown[] }> {
-  const { table, idColumn, columns } = SPOT_DETAILS_SOURCE[type]
+async function fetchSpotExtras(id: string, type: SpotType): Promise<{ detail: Record<string, any> | undefined; photos: unknown[] }> {
+  const { detailsTable: table, detailsIdColumn: idColumn, detailsColumns: columns } = SPOT_TYPES[type]
   const select = columns.split(',').includes(idColumn) ? columns : `${idColumn},${columns}`
   const [detailsRes, photosRes] = await Promise.all([
     fetch(`${REST}/${table}?${idColumn}=eq.${id}&select=${select}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
@@ -49,94 +31,44 @@ async function fetchSpotExtras(id: string, type: Trail['type']): Promise<{ detai
   }
 }
 
-// Maps trail type to the Supabase edge-function path and query-parameter name.
-// Adding a new type only requires adding a new entry here — callers stay unchanged.
-const DETAIL_ENDPOINT: Record<Trail['type'], { path: string; param: string }> = {
-  trail:    { path: 'trail-details',       param: 'trail' },
-  bikepark: { path: 'bike-parks-details',  param: 'id' },
-  dirtpark: { path: 'dirt-parks-details',  param: 'id' },
+// A resolved spot page payload: the base row + its details row + photos.
+export type ResolvedSpot = Trail & { photos: Array<{ id: string; url: string; copyright?: string | null }> } & Record<string, any>
+
+// Resolves one spot by id or slug straight from Supabase REST (replaces the
+// former server/api/trail/[id].get.ts, which 404'd for anything created since
+// the last build — see "No live Nitro server in production" in CLAUDE.md).
+// Probes every registry base table in parallel; details + photos are fetched
+// only after the type is known, since they key on the spot id.
+export async function resolveSpot(field: 'id' | 'slug', value: string): Promise<ResolvedSpot | null> {
+  const results = await Promise.all(SPOT_TYPE_LIST.map(async def => {
+    const res = await fetch(
+      `${REST}/${def.table}?${field}=eq.${encodeURIComponent(value)}${visibleFilter(def)}&select=*`,
+      { method: 'GET', cache: 'no-store', headers: anonHeaders() },
+    )
+    return res.ok ? await res.json() as Array<Record<string, any>> : []
+  }))
+
+  // REST filters already narrow real responses to one row — the .find() is
+  // load-bearing against e2e mocks that ignore eq filters (tests/fixtures.ts).
+  const hit = SPOT_TYPE_LIST
+    .map((def, i) => ({ type: def.type, base: results[i]?.find(r => r[field] === value) }))
+    .find(h => h.base)
+  if (!hit?.base) return null
+  const { base, type } = hit
+
+  const { detail, photos } = await fetchSpotExtras(base.id, type)
+  return { ...base, ...(detail ?? {}), type, photos } as ResolvedSpot
 }
 
-// Fetches a single spot's full detail payload directly from Supabase REST —
-// replaces the former server/api/trail/[id].get.ts. That route only worked
-// in production if the nuxt generate prerender crawl happened to bake it
-// for this exact id at build time (see "No live Nitro server in production"
-// in CLAUDE.md); any trail created/changed after the last deploy 404'd,
-// which trails/[slug].vue's onMounted refetch then silently turned into a
-// "Nicht gefunden" page. A direct REST call works identically at SSR/build
-// time and in the browser afterwards, with no staleness window.
-export async function getTrailById(id: string): Promise<Record<string, any> | null> {
-  const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?id=eq.${id}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/dirt_parks?id=eq.${id}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-  ])
-
-  const [trails, parks, dirtParks] = await Promise.all([
-    trailsRes.ok ? trailsRes.json() : [],
-    parksRes.ok ? parksRes.json() : [],
-    dirtRes.ok ? dirtRes.json() : [],
-  ])
-
-  // REST filters (?id=eq.<id>) already narrow real Supabase responses to at
-  // most one row — the .find() is only load-bearing against test mocks that
-  // fulfill these routes with the full unfiltered fixture array.
-  let base: Record<string, any> | undefined
-  let type: Trail['type'] = 'trail'
-  if ((base = (trails as Array<Record<string, any>>).find(t => t.id === id))) {
-    type = 'trail'
-  } else if ((base = (parks as Array<Record<string, any>>).find(t => t.id === id))) {
-    type = 'bikepark'
-  } else if ((base = (dirtParks as Array<Record<string, any>>).find(t => t.id === id))) {
-    type = 'dirtpark'
-  }
-  if (!base) return null
-
-  const { detail, photos } = await fetchSpotExtras(id, type)
-  return { ...base, ...(detail ?? {}), type, photos }
-}
-
-// Slug-based counterpart of getTrailById — the primary resolver for
-// /trails/[slug] now that spot pages are addressed by name-slug (see
-// docs/superpowers/specs/2026-09-01-trail-slug-urls-design.md). Two phases:
-// resolve the base spot row + type by slug across the three spot tables, then
-// fetch its details + photos by the resolved id (those tables key on the spot
-// id, not the slug). Returns null when no spot owns this slug — the caller
-// then falls back to getTrailById() to 301 a legacy id URL to its slug.
-export async function getTrailBySlug(slug: string): Promise<Record<string, any> | null> {
-  const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?slug=eq.${encodeURIComponent(slug)}&visible=eq.true&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/dirt_parks?slug=eq.${encodeURIComponent(slug)}&select=*`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-  ])
-
-  const [trails, parks, dirtParks] = await Promise.all([
-    trailsRes.ok ? trailsRes.json() : [],
-    parksRes.ok ? parksRes.json() : [],
-    dirtRes.ok ? dirtRes.json() : [],
-  ])
-
-  let base: Record<string, any> | undefined
-  let type: Trail['type'] = 'trail'
-  if ((base = (trails as Array<Record<string, any>>).find(t => t.slug === slug))) {
-    type = 'trail'
-  } else if ((base = (parks as Array<Record<string, any>>).find(t => t.slug === slug))) {
-    type = 'bikepark'
-  } else if ((base = (dirtParks as Array<Record<string, any>>).find(t => t.slug === slug))) {
-    type = 'dirtpark'
-  }
-  if (!base) return null
-
-  const id = base.id
-  const { detail, photos } = await fetchSpotExtras(id, type)
-  return { ...base, ...(detail ?? {}), type, photos }
-}
+export const getTrailById = (id: string) => resolveSpot('id', id)
+// Primary resolver for /trails/[slug]; null falls the caller back to getTrailById (legacy id URLs).
+export const getTrailBySlug = (slug: string) => resolveSpot('slug', slug)
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   const cached = detailsCache.get(trail.id)
   if (cached && Date.now() - cached.ts < DETAILS_TTL) return cached.data
 
-  const { path, param } = DETAIL_ENDPOINT[trail.type]
+  const { path, param } = SPOT_TYPES[trail.type].detailsEndpoint
   const res = await fetch(`${FUNCTIONS}/${path}?${param}=${trail.id}`, {
     method: 'GET',
     cache: 'no-store',

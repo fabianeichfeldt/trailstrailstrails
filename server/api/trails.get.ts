@@ -1,3 +1,5 @@
+import { SPOT_TYPE_LIST, tagSpots, visibleFilter } from '@@/app/types/SpotTypes'
+
 export default defineEventHandler(async () => {
   const url = process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL
   const key = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY
@@ -7,23 +9,11 @@ export default defineEventHandler(async () => {
   const headers = { apikey: key, Authorization: `Bearer ${key}` }
   const fields = 'id,slug,name,latitude,longitude,approved'
 
-  const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${url}/rest/v1/trails?select=${fields}&visible=eq.true`, { headers }),
-    fetch(`${url}/rest/v1/parks?select=${fields}`, { headers }),
-    fetch(`${url}/rest/v1/dirt_parks?select=${fields}`, { headers }),
-  ])
+  const responses = await Promise.all(SPOT_TYPE_LIST.map(def =>
+    fetch(`${url}/rest/v1/${def.table}?select=${fields}${visibleFilter(def)}`, { headers })))
 
-  if (!trailsRes.ok || !parksRes.ok || !dirtRes.ok) return []
+  if (responses.some(r => !r.ok)) return []
 
-  const [trails, parks, dirtParks] = await Promise.all([
-    trailsRes.json(),
-    parksRes.json(),
-    dirtRes.json(),
-  ])
-
-  return [
-    ...(trails as any[]).map(t => ({ ...t, type: 'trail' })),
-    ...(parks as any[]).map(p => ({ ...p, type: 'bikepark' })),
-    ...(dirtParks as any[]).map(d => ({ ...d, type: 'dirtpark' })),
-  ]
+  const groups = await Promise.all(responses.map(r => r.json() as Promise<any[]>))
+  return SPOT_TYPE_LIST.flatMap((def, i) => tagSpots(def.type, groups[i] ?? []))
 })

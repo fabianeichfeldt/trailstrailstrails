@@ -183,6 +183,7 @@
 </template>
 
 <script setup lang="ts">
+import { SPOT_TYPE_LIST } from '~/types/SpotTypes'
 import { confirmDialog } from '~/map/confirmDialog'
 import { showToast } from '~/utils/toast'
 import PlanCard from '~/components/profile/PlanCard.vue'
@@ -259,19 +260,13 @@ async function loadContributions() {
   const uid = await authStore.getUserId()
   if (!uid) return
 
-  const [trailsRes, parksRes, dirtRes, favRes, photosRes] = await Promise.all([
-    client.from('trails').select('id, name, created_at').eq('creator_id', uid),
-    client.from('parks').select('id, name, created_at').eq('creator_id', uid),
-    client.from('dirt_parks').select('id, name, created_at').eq('creator_id', uid),
+  const [spotRes, favRes, photosRes] = await Promise.all([
+    Promise.all(SPOT_TYPE_LIST.map(def => client.from(def.table).select('id, name, created_at').eq('creator_id', uid))),
     client.from('trail_favorites').select('trails(id, name, created_at)').eq('user_id', uid),
     client.from('trail_photos').select('id, url, created_at, trail_id, copyright, trails(name)').eq('creator', uid),
   ])
 
-  createdTrails.value = [
-    ...(trailsRes.data ?? []),
-    ...(parksRes.data ?? []),
-    ...(dirtRes.data ?? []),
-  ] as BaseTrail[]
+  createdTrails.value = spotRes.flatMap(r => r.data ?? []) as BaseTrail[]
 
   favoriteTrails.value = ((favRes.data ?? []) as { trails: BaseTrail }[]).map(r => r.trails)
 

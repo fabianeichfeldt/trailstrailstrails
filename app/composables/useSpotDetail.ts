@@ -56,7 +56,7 @@ export async function useSpotDetail(slug: string | null) {
 
   // getTrailById/BySlug merge base row + details row + type + photos — the
   // Trail shape the section components and spotPanel store expect.
-  const spot = computed<Trail | null>(() => (trail.value as unknown as Trail | null) ?? null)
+  const spot = computed<Trail | null>(() => trail.value ?? null)
 
   // Seeded from the baked payload so content renders immediately (SEO-safe);
   // refreshDetails() swaps in the live row (status hint freshness, likes).

@@ -1,3 +1,4 @@
+import { SPOT_TYPES, isSpotType } from '../types/SpotTypes'
 import type { TrailStatusState } from '../types/TrailStatus'
 
 export interface MarkerIconOptions {
@@ -10,9 +11,8 @@ export interface MarkerIconOptions {
 
 export function markerIconOptions(type: string, approved: boolean): MarkerIconOptions {
   const category =
-    type === 'dirtpark' ? 'dirtpark' :
-    type === 'bikepark' ? 'bikepark' :
-    approved           ? 'verified' : 'unverified'
+    (isSpotType(type) && SPOT_TYPES[type].markerCategory) ||
+    (approved ? 'verified' : 'unverified')
 
   return {
     html:        `<div class="map-pin map-pin-${category}"></div>`,
