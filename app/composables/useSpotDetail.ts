@@ -1,8 +1,8 @@
 import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
-import type { TrailDetails } from '~/types/TrailDetails'
+import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
-import { authInfoSnapshot, useAuthService } from './useAuthService'
+import { useAuthService } from './useAuthService'
 
 /**
  * Everything the spot-detail page (trails/[slug].vue) loads for one spot:
@@ -16,6 +16,17 @@ import { authInfoSnapshot, useAuthService } from './useAuthService'
  * static HTML.
  */
 export async function useSpotDetail(slug: string | null) {
+  // Region pages: no fetch and no payload key shared by every region page.
+  if (!slug) {
+    return {
+      trail: ref(null),
+      spot: computed<Trail | null>(() => null),
+      details: ref(new TrailDetails('')),
+      refreshDetails: async () => {},
+      removePhoto: (_id: string) => {},
+    }
+  }
+
   const spotPanel = useSpotPanelStore()
   const authStore = useAuthStore()
   const authService = useAuthService()
@@ -26,7 +37,6 @@ export async function useSpotDetail(slug: string | null) {
   // hooks must register before the first await or they attach to nothing.
   const key = `trail-${slug}`
   const asyncData = useAsyncData(key, async () => {
-    if (!slug) return null
     try {
       const bySlug = await getTrailBySlug(slug)
       if (bySlug) return bySlug
@@ -77,7 +87,7 @@ export async function useSpotDetail(slug: string | null) {
     startedFor = item.id
     details.value = bakedTrailDetails(trail.value)
     spotPanel.load(item)
-    const authInfo = authInfoSnapshot()
+    const authInfo = { userId: authStore.userId, isAdmin: authStore.isAdmin, isTrailcrew: authStore.isTrailcrew }
     spotPanel.loadComments(item.id, authInfo)
     spotPanel.loadPhotoModeration(item.id, authInfo, authService)
     refreshDetails()
@@ -86,7 +96,6 @@ export async function useSpotDetail(slug: string | null) {
   let mounted = false
   onMounted(async () => {
     mounted = true
-    if (!slug) return
     // clearNuxtData() is required: refresh() alone is a silent no-op while
     // Nuxt still holds the SSR-time promise for this key.
     clearNuxtData(key)

@@ -1,5 +1,4 @@
 import type { IAuthService } from '~/auth/auth_service'
-import type { CommentsAuthInfo } from '~/stores/spotPanel'
 
 /**
  * Minimal IAuthService over the shared auth store — the communication/ calls
@@ -24,10 +23,4 @@ export function useAuthService(): IAuthService {
       }
     },
   } as IAuthService
-}
-
-/** Snapshot of the caller's identity for the spotPanel store's loaders. */
-export function authInfoSnapshot(): CommentsAuthInfo {
-  const authStore = useAuthStore()
-  return { userId: authStore.userId, isAdmin: authStore.isAdmin, isTrailcrew: authStore.isTrailcrew }
 }

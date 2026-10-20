@@ -122,9 +122,13 @@ describe('useSpotDetail', () => {
   })
 
   it('does nothing for region pages (null slug)', async () => {
+    const asyncDataSpy = vi.fn(fakeUseAsyncData)
+    vi.stubGlobal('useAsyncData', asyncDataSpy)
+
     const { spot } = await mountDetail(null)
 
     expect(spot.value).toBeNull()
+    expect(asyncDataSpy).not.toHaveBeenCalled() // no shared 'trail-null' payload key
     expect(getTrailBySlug).not.toHaveBeenCalled()
     expect(clearNuxtData).not.toHaveBeenCalled()
   })
