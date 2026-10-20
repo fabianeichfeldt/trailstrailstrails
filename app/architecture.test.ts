@@ -338,6 +338,24 @@ describe('trail condition (server-side only)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Paid features — one gate (entitlements/gatedFetch.ts), one adapter per feature
+// ─────────────────────────────────────────────────────────────────────────────
+// The gate owns the entitlement check, 403 handling, the user-scoped cache and
+// the stale guard. A paid feature that caches on its own drifts from that rule
+// (Trail-Zustand's own cache once survived logout).
+describe('paid features go through the gated-fetch module', () => {
+  const adapters = ['app/communication/weather.ts', 'app/communication/soilMap.ts']
+
+  test('each paid-feature communication file exports a GatedAdapter', () => {
+    for (const file of adapters) expect(read(file), file).toMatch(/:\s*GatedAdapter</)
+  })
+
+  test('paid-feature communication files keep no cache of their own', () => {
+    expect(adapters.filter(f => /localStorage/.test(read(f)))).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Mini-map renderer — owns Leaflet, but only dynamically and only in a function
 // ─────────────────────────────────────────────────────────────────────────────
 // app/map/miniMap.ts is the read-only Leaflet renderer shared by the

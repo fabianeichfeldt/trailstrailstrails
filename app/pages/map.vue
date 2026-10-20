@@ -69,7 +69,6 @@ const authStore = useAuthStore()
 const mapStore = useMapStore()
 const trailsStore = useTrailsStore()
 const soilStore = useSoilRadarStore()
-const soilAccess = useFeatureAccess('soil_radar')
 const route = useRoute()
 
 let getCenter: () => { lat: number; lon: number } | null = () => null
@@ -99,9 +98,7 @@ function onMapReady(handlers: {
   getCenter = handlers.getCenter
 
   // A persisted "on" brings its data back only once entitled; otherwise it flips off without the teaser.
-  restoringSoil = true
-  soilStore.restore(soilAccess).finally(() => {
-    restoringSoil = false
+  soilStore.restore().finally(() => {
     // Deep link from the landing page / spot page: open the radar, unless restore already did.
     if (route.query.radar === '1' && !soilStore.enabled) soilButton.value?.activate()
     else soilIntro.start()
@@ -125,7 +122,6 @@ function onMapReady(handlers: {
 // ── Boden-Radar ─────────────────────────────────────────────────────────────
 const soilSheetOpen = ref(false)
 const soilUnavailable = ref(false)
-let restoringSoil = false
 const soilButton = ref<{ activate: () => void } | null>(null)
 const soilIntro = useSoilRadarIntro({
   busy: () => soilSheetOpen.value || mapStore.authModalOpen || addSpotModal.open || !!nearbyConflict.value,
@@ -159,13 +155,11 @@ function closeSoilSheet() {
   soilStore.stopSample()
 }
 
-// 403 on a user-initiated enable: the entitlement is stale, so show the teaser (no sample, no data).
-watch(() => soilStore.forbidden, (f) => {
-  if (f && !restoringSoil) soilSheetOpen.value = true
-}, { flush: 'sync' })
-
-watch(() => soilStore.status, (st) => {
-  if (st !== 'error' || soilStore.forbidden || restoringSoil) return
+// Only a user-initiated switch-on reports a failure; a restore switches off silently.
+watch(() => soilStore.failure, (f) => {
+  // 403: the entitlement is stale, so show the teaser (no sample, no data).
+  if (f === 'locked') soilSheetOpen.value = true
+  if (f !== 'unavailable') return
   soilUnavailable.value = true
   if (noticeTimer) clearTimeout(noticeTimer)
   noticeTimer = setTimeout(() => { soilUnavailable.value = false }, 4000)

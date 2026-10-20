@@ -1,7 +1,18 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import type { TrailConditionResponse } from '~/types/Weather'
 import { FUNCTIONS } from './http'
-import { fetchTrailCondition, TRAIL_CONDITION_CACHE_TTL_MS } from './weather'
+import { createGatedFetch } from '~/entitlements/gatedFetch'
+import { fetchTrailCondition, trailConditionAdapter, TRAIL_CONDITION_CACHE_TTL_MS } from './weather'
+
+// The cached path, as useTrailCondition runs it: the adapter inside the real gate.
+async function cachedCondition(spotType: string, spotId: string) {
+  const gate = createGatedFetch(trailConditionAdapter, {
+    access: () => 'allowed', userId: () => 'u1', getUserId: async () => 'u1', getToken: async () => 'jwt',
+  })
+  gate.markMounted()
+  await gate.load({ spotType, spotId })
+  return gate.data.value
+}
 
 // The network boundary is the only thing mocked: `fetch` is stubbed, so no test
 // in this file reaches Supabase or the edge function.
@@ -56,7 +67,7 @@ describe('fetchTrailCondition — at (verdict for a past instant)', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => shifted })
     vi.stubGlobal('fetch', fetchMock)
     // A cached real-now card must not answer a request for another instant.
-    localStorage.setItem(KEY, JSON.stringify({ at: Date.now(), condition: condition() }))
+    localStorage.setItem(KEY, JSON.stringify({ uid: 'u1', at: Date.now(), data: condition() }))
 
     const past = new Date(Date.now() - 3600_000).toISOString()
     const result = await fetchTrailCondition('trail', 't1', 'jwt', undefined, past)
@@ -64,7 +75,7 @@ describe('fetchTrailCondition — at (verdict for a past instant)', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toEqual({ spotType: 'trail', spotId: 't1', at: past })
     expect(result).toEqual(shifted)
-    expect(JSON.parse(localStorage.getItem(KEY)!).condition).toEqual(condition())
+    expect(JSON.parse(localStorage.getItem(KEY)!).data).toEqual(condition())
   })
 
   it('does not send `at` when absent', async () => {
@@ -118,13 +129,13 @@ describe('fetchTrailCondition — responses', () => {
   })
 })
 
-describe('fetchTrailCondition — per-device cache', () => {
+describe('trail-condition adapter — per-device cache', () => {
   it('serves a fresh entry without calling the function', async () => {
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
 
-    await fetchTrailCondition('trail', 't1', 'jwt')
-    const again = await fetchTrailCondition('trail', 't1', 'jwt')
+    await cachedCondition('trail', 't1')
+    const again = await cachedCondition('trail', 't1')
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     expect(again).toEqual(condition())
@@ -135,8 +146,8 @@ describe('fetchTrailCondition — per-device cache', () => {
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
 
-    await fetchTrailCondition('trail', 't1', 'jwt')
-    await fetchTrailCondition('bikepark', 't1', 'jwt')
+    await cachedCondition('trail', 't1')
+    await cachedCondition('bikepark', 't1')
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
@@ -146,9 +157,9 @@ describe('fetchTrailCondition — per-device cache', () => {
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
 
-    await fetchTrailCondition('trail', 't1', 'jwt')
+    await cachedCondition('trail', 't1')
     vi.advanceTimersByTime(TRAIL_CONDITION_CACHE_TTL_MS + 1000)
-    await fetchTrailCondition('trail', 't1', 'jwt')
+    await cachedCondition('trail', 't1')
 
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
@@ -158,20 +169,20 @@ describe('fetchTrailCondition — per-device cache', () => {
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
 
-    expect(await fetchTrailCondition('trail', 't1', 'jwt')).toEqual(condition())
+    expect(await cachedCondition('trail', 't1')).toEqual(condition())
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
   it('clears the cached entry on a 403, so a downgraded user keeps no stale paid card', async () => {
     vi.useFakeTimers()
     vi.stubGlobal('fetch', respond(200))
-    await fetchTrailCondition('trail', 't1', 'jwt')
+    await cachedCondition('trail', 't1')
     expect(localStorage.getItem(KEY)).not.toBeNull()
 
     // Entry expires, function now refuses.
     vi.advanceTimersByTime(TRAIL_CONDITION_CACHE_TTL_MS + 1000)
     vi.stubGlobal('fetch', respond(403, {}))
-    expect(await fetchTrailCondition('trail', 't1', 'jwt')).toBeNull()
+    expect(await cachedCondition('trail', 't1')).toBeNull()
 
     expect(localStorage.getItem(KEY)).toBeNull()
   })
@@ -180,7 +191,7 @@ describe('fetchTrailCondition — per-device cache', () => {
     vi.stubGlobal('localStorage', undefined)
     vi.stubGlobal('fetch', respond(200))
     try {
-      expect(await fetchTrailCondition('trail', 't1', 'jwt')).toEqual(condition())
+      expect(await cachedCondition('trail', 't1')).toEqual(condition())
     } finally {
       vi.unstubAllGlobals()
     }
@@ -191,7 +202,7 @@ describe('fetchTrailCondition — per-device cache', () => {
     vi.stubGlobal('localStorage', { getItem: boom, setItem: boom, removeItem: boom })
     vi.stubGlobal('fetch', respond(200))
     try {
-      expect(await fetchTrailCondition('trail', 't1', 'jwt')).toEqual(condition())
+      expect(await cachedCondition('trail', 't1')).toEqual(condition())
     } finally {
       vi.unstubAllGlobals()
     }

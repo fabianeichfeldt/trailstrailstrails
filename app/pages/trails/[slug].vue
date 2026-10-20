@@ -67,7 +67,7 @@
       <SpotDetailWeather
         v-else
         :condition="condition"
-        :loading="conditionLoading || conditionAccess === 'checking'"
+        :loading="conditionLoading"
         :spot-type="trailForStore.type"
         :spot-id="trailForStore.id"
       />
@@ -347,18 +347,15 @@ const details = ref<TrailDetails>(bakedDetails.value)
 //
 // Trail-Zustand is a paid feature (see FEATURES.trail_condition), and the real
 // gate is the `trail-condition` edge function (JWT + has_min_tier). The client
-// check below only decides what to render and whether to ask at all: no request
-// is made until the visitor is known to be allowed. "checking" covers SSR and
-// the moment before a logged-in user's entitlement arrives, and renders the same
-// skeleton as a slow fetch. If the function still answers 403 (a stale
-// entitlement in the browser), the locked teaser replaces the card.
-const conditionAccess = useFeatureAccess('trail_condition')
-const { condition, loading: conditionLoading, forbidden: conditionForbidden } = useTrailCondition(() =>
-  trailForStore.value && conditionAccess.value === 'allowed'
-    ? { spotType: trailForStore.value.type, spotId: trailForStore.value.id }
-    : null,
+// gate (useTrailCondition → entitlements/gatedFetch) only decides what to render
+// and whether to ask at all: no request is made until the visitor is known to be
+// allowed. "checking" covers SSR and the moment before a logged-in user's
+// entitlement arrives, and renders the same skeleton as a slow fetch. A 403 (a
+// stale entitlement in the browser) turns the state to "locked": the teaser.
+const { condition, loading: conditionLoading, state: conditionState } = useTrailCondition(() =>
+  trailForStore.value ? { spotType: trailForStore.value.type, spotId: trailForStore.value.id } : null,
 )
-const showConditionLocked = computed(() => conditionAccess.value === 'locked' || conditionForbidden.value)
+const showConditionLocked = computed(() => conditionState.value === 'locked')
 
 async function updateLikeButton(d: TrailDetails) {
   try {
