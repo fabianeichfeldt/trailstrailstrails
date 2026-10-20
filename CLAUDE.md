@@ -149,6 +149,7 @@ app/anon.ts
 **`composables/`**
 - `useTrailMap` owns the live `/map` Leaflet instance (client-only, inside `onMounted`) — the interactive map, its markers, and the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`. The **only** other place Leaflet `L` lives is `app/map/miniMap.ts`, the read-only mini-map renderer for the spot-detail page (`SpotDetailMiniMap.vue`) and the third-party embed page (`/embed/[token]`); it dynamic-imports `leaflet` inside `createMiniMap()` and takes no store/composable deps.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
+- What a `/map` pin, cluster, GPX soil chip or radar cloud shows (Boden-Radar badges, range ghosting, sample demo pins) comes from `app/map/markerPresentation.ts`; `useTrailMap` only applies that view model to Leaflet. Soil range matching only dims, never hides, so it lives there, not in `filtersStore`.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
 **`app/map/`**
@@ -214,7 +215,8 @@ else { ... }
 | `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
 | `app/map/miniMap.ts` | Read-only Leaflet mini-map renderer (`createMiniMap()` → `{ flyTo, setData, destroy }`) — shared by the spot-detail page and the third-party embed page; dynamic-imports `leaflet`, no store/composable deps |
 | `app/components/trail_detail/SpotDetailMiniMap.vue` | Inline mini-map on the spot-detail page — wires `spotPanelStore` (data / parkingLots / selectItem) to `createMiniMap`; client-only init, stable SSR placeholder |
-| `app/composables/useTrailMap.ts` | Live `/map` init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/composables/useTrailMap.ts` | Live `/map` init, applies the marker view model to Leaflet, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/map/markerPresentation.ts` | Pure marker view model: type-filtered trails + soil state (+ view bounds) in → pins, cluster levels, GPX soil chips, radar points, counter out; no Leaflet, no stores |
 | `app/entitlements/gatedFetch.ts` | Paid-feature fetch state machine (checking · locked · idle · loading · ready · error): gate, 403 → locked + cache sweep, user-scoped cache cleared on logout, stale guard. Features plug in a `GatedAdapter` |
 | `app/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |

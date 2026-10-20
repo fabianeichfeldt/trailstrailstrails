@@ -438,7 +438,7 @@ describe('app/map/soil* files', () => {
   const files = collectTs('app/map').filter(f => /\/soil[^/]*\.ts$/.test(f) && !f.endsWith('.test.ts'))
 
   test('the soil map modules exist (guards the glob below)', () => {
-    expect(files.length).toBeGreaterThanOrEqual(4)
+    expect(files.length).toBeGreaterThanOrEqual(3)
   })
 
   test('import no stores, composables or components (state is injected by useTrailMap)', () => {

@@ -2,10 +2,10 @@ import type { Trail } from '../types/Trail'
 import type { ConditionLevel } from '../types/Weather'
 import type { SoilMapSpot } from '../types/SoilMap'
 import { isFrost } from '../types/SoilMap'
-import { soilAxis } from '../types/soilScale'
+import { soilAxis, SOIL_AXIS_MAX } from '../types/soilScale'
 import { markerIconOptions, type MarkerIconOptions } from './markerIcon'
 import { markerWithSoilBadgeOptions, soilChipOptions } from './soilBadge'
-import { soilMarkerState, introDelayMs, countSoilInView } from './soilView'
+import type { SoilPoint } from './soilRadarLayer'
 
 // Leaflet-free: trails + soil state (+ view bounds) in, per-marker view model out; useTrailMap applies it.
 
@@ -22,8 +22,6 @@ export interface SoilInput {
   verdictFor(type: string, id: string): ConditionLevel | undefined
 }
 
-export interface SoilPoint { lat: number; lon: number; axis: number; frost: boolean }
-
 export interface PinView {
   lat: number
   lon: number
@@ -39,7 +37,7 @@ export interface PinView {
 
 export interface ChipView { lat: number; lon: number; icon: MarkerIconOptions }
 
-// 'none' = no soil verdict; soilMarkerState shows those only while the range is the full 0..4
+// 'none' = no soil verdict; pinGhost shows those only while the range is the full axis
 export function soilMatch(level: ConditionLevel | undefined, range: SoilRange): 'match' | 'ghost' | 'none' {
   const axis = soilAxis(level)
   if (axis === null) return 'none'
@@ -48,7 +46,22 @@ export function soilMatch(level: ConditionLevel | undefined, range: SoilRange): 
 
 /** Whether a badge with this level is dimmed under the range; pins without a level never ghost. */
 export function pinGhost(level: ConditionLevel | undefined, range: SoilRange): boolean {
-  return !!level && soilMarkerState(soilMatch(level, range), range) === 'ghost'
+  if (!level) return false
+  const state = soilMatch(level, range)
+  if (state === 'none') return range.lo > 0 || range.hi < SOIL_AXIS_MAX
+  return state === 'ghost'
+}
+
+/** Matches the layer's reveal sweep (soilRadarLayer SWEEP_MS), so badge pops follow the beam. */
+export const SOIL_INTRO_MS = 1600
+
+/** Pop delay of a badge = how far round the beam (north, clockwise) its spot is from the centre. */
+export function introDelayMs(center: LatLon, p: LatLon): number {
+  const dx = (p.lon - center.lon) * Math.cos(center.lat * Math.PI / 180)
+  const dy = p.lat - center.lat
+  const angle = Math.atan2(dx, dy) // 0 = north, clockwise positive
+  const turns = (angle < 0 ? angle + 2 * Math.PI : angle) / (2 * Math.PI)
+  return Math.round(turns * SOIL_INTRO_MS)
 }
 
 const sampleMode = (soil: SoilInput) => soil.enabled && soil.mode === 'sample'
@@ -131,6 +144,13 @@ export function radarPoints(soil: SoilInput): SoilPoint[] {
 
 /** Counter chip: spots in view matching the range / all spots in view with data. */
 export function soilCountsInView(soil: SoilInput, bounds: ViewBounds): { matchCount: number; totalCount: number } {
-  if (!soil.enabled) return { matchCount: 0, totalCount: 0 }
-  return countSoilInView(soil.points, bounds, soil.range, soilMatch)
+  let matchCount = 0
+  let totalCount = 0
+  if (!soil.enabled) return { matchCount, totalCount }
+  for (const s of soil.points) {
+    if (!inBounds(s, bounds)) continue
+    totalCount++
+    if (soilMatch(s.lvl, soil.range) === 'match') matchCount++
+  }
+  return { matchCount, totalCount }
 }

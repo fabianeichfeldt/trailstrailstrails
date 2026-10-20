@@ -2,16 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 import { useFiltersStore } from '~/stores/filters'
 import type { Trail } from '~/types/Trail'
-import type { SoilMapSpot } from '~/types/SoilMap'
-import type { ConditionLevel } from '~/types/Weather'
 import {
   markerPins, pinIconOptions, soilChips,
   type SoilInput,
 } from '~/map/markerPresentation'
+import { WORLD, soil, sample } from '~/map/markerPresentation.fixtures'
 
-// useTrailMap's wiring: filtersStore.apply() decides type visibility, markerPresentation the soil look.
-const FULL = { lo: 0, hi: 4 }
-const WORLD = { south: -90, north: 90, west: -180, east: 180 }
+// The wiring useTrailMap relies on: filtersStore.apply() decides type visibility, markerPresentation the soil look.
 
 function spot(type: Trail['type'], id: string, extra: Partial<Trail> = {}): Trail {
   return {
@@ -19,18 +16,6 @@ function spot(type: Trail['type'], id: string, extra: Partial<Trail> = {}): Trai
     latitude: 48, longitude: 11, approved: true, type, pumptrack: false, dirtpark: true, ...extra,
   } as Trail
 }
-
-function soil(over: Partial<SoilInput> & { verdicts?: Record<string, ConditionLevel> } = {}): SoilInput {
-  const { verdicts = {}, ...rest } = over
-  return {
-    enabled: true, mode: 'live', range: FULL, points: [],
-    verdictFor: (t, id) => verdicts[`${t}:${id}`],
-    ...rest,
-  }
-}
-
-const sample = (lvl: ConditionLevel, lat = 48, lon = 11): SoilMapSpot =>
-  ({ t: 'trail', id: `s-${lvl}`, lat, lon, lvl, lo: null, hi: null })
 
 describe('markerPins — filter × soil', () => {
   let filters: ReturnType<typeof useFiltersStore>
@@ -112,4 +97,3 @@ describe('soilChips', () => {
     expect(soilChips([spot('trail', 't')], soil({ enabled: false, verdicts: { 'trail:t': 'dry' } }), WORLD)).toEqual([])
   })
 })
-

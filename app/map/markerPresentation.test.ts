@@ -1,25 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import type { SoilMapSpot } from '../types/SoilMap'
-import type { ConditionLevel } from '../types/Weather'
 import {
-  soilMatch, pinGhost, clusterLevels, radarPoints, soilCountsInView,
-  type SoilInput,
+  soilMatch, pinGhost, introDelayMs, clusterLevels, radarPoints, soilCountsInView, SOIL_INTRO_MS,
 } from './markerPresentation'
-
-const FULL = { lo: 0, hi: 4 }
-const WORLD = { south: -90, north: 90, west: -180, east: 180 }
-
-function soil(over: Partial<SoilInput> & { verdicts?: Record<string, ConditionLevel> } = {}): SoilInput {
-  const { verdicts = {}, ...rest } = over
-  return {
-    enabled: true, mode: 'live', range: FULL, points: [],
-    verdictFor: (t, id) => verdicts[`${t}:${id}`],
-    ...rest,
-  }
-}
-
-const sample = (lvl: ConditionLevel, lat = 48, lon = 11): SoilMapSpot =>
-  ({ t: 'trail', id: `s-${lvl}`, lat, lon, lvl, lo: null, hi: null })
+import { FULL, soil, sample } from './markerPresentation.fixtures'
 
 describe('soilMatch', () => {
   it('matches a level inside the range and ghosts one outside', () => {
@@ -59,9 +42,28 @@ describe('pinGhost', () => {
     expect(pinGhost(undefined, { lo: 1, hi: 2 })).toBe(false)
   })
 
-  it('ghosts an unknown verdict as soon as the range is narrowed', () => {
+  it('ghosts an unknown verdict as soon as the range is narrowed, at either end', () => {
     expect(pinGhost('unknown', FULL)).toBe(false)
     expect(pinGhost('unknown', { lo: 0, hi: 3 })).toBe(true)
+    expect(pinGhost('unknown', { lo: 1, hi: 4 })).toBe(true)
+  })
+})
+
+describe('introDelayMs', () => {
+  const c = { lat: 48, lon: 11 }
+  it('starts at north and sweeps clockwise', () => {
+    expect(introDelayMs(c, { lat: 49, lon: 11 })).toBe(0)
+    expect(introDelayMs(c, { lat: 48, lon: 12 })).toBeCloseTo(SOIL_INTRO_MS * 0.25, -1)
+    expect(introDelayMs(c, { lat: 47, lon: 11 })).toBeCloseTo(SOIL_INTRO_MS * 0.5, -1)
+    expect(introDelayMs(c, { lat: 48, lon: 10 })).toBeCloseTo(SOIL_INTRO_MS * 0.75, -1)
+  })
+
+  it('is never negative and stays within one sweep', () => {
+    for (const p of [{ lat: 48.5, lon: 10.2 }, { lat: 47.2, lon: 12.9 }, { lat: 48, lon: 11 }]) {
+      const d = introDelayMs(c, p)
+      expect(d).toBeGreaterThanOrEqual(0)
+      expect(d).toBeLessThanOrEqual(SOIL_INTRO_MS)
+    }
   })
 })
 
@@ -88,5 +90,6 @@ describe('radarPoints / soilCountsInView', () => {
     const view = { south: 40, north: 50, west: 0, east: 20 }
     expect(soilCountsInView(soil({ points, range: { lo: 0, hi: 1 } }), view)).toEqual({ matchCount: 1, totalCount: 3 })
     expect(soilCountsInView(soil({ enabled: false, points }), view)).toEqual({ matchCount: 0, totalCount: 0 })
+    expect(soilCountsInView(soil(), view)).toEqual({ matchCount: 0, totalCount: 0 })
   })
 })
