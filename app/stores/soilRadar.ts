@@ -1,7 +1,8 @@
 import { soilMapAdapter } from '~/communication/soilMap'
 import type { FeatureAccess } from '~/entitlements/features'
 import { createGatedFetch, settled } from '~/entitlements/gatedFetch'
-import { SOIL_AXIS_MAX, type SoilMapResponse, type SoilMapSpot } from '~/types/SoilMap'
+import type { SoilMapResponse, SoilMapSpot } from '~/types/SoilMap'
+import { SOIL_AXIS_MAX, SOIL_SCALE } from '~/types/soilScale'
 import type { ConditionLevel } from '~/types/Weather'
 
 const ENABLED_KEY = 'soil-radar-enabled'
@@ -35,7 +36,6 @@ function readRange(): { lo: number; hi: number } {
 }
 
 // Fixed seed so the demo looks the same every time; a west-dry/east-wet "front" makes it plausible.
-const SAMPLE_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
 const SAMPLE_COUNT = 25
 
 function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
@@ -52,7 +52,7 @@ function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
     // The front runs north-south: position along it picks the level, a little noise blurs the edge.
     const pos = (dx + 0.6) / 1.2 + (rnd() - 0.5) * 0.25
     const axis = Math.min(SOIL_AXIS_MAX, Math.max(0, Math.round(pos * SOIL_AXIS_MAX)))
-    let lvl: ConditionLevel = SAMPLE_LEVELS[axis]!
+    let lvl: ConditionLevel = SOIL_SCALE[axis]!
     if (i === 3) lvl = 'raining'
     if (i === 11) lvl = 'snow'
     const lo = Math.max(0, axis - 1)

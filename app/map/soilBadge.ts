@@ -2,7 +2,6 @@ import type { ConditionLevel } from '../types/Weather'
 import { SOIL_PALETTE, SOIL_LABELS, isSoilMapLevel, soilAxis, type SoilLevel } from '../types/soilScale'
 import { markerIconOptions, type MarkerIconOptions } from './markerIcon'
 
-export { SOIL_PALETTE, SOIL_LABELS, type SoilLevel }
 export const SOIL_FROST = '#e8f4ff'
 const SOIL_UNKNOWN = '#c9ccd0'
 // White glyph needs a darker ground than the frost tint of the clouds.
@@ -72,7 +71,7 @@ export function markerWithSoilBadgeOptions(
 
 /** Cluster icon: donut of the children's soil shares, child count in the middle. */
 export function clusterDonutHtml(levels: ConditionLevel[]): string {
-  const counts = [0, 0, 0, 0, 0]
+  const counts = SOIL_PALETTE.map(() => 0)
   let unknown = 0
   for (const l of levels) {
     if (isSoilMapLevel(l)) counts[soilAxis(l)!]!++

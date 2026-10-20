@@ -104,8 +104,8 @@
 <script setup lang="ts">
 import type { TrailConditionResponse, ConditionLevel, ConditionRange, ConditionPositionRange } from '~/types/Weather'
 import ConditionScale from '~/components/trail_detail/ConditionScale.vue'
-import { SOIL_GLYPHS, soilBadgeColor, type SoilLevel } from '~/map/soilBadge'
-import { isSoilVerdict } from '~/types/soilScale'
+import { SOIL_GLYPHS, soilBadgeColor } from '~/map/soilBadge'
+import { isSoilVerdict, type SoilLevel } from '~/types/soilScale'
 import { formatStand } from '~/utils/formatStand'
 import SoilFeedbackSheet from '~/components/trail_detail/SoilFeedbackSheet.vue'
 import IconSpade from '~/assets/icons/spade.svg'

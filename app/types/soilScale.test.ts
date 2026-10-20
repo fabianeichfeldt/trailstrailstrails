@@ -9,6 +9,17 @@ describe('soilScale', () => {
     for (const l of SOIL_SCALE) expect(SOIL_LABELS[l]).toBeTruthy()
   })
 
+  it('palette is the L1 Earth ramp', () => {
+    expect(SOIL_PALETTE).toEqual(['#e0a526', '#8bbf3f', '#16c060', '#2ea8e6', '#6d4c41'])
+  })
+
+  it('labels are the one set for chips, radar legend and condition scale', () => {
+    expect(SOIL_LABELS).toEqual({
+      dusty: 'Staubig', dry: 'Trocken', prime: 'Hero Dirt', damp: 'Feucht', wet: 'Schlammig',
+      raining: 'Regen', snow: 'Schnee',
+    })
+  })
+
   it('isSoilVerdict is true only for the five scale levels', () => {
     for (const l of SOIL_SCALE) expect(isSoilVerdict(l)).toBe(true)
     for (const l of ['raining', 'snow', 'hard', 'unknown', undefined] as const) expect(isSoilVerdict(l)).toBe(false)

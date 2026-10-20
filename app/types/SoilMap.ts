@@ -1,5 +1,4 @@
 import type { ConditionLevel } from './Weather'
-import { soilAxis } from './soilScale'
 
 /** Wire format of the `soil-map` edge function (trailradar-backend). */
 export interface SoilMapSpot {
@@ -19,10 +18,6 @@ export interface SoilMapResponse {
   nextRunAt?: string
   spots: SoilMapSpot[]
 }
-
-export { SOIL_AXIS_MAX } from './soilScale'
-
-export const levelToAxis = soilAxis
 
 /** Snow is drawn as frost rather than as a wet soil colour. */
 export function isFrost(level: ConditionLevel | undefined): boolean {

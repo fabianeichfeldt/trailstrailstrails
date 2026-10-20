@@ -2,14 +2,13 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
-  SOIL_PALETTE, SOIL_FROST, SOIL_GLYPHS, SOIL_LABELS, axisColor, axisRgb, soilBadgeColor,
+  SOIL_FROST, SOIL_GLYPHS, axisColor, axisRgb, soilBadgeColor,
   soilBadgeHtml, markerWithSoilBadgeOptions, clusterDonutHtml, soilChipOptions,
 } from './soilBadge'
 import { markerIconOptions } from './markerIcon'
 
-describe('palette', () => {
-  it('is the L1 Earth ramp', () => {
-    expect(SOIL_PALETTE).toEqual(['#e0a526', '#8bbf3f', '#16c060', '#2ea8e6', '#6d4c41'])
+describe('SOIL_FROST', () => {
+  it('is the frost tint', () => {
     expect(SOIL_FROST).toBe('#e8f4ff')
   })
 })
@@ -45,15 +44,6 @@ describe('SOIL_GLYPHS', () => {
       expect(SOIL_GLYPHS[l], l).toContain(inner)
       expect(SOIL_GLYPHS[l], l).toMatch(/^<svg class="soil-glyph" aria-hidden="true"/)
     }
-  })
-})
-
-describe('SOIL_LABELS', () => {
-  it('is the one label set for chips, radar legend and condition scale', () => {
-    expect(SOIL_LABELS).toEqual({
-      dusty: 'Staubig', dry: 'Trocken', prime: 'Hero Dirt', damp: 'Feucht', wet: 'Schlammig',
-      raining: 'Regen', snow: 'Schnee',
-    })
   })
 })
 

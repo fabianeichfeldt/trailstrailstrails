@@ -5,7 +5,8 @@ import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '
 import { markerWithSoilBadgeOptions, clusterDonutHtml, soilChipOptions } from '~/map/soilBadge'
 import { createSoilRadarLayer, type SoilRadarLayer, type SoilPoint } from '~/map/soilRadarLayer'
 import { soilMarkerState, introDelayMs, countSoilInView } from '~/map/soilView'
-import { levelToAxis, isFrost } from '~/types/SoilMap'
+import { isFrost } from '~/types/SoilMap'
+import { soilAxis } from '~/types/soilScale'
 import type { ConditionLevel } from '~/types/Weather'
 import {
   DIFF_COLOR,
@@ -187,7 +188,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       const pts: SoilPoint[] = []
       for (const s of soilStore.points) {
         if (filtersStore.soilMatch(s.lvl, soilStore.range) !== 'match') continue
-        pts.push({ lat: s.lat, lon: s.lon, axis: levelToAxis(s.lvl)!, frost: isFrost(s.lvl) })
+        pts.push({ lat: s.lat, lon: s.lon, axis: soilAxis(s.lvl)!, frost: isFrost(s.lvl) })
       }
       return pts
     }
