@@ -823,12 +823,15 @@
 
 <script setup lang="ts">
 import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, ParkDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, getParkDetails, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
 import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter'
-import { SPOT_CAPABILITIES, type ParkDetailsTable } from '../../spot_manager/spotTypes'
+import { SPOT_CAPABILITIES } from '../../spot_manager/spotTypes'
+import { breadcrumbsFor, createViewNav, type View } from '../../spot_manager/viewTree'
+import { createSpotEditorLoader } from '../../spot_manager/spotEditorLoader'
+import { createImportQueue, type PendingImport } from '../../spot_manager/importQueue'
 import { parkBannerSub, parkStatusKey } from '../../spot_manager/spotDetailsSummary'
 import { normalizeWebsiteUrl } from '../../spot_manager/spotWebsite'
 import ParkDetailsEditor from './ParkDetailsEditor.vue'
@@ -844,17 +847,6 @@ import {
   dismissHint,
   DEFAULT_SHEET_VH,
 } from '../../spot_manager/sheetResize'
-
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'park-details'
-
-interface PendingImport {
-  key: string
-  filename: string
-  processed: ProcessedGpx
-  name: string
-  difficulty: ImbaColor
-  direction: string
-}
 
 const authStore = useAuthStore()
 
@@ -939,8 +931,12 @@ const parkingBannerSub = computed(() => {
   return n === 1 ? '1 Parkplatz' : `${n} Parkplätze`
 })
 
-async function openParkingList() {
+function openParkingList() {
   view.value = 'parking-list'
+  return loadParkingLots()
+}
+
+async function loadParkingLots() {
   parkingLoading.value = true
   parkingError.value   = null
   try {
@@ -977,8 +973,12 @@ async function executeParkingDelete() {
   }
 }
 
-async function openEmbedList() {
-  view.value    = 'embed-list'
+function openEmbedList() {
+  view.value = 'embed-list'
+  return loadEmbedTokens()
+}
+
+async function loadEmbedTokens() {
   embedLoading.value = true
   embedError.value   = null
   try {
@@ -1048,6 +1048,8 @@ const deleteTarget = ref<{ id: string; name: string; kind: 'trail' | 'tour' } | 
 const mapEl = ref<HTMLElement | null>(null)
 
 const mapView = shallowRef<MapViewLike | null>(null)
+
+const importQueue = createImportQueue({ pending, map: () => mapView.value, getToken: () => authStore.getToken() })
 
 // ── Segment editor ────────────────────────────────────────────────────────────
 const segmentEditor = useSegmentEditor({
@@ -1151,6 +1153,8 @@ onMounted(async () => {
 
 // ── Spot selection ─────────────────────────────────────────────────────────────
 const SPOT_OPEN_ZOOM = 13
+const spotLoader = createSpotEditorLoader()
+
 async function openSpot(spot: SpotRow) {
   const { id, name } = spot
   spotId.value = id
@@ -1163,21 +1167,15 @@ async function openSpot(spot: SpotRow) {
   loading.value = true
 
   try {
-    const c = SPOT_CAPABILITIES[spot.type]
-    const [t, to, d, pk] = await Promise.all([
-      c.trails ? getSpotTrails(id) : Promise.resolve([]),
-      c.tours ? getSpotTours(id) : Promise.resolve([]),
-      c.details === 'trail' ? getSpotDetails(id) : Promise.resolve(null),
-      getSpotParking(id),
-    ])
-    const bp = c.details === 'park' ? await getParkDetails(c.detailsTable as ParkDetailsTable, id) : null
-    trails.value = t
-    tours.value = to
-    spotDetails.value = d
-    parkDetails.value = bp
+    const data = await spotLoader.load(spot)
+    if (!data) return // superseded by a newer openSpot() or by leaving the spot
+    trails.value = data.trails
+    tours.value = data.tours
+    spotDetails.value = data.spotDetails
+    parkDetails.value = data.parkDetails
     // Preloaded so the "Parkplätze" banner can show a count immediately;
     // openParkingList() re-fetches for freshness when the user drills in.
-    parkingLots.value = pk
+    parkingLots.value = data.parkingLots
     trails.value.forEach(tr => mapView.value?.addTrailPolyline(tr))
     tours.value.forEach(to => mapView.value?.addTourPolyline(to))
     mapView.value?.setClickHandler(itemId => {
@@ -1194,46 +1192,38 @@ async function openSpot(spot: SpotRow) {
   loading.value = false
 }
 
-// One level up from the current view. Shared by the topbar back arrow
-// (goBack, single step) and the breadcrumb trail (goToView, repeats this
-// until the target level is reached).
-function stepBack() {
-  if (view.value === 'segment-editor' || view.value === 'segment-upload') {
-    cancelSegmentEditor()
-    view.value = 'list'
-  } else if (view.value === 'embed-edit') {
-    openEmbedList()
-  } else if (view.value === 'embed-list') {
-    view.value = 'selector'
-  } else if (view.value === 'parking-edit') {
-    openParkingList()
-  } else if (view.value === 'parking-list' || view.value === 'park-details') {
-    view.value = 'list'
-  } else if (view.value === 'import') {
-    cancelImport()
-  } else if (view.value === 'list') {
-    mapView.value?.clear()
-    view.value = 'selector'
-  } else {
-    cancelEdit()
-  }
+// ── Navigation ────────────────────────────────────────────────────────────────
+// Parent/label per view live in viewTree.ts; only the per-view side effects are here.
+const resetEditForm = () => {
+  editingTrail.value = null
+  editingTour.value = null
+  editFormStatusError.value = null
+  mapView.value?.removeLayer('edit-preview')
 }
+const nav = createViewNav({
+  get: () => view.value,
+  set: v => { view.value = v },
+  cleanup: {
+    'list': () => {
+      spotLoader.cancel()
+      loading.value = false
+      mapView.value?.clear()
+    },
+    'import': () => importQueue.clear(),
+    'edit-trail': resetEditForm,
+    'edit-tour': resetEditForm,
+    'details': resetEditForm,
+    'segment-upload': () => segmentEditor.cancel(),
+    'segment-editor': () => segmentEditor.cancel(),
+  },
+  reenter: {
+    'embed-list': loadEmbedTokens,
+    'parking-list': loadParkingLots,
+  },
+})
 
 function goBack() {
-  stepBack()
-}
-
-// Jumps straight to an ancestor level (breadcrumb click) by replaying
-// stepBack() — this reuses the exact same per-view cleanup (map layers,
-// pending imports, editor state) as the single-step back arrow instead of
-// duplicating it. Breadcrumb targets are always genuine ancestors of the
-// current view, so this always converges; the guard is just cheap insurance.
-function goToView(target: View) {
-  let guard = 0
-  while (view.value !== target && guard < 10) {
-    stepBack()
-    guard++
-  }
+  nav.stepBack()
 }
 
 interface Crumb {
@@ -1241,33 +1231,13 @@ interface Crumb {
   onClick?: () => void
 }
 
-const breadcrumbs = computed<Crumb[]>(() => {
-  if (view.value === 'selector') return [{ label: 'Spot Manager' }]
-
-  const crumbs: Crumb[] = [{ label: 'Spot Manager', onClick: () => goToView('selector') }]
-
-  if (view.value === 'embed-list') {
-    crumbs.push({ label: 'Embed-Tokens' })
-  } else if (view.value === 'embed-edit') {
-    crumbs.push({ label: 'Embed-Tokens', onClick: () => goToView('embed-list') })
-    crumbs.push({ label: embedEditTarget.value ? 'Token bearbeiten' : 'Token erstellen' })
-  } else {
-    crumbs.push({ label: spotName.value, onClick: view.value === 'list' ? undefined : () => goToView('list') })
-    if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
-    else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
-    else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
-    else if (view.value === 'details' || view.value === 'park-details') crumbs.push({ label: 'Spot-Details' })
-    else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
-    else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
-    else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
-    else if (view.value === 'parking-edit') {
-      crumbs.push({ label: 'Parkplätze', onClick: () => goToView('parking-list') })
-      crumbs.push({ label: parkingEditTarget.value ? 'Parkplatz bearbeiten' : 'Parkplatz erstellen' })
-    }
-  }
-
-  return crumbs
-})
+const breadcrumbs = computed<Crumb[]>(() =>
+  breadcrumbsFor(view.value, {
+    spotName: spotName.value,
+    editingEmbedToken: !!embedEditTarget.value,
+    editingParking: !!parkingEditTarget.value,
+  }).map(c => ({ label: c.label, onClick: c.current ? undefined : () => nav.goTo(c.view) })),
+)
 
 // ── Edit trail / tour ──────────────────────────────────────────────────────────
 function openEditTrail(id: string) {
@@ -1303,10 +1273,7 @@ function openEditTour(id: string) {
 }
 
 function cancelEdit() {
-  editingTrail.value = null
-  editingTour.value = null
-  editFormStatusError.value = null
-  mapView.value?.removeLayer('edit-preview')
+  resetEditForm()
   view.value = 'list'
 }
 
@@ -1442,8 +1409,7 @@ function openImport() {
 }
 
 function cancelImport() {
-  pending.value.forEach(p => mapView.value?.removeLayer(p.key))
-  pending.value = []
+  importQueue.clear()
   view.value = 'list'
 }
 
@@ -1462,60 +1428,21 @@ async function handleFiles(files: File[]) {
   busy.value = true
   gpxProcessing.value = true
   try {
-    for (const file of files) {
-      if (!file.name.toLowerCase().endsWith('.gpx')) continue
-      const content = await file.text()
-      const processed = await processGpx(content, await authStore.getToken())
-      if (!processed) continue
-
-      const key = `pending-${crypto.randomUUID()}`
-      pending.value.push({
-        key, filename: file.name, processed,
-        name: processed.suggestedName || file.name.replace(/\.gpx$/i, ''),
-        difficulty: 'blue',
-        direction: 'one-way-down',
-      })
-      mapView.value?.addPendingPolyline(key, processed.gpxPoints, DIFF_COLOR['blue'])
-    }
-    if (pending.value.length > 0) mapView.value?.fitAll()
+    await importQueue.addFiles(files)
   } finally {
     busy.value = false
     gpxProcessing.value = false
   }
 }
 
-function updatePendingColor(i: number) {
-  const p = pending.value[i]
-  mapView.value?.updatePendingColor(p.key, DIFF_COLOR[p.difficulty])
-}
-
-function removePending(i: number) {
-  mapView.value?.removeLayer(pending.value[i].key)
-  pending.value.splice(i, 1)
-}
+const updatePendingColor = importQueue.recolor
+const removePending = importQueue.remove
 
 async function applyImports() {
   if (!pending.value.length) return
   busy.value = true
-  const errors: string[] = []
-  const jwt = await authStore.getToken()
-  for (const p of pending.value) {
-    try {
-      const name = p.name.trim() || p.filename.replace(/\.gpx$/i, '')
-      const gpx_url = await uploadGpx(spotId.value, 'trails', `${name}.gpx`, rewriteGpxHeader(p.processed.gpxContent, name), jwt)
-      const newTrail = await upsertTrail({ spot_id: spotId.value, name, difficulty: p.difficulty, direction: p.direction,
-        distance_km: p.processed.distance_km, elevation_gain: p.processed.elevation_gain,
-        elevation_loss: p.processed.elevation_loss, gpx_points: p.processed.gpxPoints, gpx_url,
-        sort_order: trails.value.length }, jwt)
-      trails.value.push(newTrail)
-      mapView.value?.removeLayer(p.key)
-      mapView.value?.addTrailPolyline(newTrail)
-    } catch (e: any) {
-      errors.push(`${p.name}: ${e.message}`)
-    }
-  }
+  const errors = await importQueue.upload(spotId.value, trails)
   busy.value = false
-  pending.value = []
   if (errors.length) alert(`Fehler bei:\n${errors.join('\n')}`)
   view.value = 'list'
 }

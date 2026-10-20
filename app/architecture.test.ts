@@ -258,6 +258,29 @@ describe('Segment editor (architectural isolation)', () => {
     expect(src).not.toMatch(/\btype\s*===\s*['"](bikepark|dirtpark|trail)['"]/)
   })
 
+  test('SpotManagerApp.vue derives back + breadcrumbs from viewTree.ts, not its own if-chains', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('createViewNav(')
+    expect(src).toContain('breadcrumbsFor(')
+    expect(src).not.toMatch(/function stepBack\b/)
+  })
+
+  test('SpotManagerApp.vue loads a spot via spotEditorLoader.ts and imports GPX via importQueue.ts', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('createSpotEditorLoader(')
+    expect(src).toContain('createImportQueue(')
+    // per-type fetches belong to the capability-driven loader
+    expect(src).not.toMatch(/\b(getSpotTrails|getSpotTours|getSpotDetails|getParkDetails)\b/)
+  })
+
+  test('SpotManager navigation / loader / import modules stay pure (no stores, no Vue)', () => {
+    for (const f of ['viewTree.ts', 'spotEditorLoader.ts', 'importQueue.ts']) {
+      const src = read(`app/spot_manager/${f}`)
+      expect(src, f).not.toMatch(/from\s+['"][^'"]*(stores|composables)\//)
+      expect(src, f).not.toMatch(/from\s+['"]vue['"]/)
+    }
+  })
+
   test('GpxProcessor exports processSegment', () => {
     const src = read('app/spot_manager/GpxProcessor.ts')
     expect(src).toContain('export async function processSegment')
