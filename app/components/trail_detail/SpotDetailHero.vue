@@ -38,6 +38,7 @@
 
 <script setup lang="ts">
 import type { Trail } from '~/types/Trail'
+import { SPOT_TYPES } from '~/types/SpotTypes'
 import { likeTrail, dislikeTrail } from '~/communication/trails'
 import { share } from '~/communication/share'
 import { copyToClipboard } from '~/utils/clipboard'
@@ -54,11 +55,7 @@ const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
 
-const typeLabel = computed(() => {
-  if (props.trail.type === 'bikepark') return 'Bikepark'
-  if (props.trail.type === 'dirtpark') return 'Dirtpark / Pumptrack'
-  return 'Trail'
-})
+const typeLabel = computed(() => SPOT_TYPES[props.trail.type].eyebrow)
 
 const authService = useAuthService()
 

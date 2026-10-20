@@ -156,12 +156,12 @@ app/anon.ts
 - Must not import from `stores/`.
 
 ### Adding a new spot type
-1. Add a new interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
-2. Add an entry to `DETAIL_ENDPOINT` in `app/communication/trails.ts` — **nothing else in that file changes**.
-3. Add a filter entry in `stores/filters.ts` `apply()`.
-4. Add a marker category in `composables/useTrailMap.ts` `createCustomIcon()`.
-5. Add entries to `server/api/trails.get.ts` and to `getTrailById()` in `app/communication/trails.ts` (the trails/[slug].vue detail-page fetch — a direct Supabase REST call, not a server/api route; see "No live Nitro server in production" above for why).
-6. Update `app/architecture.test.ts` if any new invariants apply.
+Every per-type fact (base table, details table/endpoint, labels, GPX sections, marker category, filter toggle, add-spot endpoint, SpotManager capabilities) lives in the `SPOT_TYPES` registry, `app/types/SpotTypes.ts`. It has no imports, so `server/` reads it via `@@/app/types/SpotTypes`.
+1. Add a row to `SPOT_TYPES` (and its type to `SpotType`) — the resolver (`resolveSpot` in `communication/trails.ts`), list fetches, filters, marker icon, hero label, SpotManager picker, activity feed, profile and the Nuxt `_embed` route all read it.
+2. Add the interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
+3. Add a visibility toggle ref to `stores/filters.ts` (named by the row's `filterKey`) and a `.map-pin-<markerCategory>` style; the store field + list in `stores/trails.ts` if the map lists it.
+4. Extend the table-driven test in `app/types/SpotTypes.test.ts`. `app/architecture.test.ts` forbids raw spot-table literals outside the registry.
+5. The deployed `/_embed` Worker is the hand-maintained `cloudflare/embed-worker.js`, which does **not** read the registry: add the type to its `TABLE` and its wildcard fetches, then deploy the Worker manually.
 
 ### Open/Closed pattern for trail type dispatch
 ```typescript

@@ -153,9 +153,9 @@ describe('Auth store (Single Responsibility)', () => {
 // Open/Closed: trail type dispatch uses a lookup table, not an if-chain
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Trail type dispatch (Open/Closed)', () => {
-  test('getTrailDetails uses DETAIL_ENDPOINT lookup, not if/else chain', () => {
+  test('getTrailDetails uses the SPOT_TYPES registry, not if/else chain', () => {
     const src = read('app/communication/trails.ts')
-    expect(src, 'DETAIL_ENDPOINT lookup table must exist').toContain('DETAIL_ENDPOINT')
+    expect(src, 'registry lookup must exist').toContain('SPOT_TYPES[trail.type].detailsEndpoint')
     // The old if-chain pattern: `if (isDirtPark(trail))` in getTrailDetails
     expect(src, 'if-chain dispatch must be removed from getTrailDetails')
       .not.toMatch(/if\s*\(isDirtPark\(trail\)\)/)
@@ -419,6 +419,29 @@ describe('Soil icons live as SVG files', () => {
   test('the soil components and soilBadge.ts carry no inline <svg> drawings', () => {
     // Shapes or a viewBox mean a drawing; adding a class to a loaded file's <svg> tag is fine.
     const violations = USERS.filter(f => /<(path|circle|rect|line|polyline|polygon|ellipse)\s|<svg[^>]*viewBox/.test(read(f)))
+    expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spot-type facts live in the SPOT_TYPES registry only
+// ─────────────────────────────────────────────────────────────────────────────
+// A new spot type used to touch 9 files because each re-spelled the type →
+// table → details-table mapping. Raw table-name literals outside the registry
+// (app/types/SpotTypes.ts) re-introduce that scatter — read SPOT_TYPES[...].table.
+describe('Spot table names come from the SPOT_TYPES registry', () => {
+  const TABLE_LITERAL_RE = /(['"`/])(dirt_parks|parks|bike_park_details|dirt_park_details)\b(?=['"`?]|\/?\s)/
+  // Justified exemptions (path → why). Keep this list short.
+  const EXEMPT: Record<string, string> = {
+    'app/types/SpotTypes.ts': 'the registry itself',
+    'nuxt.config.ts': 'build-time prerender fetch + service-worker URL regexes run outside the app bundle',
+  }
+
+  test('no raw park/dirt_park table-name literals outside the registry', () => {
+    const files = [
+      ...collectTs('app'), ...collectTs('server'), ...collectTs('build'), 'nuxt.config.ts',
+    ].filter(f => !/\.test\.ts$/.test(f) && !(f in EXEMPT))
+    const violations = files.filter(f => TABLE_LITERAL_RE.test(read(f)))
     expect(violations).toEqual([])
   })
 })

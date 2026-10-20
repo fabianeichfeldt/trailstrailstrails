@@ -1,5 +1,6 @@
 import { anon } from '../anon';
 import type { anyTrailType } from '../types/Trail';
+import { SPOT_TYPE_LIST, tagSpots, visibleFilter } from '../types/SpotTypes';
 import { SPOT_CAPABILITIES, type SpotCapability, type ParkDetailsTable } from './spotTypes';
 
 const BASE = import.meta.env.VITE_SUPABASE_URL as string;
@@ -457,20 +458,9 @@ export async function deleteParking(id: string, jwt: string): Promise<void> {
 
 /** Fetches a flat list of all trails (all types) for the token trail picker. */
 export async function getAllTrailsForPicker(jwt: string): Promise<TrailPickerRow[]> {
-  const fields = 'id,name';
-  const [trailsRes, parksRes, dirtRes] = await Promise.all([
-    fetch(`${REST}/trails?select=${fields}&order=name&visible=eq.true`, { headers: headers(jwt) }),
-    fetch(`${REST}/parks?select=${fields}&order=name`, { headers: headers(jwt) }),
-    fetch(`${REST}/dirt_parks?select=${fields}&order=name`, { headers: headers(jwt) }),
-  ]);
-  const [trails, parks, dirtParks] = await Promise.all([
-    json<Array<{ id: string; name: string }>>(trailsRes),
-    json<Array<{ id: string; name: string }>>(parksRes),
-    json<Array<{ id: string; name: string }>>(dirtRes),
-  ]);
-  return [
-    ...trails.map(t  => ({ ...t, type: 'trail'    as const })),
-    ...parks.map(p   => ({ ...p, type: 'bikepark'  as const })),
-    ...dirtParks.map(d => ({ ...d, type: 'dirtpark' as const })),
-  ];
+  const groups = await Promise.all(SPOT_TYPE_LIST.map(async def => {
+    const res = await fetch(`${REST}/${def.table}?select=id,name&order=name${visibleFilter(def)}`, { headers: headers(jwt) });
+    return tagSpots(def.type, await json<Array<{ id: string; name: string }>>(res));
+  }));
+  return groups.flat();
 }

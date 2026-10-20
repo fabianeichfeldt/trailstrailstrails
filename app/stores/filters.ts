@@ -1,4 +1,5 @@
 import type { Trail } from '~/types/Trail'
+import { SPOT_TYPES, isSpotType } from '~/types/SpotTypes'
 import type { ConditionLevel } from '~/types/Weather'
 import { levelToAxis } from '~/types/SoilMap'
 
@@ -29,15 +30,12 @@ export const useFiltersStore = defineStore('filters', () => {
 
   // Applied on top of the raw trails list — used by the map composable
   function apply(items: Trail[]): Trail[] {
+    const flags = { showTrails, showBikeparks, showDirtparks, showPumptracks }
     return items.filter(t => {
-      if (t.type === 'trail') return showTrails.value
-      if (t.type === 'bikepark') return showBikeparks.value
-      if (t.type === 'dirtpark') {
-        const d = t as import('~/types/Trail').DirtPark
-        if (d.pumptrack) return showPumptracks.value
-        return showDirtparks.value
-      }
-      return true
+      if (!isSpotType(t.type)) return true
+      const def = SPOT_TYPES[t.type]
+      const key = def.pumptrackFilterKey && (t as { pumptrack?: boolean }).pumptrack ? def.pumptrackFilterKey : def.filterKey
+      return flags[key].value
     })
   }
 

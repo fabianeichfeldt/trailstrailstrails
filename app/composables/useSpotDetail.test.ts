@@ -23,7 +23,7 @@ vi.mock('~/communication/comments', () => ({
 }))
 vi.mock('~/communication/photos', () => ({ isSpotAssignedToTrailcrew: vi.fn() }))
 
-import { getTrailById, getTrailBySlug, getTrailDetails, getSpotGpxData, fetchMultipleSpotParking } from '~/communication/trails'
+import { getTrailById, getTrailBySlug, getTrailDetails, getSpotGpxData, fetchMultipleSpotParking, type ResolvedSpot } from '~/communication/trails'
 import { getComments } from '~/communication/comments'
 import { isSpotAssignedToTrailcrew } from '~/communication/photos'
 import { useSpotDetail } from './useSpotDetail'
@@ -42,8 +42,8 @@ const navigateTo = vi.fn()
 const clearNuxtData = vi.fn()
 let fakeAuth: { isLoggedIn: boolean; userId: string; isAdmin: boolean; isTrailcrew: boolean; nickname: string; avatarUrl: string; getToken: () => Promise<string> }
 
-function spotRow(id: string, extra: Record<string, unknown> = {}) {
-  return { id, slug: `${id}-slug`, name: `Spot ${id}`, type: 'trail', latitude: 1, longitude: 1, description: `baked ${id}`, photos: [], ...extra }
+function spotRow(id: string, extra: Record<string, unknown> = {}): ResolvedSpot {
+  return { id, slug: `${id}-slug`, name: `Spot ${id}`, type: 'trail', latitude: 1, longitude: 1, description: `baked ${id}`, photos: [], ...extra } as unknown as ResolvedSpot
 }
 
 function liveDetails(id: string, extra: Partial<TrailDetails> = {}): TrailDetails {
