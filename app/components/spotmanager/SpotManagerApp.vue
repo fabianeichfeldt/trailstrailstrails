@@ -492,14 +492,14 @@
           </div>
         </div>
 
-        <!-- Bikepark details editor -->
-        <BikeParkDetailsEditor
-          v-else-if="view === 'bikepark-details' && currentSpot"
+        <!-- Park details editor (bikeparks, dirtparks) -->
+        <ParkDetailsEditor
+          v-else-if="view === 'park-details' && currentSpot"
           :spot="currentSpot"
-          :details="bikeParkDetails"
+          :details="parkDetails"
           :jwt="editorJwt"
           @cancel="view = 'list'"
-          @saved="onBikeParkSaved"
+          @saved="onParkSaved"
         />
 
         <!-- Spot Details Editor -->
@@ -822,16 +822,16 @@
 </template>
 
 <script setup lang="ts">
-import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, BikeParkDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
-import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, getBikeParkDetails, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
+import type { GpxTrailRow, GpxTourRow, SpotRow, SpotDetailsRow, ParkDetailsRow, SpotStatus, AccessType, RainPolicy, NightPolicy, EmbedTokenRow, ParkingRow } from '../../spot_manager/Api'
+import { getEmbedTokens, getEmbedTokenTrails, deleteEmbedToken, updateSortOrder, getManageableSpots, getSpotTrails, getSpotTours, getSpotDetails, getParkDetails, setSpotWebsite, upsertTrail, upsertTour, upsertSpotDetails, deleteTrail, deleteTour, uploadGpx, getSpotParking, deleteParking } from '../../spot_manager/Api'
 import { DIFFICULTIES, DIRECTIONS, DIFF_COLOR, processGpx, rewriteGpxHeader } from '../../spot_manager/GpxProcessor'
 import type { ProcessedGpx } from '../../spot_manager/GpxProcessor'
 import type { MapViewLike } from '../../spot_manager/MapView'
 import { filterSpots, shouldShowSpotSearch } from '../../spot_manager/spotFilter'
-import { SPOT_CAPABILITIES } from '../../spot_manager/spotTypes'
-import { bikeParkBannerSub, bikeParkStatusKey } from '../../spot_manager/spotDetailsSummary'
+import { SPOT_CAPABILITIES, type ParkDetailsTable } from '../../spot_manager/spotTypes'
+import { parkBannerSub, parkStatusKey } from '../../spot_manager/spotDetailsSummary'
 import { normalizeWebsiteUrl } from '../../spot_manager/spotWebsite'
-import BikeParkDetailsEditor from './BikeParkDetailsEditor.vue'
+import ParkDetailsEditor from './ParkDetailsEditor.vue'
 import SpotWebsiteField from './SpotWebsiteField.vue'
 import { trailBadgeMeta, validateClosureWindow } from '../../spot_manager/trailStatusForm'
 import type { ImbaColor } from '../../types/MtbTypes'
@@ -845,7 +845,7 @@ import {
   DEFAULT_SHEET_VH,
 } from '../../spot_manager/sheetResize'
 
-type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'bikepark-details'
+type View = 'selector' | 'list' | 'import' | 'edit-trail' | 'edit-tour' | 'details' | 'embed-list' | 'embed-edit' | 'segment-upload' | 'segment-editor' | 'parking-list' | 'parking-edit' | 'park-details'
 
 interface PendingImport {
   key: string
@@ -909,7 +909,7 @@ const spotName = ref('')
 const trails = ref<GpxTrailRow[]>([])
 const tours = ref<GpxTourRow[]>([])
 const spotDetails = ref<SpotDetailsRow | null>(null)
-const bikeParkDetails = ref<BikeParkDetailsRow | null>(null)
+const parkDetails = ref<ParkDetailsRow | null>(null)
 const currentSpot = computed(() => spots.value.find(x => x.id === spotId.value) ?? null)
 const caps = computed(() => SPOT_CAPABILITIES[currentSpot.value?.type ?? 'trail'])
 const editorJwt = ref('')
@@ -1114,12 +1114,12 @@ function trailBadge(t: GpxTrailRow) {
 
 // ── Computed ──────────────────────────────────────────────────────────────────
 const currentStatusMeta = computed(() => {
-  const s = caps.value.details === 'bikepark' ? bikeParkStatusKey(bikeParkDetails.value) : (spotDetails.value?.status ?? 'open')
+  const s = caps.value.details === 'park' ? parkStatusKey(parkDetails.value) : (spotDetails.value?.status ?? 'open')
   return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]
 })
 
 const detailsBannerSub = computed(() => {
-  if (caps.value.details === 'bikepark') return bikeParkBannerSub(bikeParkDetails.value)
+  if (caps.value.details === 'park') return parkBannerSub(parkDetails.value)
   const d = spotDetails.value
   if (!d) return 'Nicht konfiguriert'
   const meta = currentStatusMeta.value
@@ -1170,11 +1170,11 @@ async function openSpot(spot: SpotRow) {
       c.details === 'trail' ? getSpotDetails(id) : Promise.resolve(null),
       getSpotParking(id),
     ])
-    const bp = c.details === 'bikepark' ? await getBikeParkDetails(id) : null
+    const bp = c.details === 'park' ? await getParkDetails(c.detailsTable as ParkDetailsTable, id) : null
     trails.value = t
     tours.value = to
     spotDetails.value = d
-    bikeParkDetails.value = bp
+    parkDetails.value = bp
     // Preloaded so the "Parkplätze" banner can show a count immediately;
     // openParkingList() re-fetches for freshness when the user drills in.
     parkingLots.value = pk
@@ -1207,7 +1207,7 @@ function stepBack() {
     view.value = 'selector'
   } else if (view.value === 'parking-edit') {
     openParkingList()
-  } else if (view.value === 'parking-list' || view.value === 'bikepark-details') {
+  } else if (view.value === 'parking-list' || view.value === 'park-details') {
     view.value = 'list'
   } else if (view.value === 'import') {
     cancelImport()
@@ -1256,7 +1256,7 @@ const breadcrumbs = computed<Crumb[]>(() => {
     if (view.value === 'import') crumbs.push({ label: 'GPX importieren' })
     else if (view.value === 'edit-trail') crumbs.push({ label: 'Trail bearbeiten' })
     else if (view.value === 'edit-tour') crumbs.push({ label: 'Tour bearbeiten' })
-    else if (view.value === 'details' || view.value === 'bikepark-details') crumbs.push({ label: 'Spot-Details' })
+    else if (view.value === 'details' || view.value === 'park-details') crumbs.push({ label: 'Spot-Details' })
     else if (view.value === 'segment-upload') crumbs.push({ label: 'Tour hochladen' })
     else if (view.value === 'segment-editor') crumbs.push({ label: 'Segmente definieren' })
     else if (view.value === 'parking-list') crumbs.push({ label: 'Parkplätze' })
@@ -1576,9 +1576,9 @@ watch(view, async (newView, prevView) => {
 
 // ── Details editor ────────────────────────────────────────────────────────────
 async function openDetailsEditor() {
-  if (caps.value.details === 'bikepark') {
+  if (caps.value.details === 'park') {
     editorJwt.value = await authStore.getToken()
-    view.value = 'bikepark-details'
+    view.value = 'park-details'
     return
   }
   const d = spotDetails.value
@@ -1607,9 +1607,9 @@ async function openDetailsEditor() {
   view.value = 'details'
 }
 
-function onBikeParkSaved(details: BikeParkDetailsRow, url: string) {
-  bikeParkDetails.value = details
-  setSpotUrl(url)
+function onParkSaved(details: ParkDetailsRow, spotPatch: Partial<SpotRow>) {
+  parkDetails.value = details
+  if (currentSpot.value) Object.assign(currentSpot.value, spotPatch)
   view.value = 'list'
 }
 

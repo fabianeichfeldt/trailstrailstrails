@@ -1,6 +1,6 @@
 import { anon } from '../anon';
 import type { anyTrailType } from '../types/Trail';
-import { SPOT_CAPABILITIES, type SpotCapability } from './spotTypes';
+import { SPOT_CAPABILITIES, type SpotCapability, type ParkDetailsTable } from './spotTypes';
 
 const BASE = import.meta.env.VITE_SUPABASE_URL as string;
 const REST  = `${BASE}/rest/v1`;
@@ -28,7 +28,8 @@ async function json<T>(res: Response): Promise<T> {
   return res.json();
 }
 
-export interface SpotRow { id: string; name: string; type: anyTrailType; url?: string | null; latitude?: number | null; longitude?: number | null; approved?: boolean }
+export interface SpotRow { id: string; name: string; type: anyTrailType; url?: string | null; latitude?: number | null; longitude?: number | null; approved?: boolean; pumptrack?: boolean | null; dirtpark?: boolean | null }
+export interface DirtParkKind { pumptrack: boolean; dirtpark: boolean }
 export interface GpxTrailRow {
   id: string;
   spot_id: string;
@@ -86,8 +87,9 @@ const SPOT_COLUMNS = 'id,name,latitude,longitude,approved,url';
 const MANAGEABLE = (Object.entries(SPOT_CAPABILITIES) as [anyTrailType, SpotCapability][])
   .filter(([, c]) => c.manageable);
 
-async function fetchSpotTable(type: anyTrailType, table: string, filter: string, jwt: string): Promise<SpotRow[]> {
-  const res = await fetch(`${REST}/${table}?select=${SPOT_COLUMNS}${filter}`, { headers: headers(jwt) });
+async function fetchSpotTable(type: anyTrailType, c: SpotCapability, filter: string, jwt: string): Promise<SpotRow[]> {
+  const columns = c.parkKind ? `${SPOT_COLUMNS},pumptrack,dirtpark` : SPOT_COLUMNS;
+  const res = await fetch(`${REST}/${c.table}?select=${columns}${filter}`, { headers: headers(jwt) });
   const rows = await json<Omit<SpotRow, 'type'>[]>(res);
   return rows.map(r => ({ ...r, type }));
 }
@@ -102,11 +104,11 @@ export async function getManageableSpots(jwt: string, userId: string, role: stri
     const list = ids.map(id => `"${id.replace(/["\\]/g, '')}"`).join(',');
     filter = `&id=in.(${encodeURIComponent(list)})`;
   }
-  const groups = await Promise.all(MANAGEABLE.map(([type, c]) => fetchSpotTable(type, c.table, filter, jwt)));
+  const groups = await Promise.all(MANAGEABLE.map(([type, c]) => fetchSpotTable(type, c, filter, jwt)));
   return groups.flat().sort((a, b) => a.name.localeCompare(b.name, 'de'));
 }
 
-export interface BikeParkDetailsRow {
+export interface ParkDetailsRow {
   id: string;
   status: SpotStatus | null;
   opening_hours: string | null;
@@ -114,17 +116,17 @@ export interface BikeParkDetailsRow {
   last_update?: string | null;
 }
 
-export async function getBikeParkDetails(id: string): Promise<BikeParkDetailsRow | null> {
+export async function getParkDetails(table: ParkDetailsTable, id: string): Promise<ParkDetailsRow | null> {
   const res = await fetch(
-    `${REST}/bike_park_details?id=eq.${id}&select=id,status,opening_hours,trail_description,last_update&limit=1`,
+    `${REST}/${table}?id=eq.${id}&select=id,status,opening_hours,trail_description,last_update&limit=1`,
     { headers: anonHeaders() },
   );
-  const rows = await json<BikeParkDetailsRow[]>(res);
+  const rows = await json<ParkDetailsRow[]>(res);
   return rows[0] ?? null;
 }
 
-export async function upsertBikeParkDetails(row: BikeParkDetailsRow, jwt: string): Promise<BikeParkDetailsRow> {
-  const res = await fetch(`${REST}/bike_park_details?on_conflict=id`, {
+export async function upsertParkDetails(table: ParkDetailsTable, row: ParkDetailsRow, jwt: string): Promise<ParkDetailsRow> {
+  const res = await fetch(`${REST}/${table}?on_conflict=id`, {
     method: 'POST',
     headers: headers(jwt, { Prefer: 'resolution=merge-duplicates,return=representation' }),
     body: JSON.stringify({
@@ -136,7 +138,7 @@ export async function upsertBikeParkDetails(row: BikeParkDetailsRow, jwt: string
       last_update: row.last_update ?? new Date().toISOString(),
     }),
   });
-  const rows = await json<BikeParkDetailsRow[]>(res);
+  const rows = await json<ParkDetailsRow[]>(res);
   return rows[0];
 }
 
@@ -147,6 +149,15 @@ export async function setSpotWebsite(spotId: string, url: string, jwt: string): 
     body: JSON.stringify({ p_spot_id: spotId, p_url: url }),
   });
   if (!res.ok) throw new Error(`Website update failed: ${await res.text()}`);
+}
+
+export async function setDirtParkKind(spotId: string, kind: DirtParkKind, jwt: string): Promise<void> {
+  const res = await fetch(`${REST}/rpc/set_dirtpark_kind`, {
+    method: 'POST',
+    headers: headers(jwt),
+    body: JSON.stringify({ p_spot_id: spotId, p_pumptrack: kind.pumptrack, p_dirtpark: kind.dirtpark }),
+  });
+  if (!res.ok) throw new Error(`Dirtpark kind update failed: ${await res.text()}`);
 }
 
 export async function getSpotTrails(spotId: string): Promise<GpxTrailRow[]> {
