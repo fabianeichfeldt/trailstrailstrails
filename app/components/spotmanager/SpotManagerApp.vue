@@ -107,7 +107,7 @@
           v-else-if="view === 'embed-edit'"
           :token="embedEditTarget"
           :jwt="embedJwt"
-          @cancel="openEmbedList"
+          @cancel="goBack"
           @saved="openEmbedList"
         />
 
@@ -129,7 +129,7 @@
           :spot-id="spotId"
           :jwt="parkingJwt"
           :map-view="mapView"
-          @cancel="openParkingList"
+          @cancel="goBack"
           @saved="openParkingList"
         />
 
@@ -258,7 +258,7 @@
         <!-- Import view -->
         <div v-else-if="view === 'import'" class="sm-import-view">
           <div class="sm-form-header">
-            <button class="sm-btn-back" @click="cancelImport"><i class="fas fa-arrow-left" /></button>
+            <button class="sm-btn-back" @click="goBack"><i class="fas fa-arrow-left" /></button>
             <h3>GPX importieren</h3>
           </div>
 
@@ -317,7 +317,7 @@
           </div>
 
           <div v-if="pending.length > 0" class="sm-import-footer">
-            <button class="sm-btn-secondary" @click="cancelImport">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="applyImports">
               <i class="fas fa-check" /> Übernehmen ({{ pending.length }})
             </button>
@@ -347,7 +347,7 @@
             </label>
           </div>
           <div class="sm-import-footer">
-            <button class="sm-btn-secondary" @click="view = 'list'">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
           </div>
         </div>
 
@@ -400,7 +400,7 @@
           </div>
 
           <div class="sm-seg-actions">
-            <button class="sm-btn-secondary" @click="cancelSegmentEditor(); view = 'list'">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="segmentBusy || (!pendingSegments.length && !saveAsTour)" @click="applySegments">
               <i class="fas fa-check" />
               {{ pendingSegments.length > 0 ? `Übernehmen (${pendingSegments.length})` : 'Tour speichern' }}
@@ -411,7 +411,7 @@
         <!-- Edit Trail -->
         <div v-else-if="view === 'edit-trail'" class="sm-edit-form">
           <div class="sm-form-header">
-            <button class="sm-btn-back" @click="cancelEdit"><i class="fas fa-arrow-left" /></button>
+            <button class="sm-btn-back" @click="goBack"><i class="fas fa-arrow-left" /></button>
             <h3>Trail bearbeiten</h3>
           </div>
           <label>Name<input type="text" v-model="editFormName" /></label>
@@ -452,7 +452,7 @@
           </div>
 
           <div class="sm-form-actions">
-            <button class="sm-btn-secondary" @click="cancelEdit">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveTrailEdit">
               <i class="fas fa-save" /> Speichern
             </button>
@@ -462,7 +462,7 @@
         <!-- Edit Tour -->
         <div v-else-if="view === 'edit-tour'" class="sm-edit-form">
           <div class="sm-form-header">
-            <button class="sm-btn-back" @click="cancelEdit"><i class="fas fa-arrow-left" /></button>
+            <button class="sm-btn-back" @click="goBack"><i class="fas fa-arrow-left" /></button>
             <h3>Tour bearbeiten</h3>
           </div>
           <label>Name<input type="text" v-model="editFormName" /></label>
@@ -485,7 +485,7 @@
           </label>
           <div v-if="editGpxInfo" class="sm-gpx-info"><span v-if="gpxProcessing" class="sm-spinner sm-spinner-inline sm-dem-spinner" role="status" />{{ editGpxInfo }}</div>
           <div class="sm-form-actions">
-            <button class="sm-btn-secondary" @click="cancelEdit">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveTourEdit">
               <i class="fas fa-save" /> Speichern
             </button>
@@ -498,14 +498,14 @@
           :spot="currentSpot"
           :details="parkDetails"
           :jwt="editorJwt"
-          @cancel="view = 'list'"
+          @cancel="goBack"
           @saved="onParkSaved"
         />
 
         <!-- Spot Details Editor -->
         <div v-else-if="view === 'details'" class="sd-editor">
           <div class="sm-form-header">
-            <button class="sm-btn-back" @click="view = 'list'"><i class="fas fa-arrow-left" /></button>
+            <button class="sm-btn-back" @click="goBack"><i class="fas fa-arrow-left" /></button>
             <h3>Spot-Details</h3>
           </div>
 
@@ -690,7 +690,7 @@
           <SpotInvitationCodes :spot-id="spotId" />
 
           <div class="sd-save-row">
-            <button class="sm-btn-secondary" @click="view = 'list'">Abbrechen</button>
+            <button class="sm-btn-secondary" @click="goBack">Abbrechen</button>
             <button class="sm-btn-primary" :disabled="busy" @click="saveDetails">
               <i class="fas fa-save" /> Speichern
             </button>
@@ -1272,11 +1272,6 @@ function openEditTour(id: string) {
   view.value = 'edit-tour'
 }
 
-function cancelEdit() {
-  resetEditForm()
-  view.value = 'list'
-}
-
 async function onEditGpx(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
@@ -1325,7 +1320,7 @@ async function saveTrailEdit() {
     trails.value = trails.value.map(tr => tr.id === t.id ? updated : tr)
     mapView.value?.removeLayer('edit-preview')
     mapView.value?.addTrailPolyline(updated)
-    cancelEdit()
+    nav.stepBack()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
   } finally {
@@ -1352,7 +1347,7 @@ async function saveTourEdit() {
     tours.value = tours.value.map(to => to.id === t.id ? updated : to)
     mapView.value?.removeLayer('edit-preview')
     mapView.value?.addTourPolyline(updated)
-    cancelEdit()
+    nav.stepBack()
   } catch (e: any) {
     alert(`Fehler: ${e.message}`)
   } finally {
@@ -1406,11 +1401,6 @@ async function dropTour(dropIdx: number) {
 function openImport() {
   pending.value = []
   view.value = 'import'
-}
-
-function cancelImport() {
-  importQueue.clear()
-  view.value = 'list'
 }
 
 function onDrop(e: DragEvent) {
@@ -1486,10 +1476,6 @@ async function executeDelete() {
 function openSegmentUpload() {
   segmentEditor.startUpload()
   view.value = 'segment-upload'
-}
-
-function cancelSegmentEditor() {
-  segmentEditor.cancel()
 }
 
 watch(view, async (newView, prevView) => {

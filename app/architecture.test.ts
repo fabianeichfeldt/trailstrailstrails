@@ -265,6 +265,13 @@ describe('Segment editor (architectural isolation)', () => {
     expect(src).not.toMatch(/function stepBack\b/)
   })
 
+  test('SpotManagerApp.vue cancel / in-view back buttons leave through nav, so the view tree’s cleanup runs', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).not.toMatch(/@(click|cancel)="[^"]*view\s*=\s*'list'/)
+    expect(src).not.toMatch(/\b(cancelImport|cancelEdit|cancelSegmentEditor)\b/)
+    expect(src).not.toMatch(/@cancel="open(EmbedList|ParkingList)"/)
+  })
+
   test('SpotManagerApp.vue loads a spot via spotEditorLoader.ts and imports GPX via importQueue.ts', () => {
     const src = read('app/components/spotmanager/SpotManagerApp.vue')
     expect(src).toContain('createSpotEditorLoader(')
