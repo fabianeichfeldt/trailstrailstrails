@@ -58,10 +58,9 @@ describe('import-external-trails', () => {
   it('skips entries without difficulty / spot / unchanged, with reasons, and writes nothing for them', async () => {
     const p = writeImport([
       entry({ difficulty: null, name: 'A' }), entry({ spot_id: null, name: 'B', source_id: 'b' }),
-      entry({ change: 'unchanged', name: 'C', source_id: 'c' }),
     ]);
     const r = await runImport(p, { ...CFG, apply: true });
-    expect(r.skipped).toEqual({ 'no difficulty': ['A'], 'no spot': ['B'], unchanged: ['C'] });
+    expect(r.skipped).toEqual({ 'no difficulty': ['A'], 'no spot': ['B'] });
     expect(writes()).toEqual([]);
     const text = formatReport(r);
     expect(text).toContain('no difficulty: 1');
@@ -137,6 +136,24 @@ describe('import-external-trails', () => {
     const text = formatReport(r);
     expect(text).toContain('DRY RUN');
     expect(text).toContain('would be replaced');
+  });
+});
+
+describe('unchanged entries', () => {
+  // "unchanged" only means the dataset didn't change since the last build — not that it was ever imported.
+  it('inserts an unchanged entry that has no row yet', async () => {
+    const p = writeImport([entry({ change: 'unchanged' })]);
+    const r = await runImport(p, { ...CFG, apply: true });
+    expect(r.inserted).toEqual([{ name: 'Neckarcoaster', id: 'new-id' }]);
+  });
+
+  it('skips an unchanged, already imported entry quietly (no conflict line)', async () => {
+    existing = [existingRow({ source: 'bw_2m', source_id: '{AAAA-1111}' })];
+    const p = writeImport([entry({ change: 'unchanged' })]);
+    const r = await runImport(p, { ...CFG, apply: true });
+    expect(r.skipped).toEqual({ 'unchanged, already imported': ['Neckarcoaster'] });
+    expect(r.conflicts).toEqual([]);
+    expect(writes()).toEqual([]);
   });
 });
 

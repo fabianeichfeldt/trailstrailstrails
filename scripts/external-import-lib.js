@@ -130,7 +130,6 @@ const rowLine = row => (Array.isArray(row.gpx_points) ? [row.gpx_points.map(p =>
 /** Returns { action: 'process' } or { action: 'skip'|'removed', reason }. Also normalises direction. */
 function classifyEntry(e) {
   if (e.change === 'removed') return { action: 'removed' };
-  if (e.change === 'unchanged') return { action: 'skip', reason: 'unchanged' };
   if (!e.spot_id) return { action: 'skip', reason: 'no spot' };
   if (!DIFFICULTIES.includes(e.difficulty)) return { action: 'skip', reason: 'no difficulty' };
   const direction = e.direction || DEFAULT_DIRECTION;
@@ -226,6 +225,8 @@ async function runImport(importPath, cfg) {
 
       const conflict = findConflict(e, file.source, proc.thinnedSegments, rows);
       const decision = e.on_conflict === 'replace' ? 'replace' : 'skip';
+      // "unchanged" = dataset unchanged since the last build, not "imported": only a row with our source_id proves that.
+      if (e.change === 'unchanged' && conflict?.kind === 'source_id' && decision === 'skip') { skip('unchanged, already imported', e); continue; }
       if (conflict) {
         report.conflicts.push({ name: e.name, kind: conflict.kind, existingId: conflict.row.id, existingName: conflict.row.name,
           meanDistanceM: conflict.meanDistanceM, decision });
