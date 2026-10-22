@@ -18,9 +18,7 @@ whenever a source publishes a new release. Replaces the one-off `scripts/import-
   matches by geometry/name), the import flags it explicitly. Decided case by case; **default skip — trailcrew wins.**
 - **Removed from source:** flagged only, never deleted (may mean a revoked 2-m-rule approval).
 
-### Open point
-- `direction` is `NOT NULL` too and the BW data has none. This plan treats it like difficulty (scraped or manual,
-  else skip). The alternative is the SpotManager default `one-way-down`.
+- **Direction:** scraped or manual if known, otherwise defaults to `one-way-down` (same default as the SpotManager).
 
 ## Import file contract (`trail-scraper/out/<source>/<timestamp>/import.json`)
 
@@ -40,7 +38,7 @@ whenever a source publishes a new release. Replaces the one-off `scripts/import-
     "difficulty": "green|blue|red|black|double-black|null",   // edit by hand if null
     "difficulty_origin": "scraped | manual | null",
     "difficulty_evidence": "verbatim quote | null",
-    "direction": "cw|ccw|one-way-down|one-way-up|both|null",
+    "direction": "cw|ccw|one-way-down|one-way-up|both",  // default one-way-down
     "on_conflict": "skip | replace",     // default skip; the importer fills `conflict` in its report
     "gpx": "gpx/neckarcoaster_<id>.gpx",
     "length_m": 1041
@@ -60,7 +58,7 @@ survive re-runs.
 | 2 | trail-scraper | `sources/bw_2m/adapter.py`: port `bw-2m-lib.js` (shp/dbf read, UTM→WGS84, GPX write) → `features() -> [{source_id, name, segments, length_m, fingerprint}]`. Port its tests to pytest. | haiku | 1 |
 | 3 | trail-scraper | `analyze_trails.py`: add `trails: [{name, difficulty, direction, evidence}]` to the strict schema; evidence verified like `rules`; no evidence → dropped. Update CLAUDE.md output format. | sonnet | 1 |
 | 4 | trail-scraper | `external_trails.py build <source> <dataset>`: absorb hand edits → load mapping → diff vs. last fingerprints (new/changed/unchanged/removed) → spot candidates (10 km, `trails.json`/parks inputs) → difficulty/direction from `trail_analysis.jsonl` (fuzzy name match within the assigned spot) → write `import.json`, `gpx/`, `review.md` (unassigned / missing difficulty / removed first). Archive previous output like the other scripts. | sonnet | 2 |
-| 5 | trailradar | `scripts/import-external-trails.js <import.json>`: dry-run by default, `--apply` writes. Per entry: skip (no spot / no difficulty / no direction / `unchanged`), detect conflict (same `source_id` row, or same-spot track matching by geometry/name), honour `on_conflict` (default skip; `replace` updates the row and adopts `source`/`source_id`), otherwise thin points like `preprocess-gpx.js`, upload GPX to storage, insert, then DEM elevation (`backfill-dem-elevation.js` path). Prints a report: inserted / replaced / skipped-by-reason / conflicts / removed-from-source. Vitest with HTTP mocked. Delete `import-bw-2m.js` + `bw-2m-lib.*`. | sonnet | 2 |
+| 5 | trailradar | `scripts/import-external-trails.js <import.json>`: dry-run by default, `--apply` writes. Per entry: skip (no spot / no difficulty / `unchanged`), detect conflict (same `source_id` row, or same-spot track matching by geometry/name), honour `on_conflict` (default skip; `replace` updates the row and adopts `source`/`source_id`), otherwise thin points like `preprocess-gpx.js`, upload GPX to storage, insert, then DEM elevation (`backfill-dem-elevation.js` path). Prints a report: inserted / replaced / skipped-by-reason / conflicts / removed-from-source. Vitest with HTTP mocked. Delete `import-bw-2m.js` + `bw-2m-lib.*`. | sonnet | 2 |
 | 6 | both | End-to-end dry run on the real BW shapefile; review report; then `--apply` on a handful of trails. | — (me) | 3 |
 
 Done checks: trailradar `npm test`; trail-scraper `.venv/bin/python -m pytest`.
