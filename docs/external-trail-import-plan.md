@@ -61,4 +61,15 @@ survive re-runs.
 | 5 | trailradar | `scripts/import-external-trails.js <import.json>`: dry-run by default, `--apply` writes. Per entry: skip (no spot / no difficulty / `unchanged`), detect conflict (same `source_id` row, or same-spot track matching by geometry/name), honour `on_conflict` (default skip; `replace` updates the row and adopts `source`/`source_id`), otherwise thin points like `preprocess-gpx.js`, upload GPX to storage, insert, then DEM elevation (`backfill-dem-elevation.js` path). Prints a report: inserted / replaced / skipped-by-reason / conflicts / removed-from-source. Vitest with HTTP mocked. Delete `import-bw-2m.js` + `bw-2m-lib.*`. | sonnet | 2 |
 | 6 | both | End-to-end dry run on the real BW shapefile; review report; then `--apply` on a handful of trails. | — (me) | 3 |
 
-Done checks: trailradar `npm test`; trail-scraper `.venv/bin/python -m pytest`.
+Done checks: trailradar `npm test`; trail-scraper `.venv/bin/python tests/test_*.py` and `bench/test_evidence.py` (plain scripts, no pytest).
+
+## Status (2026-10-22)
+
+Steps 1–5 done (trail-scraper branch `fabianeichfeldt/external-import`). Step 6 done locally (real shapefile → build → hand edit →
+rebuild → importer dry run against a stubbed empty DB). Still open:
+- apply the migration to Supabase, regenerate `database.types.ts`
+- re-run `analyze_trails.py` (one full paid run, cache key changed) so per-trail difficulties exist
+- live dry run: `npm run import-external-trails -- <import.json>`, then `--apply` on a handful of trails, then the printed `ROW_IDS=… backfill-dem-elevation`
+
+Notes: `unchanged` is skipped by the importer only when a row with that `source_id` exists. Verbal grades
+("leicht", "schwer") are not mapped to colours. A hand-set `spot_id: null` becomes a permanent `skip`.
