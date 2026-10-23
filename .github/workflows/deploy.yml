@@ -40,7 +40,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install
+      - run: npm ci
       - run: npx nuxt prepare
 
       - name: Unit tests (Vitest)
@@ -85,7 +85,7 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm install
+      - run: npm ci
       - run: npm run generate
 
       - name: Verify static build (no live server dependency)
