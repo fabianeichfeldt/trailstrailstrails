@@ -30,6 +30,14 @@ else
   args=(related --run "$file"); limit=90
 fi
 
+# Fresh worktree, or app/ files added/removed since the last prepare (dir mtime) => stale .nuxt auto-imports/tsconfig.
+if [ ! -f .nuxt/tsconfig.json ] || [ -n "$(find app -type d -newer .nuxt/tsconfig.json -print -quit 2>/dev/null)" ]; then
+  if ! node_modules/.bin/nuxt prepare >/dev/null 2>&1; then
+    echo "nuxt prepare failed; run \`npx nuxt prepare\` and fix its error before trusting test results." >&2
+    exit 2
+  fi
+fi
+
 out="$(perl -e 'alarm shift; exec @ARGV' "$limit" node_modules/.bin/vitest "${args[@]}" --reporter=default --no-color 2>&1)"
 rc=$?
 [ $rc -eq 0 ] && exit 0

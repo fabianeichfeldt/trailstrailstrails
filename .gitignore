@@ -24,3 +24,5 @@ app/types/database.types.ts
 
 # Generated every build by the nitro:config hook (see build/nearby.ts)
 public/nearby.json
+# Now written straight into .output/public by prerender:done; ignored so older branches' dev runs stay clean
+public/sitemap.xml
