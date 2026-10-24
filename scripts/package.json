@@ -16,6 +16,7 @@
     "far-parking": "node --env-file=.env find-far-parking.js",
     "far-parking-delete": "node --env-file=.env find-far-parking.js --delete",
     "preprocess-gpx": "node preprocess-gpx.js",
+    "import-external-trails": "node --env-file=.env import-external-trails.js",
     "push-gpx": "node --env-file=.env push-gpx.js",
     "push-gpx-dry": "DRY_RUN=1 node push-gpx.js",
     "rewrite-gpx-headers": "node --env-file=.env rewrite-gpx-headers.js",

@@ -24,6 +24,7 @@
  *
  * Optional env vars:
  *   SPOT_ID    only process rows for this spot_id (test on one spot first)
+ *   ROW_IDS    comma-separated spot_gpx_trails ids; only those rows (tours skipped), e.g. after an external import
  *   DATASET    Open Topo Data dataset (default: eudem25m)
  *
  * Usage:
@@ -41,12 +42,13 @@ const DRY_RUN = process.env.DRY_RUN === '1';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 const SPOT_ID       = process.env.SPOT_ID || null;
+const ROW_IDS       = process.env.ROW_IDS ? process.env.ROW_IDS.split(',').map(s => s.trim()).filter(Boolean) : null;
 const DATASET       = process.env.DATASET || 'eudem25m';
 
 if (!SUPABASE_URL) { console.error('Missing env: SUPABASE_URL'); process.exit(1); }
 if (!SERVICE_KEY)  { console.error('Missing env: SUPABASE_SERVICE_KEY'); process.exit(1); }
 
-const TABLES = ['spot_gpx_trails', 'spot_gpx_tours'];
+const TABLES = ROW_IDS ? ['spot_gpx_trails'] : ['spot_gpx_trails', 'spot_gpx_tours'];
 const PAGE_SIZE = 500;
 const CHUNK_SIZE = 100;       // Open Topo Data max locations/request
 const MIN_REQUEST_GAP_MS = 1100; // stay under ~1 req/sec
@@ -71,6 +73,7 @@ async function fetchAllRows(table) {
   while (true) {
     let url = `${SUPABASE_URL}/rest/v1/${table}?select=id,spot_id,name,gpx_points&order=id`;
     if (SPOT_ID) url += `&spot_id=eq.${encodeURIComponent(SPOT_ID)}`;
+    if (ROW_IDS) url += `&id=in.(${ROW_IDS.map(encodeURIComponent).join(',')})`;
 
     const res = await fetch(url, {
       headers: {
@@ -216,6 +219,7 @@ async function main() {
     console.log('    Make sure you already ran `npm run backup` and reviewed a DRY_RUN=1 pass.\n');
   }
   if (SPOT_ID) console.log(`Filtering to spot_id=${SPOT_ID}\n`);
+  if (ROW_IDS) console.log(`Filtering to ${ROW_IDS.length} spot_gpx_trails row(s)\n`);
 
   const counts = { updated: 0, skipped: 0, failed: 0 };
 
