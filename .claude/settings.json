@@ -1,14 +1,4 @@
 {
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Agent|Task",
-        "hooks": [
-          { "type": "command", "command": "node /Users/fabian/src/model-router/src/hook.ts", "timeout": 3 }
-        ]
-      }
-    ]
-  },
   "enabledPlugins": {
     "chrome-devtools-mcp@chrome-devtools-plugins": true
   },
