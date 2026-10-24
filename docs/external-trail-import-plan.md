@@ -13,7 +13,10 @@ whenever a source publishes a new release. Replaces the one-off `scripts/import-
   spot assignment or `skip`, manual difficulty/direction, conflict decision, last seen fingerprint. Needed besides the DB
   columns because skips and unassigned trails never get a DB row.
 - **Difficulty:** scraped from the operator page where it names the trail (evidence-verified); otherwise entered by hand
-  in the import file. **No difficulty → entry skipped at import.**
+  in the import file, or researched in bulk (`trailforks`: rating of the Trailforks track matching the GPX geometry;
+  `website`: explicit per-trail rating on the operator site). **No difficulty → entry skipped at import.**
+  **An existing row's difficulty is never overwritten**, not even with `on_conflict: replace`: the importer keeps it and
+  lists every differing import value in its report ("Difficulty differs from existing row") to clarify before `--apply`.
 - **Conflicts:** if the trail already exists (same `source`/`source_id`, or a hand-uploaded track on the same spot that
   matches by geometry/name), the import flags it explicitly. Decided case by case; **default skip — trailcrew wins.**
 - **Removed from source:** flagged only, never deleted (may mean a revoked 2-m-rule approval).
@@ -36,8 +39,8 @@ whenever a source publishes a new release. Replaces the one-off `scripts/import-
     "spot_id": "uuid | null",            // null = unassigned → skipped
     "candidates": [{ "id", "type", "name", "distanceKm" }],
     "difficulty": "green|blue|red|black|double-black|null",   // edit by hand if null
-    "difficulty_origin": "scraped | manual | null",
-    "difficulty_evidence": "verbatim quote | null",
+    "difficulty_origin": "scraped | manual | trailforks | website | null",
+    "difficulty_evidence": "verbatim quote | source URL (trailforks/website) | null",
     "direction": "cw|ccw|one-way-down|one-way-up|both",  // default one-way-down
     "on_conflict": "skip | replace",     // default skip; the importer fills `conflict` in its report
     "gpx": "gpx/neckarcoaster_<id>.gpx",

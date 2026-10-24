@@ -95,12 +95,16 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 
 ### Git commits & worktrees
 - **Never commit to `main` directly** unless the user explicitly says to in that request. Default: work happens in an isolated **git worktree**, not a feature branch in the primary checkout. An explicit "commit to main" / "commit directly to main" for the task at hand lifts this — for that request only, not as a new standing default.
-- **Start new tasks with the `EnterWorktree` tool**, not `git checkout -b`. It creates an isolated working directory + new branch under `.claude/worktrees/` and switches the session into it, so the primary checkout's `main` stays untouched and other in-flight work is never disturbed. Use it at the start of a task, before making changes — don't ask first, just start the worktree (this project has opted in to worktrees, so `EnterWorktree`'s "only when explicitly instructed" condition is satisfied by this file).
-- **Skip `EnterWorktree` if the session already runs inside a worktree** (e.g. an Orca workspace under `~/orca/workspaces/`, or `.claude/worktrees/`) — check with `git rev-parse --git-dir` (contains `/worktrees/`). Nesting a second worktree splits the work across two branches.
+- **Start new tasks in a worktree under `../trailstrailstrails_worktrees/`**, not `git checkout -b`, at the start of the task and without asking first (this file opts the project in to worktrees, which satisfies `EnterWorktree`'s "only when explicitly instructed" condition):
+  1. `git worktree add ../trailstrailstrails_worktrees/<name> -b <name> main`
+  2. `EnterWorktree` with `path` = that absolute path. Never `name`: it creates under `.claude/worktrees/`, which Orca doesn't list and where nested packages resolve from the primary checkout's stale `node_modules`.
+  3. `npm ci && npx nuxt prepare` in the worktree before running tests (a fresh worktree has no `node_modules`/`.nuxt`; never symlink the primary's `node_modules`).
+- **Skip this if the session already runs inside a worktree** (an Orca workspace under `~/src/trailstrailstrails_worktrees/`, or a legacy `.claude/worktrees/` one) — check with `git rev-parse --git-dir` (contains `/worktrees/`). Nesting a second worktree splits the work across two branches.
+- **Opening in Orca:** `orca file open <abs file> --worktree path:<abs worktree> --focus`. Confirm the worktree appears in `orca worktree list` before telling the user it's open.
 - If already mid-task on a plain feature branch in the primary checkout (not a worktree) when this rule applies, that's fine to finish out — don't migrate work-in-progress into a worktree mid-task. Start the next task in a worktree instead.
 - Commit at logical checkpoints inside the worktree — it lets the user review progress and keeps the work recoverable.
-- Only call `ExitWorktree` when the user asks to leave or wrap up that piece of work. Default to `action: "keep"` (branch + directory stay on disk) unless the user says the work is abandoned/no longer needed, in which case `action: "remove"`.
-- The user merges finished worktree branches into `main` themselves, and removes the worktree once merged (or asks Claude to `ExitWorktree` with `remove`).
+- Only call `ExitWorktree` when the user asks to leave or wrap up that piece of work, always with `action: "keep"` (it can't remove a worktree entered by `path`). If the user says the work is abandoned/no longer needed, then also run `git worktree remove ../trailstrailstrails_worktrees/<name>` from the primary checkout.
+- The user merges finished worktree branches into `main` themselves, and removes the worktree once merged (or asks Claude to, via `git worktree remove`).
 
 ---
 

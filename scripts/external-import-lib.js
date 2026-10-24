@@ -227,9 +227,11 @@ async function runImport(importPath, cfg) {
       const decision = e.on_conflict === 'replace' ? 'replace' : 'skip';
       // "unchanged" = dataset unchanged since the last build, not "imported": only a row with our source_id proves that.
       if (e.change === 'unchanged' && conflict?.kind === 'source_id' && decision === 'skip') { skip('unchanged, already imported', e); continue; }
+      // A difficulty already on the existing row is never overwritten; a differing import value is only reported.
+      const keptDifficulty = conflict && DIFFICULTIES.includes(conflict.row.difficulty) ? conflict.row.difficulty : null;
       if (conflict) {
         report.conflicts.push({ name: e.name, kind: conflict.kind, existingId: conflict.row.id, existingName: conflict.row.name,
-          meanDistanceM: conflict.meanDistanceM, decision });
+          meanDistanceM: conflict.meanDistanceM, decision, existingDifficulty: keptDifficulty, importDifficulty: e.difficulty });
         if (decision === 'skip') continue;
       }
 
@@ -239,7 +241,7 @@ async function runImport(importPath, cfg) {
       if (cfg.apply) gpx_url = await uploadGpx(cfg, e.spot_id, filename, rewriteGpxHeader(content, e.name));
 
       if (conflict) {
-        const patch = { ...stats, filename, gpx_url, spot_id: e.spot_id, name: e.name, difficulty: e.difficulty, direction,
+        const patch = { ...stats, filename, gpx_url, spot_id: e.spot_id, name: e.name, difficulty: keptDifficulty ?? e.difficulty, direction,
           source: file.source, source_id: e.source_id };
         if (cfg.apply) {
           await check(await fetch(`${cfg.supabaseUrl}/rest/v1/spot_gpx_trails?id=eq.${conflict.row.id}`,
@@ -287,6 +289,9 @@ function formatReport(r) {
     const how = { source_id: 'same source_id', name: 'same name as hand-uploaded track', geometry: `same geometry as hand-uploaded track (mean ${c.meanDistanceM} m)` }[c.kind];
     L.push(`    - "${c.name}" vs existing "${c.existingName}" (row ${c.existingId}): ${how} -> ${c.decision === 'replace' ? `${would}replaced` : `${would}skipped`}`);
   }
+  const diffs = r.conflicts.filter(c => c.existingDifficulty && c.existingDifficulty !== c.importDifficulty);
+  L.push(`Difficulty differs from existing row (existing kept, never overwritten; clarify before --apply): ${diffs.length}`,
+    ...list(diffs.map(c => `"${c.name}" (row ${c.existingId}): existing ${c.existingDifficulty}, import ${c.importDifficulty}`)));
   L.push(`Removed from source (check approval!): ${r.removed.length}`, ...list(r.removed));
   if (r.failed.length) L.push(`Failed: ${r.failed.length}`, ...list(r.failed.map(f => `${f.name}: ${f.error}`)));
   if ((r.inserted.length || r.replaced.length)) {
