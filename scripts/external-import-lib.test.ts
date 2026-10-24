@@ -87,14 +87,29 @@ describe('import-external-trails', () => {
     expect(formatReport(r)).toContain('row row-1');
   });
 
-  it('replaces the conflicting row with on_conflict=replace and adopts the source', async () => {
+  it('replaces the conflicting row with on_conflict=replace and adopts the source, keeping its difficulty', async () => {
     existing = [existingRow({ name: 'Neckarcoaster', source: 'bw_2m', source_id: '{AAAA-1111}' })];
     const r = await runImport(writeImport([entry({ change: 'changed', on_conflict: 'replace', difficulty: 'black' })]), { ...CFG, apply: true });
     const patch = writes().find(c => c.method === 'PATCH')!;
     expect(patch.url).toContain('id=eq.row-1');
-    expect(JSON.parse(patch.body)).toMatchObject({ source: 'bw_2m', source_id: '{AAAA-1111}', difficulty: 'black' });
+    expect(JSON.parse(patch.body)).toMatchObject({ source: 'bw_2m', source_id: '{AAAA-1111}', difficulty: 'blue' });
     expect(writes().some(c => c.method === 'POST' && c.url.endsWith('/rest/v1/spot_gpx_trails'))).toBe(false);
     expect(r.replaced).toHaveLength(1);
+    expect(formatReport(r)).toContain('"Neckarcoaster" (row row-1): existing blue, import black');
+  });
+
+  it('sets the import difficulty on replace only when the existing row has none', async () => {
+    existing = [existingRow({ name: 'Neckarcoaster', difficulty: null, source: 'bw_2m', source_id: '{AAAA-1111}' })];
+    const r = await runImport(writeImport([entry({ change: 'changed', on_conflict: 'replace', difficulty: 'black' })]), { ...CFG, apply: true });
+    expect(JSON.parse(writes().find(c => c.method === 'PATCH')!.body)).toMatchObject({ difficulty: 'black' });
+    expect(formatReport(r)).toContain('clarify before --apply): 0');
+  });
+
+  it('reports a differing difficulty on a skipped conflict too', async () => {
+    existing = [existingRow({ name: 'Neckarcoaster' })];
+    const r = await runImport(writeImport([entry({ difficulty: 'red' })]), CFG);
+    expect(writes()).toHaveLength(0);
+    expect(formatReport(r)).toContain('existing blue, import red');
   });
 
   it('flags a hand-uploaded track with the same name (diacritics/case-insensitive) and skips it', async () => {
