@@ -9,6 +9,8 @@ import svgLoader from 'vite-svg-loader'
 // drives prerender/sitemap. See
 // docs/superpowers/specs/2026-09-01-trail-slug-urls-design.md.
 const redirectStubs: { from: string; to: string }[] = []
+// Built in nitro:config, written only by prerender:done so prepare/dev never touch it.
+let sitemapXml = ''
 
 function redirectStubHtml(targetPath: string): string {
   const abs = `https://trailradar.org${targetPath}`
@@ -462,9 +464,8 @@ export default defineNuxtConfig({
           ...Object.keys(regions).map(slug => urlXml(`https://trailradar.org/trails/${slug}`, '0.8', 'weekly')),
           ...all.map(t => urlXml(`https://trailradar.org/trails/${t.slug || t.id}`, '0.6', 'weekly')),
         ]
-        const sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
-        writeFileSync('public/sitemap.xml', sitemapXml)
-        console.log(`  ✓ Generated sitemap.xml with ${sitemapEntries.length} URLs`)
+        sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
+        console.log(`  ✓ Prepared sitemap.xml with ${sitemapEntries.length} URLs`)
 
         // Legacy-URL redirect stubs (written to the static output by the
         // prerender:done hook). Two sources:
@@ -518,8 +519,12 @@ export default defineNuxtConfig({
     // it like a permanent redirect, and GitHub Pages can't serve a real 301.
     'nitro:init'(nitro) {
       nitro.hooks.hook('prerender:done', () => {
-        if (!redirectStubs.length) return
         const publicDir = nitro.options.output.publicDir
+        if (sitemapXml) {
+          writeFileSync(`${publicDir}/sitemap.xml`, sitemapXml)
+          console.log(`  ✓ Wrote sitemap.xml into ${publicDir}`)
+        }
+        if (!redirectStubs.length) return
         let written = 0
         for (const { from, to } of redirectStubs) {
           if (!from || from.includes('/') || from.includes('\\') || from.includes('..')) continue

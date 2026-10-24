@@ -2,6 +2,7 @@
 import { describe, test, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { execFileSync } from 'node:child_process'
 
 // Resolve project root relative to this file (app/architecture.test.ts → ../)
 const ROOT = new URL('../', import.meta.url).pathname
@@ -134,6 +135,29 @@ describe('No orphaned content directories at repo root', () => {
       } catch { /* no index.html directly in this dir — fine */ }
     }
     expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build hooks never dirty tracked files
+// ─────────────────────────────────────────────────────────────────────────────
+// nuxt.config.ts's nitro:config hook also runs on `nuxt prepare` and `nuxt dev`
+// (the test hook, e2e servers), so anything it writes into public/ shows up as
+// a diff in every worktree and gets swept into unrelated commits — this
+// happened repeatedly with public/sitemap.xml. Build-only artifacts belong in
+// the prerender output (nitro.options.output.publicDir); a dev-time file under
+// public/ must be gitignored.
+describe('Build hooks never dirty tracked files', () => {
+  test('every file nuxt.config.ts writes under public/ is gitignored', () => {
+    const src = read('nuxt.config.ts')
+    const written = [...src.matchAll(/writeFileSync\(\s*['"`](public\/[^'"`]+)['"`]/g)].map(m => m[1]!)
+    const tracked = written.filter(f => {
+      try {
+        execFileSync('git', ['check-ignore', '-q', f], { cwd: ROOT })
+        return false
+      } catch { return true }
+    })
+    expect(tracked).toEqual([])
   })
 })
 
