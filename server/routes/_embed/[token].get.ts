@@ -1,3 +1,4 @@
+import { SPOT_TYPES, SPOT_TYPE_LIST, isSpotType, tagSpots } from '@@/app/types/SpotTypes'
 import { resolveHostname, isHostAllowed } from '@@/server/utils/embedHostValidation'
 
 export interface EmbedGpxTrail {
@@ -28,12 +29,6 @@ export interface EmbedTrail {
   gpx_trails: EmbedGpxTrail[]
   gpx_tours: EmbedGpxTour[]
   parking: EmbedParkingLot[]
-}
-
-const TABLE: Record<string, string> = {
-  trail:    'trails',
-  bikepark: 'parks',
-  dirtpark: 'dirt_parks',
 }
 
 export default defineEventHandler(async (event) => {
@@ -85,14 +80,10 @@ export default defineEventHandler(async (event) => {
   if (tokenRow.is_wildcard) {
     const SPOT_FIELDS = 'id,name,latitude,longitude,approved'
     ;[spotResults, [gpxTrailsRes, gpxToursRes, parkingRes]] = await Promise.all([
-      Promise.all([
-        fetch(`${url}/rest/v1/trails?select=${SPOT_FIELDS}&limit=1000`, { headers })
-          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'trail' }))) : []),
-        fetch(`${url}/rest/v1/parks?select=${SPOT_FIELDS}&limit=1000`, { headers })
-          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'bikepark' }))) : []),
-        fetch(`${url}/rest/v1/dirt_parks?select=${SPOT_FIELDS}&limit=1000`, { headers })
-          .then(r => r.ok ? r.json().then((rows: any[]) => rows.map(x => ({ ...x, type: 'dirtpark' }))) : []),
-      ]),
+      Promise.all(SPOT_TYPE_LIST.map(def =>
+        fetch(`${url}/rest/v1/${def.table}?select=${SPOT_FIELDS}&limit=1000`, { headers })
+          .then(r => r.ok ? r.json().then((rows: any[]) => tagSpots(def.type, rows)) : []),
+      )),
       Promise.all([
         fetch(`${url}/rest/v1/spot_gpx_trails?select=spot_id,name,difficulty,gpx_points&limit=5000`, { headers }),
         fetch(`${url}/rest/v1/spot_gpx_tours?select=spot_id,name,gpx_points&limit=5000`, { headers }),
@@ -126,7 +117,7 @@ export default defineEventHandler(async (event) => {
     ;[spotResults, [gpxTrailsRes, gpxToursRes, parkingRes]] = await Promise.all([
       Promise.all(
         Array.from(byType.entries()).map(async ([type, ids]) => {
-          const table = TABLE[type]
+          const table = isSpotType(type) ? SPOT_TYPES[type].table : undefined
           if (!table || ids.length === 0) return []
           const inClause = ids.map(id => encodeURIComponent(id)).join(',')
           const res = await fetch(

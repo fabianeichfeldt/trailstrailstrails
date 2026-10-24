@@ -153,9 +153,9 @@ describe('Auth store (Single Responsibility)', () => {
 // Open/Closed: trail type dispatch uses a lookup table, not an if-chain
 // ─────────────────────────────────────────────────────────────────────────────
 describe('Trail type dispatch (Open/Closed)', () => {
-  test('getTrailDetails uses DETAIL_ENDPOINT lookup, not if/else chain', () => {
+  test('getTrailDetails uses the SPOT_TYPES registry, not if/else chain', () => {
     const src = read('app/communication/trails.ts')
-    expect(src, 'DETAIL_ENDPOINT lookup table must exist').toContain('DETAIL_ENDPOINT')
+    expect(src, 'registry lookup must exist').toContain('SPOT_TYPES[trail.type].detailsEndpoint')
     // The old if-chain pattern: `if (isDirtPark(trail))` in getTrailDetails
     expect(src, 'if-chain dispatch must be removed from getTrailDetails')
       .not.toMatch(/if\s*\(isDirtPark\(trail\)\)/)
@@ -258,6 +258,36 @@ describe('Segment editor (architectural isolation)', () => {
     expect(src).not.toMatch(/\btype\s*===\s*['"](bikepark|dirtpark|trail)['"]/)
   })
 
+  test('SpotManagerApp.vue derives back + breadcrumbs from viewTree.ts, not its own if-chains', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('createViewNav(')
+    expect(src).toContain('breadcrumbsFor(')
+    expect(src).not.toMatch(/function stepBack\b/)
+  })
+
+  test('SpotManagerApp.vue cancel / in-view back buttons leave through nav, so the view tree’s cleanup runs', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).not.toMatch(/@(click|cancel)="[^"]*view\s*=\s*'list'/)
+    expect(src).not.toMatch(/\b(cancelImport|cancelEdit|cancelSegmentEditor)\b/)
+    expect(src).not.toMatch(/@cancel="open(EmbedList|ParkingList)"/)
+  })
+
+  test('SpotManagerApp.vue loads a spot via spotEditorLoader.ts and imports GPX via importQueue.ts', () => {
+    const src = read('app/components/spotmanager/SpotManagerApp.vue')
+    expect(src).toContain('createSpotEditorLoader(')
+    expect(src).toContain('createImportQueue(')
+    // per-type fetches belong to the capability-driven loader
+    expect(src).not.toMatch(/\b(getSpotTrails|getSpotTours|getSpotDetails|getParkDetails)\b/)
+  })
+
+  test('SpotManager navigation / loader / import modules stay pure (no stores, no Vue)', () => {
+    for (const f of ['viewTree.ts', 'spotEditorLoader.ts', 'importQueue.ts']) {
+      const src = read(`app/spot_manager/${f}`)
+      expect(src, f).not.toMatch(/from\s+['"][^'"]*(stores|composables)\//)
+      expect(src, f).not.toMatch(/from\s+['"]vue['"]/)
+    }
+  })
+
   test('GpxProcessor exports processSegment', () => {
     const src = read('app/spot_manager/GpxProcessor.ts')
     expect(src).toContain('export async function processSegment')
@@ -338,6 +368,32 @@ describe('trail condition (server-side only)', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Paid features — one gate (entitlements/gatedFetch.ts), one adapter per feature
+// ─────────────────────────────────────────────────────────────────────────────
+// The gate owns the entitlement check, 403 handling, the user-scoped cache and
+// the stale guard. A paid feature that caches on its own drifts from that rule
+// (Trail-Zustand's own cache once survived logout).
+describe('paid features go through the gated-fetch module', () => {
+  const adapters = ['app/communication/weather.ts', 'app/communication/soilMap.ts']
+
+  test('each paid-feature communication file exports a GatedAdapter', () => {
+    for (const file of adapters) expect(read(file), file).toMatch(/:\s*GatedAdapter</)
+  })
+
+  test('paid-feature communication files keep no cache of their own', () => {
+    expect(adapters.filter(f => /localStorage/.test(read(f)))).toEqual([])
+  })
+
+  test('a sign-out sweeps every paid feature\'s cache, gate or no gate', () => {
+    const sweep = read('app/plugins/paidCacheSweep.client.ts')
+    for (const file of adapters) {
+      const name = read(file).match(/export const (\w+):\s*GatedAdapter</)?.[1]
+      expect(sweep, `${file}'s adapter`).toMatch(new RegExp(`\\b${name}\\b`))
+    }
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Mini-map renderer — owns Leaflet, but only dynamically and only in a function
 // ─────────────────────────────────────────────────────────────────────────────
 // app/map/miniMap.ts is the read-only Leaflet renderer shared by the
@@ -382,7 +438,7 @@ describe('app/map/soil* files', () => {
   const files = collectTs('app/map').filter(f => /\/soil[^/]*\.ts$/.test(f) && !f.endsWith('.test.ts'))
 
   test('the soil map modules exist (guards the glob below)', () => {
-    expect(files.length).toBeGreaterThanOrEqual(4)
+    expect(files.length).toBeGreaterThanOrEqual(3)
   })
 
   test('import no stores, composables or components (state is injected by useTrailMap)', () => {
@@ -394,6 +450,29 @@ describe('app/map/soil* files', () => {
   test('never import leaflet at module level (injected / type-only)', () => {
     const violations = files.filter(f => /^import\s+(?!type\b)[^\n]*from\s+['"]leaflet/m.test(read(f)))
     expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Marker presentation: pure view model, useTrailMap only applies it to Leaflet
+// ─────────────────────────────────────────────────────────────────────────────
+describe('app/map/markerPresentation.ts', () => {
+  const src = read('app/map/markerPresentation.ts')
+
+  test('imports no leaflet (not even type-only), stores, composables or components', () => {
+    expect(src).not.toMatch(/from\s+['"]leaflet/)
+    expect(src).not.toMatch(/from\s+['"]([~@]\/|\.\.?\/)+(stores|composables|components)\//)
+  })
+
+  test('soil range matching lives here, not in the filters store', () => {
+    expect(src).toMatch(/export function soilMatch\(/)
+    expect(read('app/stores/filters.ts')).not.toMatch(/soilMatch/)
+  })
+
+  test('useTrailMap takes pin icons / ghosting from the module instead of inlining soil rules', () => {
+    const map = read('app/composables/useTrailMap.ts')
+    expect(map).toMatch(/from '~\/map\/markerPresentation'/)
+    expect(map, 'soil rules must not be re-derived in the composable').not.toMatch(/soilMarkerState|soilMatch|markerWithSoilBadgeOptions/)
   })
 })
 
@@ -419,6 +498,29 @@ describe('Soil icons live as SVG files', () => {
   test('the soil components and soilBadge.ts carry no inline <svg> drawings', () => {
     // Shapes or a viewBox mean a drawing; adding a class to a loaded file's <svg> tag is fine.
     const violations = USERS.filter(f => /<(path|circle|rect|line|polyline|polygon|ellipse)\s|<svg[^>]*viewBox/.test(read(f)))
+    expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Spot-type facts live in the SPOT_TYPES registry only
+// ─────────────────────────────────────────────────────────────────────────────
+// A new spot type used to touch 9 files because each re-spelled the type →
+// table → details-table mapping. Raw table-name literals outside the registry
+// (app/types/SpotTypes.ts) re-introduce that scatter — read SPOT_TYPES[...].table.
+describe('Spot table names come from the SPOT_TYPES registry', () => {
+  const TABLE_LITERAL_RE = /(['"`/])(dirt_parks|parks|bike_park_details|dirt_park_details)\b(?=['"`?]|\/?\s)/
+  // Justified exemptions (path → why). Keep this list short.
+  const EXEMPT: Record<string, string> = {
+    'app/types/SpotTypes.ts': 'the registry itself',
+    'nuxt.config.ts': 'build-time prerender fetch + service-worker URL regexes run outside the app bundle',
+  }
+
+  test('no raw park/dirt_park table-name literals outside the registry', () => {
+    const files = [
+      ...collectTs('app'), ...collectTs('server'), ...collectTs('build'), 'nuxt.config.ts',
+    ].filter(f => !/\.test\.ts$/.test(f) && !(f in EXEMPT))
+    const violations = files.filter(f => TABLE_LITERAL_RE.test(read(f)))
     expect(violations).toEqual([])
   })
 })

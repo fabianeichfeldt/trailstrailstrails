@@ -1,3 +1,5 @@
+import { SPOT_TYPES, isSpotType, type SpotType } from './SpotTypes';
+
 export class BaseTrail {
     name: string = "";
     id: string = "";
@@ -38,13 +40,13 @@ export function isTrail(trail: Trail): trail is SingleTrail {
     return trail.type === "trail";
 }
 
-export type anyTrailType = "dirtpark" | "bikepark" | "trail";
+export type anyTrailType = SpotType;
 
 // Which GPX sections a spot type has — shared by SpotManager and the public spot page.
 export const SPOT_GPX_SECTIONS: Record<anyTrailType, { trails: boolean; tours: boolean }> = {
-    trail:    { trails: true,  tours: true },
-    bikepark: { trails: true,  tours: false },
-    dirtpark: { trails: false, tours: false },
+    trail:    SPOT_TYPES.trail.gpx,
+    bikepark: SPOT_TYPES.bikepark.gpx,
+    dirtpark: SPOT_TYPES.dirtpark.gpx,
 };
 
 export function hasGpx(type: anyTrailType): boolean {
@@ -52,5 +54,5 @@ export function hasGpx(type: anyTrailType): boolean {
 }
 
 export function isAnyTrailType(type: string): type is anyTrailType {
-    return type === "trail" || type === "bikepark" || type === "dirtpark";
+    return isSpotType(type);
 }

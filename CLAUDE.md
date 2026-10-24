@@ -55,7 +55,7 @@ These facts are not derivable from reading the TypeScript code — get them wron
 - **Write gate for trailcrew:** `can_edit_spot(spot_id)` is the single Postgres function that authorises trailcrew writes. It returns true if the caller is admin, or if the caller is trailcrew with a matching row in `trailcrew_spots`. Any new INSERT/UPDATE policy on spot-related tables must use this function.
 - **DELETE is admin-only** on `spot_gpx_trails`, `spot_gpx_tours`. Trailcrew can insert and update but not delete.
 - **RLS is enforced on all write tables.** The anon key is embedded in client JS — all write protection is in Postgres, not in application code.
-- **Paid features are gated by an edge function, never by the client alone.** The function checks the JWT and calls `has_min_tier(level)` as the caller; the client's `useFeatureAccess` only decides what to render. Example: `trail-condition` in `trailradar-backend` (its `REQUIRED_LEVEL` must equal `FEATURES.trail_condition.minLevel`); the client side is `app/communication/weather.ts` → `useTrailCondition`.
+- **Paid features are gated by an edge function, never by the client alone.** The function checks the JWT and calls `has_min_tier(level)` as the caller; the client's gate (`app/entitlements/gatedFetch.ts`) only decides what to render and whether to ask. A new paid fetch is one `GatedAdapter` in `communication/` (endpoint + freshness rule), never its own cache/403 handling, and is added to `plugins/paidCacheSweep.client.ts` so a sign-out sweeps its cache. Example: `trail-condition` in `trailradar-backend` (its `REQUIRED_LEVEL` must equal `FEATURES.trail_condition.minLevel`); the client side is `trailConditionAdapter` in `app/communication/weather.ts` → `useTrailCondition`.
 - **Key tables:** `user_roles` (role per user), `trailcrew_spots` (user ↔ assigned spot), `trail_details` (status/rules/description per spot), `spot_gpx_trails`, `spot_gpx_tours`, `embed_tokens`, `embed_token_trails`.
 - **`app/types/database.types.ts` is generated, gitignored, and machine-local.** It types the handful of places using `useSupabaseClient()` directly (`stores/auth.ts`, `stores/trails.ts`, `AddSpotModal.vue`, `profile.vue`, `plugins/auth.client.ts`) — most data fetching goes through the raw-REST `communication/` layer instead, which this file doesn't affect. Without it, `@nuxt/supabase` logs a harmless `Database = unknown` warning and those few call sites lose autocomplete/type-checking on table and column names. **Regenerate it after any schema change** (new/renamed table or column, new RPC): `npx supabase gen types typescript --project-id ixafegmxkadbzhxmepsd --schema public > app/types/database.types.ts` (requires the Supabase CLI logged in with access to the project — run this yourself rather than asking Claude to run it non-interactively).
 
@@ -153,6 +153,7 @@ app/anon.ts
 **`composables/`**
 - `useTrailMap` owns the live `/map` Leaflet instance (client-only, inside `onMounted`) — the interactive map, its markers, and the spot panel's Leaflet-side effects (trail polyline restyling, tour-segment layers, the hover marker) as `watch()`es on `useSpotPanelStore()` — see `SpotPanel.vue`/`app/stores/spotPanel.ts`. The **only** other place Leaflet `L` lives is `app/map/miniMap.ts`, the read-only mini-map renderer for the spot-detail page (`SpotDetailMiniMap.vue`) and the third-party embed page (`/embed/[token]`); it dynamic-imports `leaflet` inside `createMiniMap()` and takes no store/composable deps.
 - Filter logic lives exclusively in `filtersStore.apply()`. The composable calls it — never reimplements it inline.
+- What a `/map` pin, cluster, GPX soil chip or radar cloud shows (Boden-Radar badges, range ghosting, sample demo pins) comes from `app/map/markerPresentation.ts`; `useTrailMap` only applies that view model to Leaflet. Soil range matching only dims, never hides, so it lives there, not in `filtersStore`.
 - Do not reach into the DOM with `getElementById` from composables. Reactive state should live in the component.
 
 **`app/map/`**
@@ -160,12 +161,12 @@ app/anon.ts
 - Must not import from `stores/`.
 
 ### Adding a new spot type
-1. Add a new interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
-2. Add an entry to `DETAIL_ENDPOINT` in `app/communication/trails.ts` — **nothing else in that file changes**.
-3. Add a filter entry in `stores/filters.ts` `apply()`.
-4. Add a marker category in `composables/useTrailMap.ts` `createCustomIcon()`.
-5. Add entries to `server/api/trails.get.ts` and to `getTrailById()` in `app/communication/trails.ts` (the trails/[slug].vue detail-page fetch — a direct Supabase REST call, not a server/api route; see "No live Nitro server in production" above for why).
-6. Update `app/architecture.test.ts` if any new invariants apply.
+Every per-type fact (base table, details table/endpoint, labels, GPX sections, marker category, filter toggle, add-spot endpoint, SpotManager capabilities) lives in the `SPOT_TYPES` registry, `app/types/SpotTypes.ts`. It has no imports, so `server/` reads it via `@@/app/types/SpotTypes`.
+1. Add a row to `SPOT_TYPES` (and its type to `SpotType`) — the resolver (`resolveSpot` in `communication/trails.ts`), list fetches, filters, marker icon, hero label, SpotManager picker, activity feed, profile and the Nuxt `_embed` route all read it.
+2. Add the interface in `app/types/Trail.ts` extending `BaseTrail`, add it to the `Trail` union, add a type guard.
+3. Add a visibility toggle ref to `stores/filters.ts` (named by the row's `filterKey`) and a `.map-pin-<markerCategory>` style; the store field + list in `stores/trails.ts` if the map lists it.
+4. Extend the table-driven test in `app/types/SpotTypes.test.ts`. `app/architecture.test.ts` forbids raw spot-table literals outside the registry.
+5. The deployed `/_embed` Worker is the hand-maintained `cloudflare/embed-worker.js`, which does **not** read the registry: add the type to its `TABLE` and its wildcard fetches, then deploy the Worker manually.
 
 ### Open/Closed pattern for trail type dispatch
 ```typescript
@@ -213,10 +214,13 @@ else { ... }
 | `app/types/Trail.ts` | Discriminated union + type guards — **the canonical trail type system** |
 | `app/stores/auth.ts` | Auth state + auth operations only |
 | `app/stores/filters.ts` | Single source of truth for all trail-type visibility filtering |
+| `app/composables/useSpotDetail.ts` | Everything `trails/[slug].vue` loads for one spot: slug→id 301, post-mount refresh, live per-spot loads with stale guards, reset on navigation — the page only lays out sections |
 | `app/stores/spotPanel.ts` | Spot panel state (open spot, active tab, tour/trail selection, parking, comments) — **gold standard for this kind of panel** |
 | `app/components/map/SpotPanel.vue` | Top-level spot panel shell — mounted as a sibling of `<MapView>` in `app/pages/map.vue`; assembles the header/tabs/info/tours/trails/parking/elevation child components |
 | `app/map/miniMap.ts` | Read-only Leaflet mini-map renderer (`createMiniMap()` → `{ flyTo, setData, destroy }`) — shared by the spot-detail page and the third-party embed page; dynamic-imports `leaflet`, no store/composable deps |
 | `app/components/trail_detail/SpotDetailMiniMap.vue` | Inline mini-map on the spot-detail page — wires `spotPanelStore` (data / parkingLots / selectItem) to `createMiniMap`; client-only init, stable SSR placeholder |
-| `app/composables/useTrailMap.ts` | Live `/map` init, markers, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/composables/useTrailMap.ts` | Live `/map` init, applies the marker view model to Leaflet, geolocation, FAB, spot-panel Leaflet effects — client-only |
+| `app/map/markerPresentation.ts` | Pure marker view model: type-filtered trails + soil state (+ view bounds) in → pins, cluster levels, GPX soil chips, radar points, counter out; no Leaflet, no stores |
+| `app/entitlements/gatedFetch.ts` | Paid-feature fetch state machine (checking · locked · idle · loading · ready · error): gate, 403 → locked + cache sweep, user-scoped cache cleared on logout, stale guard. Features plug in a `GatedAdapter` |
 | `app/architecture.test.ts` | Vitest tests that enforce structural invariants |
 | `.dependency-cruiser.cjs` | Import boundary rules |

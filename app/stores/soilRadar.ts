@@ -1,7 +1,8 @@
-import type { Ref } from 'vue'
-import { clearSoilCache, fetchSoilMap } from '~/communication/soilMap'
+import { soilMapAdapter } from '~/communication/soilMap'
 import type { FeatureAccess } from '~/entitlements/features'
-import { SOIL_AXIS_MAX, type SoilMapResponse, type SoilMapSpot } from '~/types/SoilMap'
+import { createGatedFetch, settled } from '~/entitlements/gatedFetch'
+import type { SoilMapResponse, SoilMapSpot } from '~/types/SoilMap'
+import { SOIL_AXIS_MAX, SOIL_SCALE } from '~/types/soilScale'
 import type { ConditionLevel } from '~/types/Weather'
 
 const ENABLED_KEY = 'soil-radar-enabled'
@@ -35,7 +36,6 @@ function readRange(): { lo: number; hi: number } {
 }
 
 // Fixed seed so the demo looks the same every time; a west-dry/east-wet "front" makes it plausible.
-const SAMPLE_LEVELS: ConditionLevel[] = ['dusty', 'dry', 'prime', 'damp', 'wet']
 const SAMPLE_COUNT = 25
 
 function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
@@ -52,7 +52,7 @@ function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
     // The front runs north-south: position along it picks the level, a little noise blurs the edge.
     const pos = (dx + 0.6) / 1.2 + (rnd() - 0.5) * 0.25
     const axis = Math.min(SOIL_AXIS_MAX, Math.max(0, Math.round(pos * SOIL_AXIS_MAX)))
-    let lvl: ConditionLevel = SAMPLE_LEVELS[axis]!
+    let lvl: ConditionLevel = SOIL_SCALE[axis]!
     if (i === 3) lvl = 'raining'
     if (i === 11) lvl = 'snow'
     const lo = Math.max(0, axis - 1)
@@ -66,27 +66,34 @@ function sampleScene(center: { lat: number; lon: number }): SoilMapSpot[] {
   return spots
 }
 
-function settled(access: Ref<FeatureAccess>): Promise<Exclude<FeatureAccess, 'checking'>> {
-  return new Promise((resolve) => {
-    const stop = watch(access, (a) => {
-      if (a === 'checking') return
-      queueMicrotask(() => stop())
-      resolve(a)
-    }, { immediate: true })
-  })
-}
-
 export const useSoilRadarStore = defineStore('soilRadar', () => {
   const auth = useAuthStore()
+  const subscription = useSubscriptionStore()
+  // Owns access, the live snapshot, its user-scoped cache, 403 handling and the stale guard.
+  const gate = createGatedFetch(soilMapAdapter, {
+    access: () => subscription.accessFor('soil_radar'),
+    userId: () => auth.userId,
+    getUserId: () => auth.getUserId(),
+    getToken: () => auth.getToken(),
+  })
   const enabled = ref(readEnabled())
   const mode = ref<'live' | 'sample'>('live')
-  const data = ref<SoilMapResponse | null>(null)
   const range = ref(readRange())
-  const status = ref<'idle' | 'loading' | 'ready' | 'error'>('idle')
-  const offline = ref(false)
-  // Set when soil-map answers 403: the browser's entitlement is stale; the UI shows the locked sheet.
-  const forbidden = ref(false)
   const sample = ref<SoilMapSpot[]>([])
+  // Outcome of a user-initiated switch-on that failed; a restore never sets it, so it stays silent.
+  const failure = ref<'locked' | 'unavailable' | null>(null)
+
+  const data = computed(() => gate.data.value)
+  const offline = computed(() => gate.offline.value)
+  const status = computed<'idle' | 'loading' | 'ready' | 'error'>(() => {
+    const st = gate.state.value
+    return st === 'checking' || st === 'locked' ? 'idle' : st
+  })
+  /** What the button shows: 'locked' also after a 403 (the browser's entitlement was stale). */
+  const access = computed<FeatureAccess>(() => {
+    const st = gate.state.value
+    return st === 'checking' || st === 'locked' ? st : 'allowed'
+  })
 
   const points = computed<SoilMapSpot[]>(() => mode.value === 'sample' ? sample.value : data.value?.spots ?? [])
 
@@ -110,23 +117,9 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
     return mode.value === 'live' ? index.value.get(`${type}:${id}`) : undefined
   }
 
-  /** Fetches (or reads the cache for) the live snapshot; returns whether data is available. */
-  async function fetchLive(): Promise<boolean> {
-    status.value = 'loading'
-    forbidden.value = false
-    const userId = await auth.getUserId()
-    const token = await auth.getToken()
-    const res = await fetchSoilMap(token, userId, () => { forbidden.value = true })
-    // Signed out or switched account mid-request: the answer belongs to the previous user.
-    if (userId !== auth.userId) return false
-    if (!res) {
-      status.value = 'error'
-      return false
-    }
-    data.value = res.data
-    offline.value = res.offline
-    status.value = 'ready'
-    return true
+  /** Call from onMounted: until then access stays 'checking' (prerendered HTML is the same for everyone). */
+  function attach(): void {
+    gate.markMounted()
   }
 
   async function toggle(): Promise<void> {
@@ -137,43 +130,41 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
       writeEnabled(false)
       return
     }
-    if (await fetchLive()) {
+    failure.value = null
+    attach() // a tap is client-only by definition
+    const outcome = await gate.load()
+    if (outcome === 'ready') {
       enabled.value = true
       writeEnabled(true)
+    } else if (outcome !== 'superseded') {
+      failure.value = outcome === 'locked' ? 'locked' : 'unavailable'
     }
   }
 
   /** For a restored `enabled`: waits for the entitlement, then loads or silently switches off. */
-  async function restore(access: Ref<FeatureAccess>): Promise<void> {
+  async function restore(): Promise<void> {
     // Read storage, not the refs: prerender has no localStorage, so the hydrated payload holds defaults.
     range.value = readRange()
     if (mode.value !== 'live' || !readEnabled()) return
-    if (await settled(access) === 'locked') {
+    attach()
+    if (await settled(gate.state) === 'locked') {
       enabled.value = false
       writeEnabled(false)
       return
     }
     enabled.value = true
-    return load()
-  }
-
-  async function load(): Promise<void> {
-    if (mode.value !== 'live' || !enabled.value || status.value === 'loading') return
-    if (await fetchLive()) return
+    const outcome = await gate.load()
+    if (outcome === 'ready') return
     enabled.value = false
-    if (forbidden.value) writeEnabled(false)
+    if (outcome === 'locked') writeEnabled(false)
   }
 
-  // Paid data and the "on" preference belong to whoever was signed in; '' → user is just auth resolving.
+  // The "on" preference belongs to whoever was signed in (the gate drops data and cache itself).
   watch(() => auth.userId, (now, before) => {
     if (!before || now === before || mode.value !== 'live') return
     enabled.value = false
     writeEnabled(false)
-    data.value = null
-    offline.value = false
-    forbidden.value = false
-    status.value = 'idle'
-    clearSoilCache()
+    failure.value = null
   })
 
   function setRange(lo: number, hi: number): void {
@@ -197,7 +188,7 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
   }
 
   return {
-    enabled, mode, data, range, status, offline, forbidden,
-    points, freshness, verdictFor, toggle, restore, setRange, startSample, stopSample,
+    enabled, mode, data, range, status, offline, access, failure,
+    points, freshness, verdictFor, attach, toggle, restore, setRange, startSample, stopSample,
   }
 })

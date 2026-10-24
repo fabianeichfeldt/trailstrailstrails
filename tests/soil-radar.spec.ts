@@ -193,3 +193,38 @@ baseTest('a signed-in free account sees the sample and a link to the plans, and 
 
   assertNoLeaks();
 });
+
+baseTest('a Supporter whose entitlement the server rejects (403) gets the sheet, and the next tap asks nothing', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  const soilCalls = trackSoilRequests(page);
+  await openMapAsSupporter(page);
+  await page.route('**/functions/v1/soil-map', (route) => route.fulfill({ status: 403, json: { error: 'forbidden' } }));
+
+  await page.locator('[data-testid="soil-radar-button"]').click();
+  await expect(page.locator('[data-testid="soil-locked-sheet"]')).toBeVisible();
+  await expect(page.locator('.soil-radar-btn.is-locked')).toBeVisible();
+  await expect(page.locator('.leaflet-marker-pane .soil-badge')).toHaveCount(0);
+  expect(soilCalls).toHaveLength(1);
+
+  // The gate now says locked: the next tap is the teaser, not another request.
+  await page.locator('[data-testid="soil-locked-close"]').click();
+  await page.locator('[data-testid="soil-radar-button"]').click();
+  await expect(page.locator('[data-testid="soil-locked-sheet"]')).toBeVisible();
+  expect(soilCalls).toHaveLength(1);
+
+  assertNoLeaks();
+});
+
+baseTest('a Supporter tapping while soil-map is down sees the notice and the radar stays off', async ({ page }) => {
+  const assertNoLeaks = await setupAllMocks(page);
+  await openMapAsSupporter(page);
+  await page.route('**/functions/v1/soil-map', (route) => route.fulfill({ status: 500, json: { error: 'boom' } }));
+
+  await page.locator('[data-testid="soil-radar-button"]').click();
+  await expect(page.locator('.soil-notice')).toHaveText('Boden-Radar gerade nicht verfügbar');
+  await expect(page.locator('[data-testid="soil-locked-sheet"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="soil-panel"]')).toHaveCount(0);
+  await expect(page.locator('.soil-radar-btn.is-locked')).toHaveCount(0);
+
+  assertNoLeaks();
+});

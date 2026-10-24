@@ -57,13 +57,11 @@ import { showToast } from '~/utils/toast'
 import { formatDate } from '~/utils/formatDate'
 import { authorName } from '~/utils/authorName'
 import type { Comment } from '~/types/Comment'
-import type { IAuthService } from '~/auth/auth_service'
+import { useAuthService } from '~/composables/useAuthService'
 
-// Mounted directly as the "Kommentare" section of the routed spot-detail
-// page (app/pages/trails/[slug].vue), which triggers the fetch
-// (store.loadComments()) itself in onMounted() since it already builds the
-// auth snapshot loadComments() needs — this component only reads/writes
-// store state reactively.
+// Mounted as the "Kommentare" section of the spot-detail page; the fetch
+// (store.loadComments()) is started by useSpotDetail — this component only
+// reads/writes store state reactively.
 const store = useSpotPanelStore()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
@@ -100,25 +98,7 @@ function reply(c: Comment) {
   nextTick(() => textareaEl.value?.focus())
 }
 
-// Minimal IAuthService adapter — postComment()/deleteComment()
-// (communication/comments.ts) only ever call authService.getUser().
-function authServiceAdapter(): IAuthService {
-  return {
-    loggedIn: authStore.isLoggedIn,
-    async getUser() {
-      return {
-        id: authStore.userId,
-        email: '',
-        nickname: authStore.nickname,
-        accessToken: await authStore.getToken(),
-        avatarUrl: authStore.avatarUrl,
-        avatarHTML: '',
-        isAdmin: authStore.isAdmin,
-        isTrailcrew: authStore.isTrailcrew,
-      }
-    },
-  } as IAuthService
-}
+const authService = useAuthService()
 
 async function submit() {
   const trimmed = text.value.trim()
@@ -126,7 +106,7 @@ async function submit() {
   error.value = ''
   posting.value = true
   try {
-    await store.postComment(trimmed, authServiceAdapter())
+    await store.postComment(trimmed, authService)
     text.value = ''
   } catch (err) {
     console.error('Failed to post comment:', err)
@@ -140,7 +120,7 @@ async function remove(id: number) {
   const confirmed = await confirmDialog('Kommentar wirklich löschen?')
   if (!confirmed) return
   try {
-    await store.deleteComment(id, authServiceAdapter())
+    await store.deleteComment(id, authService)
   } catch (err) {
     console.error('Failed to delete comment:', err)
     showToast('Löschen fehlgeschlagen 😢')

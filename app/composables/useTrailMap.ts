@@ -2,11 +2,12 @@ import type { Ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import type { Trail } from '~/types/Trail'
 import { markerIconOptions, parkingIconOptions, trailStatusBadgeOptions } from '~/map/markerIcon'
-import { markerWithSoilBadgeOptions, clusterDonutHtml, soilChipOptions } from '~/map/soilBadge'
-import { createSoilRadarLayer, type SoilRadarLayer, type SoilPoint } from '~/map/soilRadarLayer'
-import { soilMarkerState, introDelayMs, countSoilInView } from '~/map/soilView'
-import { levelToAxis, isFrost } from '~/types/SoilMap'
-import type { ConditionLevel } from '~/types/Weather'
+import { clusterDonutHtml } from '~/map/soilBadge'
+import { createSoilRadarLayer, type SoilRadarLayer } from '~/map/soilRadarLayer'
+import {
+  markerPins, pinGhost, pinIconOptions, clusterLevels, soilChips, radarPoints, soilCountsInView,
+  type PinView, type ViewBounds,
+} from '~/map/markerPresentation'
 import {
   DIFF_COLOR,
   computeTrailStats, trailTooltipHtml, placeholderDesc,
@@ -136,11 +137,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
     // Visible line layers grouped by spot ID for hover highlighting
     let gpxSpotLines = new Map<string, Array<{ line: L.Polyline; opts: any }>>()
 
-    // Cluster + plain layer
-    // Boden-Radar: soil styling applies to real pins only in live mode; sample mode adds fake pins.
-    const soilLive = () => soilStore.enabled && soilStore.mode === 'live'
-    const soilState = (lvl: ConditionLevel | undefined, range = soilStore.range) =>
-      soilMarkerState(filtersStore.soilMatch(lvl, range), range)
+    // Cluster + plain layer — what each pin shows comes from ~/map/markerPresentation.
+    const allSpots = (): Trail[] => [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
+    const viewBounds = (): ViewBounds => {
+      const b = mymap.getBounds()
+      return { south: b.getSouth(), north: b.getNorth(), west: b.getWest(), east: b.getEast() }
+    }
 
     // Mirrors leaflet.markercluster's default icon so only the radar changes the look.
     function defaultClusterIcon(cluster: any) {
@@ -153,12 +155,12 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       })
     }
 
-    const markerSoil = new Map<any, { type: string; approved: boolean; level: ConditionLevel | undefined; ghost: boolean }>()
+    const markerPin = new Map<any, PinView>()
 
     const clusterGroup = new (L as any).MarkerClusterGroup({
       iconCreateFunction: (cluster: any) => {
-        if (!soilStore.enabled) return defaultClusterIcon(cluster)
-        const levels = cluster.getAllChildMarkers().map((m: any) => markerSoil.get(m)?.level ?? 'unknown')
+        const levels = clusterLevels(cluster.getAllChildMarkers().map((m: any) => markerPin.get(m)), soilStore.enabled)
+        if (!levels) return defaultClusterIcon(cluster)
         return (L as any).divIcon({ html: clusterDonutHtml(levels), className: 'soil-cluster', iconSize: [42, 42] })
       },
     })
@@ -169,12 +171,6 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       return filtersStore.useCluster ? clusterGroup : markerGroup
     }
 
-    function pinIcon(type: string, approved: boolean, level: ConditionLevel | undefined, ghost: boolean, delayMs?: number) {
-      if (!soilStore.enabled || !level) return L.divIcon(markerIconOptions(type, approved))
-      const o = markerWithSoilBadgeOptions(type, approved, level, delayMs)
-      return L.divIcon(ghost ? { ...o, className: `${o.className} soil-ghost`.trim() } : o)
-    }
-
     // GPX-view fallback pin: plain, because the soil chip already carries the verdict there.
     function createCustomIcon(trail: Trail) {
       return L.divIcon(markerIconOptions(trail.type, trail.approved))
@@ -182,37 +178,19 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
     let soilLayer: SoilRadarLayer | null = null
 
-    function soilPoints(): SoilPoint[] {
-      if (!soilStore.enabled) return []
-      const pts: SoilPoint[] = []
-      for (const s of soilStore.points) {
-        if (filtersStore.soilMatch(s.lvl, soilStore.range) !== 'match') continue
-        pts.push({ lat: s.lat, lon: s.lon, axis: levelToAxis(s.lvl)!, frost: isFrost(s.lvl) })
-      }
-      return pts
-    }
-
     function updateSoilCounts() {
       if (destroyed) return
-      const b = mymap.getBounds()
-      soilCounts.value = soilStore.enabled
-        ? countSoilInView(
-            soilStore.points,
-            { south: b.getSouth(), north: b.getNorth(), west: b.getWest(), east: b.getEast() },
-            soilStore.range,
-            (lvl, r) => filtersStore.soilMatch(lvl, r),
-          )
-        : { matchCount: 0, totalCount: 0 }
+      soilCounts.value = soilCountsInView(soilStore, viewBounds())
     }
 
     // Slider drag: only pins whose ghost state flipped get a new icon (no pop replay, no full re-render).
     function refreshGhosts() {
-      for (const [marker, st] of markerSoil) {
-        if (!st.level) continue
-        const ghost = soilState(st.level) === 'ghost'
-        if (ghost === st.ghost) continue
-        st.ghost = ghost
-        marker.setIcon(pinIcon(st.type, st.approved, st.level, ghost))
+      for (const [marker, pin] of markerPin) {
+        const ghost = pinGhost(pin.level, soilStore.range)
+        if (ghost === pin.ghost) continue
+        const next = { ...pin, ghost, delayMs: undefined }
+        markerPin.set(marker, next)
+        marker.setIcon(L.divIcon(pinIconOptions(next)))
       }
     }
 
@@ -235,72 +213,35 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       }
       clusterGroup.clearLayers()
       markerGroup.clearLayers()
-      markerSoil.clear()
+      markerPin.clear()
 
-      const all: Trail[] = [
-        ...trailsStore.trails,
-        ...trailsStore.bikeparks,
-        ...trailsStore.dirtparks,
-      ]
-      // The sample demo replaces the real pins, or clusters would mix fake and real spots.
-      const visible = soilStore.enabled && soilStore.mode === 'sample' ? [] : filtersStore.apply(all)
       // Angle-based pop delays only for the intro render, or badges would re-pop on every re-render.
       const c = introDelays ? mymap.getCenter() : null
-      const center = c && { lat: c.lat, lon: c.lng }
-
-      for (const trail of visible) {
-        const level = soilLive() ? soilStore.verdictFor(trail.type, trail.id) : undefined
-        const ghost = !!level && soilState(level) === 'ghost'
-        const delay = center && level ? introDelayMs(center, { lat: trail.latitude, lon: trail.longitude }) : undefined
-        const marker = L.marker([trail.latitude, trail.longitude], {
-          icon: pinIcon(trail.type, trail.approved, level, ghost, delay),
+      for (const pin of markerPins(filtersStore.apply(allSpots()), soilStore, c && { lat: c.lat, lon: c.lng })) {
+        const trail = pin.trail
+        const marker = L.marker([pin.lat, pin.lon], {
+          icon: L.divIcon(pinIconOptions(pin)),
+          ...(trail ? {} : { interactive: false, keyboard: false }),
         })
         // Registered before addTo: the cluster icon callback reads it while adding.
-        markerSoil.set(marker, { type: trail.type, approved: trail.approved, level, ghost })
+        markerPin.set(marker, pin)
         marker.addTo(currentLayer() as any)
-
-        marker.on('click', () => {
-          navigateToSpot(trail)
-        })
-      }
-
-      // Sample demo: fake pins around the viewport, not tied to real spots.
-      if (soilStore.enabled && soilStore.mode === 'sample') {
-        for (const s of soilStore.points) {
-          const ghost = soilState(s.lvl) === 'ghost'
-          const delay = center ? introDelayMs(center, s) : undefined
-          const marker = L.marker([s.lat, s.lon], {
-            icon: pinIcon(s.t, true, s.lvl, ghost, delay), interactive: false, keyboard: false,
-          })
-          markerSoil.set(marker, { type: s.t, approved: true, level: s.lvl, ghost })
-          marker.addTo(currentLayer() as any)
-        }
+        if (trail) marker.on('click', () => { navigateToSpot(trail) })
       }
     }
 
     // GPX view (zoom >= threshold): one soil chip per spot in view, at its coordinates.
-    let soilChips: any[] = []
+    let chipLayers: any[] = []
     function clearSoilChips() {
-      for (const m of soilChips) mymap.removeLayer(m)
-      soilChips = []
+      for (const m of chipLayers) mymap.removeLayer(m)
+      chipLayers = []
     }
     function renderSoilChips() {
       clearSoilChips()
-      if (destroyed || !soilStore.enabled || renderGuard.viewMode !== 'gpx') return
-      const bounds = mymap.getBounds()
-      const spots: Array<{ lat: number; lon: number; lvl: ConditionLevel | undefined }> = soilStore.mode === 'sample'
-        ? soilStore.points
-        : filtersStore.apply([...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks])
-            .map(t => ({ lat: t.latitude, lon: t.longitude, lvl: soilStore.verdictFor(t.type, t.id) }))
-      for (const s of spots) {
-        if (!s.lvl || !bounds.contains([s.lat, s.lon])) continue
-        const opts = soilChipOptions(s.lvl)
-        if (!opts) continue
-        const ghost = soilState(s.lvl) === 'ghost'
-        soilChips.push(L.marker([s.lat, s.lon], {
-          // Anchored below the coordinate so the chip doesn't sit on the spot's own pin.
-          icon: L.divIcon({ ...opts, iconAnchor: [46, -4], className: ghost ? `${opts.className} soil-ghost` : opts.className }),
-          interactive: false, keyboard: false,
+      if (destroyed || renderGuard.viewMode !== 'gpx') return
+      for (const chip of soilChips(filtersStore.apply(allSpots()), soilStore, viewBounds())) {
+        chipLayers.push(L.marker([chip.lat, chip.lon], {
+          icon: L.divIcon(chip.icon), interactive: false, keyboard: false,
         }).addTo(mymap))
       }
     }
@@ -325,8 +266,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
 
       // No bounds filter — spot marker coords can be far from the actual trail
       // geometry (e.g. city-centre marker whose trails are 5 km into the hills).
-      const all: Trail[] = [...trailsStore.trails, ...trailsStore.bikeparks, ...trailsStore.dirtparks]
-      const filtered = filtersStore.apply(all)
+      const filtered = filtersStore.apply(allSpots())
       if (!filtered.length) return
 
       // Batch-fetch GPX + parking lots for any uncached spots
@@ -644,7 +584,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       const on = soilStore.enabled
       const turningOn = on && !wasOn
       wasOn = on
-      soilLayer.setPoints(soilPoints())
+      soilLayer.setPoints(radarPoints(soilStore))
       soilLayer.setVisible(on)
       rerender(turningOn && soilStore.points.length > 0)
       updateSoilCounts()
@@ -655,7 +595,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       watch(() => [soilStore.enabled, soilStore.mode, soilStore.points] as const, syncSoil),
       // Slider: clouds redraw, only flipped pins re-icon; no marker re-render.
       watch(() => soilStore.range, () => {
-        soilLayer?.setPoints(soilPoints())
+        soilLayer?.setPoints(radarPoints(soilStore))
         refreshGhosts()
         if (renderGuard.viewMode === 'gpx') renderSoilChips()
         updateSoilCounts()

@@ -38,7 +38,7 @@
 
 <script setup lang="ts">
 import type { ConditionIndex, ConditionPositionRange, ConditionRange } from '~/types/Weather'
-import { SOIL_LABELS, SOIL_PALETTE } from '~/map/soilBadge'
+import { SOIL_LABELS, SOIL_PALETTE, SOIL_SCALE } from '~/types/soilScale'
 
 /**
  * The four soil levels as one continuous scale, dry to wet: a single gradient
@@ -63,7 +63,7 @@ const props = defineProps<{
 }>()
 const emit = defineEmits<{ select: [index: ConditionIndex] }>()
 
-const NAMES = (['dusty', 'dry', 'prime', 'damp', 'wet'] as const).map(l => SOIL_LABELS[l])
+const NAMES = SOIL_SCALE.map(l => SOIL_LABELS[l])
 
 /** Avoids IEEE-754 float noise (e.g. `2.6 - 1.4` -> `1.2000000000000002`) leaking into the emitted CSS. */
 function round2(x: number): number {

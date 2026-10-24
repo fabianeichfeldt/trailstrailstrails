@@ -24,7 +24,9 @@ defineProps<{ highlight?: boolean }>()
 const emit = defineEmits<{ teaser: [] }>()
 
 const store = useSoilRadarStore()
-const access = useFeatureAccess('soil_radar')
+// The store's gate: 'checking' until mounted, 'locked' also after a 403.
+const access = computed(() => store.access)
+onMounted(() => store.attach())
 
 const label = computed(() => {
   if (access.value === 'locked') return 'Boden-Radar ansehen (Supporter-Funktion)'

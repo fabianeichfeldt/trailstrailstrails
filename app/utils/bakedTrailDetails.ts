@@ -4,12 +4,14 @@ import { TrailDetails } from '~/types/TrailDetails'
  * Builds a TrailDetails-shaped object from the trail JSON returned by
  * getTrailById() (~/communication/trails.ts) — a direct Supabase REST fetch
  * that merges `{ ...base, ...trail_details_row, type, photos }`. Runs both
- * during SSR/prerender and, on the client, in trails/[slug].vue's onMounted
+ * during SSR/prerender and, on the client, in useSpotDetail's post-mount
  * refresh — a real REST call either way, so (unlike the server/api route it
  * replaced) there's no build-time staleness window; see CLAUDE.md's
  * "No live Nitro server in production" for why that mattered.
  *
- * Used to seed app/components/trail_detail/SpotDetailInfo.vue so the
+ * Used by useSpotDetail to seed the `details` that trails/[slug].vue's
+ * section components (SpotDetailStatus, SpotDetailPhotos,
+ * SpotDetailDescription, ...) render, so the
  * description/rules/opening-hours/photos content renders immediately
  * (SEO-safe, no loading flash) before the client kicks off a live
  * getTrailDetails() refresh for the genuinely dynamic bits (status hint,
