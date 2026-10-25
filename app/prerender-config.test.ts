@@ -40,3 +40,7 @@ describe('Embed token pages are included in the prerender route list', () => {
 test('nitro:config hook fetches only visible trails', () => {
   expect(nuxtConfig).toMatch(/rest\/v1\/trails\?select=\$\{spotFields\}&visible=eq\.true/)
 })
+
+test.each(['/how-to-embed', '/trailmanagement'])('%s is in the explicit prerender route list', (route) => {
+  expect(nuxtConfig).toContain(`'${route}',`)
+})

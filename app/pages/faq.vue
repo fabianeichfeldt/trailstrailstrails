@@ -92,18 +92,19 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'FAQ – MTB-Trails finden & Vorbereitung deiner Tour',
   description: 'Häufige Fragen zu offiziell gebauten MTB-Trails sowie Tipps zur Vorbereitung deiner Mountainbike-Tour.',
   ogTitle: 'FAQ – MTB-Trails & Vorbereitung deiner Tour | Trailradar',
   ogDescription: 'Alles über offiziell gebaute MTB-Trails und die wichtigste Ausrüstung für deine nächste Tour.',
   ogType: 'article',
-  ogUrl: 'https://trailradar.org/faq',
+  ogUrl: canonicalUrl('/faq'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/faq' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/faq') }],
   script: [{
     type: 'application/ld+json',
     children: JSON.stringify({

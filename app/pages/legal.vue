@@ -88,18 +88,19 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'Offiziell gebaute MTB Trails – das meint diese Karte',
   description: 'Trailradar zeigt nicht jeden befahrbaren Trail – sondern nur offiziell gebaute und abgestimmte MTB-Strecken.',
   ogTitle: 'Was ist ein offiziell gebauter MTB-Trail?',
   ogDescription: 'Wir zeigen MTB Trails die offiziell geplant, genehmigt oder betrieben werden.',
   ogType: 'article',
-  ogUrl: 'https://trailradar.org/legal',
+  ogUrl: canonicalUrl('/legal'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/legal' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/legal') }],
   script: [{
     type: 'application/ld+json',
     children: JSON.stringify({

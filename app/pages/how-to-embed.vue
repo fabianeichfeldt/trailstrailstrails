@@ -103,6 +103,7 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 const DEMO_LAT  = 50.1043
 const DEMO_LNG  = 11.4497
 const DEMO_ZOOM = 12
@@ -126,12 +127,12 @@ const snippet = `<div id="trailradar-embed" style="height:500px"></div>
 useSeoMeta({
   title: 'Karte einbetten – Trailradar für eure Website',
   description: 'Bindet die Trailradar-Karte mit wenigen Zeilen Code in eure Website ein. Anleitung, Beispiel und Code zum Kopieren.',
-  ogUrl: 'https://trailradar.org/how-to-embed',
+  ogUrl: canonicalUrl('/how-to-embed'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/how-to-embed' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/how-to-embed') }],
 })
 </script>
 

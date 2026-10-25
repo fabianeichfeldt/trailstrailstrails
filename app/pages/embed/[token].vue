@@ -20,6 +20,7 @@ import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'
 import 'leaflet-gesture-handling/dist/leaflet-gesture-handling.css'
 
 definePageMeta({ layout: 'embed' })
+useSeoMeta({ robots: 'noindex' })
 
 const mapEl  = ref<HTMLElement | null>(null)
 const error  = ref(false)

@@ -17,7 +17,7 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'map' })
 
-useSeoMeta({ title: 'Spot Manager' })
+useSeoMeta({ title: 'Spot Manager', robots: 'noindex' })
 
 const authStore = useAuthStore()
 const mapStore = useMapStore()

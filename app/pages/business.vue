@@ -68,15 +68,16 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'Kooperationen – Sichtbarkeit in der MTB-Community',
   description: 'Kooperation mit Trailradar: Erreiche Mountainbiker direkt auf der Karte.',
-  ogUrl: 'https://trailradar.org/business',
+  ogUrl: canonicalUrl('/business'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/business' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/business') }],
 })
 </script>
 

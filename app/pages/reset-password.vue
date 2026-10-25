@@ -68,10 +68,8 @@ definePageMeta({ layout: false })
 
 useSeoMeta({
   title: 'Neues Passwort',
-  description: 'Neues Passwort erstellen für trailradar.org',
-})
-useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/reset-password' }],
+  description: 'Neues Passwort erstellen für Trailradar',
+  robots: 'noindex',
 })
 
 const authStore = useAuthStore()

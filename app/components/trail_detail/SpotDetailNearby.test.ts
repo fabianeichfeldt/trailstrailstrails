@@ -26,8 +26,8 @@ describe('SpotDetailNearby', () => {
     const wrapper = mountWith([withPhoto, noPhoto])
     const links = wrapper.findAll('a.nearby-card')
     expect(links).toHaveLength(2)
-    expect(links[0].attributes('href')).toBe('/trails/alpha-trail')
-    expect(links[1].attributes('href')).toBe('/trails/bravo-bikepark')
+    expect(links[0].attributes('href')).toBe('/trails/alpha-trail/')
+    expect(links[1].attributes('href')).toBe('/trails/bravo-bikepark/')
   })
 
   it('renders an <img> with the photo url when a photo is present', () => {

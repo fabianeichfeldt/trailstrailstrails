@@ -60,16 +60,17 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Impressum',
   ogTitle: 'Impressum | Trailradar',
-  ogUrl: 'https://trailradar.org/impressum',
+  ogUrl: canonicalUrl('/impressum'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/impressum' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/impressum') }],
 })
 </script>
 

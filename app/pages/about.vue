@@ -65,15 +65,16 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'Über uns – Aus der Community, für die Community',
   description: 'Warum Trailradar existiert: persönliche MTB-Geschichte, Community-Gedanke und legale Trails sichtbar machen.',
-  ogUrl: 'https://trailradar.org/about',
+  ogUrl: canonicalUrl('/about'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/about' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/about') }],
 })
 </script>
 

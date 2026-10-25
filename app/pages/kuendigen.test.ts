@@ -48,7 +48,7 @@ describe('kuendigen.vue', () => {
     sub.subscription = { ...LIVE }
     vi.mocked(cancelSubscription).mockResolvedValue({ ok: true, receivedAt: '2026-10-03T10:15:00Z' })
     const w = mountPage()
-    expect(w.text()).toContain('TrailRadar Supporter')
+    expect(w.text()).toContain('Trailradar Supporter')
     expect(w.text()).toContain('3. November 2026')
     await w.get('button.btn-danger').trigger('click')
     await flushPromises()
@@ -62,7 +62,7 @@ describe('kuendigen.vue', () => {
     auth.isLoggedIn = true
     sub.subscription = { ...LIVE, status: 'past_due' }
     const w = mountPage()
-    expect(w.text()).toContain('TrailRadar Supporter')
+    expect(w.text()).toContain('Trailradar Supporter')
     expect(w.find('input[type=email]').exists()).toBe(false)
   })
 

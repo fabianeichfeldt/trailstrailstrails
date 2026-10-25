@@ -14,7 +14,7 @@
 
       <ul ref="trackEl" class="nearby-track" @scroll="updateArrows">
         <li v-for="s in spots" :key="s.slug" class="nearby-item">
-          <NuxtLink :to="`/trails/${s.slug}`" class="nearby-card">
+          <NuxtLink :to="canonicalPath(`/trails/${s.slug}`)" class="nearby-card">
             <img
               :src="s.photo || FALLBACK_IMG"
               loading="lazy"
@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import type { NearbySpot, SpotType } from '@@/build/nearby'
+import { canonicalPath } from '~/utils/seo'
 
 // Build-time list of the closest other spots, rendered at the bottom of the
 // trails/[slug] detail page as a horizontal carousel: swipe on touch, arrow
