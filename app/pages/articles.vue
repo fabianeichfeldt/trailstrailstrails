@@ -13,15 +13,15 @@
       <div class="articles-grid">
         <NuxtLink to="/trailradar-vs-trailforks" class="article-card">
           <span class="tag">Vergleich</span>
-          <h2>TrailRadar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?</h2>
-          <p>Trailforks hat mehr Trails weltweit – aber warum TrailRadar für Deutschland die besseren Daten
+          <h2>Trailradar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?</h2>
+          <p>Trailforks hat mehr Trails weltweit – aber warum Trailradar für Deutschland die besseren Daten
             liefert und was das für deine Tourenplanung bedeutet.</p>
           <span class="read-link">Artikel lesen →</span>
         </NuxtLink>
 
         <NuxtLink to="/trailradar-vs-komoot" class="article-card">
           <span class="tag">Vergleich</span>
-          <h2>TrailRadar vs. Komoot – Wer schickt dich besser auf die Trails?</h2>
+          <h2>Trailradar vs. Komoot – Wer schickt dich besser auf die Trails?</h2>
           <p>Komoot plant Routen. Aber wenn es um maximalen MTB-Fahrspaß geht, stößt es schnell an
             Grenzen – unklare Trailzustände, falscher Schwierigkeitsgrad und öfter mal ein Brombeerstrauch.</p>
           <span class="read-link">Artikel lesen →</span>
@@ -40,15 +40,16 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'Trailgespräche',
   description: 'Meinungen, Vergleiche und Einblicke aus der MTB-Community in Deutschland.',
-  ogUrl: 'https://trailradar.org/articles',
+  ogUrl: canonicalUrl('/articles'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/articles' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/articles') }],
 })
 </script>
 

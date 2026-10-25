@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: false })
+useSeoMeta({ robots: 'noindex' })
 
 const mapStore = useMapStore()
 

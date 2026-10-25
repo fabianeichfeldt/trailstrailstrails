@@ -177,17 +177,18 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Datenschutzerklärung',
   ogTitle: 'Datenschutzerklärung | Trailradar',
   ogType: 'article',
-  ogUrl: 'https://trailradar.org/privacy',
+  ogUrl: canonicalUrl('/privacy'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/privacy' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/privacy') }],
 })
 </script>
 

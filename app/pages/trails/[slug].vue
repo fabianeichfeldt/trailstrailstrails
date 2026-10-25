@@ -29,6 +29,8 @@
         />
       </section>
 
+      <RegionSpotList :spots="regionSpotList" :heading="regionHeading" />
+
       <section v-if="region!.descr" class="region-descr content-section">
         <div class="prose" v-html="region!.descr" />
       </section>
@@ -45,7 +47,7 @@
         <h2>Weitere Regionen</h2>
         <ul class="region-list">
           <li v-for="(r, key) in otherRegions" :key="key">
-            <NuxtLink :to="`/trails/${key}`">Trails {{ r.pronom }}</NuxtLink>
+            <NuxtLink :to="canonicalPath(`/trails/${key}`)">Trails {{ r.pronom }}</NuxtLink>
           </li>
         </ul>
       </section>
@@ -59,6 +61,8 @@
            paid feature: without access it gets no weather and shows only the
            trailcrew's rule ("Geschlossen 24h nach Regen"), not the answer. -->
       <SpotDetailStatus :details="details" :condition="showConditionLocked ? null : condition" />
+
+      <SpotDetailSummary :text="summaryText" />
 
       <!-- Sits with the status banner rather than below the photos: both
            answer the same "can I ride this today" question. Above the sticky
@@ -170,6 +174,8 @@ import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescripti
 import SpotDetailRules from '~/components/trail_detail/SpotDetailRules.vue'
 import SpotDetailVideo from '~/components/trail_detail/SpotDetailVideo.vue'
 import SpotDetailNearby from '~/components/trail_detail/SpotDetailNearby.vue'
+import SpotDetailSummary from '~/components/trail_detail/SpotDetailSummary.vue'
+import RegionSpotList from '~/components/trail_detail/RegionSpotList.vue'
 import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
 import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
 import SpotPanelParkingTab from '~/components/map/SpotPanelParkingTab.vue'
@@ -179,6 +185,12 @@ import ReportErrorModal from '~/components/map/ReportErrorModal.vue'
 import { toSocialImage, OG_FALLBACK_IMAGE } from '~/utils/socialImage'
 import { SPOT_GPX_SECTIONS } from '~/types/Trail'
 import type { NearbySpot } from '@@/build/nearby'
+import type { RegionSpot, RegionSpotsMap } from '@@/build/regionSpots'
+import { canonicalPath, canonicalUrl } from '~/utils/seo'
+import { buildSpotSummary, findSpotRegion, type SpotRegionMatch } from '~/utils/spotSummary'
+import { buildSpotJsonLd, buildSpotBreadcrumb } from '~/utils/spotJsonLd'
+import { buildRegionBreadcrumb, buildRegionItemList, isRegionThin, regionCountSentence } from '~/utils/regionJsonLd'
+import { spotNotFoundPolicy } from '~/utils/spotNotFound'
 
 const EMBED_TOKEN = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4'
 // '' in dev/E2E (same-origin dev server) and in the prod web/PWA build
@@ -225,6 +237,32 @@ const { data: nearby } = await useAsyncData(
   { watch: [() => route.params.slug] },
 )
 
+// Build-time region → spots (public/regions.json, same read path as nearby.json).
+// Only the slice this page needs is returned so the payload stays small: the
+// region's own spot list, or the region a spot belongs to (nearest wins).
+const { data: regionInfo } = await useAsyncData(
+  () => `region-info-${route.params.slug}`,
+  async (): Promise<{ spots: RegionSpot[]; match: SpotRegionMatch | null }> => {
+    const key = route.params.slug as string
+    try {
+      let map: RegionSpotsMap
+      if (import.meta.server) {
+        const { readFileSync } = await import('node:fs')
+        map = JSON.parse(readFileSync('public/regions.json', 'utf8'))
+      } else {
+        map = await $fetch<RegionSpotsMap>('/regions.json')
+      }
+      return { spots: map[key] ?? [], match: regions[key as keyof typeof regions] ? null : findSpotRegion(key, map, regions) }
+    } catch {
+      return { spots: [], match: null }
+    }
+  },
+  { watch: [() => route.params.slug] },
+)
+const regionSpotList = computed(() => (isRegion ? regionInfo.value?.spots ?? [] : []))
+const regionMatch = computed(() => regionInfo.value?.match ?? null)
+const regionHeading = computed(() => regionCountSentence(region?.pronom ?? '', regionSpotList.value))
+
 const regionEmbedSrc = computed(() => {
   if (!region) return ''
   // Trailing slash is deliberate: GitHub Pages serves /embed/{token} as a
@@ -239,8 +277,7 @@ const regionEmbedSrc = computed(() => {
 const otherRegions = computed(() =>
   Object.fromEntries(
     Object.entries(regions)
-      .filter(([k]) => k !== slug)
-      .slice(0, 12),
+      .filter(([k]) => k !== slug),
   ),
 )
 
@@ -320,7 +357,7 @@ const pageName = computed(() => isRegion
 // the resolved spot's own slug (so a legacy /trails/<id>/ URL still emits a
 // canonical + og:url pointing at /trails/<slug>/, not the id).
 const canonicalSlug = computed(() => isRegion ? slug : (trail.value?.slug || slug))
-const canonicalUrl = computed(() => `https://trailradar.org/trails/${canonicalSlug.value}/`)
+const pageUrl = computed(() => canonicalUrl(`/trails/${canonicalSlug.value}`))
 
 // Spot name first, brand after — used verbatim for <title> (titleTemplate is
 // disabled for this page below) and for og:/twitter: titles, which never get
@@ -331,10 +368,21 @@ const metaTitle = computed(() => `${pageName.value} - Trailradar`)
 // Full text — feeds the JSON-LD below. The meta/og/twitter descriptions get
 // the trimmed version: search snippets and social cards cut off around
 // 160–200 chars anyway, and WhatsApp shows the raw truncation.
+// Status is left out of the description: the build would freeze it into meta.
+const summaryInput = computed(() => trail.value && {
+  name: trail.value.name,
+  type: trail.value.type,
+  approved: trail.value.approved,
+  region: regionMatch.value,
+  status: details.value.status,
+  openingHours: details.value.opening_hours,
+})
+const summaryText = computed(() => (summaryInput.value ? buildSpotSummary(summaryInput.value, { includeStatus: true }) : ''))
+
 const pageDescription = computed(() => isRegion
   ? `Finde offizielle Mountainbike Trails ${region!.pronom}. Community-basiert und aktuell.`
   : trail.value?.trail_description
-    || (trail.value ? `${trail.value.name} – offizieller MTB-Trail auf Trailradar.` : ''))
+    || (summaryInput.value ? buildSpotSummary(summaryInput.value) : ''))
 
 const metaDescription = computed(() => {
   const full = pageDescription.value
@@ -347,13 +395,22 @@ const metaImage = computed(() => isRegion
   ? OG_FALLBACK_IMAGE
   : toSocialImage(trail.value?.photos?.[0]?.url))
 
+const isThin = isRegion && isRegionThin(region!, regionSpotList.value)
+const notFound = spotNotFoundPolicy({
+  isRegion, hasSpot: !!trail.value, isServer: import.meta.server, isPrerender: !!import.meta.prerender,
+})
+// Spots created after the last deploy have no prerendered page and render client-side;
+// failing here only stops Nitro from writing a soft-404 page at build time.
+if (notFound.fail404) throw createError({ statusCode: 404, statusMessage: 'Spot not found' })
+const missing = computed(() => !isRegion && !trail.value)
+
 useSeoMeta({
   title: () => metaTitle.value,
   description: () => metaDescription.value,
   ogTitle: () => metaTitle.value,
   ogDescription: () => metaDescription.value,
-  ogUrl: () => canonicalUrl.value,
-  ogSiteName: 'Trailradar.org',
+  ogUrl: () => pageUrl.value,
+  ogSiteName: 'Trailradar',
   ogLocale: 'de_DE',
   ogType: 'website',
   ogImage: () => metaImage.value,
@@ -365,32 +422,35 @@ useSeoMeta({
   twitterTitle: () => metaTitle.value,
   twitterDescription: () => metaDescription.value,
   twitterImage: () => metaImage.value,
+  robots: () => (isThin || missing.value ? (isThin ? 'noindex, follow' : 'noindex') : undefined),
 })
 
 useHead({
   titleTemplate: '%s',
-  link: () => [{ rel: 'canonical', href: canonicalUrl.value }],
-  script: () => (trail.value && !isRegion
-    ? [
-        {
-          type: 'application/ld+json',
-          innerHTML: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'SportsActivityLocation',
-            name: trail.value.name,
-            description: pageDescription.value,
-            sport: 'Mountainbiking',
-            geo: {
-              '@type': 'GeoCoordinates',
-              latitude: trail.value.latitude,
-              longitude: trail.value.longitude,
-            },
-            url: canonicalUrl.value,
-            ...(trail.value.photos?.[0]?.url ? { image: trail.value.photos[0].url } : {}),
-          }),
-        },
-      ]
-    : []),
+  link: () => [{ rel: 'canonical', href: pageUrl.value }],
+  script: () => {
+    const ld: unknown[] = []
+    if (isRegion) {
+      ld.push(buildRegionBreadcrumb(slug, region!.pronom))
+      if (regionSpotList.value.length) ld.push(buildRegionItemList(region!.pronom, regionSpotList.value))
+    }
+    else if (trail.value) {
+      const t = trail.value
+      ld.push(buildSpotJsonLd({
+        slug: canonicalSlug.value,
+        name: t.name,
+        description: pageDescription.value,
+        latitude: t.latitude,
+        longitude: t.longitude,
+        image: t.photos?.[0]?.url,
+        openingHours: details.value.opening_hours,
+        accessType: details.value.access_type,
+        region: regionMatch.value,
+      }))
+      ld.push(buildSpotBreadcrumb({ slug: canonicalSlug.value, name: t.name, region: regionMatch.value }))
+    }
+    return ld.map(o => ({ type: 'application/ld+json', innerHTML: JSON.stringify(o) }))
+  },
 })
 </script>
 
@@ -683,17 +743,19 @@ useHead({
 .region-list {
   list-style: none;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.5em;
 }
 .region-list a {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  min-height: 44px;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 2em;
-  padding: 0.3em 0.8em;
-  font-size: 0.75em;
+  padding: 0.3em 0.9em;
+  font-size: 0.8em;
   color: #2a9d5c;
   text-decoration: none;
   transition: background 0.15s, border-color 0.15s;

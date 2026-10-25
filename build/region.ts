@@ -26,12 +26,12 @@ export const regions: Regions = {
   },
   muenchen: {
     lat: 48.15, lng: 11.60, zoom: 10,
-    descr: "In <strong>München</strong> selbst gibt es aktuell noch keine <strong>offiziellen MTB-Trails</strong>, doch der DAV arbeitet intensiv an einer nachhaltigen Lösung. Nach vielen Jahren der Duldung sollen die <strong>Isartrails</strong> durch naturverträgliche, offiziell genehmigte Alternativen ersetzt werden – mit geplantem Baustart im <strong>Herbst 2026</strong>. Die nächsten <strong>offiziellen MTB-Strecken</strong> finden sich südlich von München: Zwischen <strong>Starnberg</strong> und <strong>Gauting</strong> liegen die <strong>Würmtaltrails</strong>, die im Jahr <strong>2025</strong> von der <strong>DIMB</strong> gebaut und eröffnet wurden.<br>Eine weitere beliebte Option sind die offiziellen Trails am Ostufer des <strong>Tegernsees</strong>, darunter <strong>Coal Chamber</strong>, <strong>Back to the Roots</strong> und <strong>Center of Gravity</strong>, die für abwechslungsreiche Bike-Action sorgen. Undebingt erwähnenswert sind ausserdem die Heumödern Trails in Treuchtlingen mit Liftunterstützung, die jedes Jahr zahlreiche Biker aus <strong>München und dem Umland</strong> anziehen. Die <strong>Heumödern Trails</strong> bieten eine Vielzahl von Strecken für unterschiedliche Fahrniveaus und sind bekannt für ihre hervorragende Pflege und abwechslungsreichen Herausforderungen. Für <strong>Bikepark-Fans</strong> ist auch der <strong>Bikepark Geiskopf</strong> im Bayerischen Wald eine gut erreichbare Option, die mit ihren vielfältigen Strecken punkten kann.",
-    pronom: "in Muenchen"
+    descr: "In <strong>München</strong> selbst gibt es aktuell noch keine <strong>offiziellen MTB-Trails</strong>, doch der DAV arbeitet intensiv an einer nachhaltigen Lösung. Nach vielen Jahren der Duldung sollen die <strong>Isartrails</strong> durch naturverträgliche, offiziell genehmigte Alternativen ersetzt werden – mit geplantem Baustart im <strong>Herbst 2026</strong>. Die nächsten <strong>offiziellen MTB-Strecken</strong> finden sich südlich von München: Zwischen <strong>Starnberg</strong> und <strong>Gauting</strong> liegen die <strong>Würmtaltrails</strong>, die im Jahr <strong>2025</strong> von der <strong>DIMB</strong> gebaut und eröffnet wurden.<br>Eine weitere beliebte Option sind die offiziellen Trails am Ostufer des <strong>Tegernsees</strong>, darunter <strong>Coal Chamber</strong>, <strong>Back to the Roots</strong> und <strong>Center of Gravity</strong>, die für abwechslungsreiche Bike-Action sorgen. Unbedingt erwähnenswert sind ausserdem die Heumödern Trails in Treuchtlingen mit Liftunterstützung, die jedes Jahr zahlreiche Biker aus <strong>München und dem Umland</strong> anziehen. Die <strong>Heumödern Trails</strong> bieten eine Vielzahl von Strecken für unterschiedliche Fahrniveaus und sind bekannt für ihre hervorragende Pflege und abwechslungsreichen Herausforderungen. Für <strong>Bikepark-Fans</strong> ist auch der <strong>Bikepark Geiskopf</strong> im Bayerischen Wald eine gut erreichbare Option, die mit ihren vielfältigen Strecken punkten kann.",
+    pronom: "in München"
   },
   koeln: {
     descr: "Ein besonderes Highlight im Rheinland sind die <strong>Himmelsleiter Trails auf der Glessener Höhe</strong>, die von der <strong>DIMB IG Erft</strong> im <strong>Rhein-Erft-Kreis</strong> realisiert wurden. Die Trails verlaufen auf <strong>sandigem Untergrund</strong> und bieten dadurch ganzjährig gute Bedingungen sowie ein besonders flowiges Fahrgefühl.<br>Aktuell bestehen die <strong>Himmelsleiter MTB-Trails bei Köln</strong> aus <strong>zwei abwechslungsreichen Strecken</strong> sowie einer <strong>Skillarea</strong>, die sich ideal zum Üben und Verbessern der Fahrtechnik eignet. Weitere Trails sind bereits in Planung, was das Gebiet langfristig zu einem wichtigen <strong>Mountainbike-Spot im Großraum Köln</strong> macht und zeigt, wie moderner, legaler Trailbau in Zusammenarbeit mit Vereinen erfolgreich umgesetzt werden kann.",
-    pronom: "in in Koeln",
+    pronom: "in Köln",
     lat: 50.93, lng: 6.96, zoom: 11,
   },
   stuttgart: {
@@ -41,7 +41,7 @@ export const regions: Regions = {
   },
   duesseldorf: {
     descr: undefined,
-    pronom: "Duesseldorf",
+    pronom: "in Düsseldorf",
     lat: 51.23, lng: 6.78, zoom: 11,
   },
   leipzig: {
@@ -51,7 +51,7 @@ export const regions: Regions = {
   },
   dortmund: {
     descr: undefined,
-    pronom: "Dortmund",
+    pronom: "in Dortmund",
     lat: 51.51, lng: 7.47, zoom: 11,
   },
   "fraenkische-schweiz": {
@@ -71,7 +71,7 @@ export const regions: Regions = {
   },
   "schwaebische-alb": {
     descr: undefined,
-    pronom: "auf der Schäwbischen Alb",
+    pronom: "auf der Schwäbischen Alb",
     lat: 48.40, lng: 9.50, zoom: 10,
   },
   "taunus": {
@@ -116,7 +116,7 @@ export const regions: Regions = {
   },
   oesterreich: {
     descr: undefined,
-    pronom: "in Oesterreich",
+    pronom: "in Österreich",
     lat: 47.50, lng: 13.50, zoom: 7,
   },
   tschechien: {
@@ -130,7 +130,7 @@ export const regions: Regions = {
     lat: 47.30, lng: 11.60, zoom: 9,
   },
   innsbruck: {
-    descr: "<strong>Innsbruck<strong> ist ein echtes Paradies für Mountainbiker – mit mehreren <strong>offiziellen MTB-Strecken</strong>, die direkt in und um die Stadt starten. Der <strong>Bikepark Innsbruck auf der Muttereralm</strong> bietet über 16 km Trails – von flowigen Anliegern bis hin zu technisch anspruchsvollen Downhills wie „The Straight One“. Für erfahrene Fahrer ist der <strong>Nordketten Singletrail</strong> ein Highlight: 4 km voller Wurzeln, Drops und vor allem Felsen mit atemberaubendem Blick über Innsbruck. Ebenfalls beliebt und offiziell befahrbar sind der <strong>Arzler Alm Trail</strong> sowie der <strong>Hungerburg Trail</strong> – zwei naturbelassene Singletrails mit Flow und technischen Passagen. Weiterhin gibt es noch die<strong>Bichl Trails – im Trailpark Rossau</strong>, der ganzjährig öffentlich zugänglich ist. Insgesamt bietet Innsbruck eine Vielzahl an <strong>genehmigten Mountainbike-Trails</strong>, die für alle Schwierigkeitsgrade geeignet sind. Egal ob Anfänger oder Profi, hier findet jeder den passenden Trail für ein unvergessliches MTB-Erlebnis inmitten der Alpenkulisse.",
+    descr: "<strong>Innsbruck</strong> ist ein echtes Paradies für Mountainbiker – mit mehreren <strong>offiziellen MTB-Strecken</strong>, die direkt in und um die Stadt starten. Der <strong>Bikepark Innsbruck auf der Muttereralm</strong> bietet über 16 km Trails – von flowigen Anliegern bis hin zu technisch anspruchsvollen Downhills wie „The Straight One“. Für erfahrene Fahrer ist der <strong>Nordketten Singletrail</strong> ein Highlight: 4 km voller Wurzeln, Drops und vor allem Felsen mit atemberaubendem Blick über Innsbruck. Ebenfalls beliebt und offiziell befahrbar sind der <strong>Arzler Alm Trail</strong> sowie der <strong>Hungerburg Trail</strong> – zwei naturbelassene Singletrails mit Flow und technischen Passagen. Weiterhin gibt es noch die <strong>Bichl Trails – im Trailpark Rossau</strong>, der ganzjährig öffentlich zugänglich ist. Insgesamt bietet Innsbruck eine Vielzahl an <strong>genehmigten Mountainbike-Trails</strong>, die für alle Schwierigkeitsgrade geeignet sind. Egal ob Anfänger oder Profi, hier findet jeder den passenden Trail für ein unvergessliches MTB-Erlebnis inmitten der Alpenkulisse.",
     pronom: "in Innsbruck",
     lat: 47.27, lng: 11.40, zoom: 12,
   },
@@ -198,5 +198,20 @@ export const regions: Regions = {
     descr: "",
     pronom: "in Kassel",
     lat: 51.31, lng: 9.50, zoom: 11,
-  }
+  },
+  regensburg: {
+    descr: undefined,
+    pronom: "in Regensburg",
+    lat: 49.02, lng: 12.10, zoom: 11,
+  },
+  salzburg: {
+    descr: undefined,
+    pronom: "in Salzburg",
+    lat: 47.80, lng: 13.04, zoom: 10,
+  },
+  kaernten: {
+    descr: undefined,
+    pronom: "in Kärnten",
+    lat: 46.72, lng: 14.18, zoom: 9,
+  },
 };

@@ -43,6 +43,7 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import SupportEmail from '~/components/SupportEmail.vue'
 import PlanCards from '~/components/plans/PlanCards.vue'
 
@@ -50,12 +51,12 @@ useSeoMeta({
   title: 'Preise & Pläne',
   ogTitle: 'Preise & Pläne | Trailradar',
   description: 'Trailradar ist kostenlos. Supporter bringt den Trail-Zustand: Bodenzustand und Wetter für jeden Spot.',
-  ogUrl: 'https://trailradar.org/plans',
+  ogUrl: canonicalUrl('/plans'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/plans' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/plans') }],
 })
 
 const isNative = useIsNativeApp()

@@ -86,6 +86,7 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import PlanCards from '~/components/plans/PlanCards.vue'
 
 const isNative = useIsNativeApp()
@@ -93,12 +94,12 @@ const isNative = useIsNativeApp()
 useSeoMeta({
   title: 'Support – Trailradar unterstützen',
   description: 'Trailradar ist ein Feierabendprojekt. Unterstütze es mit dem Supporter-Plan – oder mit neuen Trails, Feedback und Teilen.',
-  ogUrl: 'https://trailradar.org/support',
+  ogUrl: canonicalUrl('/support'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/support' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/support') }],
 })
 </script>
 

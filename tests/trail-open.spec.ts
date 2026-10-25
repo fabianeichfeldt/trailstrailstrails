@@ -160,7 +160,7 @@ baseTest('/trails/[slug] refreshes the embedded map location on client-side navi
 
   // Client-side navigation to another region page matched by the SAME
   // [slug].vue component — no full page reload happens here.
-  await page.locator('a[href="/trails/berlin"]').click();
+  await page.locator('a[href="/trails/berlin/"]').click();
 
   await expect(page.locator('h1')).toHaveText('Trails in Berlin');
   await expect(page.locator('iframe.region-map')).toHaveAttribute('src', /lat=52\.5&lng=13\.4(&|$)/);

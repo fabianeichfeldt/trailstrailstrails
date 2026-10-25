@@ -65,17 +65,18 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import { sendContactMessage, type ContactField } from '~/communication/contact'
 
 useSeoMeta({
   title: 'Kontakt',
   ogTitle: 'Kontakt | Trailradar',
-  ogUrl: 'https://trailradar.org/kontakt',
+  ogUrl: canonicalUrl('/kontakt'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/kontakt' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/kontakt') }],
 })
 
 const name = ref('')

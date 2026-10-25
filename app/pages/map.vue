@@ -51,18 +51,19 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import { parseFlyQuery } from '~/map/flyHandlers'
 definePageMeta({ layout: 'map' })
 
 useSeoMeta({
   title: 'Karte',
   description: 'Interaktive Karte aller offiziellen Mountainbike-Trails, Bikeparks und Pumptracks in Deutschland.',
-  ogUrl: 'https://trailradar.org/map',
+  ogUrl: canonicalUrl('/map'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/map' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/map') }],
 })
 
 const authStore = useAuthStore()

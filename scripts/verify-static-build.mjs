@@ -59,7 +59,7 @@ const sampleId = ids[0]
 
 // sitemap.xml is written into the output by prerender:done, not copied from public/.
 const sitemapFile = `${ROOT}.output/public/sitemap.xml`
-if (!existsSync(sitemapFile) || !readFileSync(sitemapFile, 'utf8').includes(`/trails/${sampleId}</loc>`)) {
+if (!existsSync(sitemapFile) || !readFileSync(sitemapFile, 'utf8').includes(`/trails/${sampleId}/</loc>`)) {
   console.error(`✗ .output/public/sitemap.xml missing or lacks /trails/${sampleId}`)
   process.exit(1)
 }

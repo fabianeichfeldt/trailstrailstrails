@@ -2,7 +2,7 @@
   <div>
     <PageHero>
       <h1>Verträge hier kündigen</h1>
-      <p>Kündige dein TrailRadar-Abo mit einem Klick – ohne Umwege.</p>
+      <p>Kündige dein Trailradar-Abo mit einem Klick – ohne Umwege.</p>
     </PageHero>
 
     <main class="container">
@@ -17,14 +17,14 @@
       </section>
 
       <section v-else-if="authStore.isLoggedIn && subscriptionStore.subscription && subscriptionStore.isCancelScheduled" class="kd-box">
-        <h2>TrailRadar Supporter</h2>
+        <h2>Trailradar Supporter</h2>
         <p>Dein Abo endet am {{ periodEnd }}. Bis dahin behältst du alle Vorteile.</p>
         <button class="btn-primary" :disabled="busy" @click="onResume">Kündigung zurücknehmen</button>
         <p v-if="error" class="kd-error" role="alert">{{ error }}</p>
       </section>
 
       <section v-else-if="authStore.isLoggedIn && isLive" class="kd-box">
-        <h2>TrailRadar Supporter</h2>
+        <h2>Trailradar Supporter</h2>
         <p v-if="periodEnd">Nächste Verlängerung bzw. Laufzeitende: {{ periodEnd }}</p>
         <button class="btn-danger" :disabled="busy" @click="onCancelLoggedIn">Jetzt kündigen</button>
         <p v-if="error" class="kd-error" role="alert">{{ error }}</p>

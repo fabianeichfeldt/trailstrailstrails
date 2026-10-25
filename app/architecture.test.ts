@@ -81,6 +81,20 @@ describe('No dynamic server/api routes', () => {
 })
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Canonical URLs keep the trailing slash (GitHub Pages 301s the slashless form)
+// ─────────────────────────────────────────────────────────────────────────────
+// Use canonicalUrl()/canonicalPath() from app/utils/seo.ts instead of a literal.
+describe('Page URLs end with a trailing slash', () => {
+  test('no .vue file under app/pages hardcodes a trailradar.org URL without one', () => {
+    const SLASHLESS_URL_RE = /https:\/\/trailradar\.org\/[a-z0-9\/-]*[a-z0-9-]['"`]/
+    const violations = collectTs('app/pages')
+      .filter(f => f.endsWith('.vue'))
+      .filter(f => SLASHLESS_URL_RE.test(readFileSync(join(ROOT, f), 'utf8')))
+    expect(violations).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
 // No orphaned content directories at repo root
 // ─────────────────────────────────────────────────────────────────────────────
 // `nuxt generate` only ships `.output/public`, which is `public/` copied

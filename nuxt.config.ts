@@ -1,6 +1,8 @@
 import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
 import { regions } from './build/region'
 import { computeNearbyMap } from './build/nearby'
+import { assignSpotsToRegions } from './build/regionSpots'
+import { buildSitemapXml, buildBulkRedirectRows, redirectStubHtml, isSafeStubFrom, STATIC_SITEMAP_PATHS } from './build/sitemap'
 import svgLoader from 'vite-svg-loader'
 
 // Legacy /trails/<id>/ URLs (and slugs retired by a rename) → 301-equivalent
@@ -12,21 +14,11 @@ const redirectStubs: { from: string; to: string }[] = []
 // Built in nitro:config, written only by prerender:done so prepare/dev never touch it.
 let sitemapXml = ''
 
-function redirectStubHtml(targetPath: string): string {
-  const abs = `https://trailradar.org${targetPath}`
-  return `<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="robots" content="noindex, follow">
-<title>Weiterleitung – Trailradar</title>
-<link rel="canonical" href="${abs}">
-<meta http-equiv="refresh" content="0; url=${targetPath}">
-<script>location.replace(${JSON.stringify(targetPath)})</script>
-</head>
-<body><p>Diese Seite ist umgezogen: <a href="${targetPath}">${targetPath}</a></p></body>
-</html>
-`
+// SSR reads this; it must exist (every region -> []) even when the spot fetch fails.
+function writeEmptyRegionsJson() {
+  const empty: Record<string, never[]> = {}
+  for (const slug of Object.keys(regions)) empty[slug] = []
+  writeFileSync('public/regions.json', JSON.stringify(empty))
 }
 
 // Load .env.local explicitly — c12 loads it after config evaluation, so
@@ -372,6 +364,8 @@ export default defineNuxtConfig({
         '/privacy',
         '/support',
         '/terms',
+        '/how-to-embed',
+        '/trailmanagement',
         '/reset-password',
         '/supporter/danke',
         '/kuendigen',
@@ -387,7 +381,7 @@ export default defineNuxtConfig({
     async 'nitro:config'(nitroConfig) {
       const url = process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.VITE_SUPABASE_URL
       const key = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.VITE_SUPABASE_ANON_KEY
-      if (!url || !key) return
+      if (!url || !key) { writeEmptyRegionsJson(); return }
       try {
         const h = { apikey: key, Authorization: `Bearer ${key}` }
         // Widened from `select=id` to also carry name/coords/approved so the
@@ -428,6 +422,10 @@ export default defineNuxtConfig({
         )
         console.log(`  ✓ Generated nearby.json for ${all.length} spots`)
 
+        const regionSpots = assignSpotsToRegions(all, regions)
+        writeFileSync('public/regions.json', JSON.stringify(regionSpots))
+        console.log(`  ✓ Generated regions.json for ${Object.keys(regionSpots).length} regions`)
+
         nitroConfig.prerender ||= {}
         nitroConfig.prerender.routes ||= []
         for (const t of all) {
@@ -439,33 +437,13 @@ export default defineNuxtConfig({
         // above, so it can never drift out of sync with the actual site
         // (it previously was a hand-maintained file that omitted the
         // homepage and referenced dead pre-migration .html URLs).
-        const staticPages: { path: string; priority: string; changefreq: string }[] = [
-          { path: '/', priority: '1.0', changefreq: 'daily' },
-          { path: '/map', priority: '0.9', changefreq: 'daily' },
-          { path: '/trailradar-vs-komoot', priority: '0.8', changefreq: 'monthly' },
-          { path: '/trailradar-vs-trailforks', priority: '0.8', changefreq: 'monthly' },
-          { path: '/articles', priority: '0.7', changefreq: 'weekly' },
-          { path: '/about', priority: '0.6', changefreq: 'monthly' },
-          { path: '/faq', priority: '0.6', changefreq: 'monthly' },
-          { path: '/support', priority: '0.6', changefreq: 'monthly' },
-          { path: '/plans', priority: '0.6', changefreq: 'monthly' },
-          { path: '/business', priority: '0.6', changefreq: 'monthly' },
-          { path: '/impressum', priority: '0.3', changefreq: 'yearly' },
-          { path: '/kontakt', priority: '0.3', changefreq: 'yearly' },
-          { path: '/legal', priority: '0.3', changefreq: 'yearly' },
-          { path: '/privacy', priority: '0.3', changefreq: 'yearly' },
-          { path: '/terms', priority: '0.3', changefreq: 'yearly' },
-        ]
-        const lastmod = new Date().toISOString().slice(0, 10)
-        const urlXml = (loc: string, priority: string, changefreq: string) =>
-          `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`
-        const sitemapEntries = [
-          ...staticPages.map(p => urlXml(`https://trailradar.org${p.path}`, p.priority, p.changefreq)),
-          ...Object.keys(regions).map(slug => urlXml(`https://trailradar.org/trails/${slug}`, '0.8', 'weekly')),
-          ...all.map(t => urlXml(`https://trailradar.org/trails/${t.slug || t.id}`, '0.6', 'weekly')),
-        ]
-        sitemapXml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${sitemapEntries.join('\n')}\n</urlset>\n`
-        console.log(`  ✓ Prepared sitemap.xml with ${sitemapEntries.length} URLs`)
+        sitemapXml = buildSitemapXml({
+          regions,
+          regionSpots,
+          spotSlugs: all.map(t => t.slug || t.id),
+          staticPaths: STATIC_SITEMAP_PATHS,
+        })
+        console.log(`  ✓ Prepared sitemap.xml with ${(sitemapXml.match(/<loc>/g) ?? []).length} URLs`)
 
         // Legacy-URL redirect stubs (written to the static output by the
         // prerender:done hook). Two sources:
@@ -490,6 +468,7 @@ export default defineNuxtConfig({
         console.log(`  ✓ Prepared ${redirectStubs.length} legacy-URL redirect stubs`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)
+        if (!existsSync('public/regions.json')) writeEmptyRegionsJson()
       }
 
       // /embed/[token].vue is a real page, not just the /_embed/[token] API
@@ -527,7 +506,7 @@ export default defineNuxtConfig({
         if (!redirectStubs.length) return
         let written = 0
         for (const { from, to } of redirectStubs) {
-          if (!from || from.includes('/') || from.includes('\\') || from.includes('..')) continue
+          if (!isSafeStubFrom(from)) continue
           const file = `${publicDir}/trails/${from}/index.html`
           if (existsSync(file)) continue // a real prerendered page — never overwrite
           mkdirSync(`${publicDir}/trails/${from}`, { recursive: true })
@@ -535,6 +514,10 @@ export default defineNuxtConfig({
           written++
         }
         console.log(`  ✓ Wrote ${written} legacy-URL redirect stubs into ${publicDir}/trails/`)
+        // Outside publicDir on purpose: a Cloudflare Bulk Redirects import file, not a served asset.
+        const rows = buildBulkRedirectRows(redirectStubs)
+        writeFileSync(`${nitro.options.output.dir}/cloudflare-bulk-redirects.csv`, rows.join('\n') + '\n')
+        console.log(`  ✓ Wrote cloudflare-bulk-redirects.csv (${rows.length} rows)`)
       })
     },
   },

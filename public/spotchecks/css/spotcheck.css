@@ -232,7 +232,8 @@ body {
   gap: 0.5em;
 }
 
-.nearby-list a {
+.nearby-list a,
+.nearby-list span {
   display: inline-block;
   background: white;
   border: 1px solid #e2e8f0;
@@ -246,6 +247,10 @@ body {
 
 .nearby-list a:hover {
   background: #ebf4ff;
+}
+
+.nearby-list span {
+  color: #718096;
 }
 
 .nearby-all {

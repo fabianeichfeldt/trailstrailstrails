@@ -8,7 +8,7 @@
       <p class="article-meta">Veröffentlicht am 11. Mai 2026 · Lesedauer ca. 5 Minuten</p>
 
       <p class="lead">
-        Trailforks ist die weltweit größte Datenbank für Mountainbike-Trails. TrailRadar ist eine auf Deutschland spezialisierte Plattform. Wer mehr Trails listet, ist klar – wer die <em>besseren</em> Trails für Deutschland liefert, auch.
+        Trailforks ist die weltweit größte Datenbank für Mountainbike-Trails. Trailradar ist eine auf Deutschland spezialisierte Plattform. Wer mehr Trails listet, ist klar – wer die <em>besseren</em> Trails für Deutschland liefert, auch.
       </p>
 
       <section class="section">
@@ -17,30 +17,30 @@
           <strong>Trailforks</strong> sammelt Trails weltweit – hauptsächlich durch User-Uploads. Die Datenbank ist entsprechend groß und reicht von Nordamerika über Europa bis nach Australien.
         </p>
         <p>
-          <strong>TrailRadar</strong> hingegen fokussiert sich ausschließlich auf Deutschland – und auf eine Kategorie von Trails, die auf Trailforks oft unterrepräsentiert oder schlicht nicht vorhanden ist: <em>offiziell angelegte und dauerhaft gepflegte MTB-Trails</em>, die in Zusammenarbeit mit Kommunen, Vereinen, Forstbehörden und Grundstückseigentümern entstanden sind.
+          <strong>Trailradar</strong> hingegen fokussiert sich ausschließlich auf Deutschland – und auf eine Kategorie von Trails, die auf Trailforks oft unterrepräsentiert oder schlicht nicht vorhanden ist: <em>offiziell angelegte und dauerhaft gepflegte MTB-Trails</em>, die in Zusammenarbeit mit Kommunen, Vereinen, Forstbehörden und Grundstückseigentümern entstanden sind.
         </p>
       </section>
 
       <section class="section">
         <h2>Mehr Trails ≠ bessere Trails</h2>
         <p>
-          Trailforks hat für Deutschland mehr Einträge als TrailRadar – das ist eine Tatsache. Der entscheidende Unterschied liegt aber nicht in der Anzahl, sondern in der Qualität und Verlässlichkeit der Daten.
+          Trailforks hat für Deutschland mehr Einträge als Trailradar – das ist eine Tatsache. Der entscheidende Unterschied liegt aber nicht in der Anzahl, sondern in der Qualität und Verlässlichkeit der Daten.
         </p>
         <p>
           Auf Trailforks landen Trails, sobald sie jemand aufnimmt und hochlädt – unabhängig davon, ob der Trail noch existiert, ob er legal ist, ob er noch gepflegt wird oder wenigstens noch fahrbar ist. Das Ergebnis: veraltete Einträge, Geisterspuren, Trails die seit Jahren nicht mehr gefahren werden können.
         </p>
         <div class="highlight-box">
-          <p><strong>TrailRadar-Grundsatz:</strong> Jeder Trail auf TrailRadar ist offiziell genehmigt, aktiv gepflegt und dauerhaft zugänglich.</p>
+          <p><strong>Trailradar-Grundsatz:</strong> Jeder Trail auf Trailradar ist offiziell genehmigt, aktiv gepflegt und dauerhaft zugänglich.</p>
         </div>
       </section>
 
       <section class="section">
         <h2>Kuratierte Daten: Qualität durch Community-Kontrolle</h2>
         <p>
-          Das entscheidende Alleinstellungsmerkmal von TrailRadar ist das Kurationsmodell. Daten werden nicht passiv gesammelt, sondern aktiv gepflegt – in enger Zusammenarbeit mit den Trail-Maintainern vor Ort.
+          Das entscheidende Alleinstellungsmerkmal von Trailradar ist das Kurationsmodell. Daten werden nicht passiv gesammelt, sondern aktiv gepflegt – in enger Zusammenarbeit mit den Trail-Maintainern vor Ort.
         </p>
         <ul>
-          <li>Kein Trail auf TrailRadar ist „historisch" – alle Einträge spiegeln den aktuellen Zustand wider.</li>
+          <li>Kein Trail auf Trailradar ist „historisch" – alle Einträge spiegeln den aktuellen Zustand wider.</li>
           <li>Schwierigkeitsbewertungen und Streckenbeschreibungen kommen von den Menschen, die den Trail gebaut haben und täglich kennen.</li>
           <li>Wenn ein Trail gesperrt oder verändert wird, aktualisiert sich die Information unmittelbar.</li>
         </ul>
@@ -63,10 +63,10 @@
       </section>
 
       <section class="section">
-        <h2>Direkter Vergleich: TrailRadar vs. Trailforks für Deutschland</h2>
+        <h2>Direkter Vergleich: Trailradar vs. Trailforks für Deutschland</h2>
         <table class="comparison-table">
           <thead>
-            <tr><th>Kriterium</th><th>TrailRadar</th><th>Trailforks</th></tr>
+            <tr><th>Kriterium</th><th>Trailradar</th><th>Trailforks</th></tr>
           </thead>
           <tbody>
             <tr><td>Fokus</td><td>Deutschland (offiziell angelegte Trails)</td><td>Weltweit (alle gemeldeten Trails)</td></tr>
@@ -83,12 +83,12 @@
       </section>
 
       <section class="section">
-        <h2>Fazit: Wer in Deutschland Mountainbike fährt, braucht TrailRadar</h2>
+        <h2>Fazit: Wer in Deutschland Mountainbike fährt, braucht Trailradar</h2>
         <p>
           Trailforks ist als globale Sammlung bekannt – wer irgendwo auf der Welt einen Trail eingetragen hat, findet ihn dort möglicherweise wieder.
         </p>
         <p>
-          Wer in Deutschland unterwegs ist und zuverlässig gute, sichere und tatsächlich existierende Trails finden will, ist mit TrailRadar besser beraten. Nicht weil TrailRadar mehr Trails hat – sondern weil jeder Trail auf TrailRadar ein Trail ist, auf dem man <em>tatsächlich fahren kann</em>.
+          Wer in Deutschland unterwegs ist und zuverlässig gute, sichere und tatsächlich existierende Trails finden will, ist mit Trailradar besser beraten. Nicht weil Trailradar mehr Trails hat – sondern weil jeder Trail auf Trailradar ein Trail ist, auf dem man <em>tatsächlich fahren kann</em>.
         </p>
         <p>Bessere Daten. Bessere Trails. Mehr Spaß.</p>
       </section>
@@ -96,35 +96,36 @@
 
     <footer class="cta">
       <h2>Offiziell angelegte MTB-Trails in Deutschland entdecken</h2>
-      <p>TrailRadar zeigt dir, wo du in Deutschland auf legalen, gepflegten und gut ausgebauten Trails unterwegs sein kannst.</p>
+      <p>Trailradar zeigt dir, wo du in Deutschland auf legalen, gepflegten und gut ausgebauten Trails unterwegs sein kannst.</p>
       <NuxtLink to="/map">Zur Karte</NuxtLink>
     </footer>
   </div>
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
-  title: 'TrailRadar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?',
-  description: 'TrailRadar und Trailforks im direkten Vergleich: Warum TrailRadar für MTB-Trails in Deutschland die bessere Datenqualität bietet.',
-  ogUrl: 'https://trailradar.org/trailradar-vs-trailforks',
+  title: 'Trailradar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?',
+  description: 'Trailradar und Trailforks im direkten Vergleich: Warum Trailradar für MTB-Trails in Deutschland die bessere Datenqualität bietet.',
+  ogUrl: canonicalUrl('/trailradar-vs-trailforks'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/trailradar-vs-trailforks' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/trailradar-vs-trailforks') }],
   script: [{
     type: 'application/ld+json',
     innerHTML: JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: 'TrailRadar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?',
-      description: 'TrailRadar und Trailforks im direkten Vergleich: bessere Datenqualität für Deutschland.',
-      author: { '@type': 'Organization', name: 'TrailRadar', url: 'https://trailradar.org' },
-      publisher: { '@type': 'Organization', name: 'TrailRadar', url: 'https://trailradar.org', logo: { '@type': 'ImageObject', url: 'https://trailradar.org/assets/logo.webp' } },
+      headline: 'Trailradar vs. Trailforks – Welche MTB-App liefert bessere Trails in Deutschland?',
+      description: 'Trailradar und Trailforks im direkten Vergleich: bessere Datenqualität für Deutschland.',
+      author: { '@type': 'Organization', name: 'Trailradar', url: 'https://trailradar.org' },
+      publisher: { '@type': 'Organization', name: 'Trailradar', url: 'https://trailradar.org', logo: { '@type': 'ImageObject', url: 'https://trailradar.org/assets/logo.webp' } },
       datePublished: '2026-05-11',
       dateModified: '2026-05-11',
       inLanguage: 'de',
-      mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://trailradar.org/trailradar-vs-trailforks' },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl('/trailradar-vs-trailforks') },
     }),
   }],
 })
@@ -186,7 +187,7 @@ useHead({
     letter-spacing: 0.06em;
     margin-bottom: 0.2em;
   }
-  .comparison-table td:nth-child(2)::before { content: "TrailRadar"; color: #2a9d2a; }
+  .comparison-table td:nth-child(2)::before { content: "Trailradar"; color: #2a9d2a; }
   .comparison-table td:nth-child(3)::before { content: "Trailforks"; color: #777; }
 }
 

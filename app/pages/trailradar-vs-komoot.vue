@@ -8,7 +8,7 @@
       <p class="article-meta">Veröffentlicht am 12. Mai 2026 · Lesedauer ca. 4 Minuten</p>
 
       <p class="lead">
-        Komoot ist eine App zum Tourenplanen. TrailRadar ist eine Plattform für die besten offiziellen MTB-Trails in Deutschland. Beides klingt ähnlich – ist es aber nicht.
+        Komoot ist eine App zum Tourenplanen. Trailradar ist eine Plattform für die besten offiziellen MTB-Trails in Deutschland. Beides klingt ähnlich – ist es aber nicht.
       </p>
 
       <section class="section">
@@ -33,14 +33,14 @@
           Dazu kommt das Verbindungsproblem: Selbst wenn du weißt, wo die guten Trails einer Region sind, brauchst du bei Komoot erheblichen Planungsaufwand, um diese Trails sinnvoll miteinander zu verbinden – mit möglichst wenig Straße, möglichst wenig Schotter-Einöde dazwischen. Das ist frustrierend und zeitaufwändig.
         </p>
         <blockquote>
-          Komoot schickt dich dorthin, wo ein Weg eingezeichnet ist. TrailRadar schickt dich dorthin, wo es Spaß macht.
+          Komoot schickt dich dorthin, wo ein Weg eingezeichnet ist. Trailradar schickt dich dorthin, wo es Spaß macht.
         </blockquote>
       </section>
 
       <section class="section">
-        <h2>Was TrailRadar anders macht</h2>
+        <h2>Was Trailradar anders macht</h2>
         <p>
-          TrailRadar listet ausschließlich offiziell angelegte und aktiv gepflegte MTB-Trails in Deutschland. Jeder Eintrag ist verifiziert – kein Graubereich, kein Erraten des Zustands. Die Beschreibungen kommen direkt von den Trailbauern, die die Strecken kennen wie ihre Westentasche.
+          Trailradar listet ausschließlich offiziell angelegte und aktiv gepflegte MTB-Trails in Deutschland. Jeder Eintrag ist verifiziert – kein Graubereich, kein Erraten des Zustands. Die Beschreibungen kommen direkt von den Trailbauern, die die Strecken kennen wie ihre Westentasche.
         </p>
         <ul>
           <li>Schwierigkeitsgrad stimmt – weil ihn die angeben, die den Trail gebaut haben.</li>
@@ -48,14 +48,14 @@
           <li>Der Trail existiert tatsächlich – und ist fahrbar.</li>
         </ul>
         <div class="highlight-box">
-          <p><strong>Kein Rätselraten mehr:</strong> Auf TrailRadar weißt du vor der Ausfahrt, was dich erwartet – nicht erst wenn du mittendrin stehst.</p>
+          <p><strong>Kein Rätselraten mehr:</strong> Auf Trailradar weißt du vor der Ausfahrt, was dich erwartet – nicht erst wenn du mittendrin stehst.</p>
         </div>
       </section>
 
       <section class="section">
         <h2>Das Killer-Feature: fertige Touren zum Herunterladen</h2>
         <p>
-          Viele Spots auf TrailRadar bieten nicht nur Trail-Infos, sondern gleich fertige Touren als GPX-Download – zusammengestellt von den Leuten, die die Region in- und auswendig kennen. Die Trails sind optimal miteinander verbunden, unnötige Verbindungsstücke auf der Straße sind auf ein Minimum reduziert.
+          Viele Spots auf Trailradar bieten nicht nur Trail-Infos, sondern gleich fertige Touren als GPX-Download – zusammengestellt von den Leuten, die die Region in- und auswendig kennen. Die Trails sind optimal miteinander verbunden, unnötige Verbindungsstücke auf der Straße sind auf ein Minimum reduziert.
         </p>
         <p>
           Das ist der Unterschied zwischen einer Tour, die jemand für sich selbst gebaut hat, und einer Tour, die speziell für Leute gebaut wurde, die einfach nur fahren wollen – ohne stundenlange Vorbereitung, ohne Komoot-Puzzeln, ohne böse Überraschungen.
@@ -64,10 +64,10 @@
       </section>
 
       <section class="section">
-        <h2>Direkter Vergleich: TrailRadar vs. Komoot für MTB in Deutschland</h2>
+        <h2>Direkter Vergleich: Trailradar vs. Komoot für MTB in Deutschland</h2>
         <table class="comparison-table">
           <thead>
-            <tr><th>Kriterium</th><th>TrailRadar</th><th>Komoot</th></tr>
+            <tr><th>Kriterium</th><th>Trailradar</th><th>Komoot</th></tr>
           </thead>
           <tbody>
             <tr><td>Schwerpunkt</td><td>Offizielle MTB-Trails in Deutschland</td><td>Allgemeines Tourenrouting (Rad, Wandern, MTB)</td></tr>
@@ -83,12 +83,12 @@
       </section>
 
       <section class="section">
-        <h2>Fazit: Mit Komoot planst du, mit TrailRadar fährst du</h2>
+        <h2>Fazit: Mit Komoot planst du, mit Trailradar fährst du</h2>
         <p>
           Komoot ist kein schlechtes Tool – es löst nur ein anderes Problem. Wer von A nach B kommen will und dabei ein paar schöne Wege mitnehmen möchte, ist damit unterwegs.
         </p>
         <p>
-          Wer maximalen Fahrspaß will, wer keine Zeit hat, stundenlang Touren zusammenzuklicken, wer sich darauf verlassen möchte, dass der Trail tatsächlich so ist wie beschrieben – der braucht TrailRadar.
+          Wer maximalen Fahrspaß will, wer keine Zeit hat, stundenlang Touren zusammenzuklicken, wer sich darauf verlassen möchte, dass der Trail tatsächlich so ist wie beschrieben – der braucht Trailradar.
         </p>
         <p>Weniger planen. Mehr fahren. Kein Brombeerstrauch.</p>
       </section>
@@ -103,28 +103,29 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
-  title: 'TrailRadar vs. Komoot – Wer schickt dich besser auf die Trails?',
-  description: 'Komoot plant Touren, TrailRadar findet die besten MTB-Trails in Deutschland. Warum der Unterschied für maximalen Fahrspaß entscheidend ist.',
-  ogUrl: 'https://trailradar.org/trailradar-vs-komoot',
+  title: 'Trailradar vs. Komoot – Wer schickt dich besser auf die Trails?',
+  description: 'Komoot plant Touren, Trailradar findet die besten MTB-Trails in Deutschland. Warum der Unterschied für maximalen Fahrspaß entscheidend ist.',
+  ogUrl: canonicalUrl('/trailradar-vs-komoot'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/trailradar-vs-komoot' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/trailradar-vs-komoot') }],
   script: [{
     type: 'application/ld+json',
     innerHTML: JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: 'TrailRadar vs. Komoot – Wer schickt dich besser auf die Trails?',
-      description: 'Komoot plant Touren, TrailRadar findet die besten MTB-Trails in Deutschland.',
-      author: { '@type': 'Organization', name: 'TrailRadar', url: 'https://trailradar.org' },
-      publisher: { '@type': 'Organization', name: 'TrailRadar', url: 'https://trailradar.org', logo: { '@type': 'ImageObject', url: 'https://trailradar.org/assets/logo.webp' } },
+      headline: 'Trailradar vs. Komoot – Wer schickt dich besser auf die Trails?',
+      description: 'Komoot plant Touren, Trailradar findet die besten MTB-Trails in Deutschland.',
+      author: { '@type': 'Organization', name: 'Trailradar', url: 'https://trailradar.org' },
+      publisher: { '@type': 'Organization', name: 'Trailradar', url: 'https://trailradar.org', logo: { '@type': 'ImageObject', url: 'https://trailradar.org/assets/logo.webp' } },
       datePublished: '2026-05-12',
       dateModified: '2026-05-12',
       inLanguage: 'de',
-      mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://trailradar.org/trailradar-vs-komoot' },
+      mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl('/trailradar-vs-komoot') },
     }),
   }],
 })
@@ -186,7 +187,7 @@ useHead({
     letter-spacing: 0.06em;
     margin-bottom: 0.2em;
   }
-  .comparison-table td:nth-child(2)::before { content: "TrailRadar"; color: #2a9d2a; }
+  .comparison-table td:nth-child(2)::before { content: "Trailradar"; color: #2a9d2a; }
   .comparison-table td:nth-child(3)::before { content: "Komoot"; color: #777; }
 }
 

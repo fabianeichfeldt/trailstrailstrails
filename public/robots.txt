@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+Disallow: /embed/
+Disallow: /_embed/
 
 Sitemap: https://trailradar.org/sitemap.xml

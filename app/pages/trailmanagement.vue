@@ -97,15 +97,16 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 useSeoMeta({
   title: 'Trailmanagement für Trailcrews – Trailradar',
   description: 'Sperrt Trails befristet oder unbefristet, hinterlasst einen Hinweis für eure Community und zeigt den Status live auf Trailradar und eurer eigenen Website.',
-  ogUrl: 'https://trailradar.org/trailmanagement',
+  ogUrl: canonicalUrl('/trailmanagement'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/trailmanagement' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/trailmanagement') }],
 })
 </script>
 

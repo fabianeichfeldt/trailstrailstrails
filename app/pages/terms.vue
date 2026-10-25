@@ -67,7 +67,7 @@
 
       <h2 id="supporter">8. Supporter-Abo</h2>
       <h3>8.1 Leistung</h3>
-      <p>Mit dem Supporter-Abo („TrailRadar Supporter“) schaltest du zusätzliche Funktionen in deinem
+      <p>Mit dem Supporter-Abo („Trailradar Supporter“) schaltest du zusätzliche Funktionen in deinem
         Trailradar-Konto frei, derzeit die Funktion „Trail-Zustand“ (eine Einschätzung des Bodenzustands und
         Wetters für einen Spot). Mit deinem Beitrag unterstützt du außerdem Betrieb und Weiterentwicklung von
         Trailradar. Die Funktionen können wir weiterentwickeln; den Kern der bezahlten Leistung schränken wir
@@ -157,15 +157,16 @@
 </template>
 
 <script setup lang="ts">
+import { canonicalUrl } from '~/utils/seo'
 import SupportEmail from '~/components/SupportEmail.vue'
 useSeoMeta({
   title: 'Nutzungsbedingungen',
-  ogUrl: 'https://trailradar.org/terms',
+  ogUrl: canonicalUrl('/terms'),
   ogSiteName: 'Trailradar.org',
   ogLocale: 'de_DE',
 })
 useHead({
-  link: [{ rel: 'canonical', href: 'https://trailradar.org/terms' }],
+  link: [{ rel: 'canonical', href: canonicalUrl('/terms') }],
 })
 </script>
 
