@@ -1,33 +1,39 @@
 #!/usr/bin/env bash
-# Quiet test hook. Usage: run-tests.sh edit   (PostToolUse Write|Edit: related tests only)
-#                        run-tests.sh stop    (Stop: full unit suite, main agent only; SubagentStop is not wired)
-# Success => no output, exit 0. Failure => <=25 line summary on stderr, exit 2 (fed back to Claude).
+# Quiet test hook. Tests run when an agent says it's done, not after every edit (red is expected mid-TDD).
+#   run-tests.sh subagent  (SubagentStop: tests related to the changed .ts/.vue files)
+#   run-tests.sh stop      (Stop: full unit suite, main agent)
+# Success => no output, exit 0. Failure => <=25 line summary on stderr, exit 2 (fed back to the agent).
 set -u
-mode="${1:-edit}"
+mode="${1:-stop}"
 input="$(cat)"
 jqr() { printf '%s' "$input" | jq -r "$1" 2>/dev/null; }
 
 cd "$(jqr '.cwd // empty' | grep . || echo "${CLAUDE_PROJECT_DIR:-.}")" 2>/dev/null || exit 0
 [ -x node_modules/.bin/vitest ] || exit 0
+[ "$(jqr '.stop_hook_active // false')" = true ] && exit 0   # already retried once: never loop
 
 # One run at a time per checkout; parallel agents skip instead of piling up. Stale after 10 min.
-lock="${TMPDIR:-/tmp}/claude-tests-$(pwd | shasum | cut -c1-12).lock"
+key="$(pwd | shasum | cut -c1-12)"
+lock="${TMPDIR:-/tmp}/claude-tests-$key.lock"
 if [ -d "$lock" ] && [ -n "$(find "$lock" -maxdepth 0 -mmin +10 2>/dev/null)" ]; then rmdir "$lock" 2>/dev/null; fi
 mkdir "$lock" 2>/dev/null || exit 0
-trap 'rmdir "$lock" 2>/dev/null' EXIT
+
+# Changed since the last green full run (mtime, so mid-turn commits still count); no marker yet => uncommitted changes.
+marker="${TMPDIR:-/tmp}/claude-tests-$key.green"
+stamp="$marker.$$"; touch "$stamp"; trap 'rmdir "$lock" 2>/dev/null; rm -f "$stamp"' EXIT   # taken before the run: edits during it count next time
+if [ -f "$marker" ]; then
+  changed="$(find app server -type f \( -name '*.ts' -o -name '*.vue' \) -newer "$marker" 2>/dev/null)"
+else
+  changed="$(git status --porcelain 2>/dev/null | awk '{print $NF}' | grep -E '\.(ts|vue)$')"
+  [ -z "$changed" ] && mv "$stamp" "$marker"   # clean tree: start the mtime baseline here
+fi
+changed="$(printf '%s\n' "$changed" | grep -vE '(^|/)(node_modules|\.nuxt|\.output|tests)/|\.d\.ts$' | grep .)" || exit 0   # tests/ = playwright e2e
 
 if [ "$mode" = stop ]; then
-  [ "$(jqr '.stop_hook_active // false')" = true ] && exit 0   # already retried once: never loop
-  git status --porcelain 2>/dev/null | awk '{print $NF}' | grep -qE '\.(ts|vue)$' || exit 0
   args=(run); limit=240
 else
-  file="$(jqr '.tool_input.file_path // empty')"
-  case "$file" in
-    */node_modules/*|*/.nuxt/*|*/.output/*|*/tests/*|*.d.ts) exit 0 ;;   # tests/ = playwright e2e
-    *.ts|*.vue) ;;
-    *) exit 0 ;;
-  esac
-  args=(related --run "$file"); limit=90
+  # shellcheck disable=SC2086
+  args=(related --run $changed); limit=90
 fi
 
 # Fresh worktree, or app/ files added/removed since the last prepare (dir mtime) => stale .nuxt auto-imports/tsconfig.
@@ -40,7 +46,10 @@ fi
 
 out="$(perl -e 'alarm shift; exec @ARGV' "$limit" node_modules/.bin/vitest "${args[@]}" --reporter=default --no-color 2>&1)"
 rc=$?
-[ $rc -eq 0 ] && exit 0
+if [ $rc -eq 0 ]; then
+  [ "$mode" = stop ] && mv "$stamp" "$marker"
+  exit 0
+fi
 
 clean="$(printf '%s' "$out" | tr -d '\000' | sed -E $'s/\x1b\\[[0-9;?]*[A-Za-z]//g')"
 if [ $rc -eq 142 ]; then summary="Tests timed out after ${limit}s."
