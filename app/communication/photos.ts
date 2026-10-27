@@ -3,7 +3,9 @@ import { REST, userHeaders } from './http'
 import type { IAuthService } from '../auth/auth_service'
 import { normalizeCopyright } from '../utils/photoCopyright'
 
-async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<Blob> {
+interface EncodedImage { blob: Blob; ext: 'webp' | 'jpg'; contentType: 'image/webp' | 'image/jpeg' }
+
+async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<EncodedImage> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image()
     el.onload = () => resolve(el)
@@ -19,7 +21,12 @@ async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promi
   canvas.width = w
   canvas.height = h
   canvas.getContext('2d')!.drawImage(img, 0, 0, w, h)
-  return new Promise(resolve => canvas.toBlob(b => resolve(b!), 'image/webp', quality))
+  const encode = (type: string) => new Promise<Blob>(resolve => canvas.toBlob(b => resolve(b!), type, quality))
+
+  const webp = await encode('image/webp')
+  if (webp.type === 'image/webp') return { blob: webp, ext: 'webp', contentType: 'image/webp' }
+  // iOS Safari can't encode WebP and silently hands back a multi-MB PNG instead.
+  return { blob: await encode('image/jpeg'), ext: 'jpg', contentType: 'image/jpeg' }
 }
 
 export async function uploadTrailPhoto(
@@ -29,12 +36,13 @@ export async function uploadTrailPhoto(
   userId: string,
   copyright?: string | null,
 ): Promise<string> {
-  const filePath = `${trailId}/${crypto.randomUUID()}.webp`
-  const resized = await transformImage(file, 1000, 0.8)
+  const { blob, ext, contentType } = await transformImage(file, 1000, 0.8)
+  const filePath = `${trailId}/${crypto.randomUUID()}.${ext}`
 
+  // Paths are unique per upload and never overwritten, so the file can be cached for a year.
   const { error } = await client.storage
     .from('trail-photos')
-    .upload(filePath, resized, { cacheControl: '86400', upsert: false, contentType: 'image/webp' })
+    .upload(filePath, blob, { cacheControl: '31536000', upsert: false, contentType })
   if (error) throw new Error('Photo upload failed')
 
   const { data } = client.storage.from('trail-photos').getPublicUrl(filePath)
@@ -48,6 +56,16 @@ export async function uploadTrailPhoto(
   if (dbError) throw new Error('Photo record insert failed')
 
   return data.publicUrl
+}
+
+export async function uploadAvatar(file: File, userId: string, client: SupabaseClient): Promise<string> {
+  const { blob, ext, contentType } = await transformImage(file, 256, 0.8)
+  const filePath = `${userId}/avatar.${ext}`
+  const { error } = await client.storage
+    .from('avatars')
+    .upload(filePath, blob, { cacheControl: '3600', upsert: true, contentType })
+  if (error) throw new Error('Avatar upload failed')
+  return client.storage.from('avatars').getPublicUrl(filePath).data.publicUrl
 }
 
 export async function deletePhoto(

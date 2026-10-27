@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { deletePhoto, isSpotAssignedToTrailcrew, uploadTrailPhoto, updatePhotoCopyright } from './photos'
+import { deletePhoto, isSpotAssignedToTrailcrew, uploadAvatar, uploadTrailPhoto, updatePhotoCopyright } from './photos'
 import type { IAuthService } from '../auth/auth_service'
 import { User } from '../auth/user'
 
@@ -74,17 +74,47 @@ function fakeUploadClient(insertError: unknown = null) {
 }
 
 // jsdom never decodes images or encodes canvases — fake just enough for transformImage().
-function stubImagePipeline() {
+// webp: false mimics iOS Safari, whose toBlob('image/webp') silently returns a PNG.
+function stubImagePipeline({ webp = true } = {}) {
   vi.stubGlobal('Image', class {
     width = 2000; height = 1000; onload: (() => void) | null = null
     set src(_: string) { queueMicrotask(() => this.onload?.()) }
   })
   vi.stubGlobal('URL', { ...URL, createObjectURL: () => 'blob:x' })
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as any)
-  vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(cb => cb(new Blob(['x'])))
+  const widths: number[] = []
+  vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(function (this: HTMLCanvasElement, cb, type) {
+    widths.push(this.width)
+    cb(new Blob(['x'], { type: type === 'image/webp' && !webp ? 'image/png' : type }))
+  })
+  return { widths }
 }
 
 describe('uploadTrailPhoto', () => {
+  it('uploads WebP with a long-lived cache header when the browser can encode it', async () => {
+    stubImagePipeline()
+    const { client, upload } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
+
+    const [path, blob, opts] = upload.mock.calls[0]
+    expect(path).toMatch(/^t1\/.+\.webp$/)
+    expect(blob.type).toBe('image/webp')
+    expect(opts).toMatchObject({ contentType: 'image/webp', cacheControl: '31536000' })
+  })
+
+  it('falls back to JPEG instead of uploading a PNG when WebP encoding is unsupported (iOS Safari)', async () => {
+    stubImagePipeline({ webp: false })
+    const { client, upload } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
+
+    const [path, blob, opts] = upload.mock.calls[0]
+    expect(blob.type).toBe('image/jpeg')
+    expect(path).toMatch(/^t1\/.+\.jpg$/)
+    expect(opts).toMatchObject({ contentType: 'image/jpeg' })
+  })
+
   it('stores the normalized copyright on the photo row', async () => {
     stubImagePipeline()
     const { client, insert } = fakeUploadClient()
@@ -101,6 +131,45 @@ describe('uploadTrailPhoto', () => {
     await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
 
     expect(insert).toHaveBeenCalledWith(expect.objectContaining({ copyright: null }))
+  })
+})
+
+// ── uploadAvatar ─────────────────────────────────────────────────────────
+
+describe('uploadAvatar', () => {
+  function fakeAvatarClient() {
+    const upload = vi.fn().mockResolvedValue({ error: null })
+    const getPublicUrl = vi.fn((p: string) => ({ data: { publicUrl: `https://x/avatars/${p}` } }))
+    const storage = { from: vi.fn(() => ({ upload, getPublicUrl })) }
+    return { client: { storage } as any, upload, storage }
+  }
+
+  it('downsizes the avatar before upload instead of storing the original file', async () => {
+    const { widths } = stubImagePipeline()
+    const { client, upload, storage } = fakeAvatarClient()
+    const original = new File(['x'.repeat(10)], 'me.jpg', { type: 'image/jpeg' })
+
+    const url = await uploadAvatar(original, 'u1', client)
+
+    expect(storage.from).toHaveBeenCalledWith('avatars')
+    const [path, blob, opts] = upload.mock.calls[0]
+    expect(blob).not.toBe(original)
+    expect(widths).toEqual([256])
+    expect(path).toBe('u1/avatar.webp')
+    expect(opts).toMatchObject({ upsert: true, contentType: 'image/webp' })
+    expect(url).toBe('https://x/avatars/u1/avatar.webp')
+  })
+
+  it('falls back to JPEG on browsers without WebP encoding', async () => {
+    stubImagePipeline({ webp: false })
+    const { client, upload } = fakeAvatarClient()
+
+    await uploadAvatar(new File(['x'], 'me.png', { type: 'image/png' }), 'u1', client)
+
+    const [path, blob, opts] = upload.mock.calls[0]
+    expect(blob.type).toBe('image/jpeg')
+    expect(path).toBe('u1/avatar.jpg')
+    expect(opts).toMatchObject({ contentType: 'image/jpeg' })
   })
 })
 
