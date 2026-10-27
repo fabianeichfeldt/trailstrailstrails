@@ -93,7 +93,8 @@ export function bindPhotoLightbox(container: HTMLElement) {
   if (!wraps.length) return;
 
   const collected: LightboxPhoto[] = Array.from(wraps).map(wrap => ({
-    src:      (wrap.querySelector('img') as HTMLImageElement)?.src ?? '',
+    // data-src first: lazy carousel slides have no src until they are shown.
+    src:      (wrap.querySelector('img') as HTMLImageElement)?.dataset.src || (wrap.querySelector('img') as HTMLImageElement)?.src || '',
     uploader: wrap.querySelector('.photo-uploader')?.textContent ?? '',
     date:     wrap.querySelector('.photo-date')?.textContent ?? '',
     copyright: wrap.querySelector('.photo-copyright')?.textContent?.trim() ?? '',

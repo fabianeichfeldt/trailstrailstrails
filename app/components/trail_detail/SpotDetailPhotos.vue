@@ -26,7 +26,7 @@
           :class="{ active: i === activePhoto }"
           :style="{ '--img': `url('${p.url}')` }"
         >
-          <img alt="offizieller MTB Trail" :src="p.url" :class="{ active: i === activePhoto }" />
+          <img alt="offizieller MTB Trail" :src="loadedPhotos.has(i) ? p.url : undefined" :data-src="p.url" :class="{ active: i === activePhoto }" />
           <span v-if="p.copyright" class="photo-copyright">© {{ p.copyright }}</span>
           <div class="photo-meta">
             <span class="photo-uploader">von {{ authorName(p.profiles) }}</span>
@@ -113,6 +113,24 @@ watch(pendingFile, (file) => {
 })
 let carouselTimer: ReturnType<typeof setInterval> | null = null
 
+// Slides get a src only once shown or next up, so opening a spot doesn't download every photo.
+const loadedPhotos = ref(new Set<number>([0, 1]))
+watch(activePhoto, (i) => {
+  loadedPhotos.value = new Set([...loadedPhotos.value, i, (i + 1) % props.details.photos.length])
+})
+
+let carouselInView = true
+let viewObserver: IntersectionObserver | null = null
+
+function observeCarouselVisibility() {
+  viewObserver?.disconnect()
+  viewObserver = null
+  carouselInView = true
+  if (!photosContainer.value || typeof IntersectionObserver === 'undefined') return
+  viewObserver = new IntersectionObserver(([entry]) => { carouselInView = !!entry?.isIntersecting })
+  viewObserver.observe(photosContainer.value)
+}
+
 function formatPhotoDate(iso: string): string {
   return new Date(iso).toLocaleDateString('de-DE', { year: 'numeric', month: 'short', day: 'numeric' })
 }
@@ -126,6 +144,8 @@ function startCarousel() {
   stopCarousel()
   if (props.details.photos.length < 2) return
   carouselTimer = setInterval(() => {
+    // Each advance loads another photo; don't spend egress on a carousel nobody sees.
+    if (document.hidden || !carouselInView) return
     activePhoto.value = (activePhoto.value + 1) % props.details.photos.length
   }, 4000)
 }
@@ -134,6 +154,7 @@ async function initPhotoUi(photos: TrailDetails['photos']) {
   startCarousel()
   if (!photos || photos.length === 0) return
   await nextTick()
+  observeCarouselVisibility()
   if (photosContainer.value) bindPhotoLightbox(photosContainer.value)
 }
 
@@ -145,11 +166,13 @@ onMounted(() => initPhotoUi(props.details.photos))
 
 watch(() => props.details.photos, async (photos) => {
   activePhoto.value = 0
+  loadedPhotos.value = new Set([0, 1])
   await initPhotoUi(photos)
 }, { deep: false })
 
 onUnmounted(() => {
   stopCarousel()
+  viewObserver?.disconnect()
   if (pendingPreview.value) URL.revokeObjectURL(pendingPreview.value)
 })
 

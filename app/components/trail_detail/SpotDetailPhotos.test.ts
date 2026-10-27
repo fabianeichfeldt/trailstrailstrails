@@ -298,6 +298,62 @@ describe('SpotDetailPhotos', () => {
   // There is exactly one delete button now (paired with the upload FAB,
   // not one per photo) — it must follow whichever photo the carousel is
   // currently showing, not any deletable photo in the list.
+  function manyPhotos(n: number) {
+    return Array.from({ length: n }, (_, i) => (
+      { id: `p${i}`, url: `https://example.com/${i}.jpg`, created_at: '2024-01-01', profiles: { display_name: '', avatar_url: '' } } as any
+    ))
+  }
+  const srcs = (wrapper: ReturnType<typeof mountPhotos>) =>
+    wrapper.findAll('.photo-wrap img').map(img => img.attributes('src') ?? null)
+
+  it('only downloads the visible photo and the next one, not the whole carousel', () => {
+    const wrapper = mountPhotos({ trail: trail(), details: details({ photos: manyPhotos(5) }) })
+
+    expect(srcs(wrapper)).toEqual(['https://example.com/0.jpg', 'https://example.com/1.jpg', null, null, null])
+    // The lightbox still needs every URL.
+    expect(wrapper.findAll('.photo-wrap img').map(img => img.attributes('data-src'))).toEqual(manyPhotos(5).map(p => p.url))
+  })
+
+  it('loads the following photo as the carousel advances and keeps already-loaded ones', async () => {
+    vi.useFakeTimers()
+    try {
+      const wrapper = mountPhotos({ trail: trail(), details: details({ photos: manyPhotos(5) }) })
+
+      await vi.advanceTimersByTimeAsync(4000)
+
+      expect(srcs(wrapper)).toEqual(['https://example.com/0.jpg', 'https://example.com/1.jpg', 'https://example.com/2.jpg', null, null])
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('does not auto-advance (and download more photos) while the tab is hidden', async () => {
+    vi.useFakeTimers()
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(true)
+    try {
+      const wrapper = mountPhotos({ trail: trail(), details: details({ photos: manyPhotos(5) }) })
+
+      await vi.advanceTimersByTimeAsync(12000)
+
+      expect(srcs(wrapper)).toEqual(['https://example.com/0.jpg', 'https://example.com/1.jpg', null, null, null])
+    } finally {
+      hidden.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it('prerenders only the first two photo URLs as img src', async () => {
+    const app = createSSRApp({
+      render: () => h(SpotDetailPhotos, { trail: trail(), details: details({ photos: manyPhotos(5) }) }),
+    })
+    app.component('ClientOnly', { setup: (_: unknown, { slots }: any) => () => slots.fallback?.() })
+    const html = await renderToString(app)
+
+    expect(html.match(/ src="https:\/\/example\.com\/\d\.jpg"/g)).toEqual([
+      ' src="https://example.com/0.jpg"', ' src="https://example.com/1.jpg"',
+    ])
+  })
+
   it('gates the single delete button on whichever photo is currently active in the carousel', async () => {
     vi.useFakeTimers()
     try {
