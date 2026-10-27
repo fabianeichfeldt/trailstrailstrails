@@ -161,6 +161,8 @@ export async function setupApiMocks(page: Page) {
   await page.route('**/rest/v1/trails**',          (route) => route.fulfill({ json: MOCK_TRAILS }));
   await page.route('**/rest/v1/parks**',            (route) => route.fulfill({ json: MOCK_BIKEPARKS }));
   await page.route('**/rest/v1/dirt_parks**',       (route) => route.fulfill({ json: MOCK_DIRTPARKS }));
+  // Empty → getTrailBySlug falls back to probing the three tables above.
+  await page.route('**/rest/v1/spot_slugs**',       (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_photos**',     (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/spot_comments**',    (route) => route.fulfill({ json: [] }));
   await page.route('**/rest/v1/trail_favorites**',  (route) => route.fulfill({ json: [] }));

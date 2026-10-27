@@ -191,6 +191,62 @@ describe('getTrailBySlug', () => {
   })
 })
 
+// ── getTrailBySlug via spot_slugs ────────────────────────────────────────────
+
+describe('getTrailBySlug resolves the type from spot_slugs', () => {
+  // Behaves like PostgREST: honours eq filters, so wrong-table queries come back empty.
+  function db(tables: Record<string, Record<string, unknown>[]>) {
+    return vi.fn((url: string) => {
+      const u = new URL(url)
+      let rows = tables[u.pathname.split('/rest/v1/')[1]!] ?? []
+      for (const [col, val] of u.searchParams) {
+        if (val.startsWith('eq.')) rows = rows.filter(r => String(r[col]) === val.slice(3))
+      }
+      return ok(rows)
+    })
+  }
+  const spotTableCalls = (fetch: ReturnType<typeof db>) =>
+    fetch.mock.calls.map(c => new URL(String(c[0])).pathname.split('/rest/v1/')[1]).filter(t => ['trails', 'parks', 'dirt_parks'].includes(t!))
+
+  it('queries only the base table spot_slugs names, instead of all three', async () => {
+    const fetch = db({
+      spot_slugs: [{ slug: 'pumptrack-muc', spot_id: 'd-uuid', spot_type: 'dirtpark', is_current: true }],
+      dirt_parks: [{ id: 'd-uuid', slug: 'pumptrack-muc', name: 'Pumptrack' }],
+    })
+    vi.stubGlobal('fetch', fetch)
+
+    expect(await getTrailBySlug('pumptrack-muc')).toMatchObject({ id: 'd-uuid', type: 'dirtpark' })
+    expect(spotTableCalls(fetch)).toEqual(['dirt_parks'])
+  })
+
+  it('still hides a hidden trail without probing the other tables', async () => {
+    const fetch = db({
+      spot_slugs: [{ slug: 'versteckt', spot_id: 'h1', spot_type: 'trail', is_current: true }],
+      trails: [{ id: 'h1', slug: 'versteckt', visible: false }],
+    })
+    vi.stubGlobal('fetch', fetch)
+
+    expect(await getTrailBySlug('versteckt')).toBeNull()
+    expect(spotTableCalls(fetch)).toEqual(['trails'])
+  })
+
+  it('returns null for a region slug without querying any spot table', async () => {
+    const fetch = db({ spot_slugs: [{ slug: 'allgaeu', spot_id: 'allgaeu', spot_type: 'region', is_current: true }] })
+    vi.stubGlobal('fetch', fetch)
+
+    expect(await getTrailBySlug('allgaeu')).toBeNull()
+    expect(spotTableCalls(fetch)).toEqual([])
+  })
+
+  it('falls back to probing all three tables when spot_slugs has no current row', async () => {
+    const fetch = db({ parks: [{ id: 'p-uuid', slug: 'bikepark-x', name: 'Bikepark X' }] })
+    vi.stubGlobal('fetch', fetch)
+
+    expect(await getTrailBySlug('bikepark-x')).toMatchObject({ id: 'p-uuid', type: 'bikepark' })
+    expect(spotTableCalls(fetch).sort()).toEqual(['dirt_parks', 'parks', 'trails'])
+  })
+})
+
 // ── park details (bike_park_details / dirt_park_details) ────────────────────────────────────
 
 describe('spot details source per type', () => {

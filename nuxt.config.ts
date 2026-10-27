@@ -1,9 +1,11 @@
-import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs'
+import { readFileSync, existsSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { dirname } from 'node:path'
 import { regions } from './build/region'
 import { computeNearbyMap } from './build/nearby'
 import { assignSpotsToRegions } from './build/regionSpots'
 import { buildSitemapXml, buildBulkRedirectRows, redirectStubHtml, isSafeStubFrom, STATIC_SITEMAP_PATHS } from './build/sitemap'
 import svgLoader from 'vite-svg-loader'
+import { fetchAllSpots, buildSpotSnapshot, SPOT_SNAPSHOT_PATH } from './app/communication/spotSnapshot'
 
 // Legacy /trails/<id>/ URLs (and slugs retired by a rename) → 301-equivalent
 // redirect stubs written into the static output by the prerender:done hook
@@ -384,37 +386,23 @@ export default defineNuxtConfig({
       if (!url || !key) { writeEmptyRegionsJson(); return }
       try {
         const h = { apikey: key, Authorization: `Bearer ${key}` }
-        // Widened from `select=id` to also carry name/coords/approved so the
-        // same fetch feeds the build-time "Nearby Spots" computation
-        // (public/nearby.json) — see build/nearby.ts. Each array is tagged
-        // with its spot `type` the same way server/api/trails.get.ts does.
-        const spotFields = 'id,slug,name,latitude,longitude,approved'
-        const [r1, r2, r3, r4] = await Promise.all([
-          // Hidden trails (visible = false) get no page, sitemap/nearby entry or redirect stub.
-          fetch(`${url}/rest/v1/trails?select=${spotFields}&visible=eq.true`, { headers: h }),
-          fetch(`${url}/rest/v1/parks?select=${spotFields}`, { headers: h }),
-          fetch(`${url}/rest/v1/dirt_parks?select=${spotFields}`, { headers: h }),
-          fetch(`${url}/rest/v1/trail_photos?select=trail_id,url&order=created_at.asc`, { headers: h }),
-        ])
-        type SpotRow = { id: string; slug: string; name: string; latitude: number; longitude: number; approved: boolean }
-        const [trails, parks, dirtParks, photos] = await Promise.all([
-          r1.json() as Promise<SpotRow[]>,
-          r2.json() as Promise<SpotRow[]>,
-          r3.json() as Promise<SpotRow[]>,
-          r4.json() as Promise<{ trail_id: string; url: string }[]>,
-        ])
-        const all = [
-          ...trails.map(t => ({ ...t, type: 'trail' as const })),
-          ...parks.map(p => ({ ...p, type: 'bikepark' as const })),
-          ...dirtParks.map(d => ({ ...d, type: 'dirtpark' as const })),
-        ]
+        // One paged bulk fetch of every visible spot (base + details + photos) feeds the
+        // prerendered spot pages (snapshot), nearby.json, regions.json, sitemap and stubs.
+        const spots = await fetchAllSpots(`${url}/rest/v1`, h)
+        mkdirSync(dirname(SPOT_SNAPSHOT_PATH), { recursive: true })
+        writeFileSync(SPOT_SNAPSHOT_PATH, JSON.stringify(buildSpotSnapshot(spots)))
+        console.log(`  ✓ Wrote spot snapshot for ${spots.length} spots`)
 
-        // First photo (rows already ordered created_at.asc) per spot.
+        const all = spots.map(s => ({
+          id: String(s.id), slug: s.slug as string, name: s.name, latitude: s.latitude, longitude: s.longitude,
+          approved: !!s.approved, type: s.type,
+        }))
+        const countOf = (type: string) => all.filter(s => s.type === type).length
+
+        // First photo (photos are ordered created_at.asc) per spot.
         const photoBySpotId: Record<string, string> = {}
-        for (const p of Array.isArray(photos) ? photos : []) {
-          if (p && p.trail_id && p.url && !photoBySpotId[p.trail_id]) {
-            photoBySpotId[p.trail_id] = p.url
-          }
+        for (const s of spots) {
+          if (s.photos[0]?.url) photoBySpotId[String(s.id)] = s.photos[0].url
         }
         writeFileSync(
           'public/nearby.json',
@@ -431,7 +419,7 @@ export default defineNuxtConfig({
         for (const t of all) {
           (nitroConfig.prerender.routes as string[]).push(`/trails/${t.slug || t.id}`)
         }
-        console.log(`  ✓ Added ${all.length} trail routes for prerender (${trails.length} trails, ${parks.length} parks, ${dirtParks.length} dirtparks)`)
+        console.log(`  ✓ Added ${all.length} trail routes for prerender (${countOf('trail')} trails, ${countOf('bikepark')} parks, ${countOf('dirtpark')} dirtparks)`)
 
         // Generate sitemap.xml from the same route data used for prerendering
         // above, so it can never drift out of sync with the actual site
@@ -468,6 +456,8 @@ export default defineNuxtConfig({
         console.log(`  ✓ Prepared ${redirectStubs.length} legacy-URL redirect stubs`)
       } catch (e) {
         console.warn('  ⚠ Could not fetch trail routes for prerender:', e)
+        // A previous build's snapshot would prerender stale pages; pages resolve live instead.
+        rmSync(SPOT_SNAPSHOT_PATH, { force: true })
         if (!existsSync('public/regions.json')) writeEmptyRegionsJson()
       }
 
