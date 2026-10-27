@@ -39,8 +39,8 @@ const BACKUP_DIR = process.env.BACKUP_DIR ?? path.join(__dirname, 'image-backups
 
 // Same limits as the client-side upload (app/communication/photos.ts).
 const BUCKETS = {
-  'trail-photos': { maxWidth: 1000, cacheControl: '31536000' },
-  'avatars':      { maxWidth: 256,  cacheControl: '3600' },
+  'trail-photos': { maxWidth: 1000, maxHeight: 1400, cacheControl: '31536000' },
+  'avatars':      { maxWidth: 256,  maxHeight: 256,  cacheControl: '3600' },
 };
 
 if (!SUPABASE_URL || !KEY) {
@@ -67,14 +67,14 @@ async function listObjects(bucket, prefix = '') {
   return out;
 }
 
-async function processObject(bucket, obj, { maxWidth, cacheControl }) {
+async function processObject(bucket, obj, { maxWidth, maxHeight, cacheControl }) {
   const res = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${obj.name}`, { headers });
   if (!res.ok) throw new Error(`download failed: ${res.status}`);
   const original = Buffer.from(await res.arrayBuffer());
 
   const reencoded = await sharp(original)
     .rotate()
-    .resize({ width: maxWidth, withoutEnlargement: true })
+    .resize({ width: maxWidth, height: maxHeight, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 80 })
     .toBuffer();
 

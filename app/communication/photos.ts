@@ -5,7 +5,7 @@ import { normalizeCopyright } from '../utils/photoCopyright'
 
 interface EncodedImage { blob: Blob; ext: 'webp' | 'jpg'; contentType: 'image/webp' | 'image/jpeg' }
 
-async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promise<EncodedImage> {
+async function transformImage(file: File, maxWidth: number, maxHeight: number, quality = 0.8): Promise<EncodedImage> {
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image()
     el.onload = () => resolve(el)
@@ -13,7 +13,8 @@ async function transformImage(file: File, maxWidth = 1000, quality = 0.8): Promi
     el.src = URL.createObjectURL(file)
   })
 
-  const scale = Math.min(1, maxWidth / img.width)
+  // Height cap too: phone portraits would otherwise land at 1000×1778.
+  const scale = Math.min(1, maxWidth / img.width, maxHeight / img.height)
   const w = Math.round(img.width * scale)
   const h = Math.round(img.height * scale)
 
@@ -36,7 +37,8 @@ export async function uploadTrailPhoto(
   userId: string,
   copyright?: string | null,
 ): Promise<string> {
-  const { blob, ext, contentType } = await transformImage(file, 1000, 0.8)
+  // The carousel crops to fill its width, so portraits keep enough width to stay sharp.
+  const { blob, ext, contentType } = await transformImage(file, 1000, 1400)
   const filePath = `${trailId}/${crypto.randomUUID()}.${ext}`
 
   // Paths are unique per upload and never overwritten, so the file can be cached for a year.
@@ -59,7 +61,7 @@ export async function uploadTrailPhoto(
 }
 
 export async function uploadAvatar(file: File, userId: string, client: SupabaseClient): Promise<string> {
-  const { blob, ext, contentType } = await transformImage(file, 256, 0.8)
+  const { blob, ext, contentType } = await transformImage(file, 256, 256)
   const filePath = `${userId}/avatar.${ext}`
   const { error } = await client.storage
     .from('avatars')

@@ -75,22 +75,42 @@ function fakeUploadClient(insertError: unknown = null) {
 
 // jsdom never decodes images or encodes canvases — fake just enough for transformImage().
 // webp: false mimics iOS Safari, whose toBlob('image/webp') silently returns a PNG.
-function stubImagePipeline({ webp = true } = {}) {
+function stubImagePipeline({ webp = true, width = 2000, height = 1000 } = {}) {
   vi.stubGlobal('Image', class {
-    width = 2000; height = 1000; onload: (() => void) | null = null
+    width = width; height = height; onload: (() => void) | null = null
     set src(_: string) { queueMicrotask(() => this.onload?.()) }
   })
   vi.stubGlobal('URL', { ...URL, createObjectURL: () => 'blob:x' })
   vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue({ drawImage: vi.fn() } as any)
   const widths: number[] = []
+  const sizes: [number, number][] = []
   vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation(function (this: HTMLCanvasElement, cb, type) {
     widths.push(this.width)
+    sizes.push([this.width, this.height])
     cb(new Blob(['x'], { type: type === 'image/webp' && !webp ? 'image/png' : type }))
   })
-  return { widths }
+  return { widths, sizes }
 }
 
 describe('uploadTrailPhoto', () => {
+  it('caps portrait photos at 1400px tall instead of storing them at 1000×1778', async () => {
+    const { sizes } = stubImagePipeline({ width: 3000, height: 5250 })
+    const { client } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
+
+    expect(sizes[0]).toEqual([800, 1400])
+  })
+
+  it('keeps landscape photos at 1000px wide', async () => {
+    const { sizes } = stubImagePipeline({ width: 4000, height: 3000 })
+    const { client } = fakeUploadClient()
+
+    await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
+
+    expect(sizes[0]).toEqual([1000, 750])
+  })
+
   it('uploads WebP with a long-lived cache header when the browser can encode it', async () => {
     stubImagePipeline()
     const { client, upload } = fakeUploadClient()
