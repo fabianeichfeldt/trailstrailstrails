@@ -53,9 +53,9 @@ export function computeTrailStats(points: [number, number, number][]): TrailStat
   const dists: number[] = [0]
 
   for (let i = 1; i < points.length; i++) {
-    dist += haversineKm(points[i - 1][0], points[i - 1][1], points[i][0], points[i][1])
+    dist += haversineKm(points[i - 1]![0], points[i - 1]![1], points[i]![0], points[i]![1])
     dists.push(dist)
-    const dElev = points[i][2] - points[i - 1][2]
+    const dElev = points[i]![2] - points[i - 1]![2]
     if (dElev > 0) gain += dElev
     else loss += Math.abs(dElev)
   }
@@ -68,8 +68,8 @@ export function computeTrailStats(points: [number, number, number][]): TrailStat
   const H = 44
 
   const pts = points.map((_, i) => {
-    const x = ((dists[i] / dist) * W).toFixed(1)
-    const y = (H - ((elevs[i] - minE) / range) * (H - 6) - 3).toFixed(1)
+    const x = ((dists[i]! / dist) * W).toFixed(1)
+    const y = (H - ((elevs[i]! - minE) / range) * (H - 6) - 3).toFixed(1)
     return `${x},${y}`
   })
   const profilePath = `M0,${H} L${pts.join(' L')} L${W},${H} Z`

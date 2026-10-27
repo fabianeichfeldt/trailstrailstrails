@@ -140,7 +140,7 @@ export async function upsertParkDetails(table: ParkDetailsTable, row: ParkDetail
     }),
   });
   const rows = await json<ParkDetailsRow[]>(res);
-  return rows[0];
+  return rows[0]!;
 }
 
 export async function setSpotWebsite(spotId: string, url: string, jwt: string): Promise<void> {
@@ -220,7 +220,7 @@ export async function upsertTrail(row: Partial<GpxTrailRow> & { spot_id: string 
     body:    JSON.stringify(row),
   });
   const data = await json<GpxTrailRow | GpxTrailRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 export async function upsertTour(row: Partial<GpxTourRow> & { spot_id: string }, jwt: string): Promise<GpxTourRow> {
@@ -232,7 +232,7 @@ export async function upsertTour(row: Partial<GpxTourRow> & { spot_id: string },
     body:    JSON.stringify(row),
   });
   const data = await json<GpxTourRow | GpxTourRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 async function deleteGpxFile(gpx_url: string, jwt: string): Promise<void> {
@@ -317,7 +317,7 @@ export async function upsertSpotDetails(row: SpotDetailsRow, jwt: string): Promi
     body: JSON.stringify(row),
   });
   const data = await json<SpotDetailsRow | SpotDetailsRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 // ─── Embed token management ───────────────────────────────────────────────────
@@ -362,7 +362,7 @@ export async function createEmbedToken(
     body: JSON.stringify(row),
   });
   const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 export async function updateEmbedToken(
@@ -376,7 +376,7 @@ export async function updateEmbedToken(
     body: JSON.stringify(patch),
   });
   const data = await json<EmbedTokenRow | EmbedTokenRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 export async function deleteEmbedToken(id: string, jwt: string): Promise<void> {
@@ -446,7 +446,7 @@ export async function upsertParking(row: Partial<ParkingRow> & { spot_id: string
     body:    JSON.stringify(row),
   });
   const data = await json<ParkingRow | ParkingRow[]>(res);
-  return Array.isArray(data) ? data[0] : data;
+  return Array.isArray(data) ? data[0]! : data;
 }
 
 export async function deleteParking(id: string, jwt: string): Promise<void> {

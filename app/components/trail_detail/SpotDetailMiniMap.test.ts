@@ -14,7 +14,7 @@ const handle = {
   destroy: vi.fn(),
 }
 const createMiniMap = vi.fn(async () => handle)
-vi.mock('~/map/miniMap', () => ({ createMiniMap: (...a: unknown[]) => createMiniMap(...a) }))
+vi.mock('~/map/miniMap', () => ({ createMiniMap: (...a: unknown[]) => (createMiniMap as (...args: unknown[]) => unknown)(...a) }))
 
 vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
 
@@ -82,7 +82,7 @@ describe('SpotDetailMiniMap', () => {
     await flushPromises()
 
     expect(createMiniMap).toHaveBeenCalledTimes(1)
-    const [, input, options] = createMiniMap.mock.calls[0] as [unknown, any, any]
+    const [, input, options] = createMiniMap.mock.calls[0] as unknown as [unknown, any, any]
     expect(options.interactive).toBe(true)
     expect(input.center).toEqual([47.71, 11.76])
     expect(input.zoom).toBe(13)
@@ -97,7 +97,7 @@ describe('SpotDetailMiniMap', () => {
   it('includes one parking marker per lot', async () => {
     mountMap({ parking: [{ id: 'p1', name: 'Talstation', lat: 47.709, lng: 11.758 }] })
     await flushPromises()
-    const [, input] = createMiniMap.mock.calls[0] as [unknown, any]
+    const [, input] = createMiniMap.mock.calls[0] as unknown as [unknown, any]
     expect(input.markers).toHaveLength(2)
     expect(input.markers[1]).toMatchObject({ kind: 'parking', lat: 47.709, lng: 11.758, name: 'Talstation' })
   })
@@ -106,7 +106,7 @@ describe('SpotDetailMiniMap', () => {
     mountMap({ data: mtbData() })
     await flushPromises()
     const store = useSpotPanelStore()
-    const [, , options] = createMiniMap.mock.calls[0] as [unknown, unknown, any]
+    const [, , options] = createMiniMap.mock.calls[0] as unknown as [unknown, unknown, any]
 
     options.onPolylineActivate({ id: 'gt1', kind: 'trail' })
     expect(store.selectedItemId).toBe('gt1')
@@ -122,7 +122,7 @@ describe('SpotDetailMiniMap', () => {
     await flushPromises()
 
     expect(handle.setData).toHaveBeenCalledTimes(1)
-    expect(handle.setData.mock.calls[0][0].polylines).toHaveLength(3)
+    expect(handle.setData.mock.calls[0]![0].polylines).toHaveLength(3)
   })
 
   it('flies to a focus target, and back to the spot at zoom 13 when focus clears', async () => {

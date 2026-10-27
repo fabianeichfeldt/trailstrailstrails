@@ -1117,7 +1117,7 @@ function trailBadge(t: GpxTrailRow) {
 // ── Computed ──────────────────────────────────────────────────────────────────
 const currentStatusMeta = computed(() => {
   const s = caps.value.details === 'park' ? parkStatusKey(parkDetails.value) : (spotDetails.value?.status ?? 'open')
-  return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]
+  return STATUS_OPTIONS.find(o => o.value === s) ?? STATUS_OPTIONS[0]!
 })
 
 const detailsBannerSub = computed(() => {
@@ -1366,11 +1366,11 @@ async function dropTrail(dropIdx: number) {
   trailDragIdx.value = null
   trailDragOverIdx.value = null
   if (fromIdx === null || fromIdx === dropIdx) return
-  const item = trails.value.splice(fromIdx, 1)[0]
+  const item = trails.value.splice(fromIdx, 1)[0]!
   trails.value.splice(dropIdx, 0, item)
   const lo = Math.min(fromIdx, dropIdx)
   const hi = Math.max(fromIdx, dropIdx)
-  for (let i = lo; i <= hi; i++) trails.value[i].sort_order = i
+  for (let i = lo; i <= hi; i++) trails.value[i]!.sort_order = i
   try {
     const jwt = await authStore.getToken()
     await Promise.all(trails.value.slice(lo, hi + 1).map(t => updateSortOrder('spot_gpx_trails', t.id, t.sort_order, jwt)))
@@ -1384,11 +1384,11 @@ async function dropTour(dropIdx: number) {
   tourDragIdx.value = null
   tourDragOverIdx.value = null
   if (fromIdx === null || fromIdx === dropIdx) return
-  const item = tours.value.splice(fromIdx, 1)[0]
+  const item = tours.value.splice(fromIdx, 1)[0]!
   tours.value.splice(dropIdx, 0, item)
   const lo = Math.min(fromIdx, dropIdx)
   const hi = Math.max(fromIdx, dropIdx)
-  for (let i = lo; i <= hi; i++) tours.value[i].sort_order = i
+  for (let i = lo; i <= hi; i++) tours.value[i]!.sort_order = i
   try {
     const jwt = await authStore.getToken()
     await Promise.all(tours.value.slice(lo, hi + 1).map(t => updateSortOrder('spot_gpx_tours', t.id, t.sort_order, jwt)))
@@ -1581,7 +1581,7 @@ function mmddToDdmm(mmdd?: string): string {
 function ddmmToMmdd(ddmm: string): string | undefined {
   const m = ddmm.match(/^(\d{1,2})\.(\d{1,2})$/)
   if (!m) return undefined
-  return `${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`
+  return `${m[2]!.padStart(2, '0')}-${m[1]!.padStart(2, '0')}`
 }
 </script>
 

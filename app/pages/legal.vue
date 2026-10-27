@@ -103,7 +103,7 @@ useHead({
   link: [{ rel: 'canonical', href: canonicalUrl('/legal') }],
   script: [{
     type: 'application/ld+json',
-    children: JSON.stringify({
+    innerHTML: JSON.stringify({
       '@context': 'https://schema.org',
       '@type': 'FAQPage',
       mainEntity: [

@@ -96,7 +96,7 @@ describe('MapTeaser — searching from the landing page', () => {
 
     await search(wrapper, 'Flow')
 
-    const row = wrapper.findAll('.search-result-item')[0]
+    const row = wrapper.findAll('.search-result-item')[0]!
     expect(row.text()).toContain('Flowtrail Tegernsee')
 
     await row.trigger('click')
@@ -108,7 +108,7 @@ describe('MapTeaser — searching from the landing page', () => {
     wrapper = mountTeaser()
 
     await search(wrapper, 'Pumptrack')
-    await wrapper.findAll('.search-result-item')[0].trigger('click')
+    await wrapper.findAll('.search-result-item')[0]!.trigger('click')
 
     expect(push).toHaveBeenCalledWith('/map?trail=d1')
   })
@@ -120,7 +120,7 @@ describe('MapTeaser — searching from the landing page', () => {
     await search(wrapper, 'Tegernsee')
 
     const rows = wrapper.findAll('.search-result-item')
-    const placeRow = rows[rows.length - 1]
+    const placeRow = rows[rows.length - 1]!
     expect(placeRow.text()).toContain('Tegernsee')
 
     await placeRow.trigger('click')
@@ -134,7 +134,7 @@ describe('MapTeaser — searching from the landing page', () => {
 
     await search(wrapper, 'Reutte')
     const rows = wrapper.findAll('.search-result-item')
-    await rows[rows.length - 1].trigger('click')
+    await rows[rows.length - 1]!.trigger('click')
 
     expect(push).toHaveBeenCalledWith('/map?fly=47.49,10.72&zoom=12')
   })

@@ -43,7 +43,7 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   const handleCenterY = canvasHeight - padBottom / 2;
 
   const xAtIndex = (idx: number) =>
-    padLeft + (distances[Math.min(idx, distances.length - 1)] / (totalDistance || 1)) * chartWidth;
+    padLeft + (distances[Math.min(idx, distances.length - 1)]! / (totalDistance || 1)) * chartWidth;
   const yForAlt = (alt: number) =>
     padTop + chartHeight - ((alt - altMin) / (altRange || 1)) * chartHeight;
 
@@ -62,8 +62,8 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   sourceGradient.addColorStop(0, 'rgba(180,190,200,0.28)');
   sourceGradient.addColorStop(1, 'rgba(180,190,200,0.04)');
   ctx.beginPath();
-  ctx.moveTo(xAtIndex(0), yForAlt(smoothedAlts[0]));
-  for (let i = 1; i < points.length; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+  ctx.moveTo(xAtIndex(0), yForAlt(smoothedAlts[0]!));
+  for (let i = 1; i < points.length; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
   ctx.lineTo(xAtIndex(points.length - 1), chartBottom);
   ctx.lineTo(padLeft, chartBottom);
   ctx.closePath();
@@ -71,8 +71,8 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(xAtIndex(0), yForAlt(smoothedAlts[0]));
-  for (let i = 1; i < points.length; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+  ctx.moveTo(xAtIndex(0), yForAlt(smoothedAlts[0]!));
+  for (let i = 1; i < points.length; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
   ctx.strokeStyle = 'rgba(170,180,195,0.5)';
   ctx.lineWidth   = 1.5;
   ctx.lineJoin    = 'round';
@@ -85,16 +85,16 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
     segGradient.addColorStop(0, `rgba(${cr},${cg},${cb},0.28)`);
     segGradient.addColorStop(1, `rgba(${cr},${cg},${cb},0.05)`);
     ctx.beginPath();
-    ctx.moveTo(xAtIndex(seg.startIdx), yForAlt(smoothedAlts[seg.startIdx]));
-    for (let i = seg.startIdx + 1; i <= seg.endIdx; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+    ctx.moveTo(xAtIndex(seg.startIdx), yForAlt(smoothedAlts[seg.startIdx]!));
+    for (let i = seg.startIdx + 1; i <= seg.endIdx; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
     ctx.lineTo(xAtIndex(seg.endIdx), chartBottom);
     ctx.lineTo(xAtIndex(seg.startIdx), chartBottom);
     ctx.closePath();
     ctx.fillStyle = segGradient;
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(xAtIndex(seg.startIdx), yForAlt(smoothedAlts[seg.startIdx]));
-    for (let i = seg.startIdx + 1; i <= seg.endIdx; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+    ctx.moveTo(xAtIndex(seg.startIdx), yForAlt(smoothedAlts[seg.startIdx]!));
+    for (let i = seg.startIdx + 1; i <= seg.endIdx; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
     ctx.strokeStyle = seg.color;
     ctx.lineWidth   = 2;
     ctx.lineJoin    = 'round';
@@ -106,8 +106,8 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   selectionGradient.addColorStop(0, `rgba(${selR},${selG},${selB},0.42)`);
   selectionGradient.addColorStop(1, `rgba(${selR},${selG},${selB},0.06)`);
   ctx.beginPath();
-  ctx.moveTo(startX, yForAlt(smoothedAlts[startIndex]));
-  for (let i = startIndex + 1; i <= endIndex; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+  ctx.moveTo(startX, yForAlt(smoothedAlts[startIndex]!));
+  for (let i = startIndex + 1; i <= endIndex; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
   ctx.lineTo(endX, chartBottom);
   ctx.lineTo(startX, chartBottom);
   ctx.closePath();
@@ -115,8 +115,8 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   ctx.fill();
 
   ctx.beginPath();
-  ctx.moveTo(startX, yForAlt(smoothedAlts[startIndex]));
-  for (let i = startIndex + 1; i <= endIndex; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]));
+  ctx.moveTo(startX, yForAlt(smoothedAlts[startIndex]!));
+  for (let i = startIndex + 1; i <= endIndex; i++) ctx.lineTo(xAtIndex(i), yForAlt(smoothedAlts[i]!));
   ctx.strokeStyle = selectionColor;
   ctx.lineWidth   = 2.5;
   ctx.lineJoin    = 'round';
@@ -179,7 +179,7 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   }
 
   // ── Distance label between handles ───────────────────────────────────────────
-  const selectionKm = Math.round((distances[endIndex] - distances[startIndex]) / 100) / 10;
+  const selectionKm = Math.round((distances[endIndex]! - distances[startIndex]!) / 100) / 10;
   ctx.fillStyle = `rgba(${selR},${selG},${selB},1)`;
   ctx.font      = 'bold 11px Arial';
   ctx.textAlign = 'center';
@@ -195,12 +195,12 @@ export function computeSmoothedAlts(
   const SMOOTH_RADIUS_M = 75;
   let altMin = Infinity, altMax = -Infinity;
   const smoothedAlts = points.map((_, i) => {
-    const d = distances[i];
+    const d = distances[i]!;
     let lo = i, hi = i;
-    while (lo > 0 && d - distances[lo - 1] <= SMOOTH_RADIUS_M) lo--;
-    while (hi < points.length - 1 && distances[hi + 1] - d <= SMOOTH_RADIUS_M) hi++;
+    while (lo > 0 && d - distances[lo - 1]! <= SMOOTH_RADIUS_M) lo--;
+    while (hi < points.length - 1 && distances[hi + 1]! - d <= SMOOTH_RADIUS_M) hi++;
     let sum = 0;
-    for (let j = lo; j <= hi; j++) sum += points[j].alt;
+    for (let j = lo; j <= hi; j++) sum += points[j]!.alt;
     const v = sum / (hi - lo + 1);
     if (v < altMin) altMin = v;
     if (v > altMax) altMax = v;
@@ -235,7 +235,7 @@ export function indexAtCanvasX(
   let lo = 0, hi = distances.length - 1;
   while (lo < hi) {
     const mid = (lo + hi + 1) >> 1;
-    if (distances[mid] <= targetDist) lo = mid; else hi = mid - 1;
+    if (distances[mid]! <= targetDist) lo = mid; else hi = mid - 1;
   }
   return lo;
 }

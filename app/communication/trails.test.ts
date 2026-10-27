@@ -51,7 +51,7 @@ describe('fetchMultipleSpotParking', () => {
     const fetch = vi.fn().mockReturnValue(ok([]))
     vi.stubGlobal('fetch', fetch)
     await fetchMultipleSpotParking(['s1', 's2'])
-    const url: string = fetch.mock.calls[0][0]
+    const url: string = fetch.mock.calls[0]![0]
     expect(url).toContain('spot_id=in.(s1,s2)')
   })
 
@@ -67,7 +67,7 @@ describe('fetchMultipleSpotGpx', () => {
   function routeFetch(tables: { spot_gpx_trails?: unknown[]; spot_gpx_tours?: unknown[] }) {
     return vi.fn((url: string) => {
       const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
-      return ok((tables as Record<string, unknown[]>)[table] ?? [])
+      return ok((tables as Record<string, unknown[]>)[table!] ?? [])
     })
   }
 
@@ -134,7 +134,7 @@ describe('getTrailBySlug', () => {
   }) {
     return vi.fn((url: string) => {
       const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
-      return ok((tables as Record<string, unknown[]>)[table] ?? [])
+      return ok((tables as Record<string, unknown[]>)[table!] ?? [])
     })
   }
 
@@ -172,7 +172,7 @@ describe('getTrailBySlug', () => {
     const fetch = routeFetch({})
     vi.stubGlobal('fetch', fetch)
     await getTrailBySlug('a b/c')
-    expect(String(fetch.mock.calls[0][0])).toContain('slug=eq.a%20b%2Fc')
+    expect(String(fetch.mock.calls[0]![0])).toContain('slug=eq.a%20b%2Fc')
   })
 
   it('fetches only the baked trail_details columns, not select=*', async () => {
@@ -253,7 +253,7 @@ describe('spot details source per type', () => {
   function routeFetch(tables: Record<string, unknown[] | 'fail'>) {
     return vi.fn((url: string) => {
       const table = String(url).split('/rest/v1/')[1]?.split('?')[0]
-      const rows = tables[table]
+      const rows = tables[table!]
       if (rows === 'fail') return err(500)
       return ok(rows ?? [])
     })
@@ -341,7 +341,7 @@ describe('toElevationProfile', () => {
       [48.001, 11.501, 510],
     ]
     const profile = toElevationProfile(points)
-    expect(profile[0].dist).toBe(0)
+    expect(profile[0]!.dist).toBe(0)
   })
 
   it('distance increases for subsequent points', () => {
@@ -351,8 +351,8 @@ describe('toElevationProfile', () => {
       [48.02, 11.52, 540],
     ]
     const profile = toElevationProfile(points)
-    expect(profile[1].dist).toBeGreaterThan(0)
-    expect(profile[2].dist).toBeGreaterThan(profile[1].dist)
+    expect(profile[1]!.dist).toBeGreaterThan(0)
+    expect(profile[2]!.dist).toBeGreaterThan(profile[1]!.dist)
   })
 
   it('preserves altitude values', () => {
@@ -361,8 +361,8 @@ describe('toElevationProfile', () => {
       [48.001, 11.501, 600],
     ]
     const profile = toElevationProfile(points)
-    expect(profile[0].alt).toBe(500)
-    expect(profile[1].alt).toBe(600)
+    expect(profile[0]!.alt).toBe(500)
+    expect(profile[1]!.alt).toBe(600)
   })
 
   it('does not collapse closely-spaced points onto the same distance bucket', () => {

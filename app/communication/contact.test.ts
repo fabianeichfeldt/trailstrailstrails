@@ -15,7 +15,7 @@ describe('sendContactMessage', () => {
     const fetch = vi.fn().mockReturnValue(respond(200, { ok: true }))
     vi.stubGlobal('fetch', fetch)
     await sendContactMessage(MSG)
-    const [url, init] = fetch.mock.calls[0]
+    const [url, init] = fetch.mock.calls[0]!
     expect(url).toBe(`${BASE_URL}/functions/v1/contact`)
     expect(init.method).toBe('POST')
     expect(init.headers.apikey).toBeTruthy()

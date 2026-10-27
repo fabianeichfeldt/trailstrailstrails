@@ -39,7 +39,7 @@ describe('getComments', () => {
     const fetch = vi.fn().mockReturnValue(ok([]))
     vi.stubGlobal('fetch', fetch)
     await getComments('s1')
-    const url: string = fetch.mock.calls[0][0]
+    const url: string = fetch.mock.calls[0]![0]
     expect(url).toContain('/spot_comments?')
     expect(url).toContain('spot_id=eq.s1')
     expect(url).toContain('order=created_at.desc')
@@ -68,7 +68,7 @@ describe('getOlderComments', () => {
     const fetch = vi.fn().mockReturnValue(ok([]))
     vi.stubGlobal('fetch', fetch)
     await getOlderComments('s1', '2026-08-01T00:00:00Z')
-    const url: string = fetch.mock.calls[0][0]
+    const url: string = fetch.mock.calls[0]![0]
     expect(url).toContain('created_at=lt.')
     expect(url).toContain(encodeURIComponent('2026-08-01T00:00:00Z'))
   })
@@ -82,7 +82,7 @@ describe('postComment', () => {
     vi.stubGlobal('fetch', fetch)
     await postComment('s1', 'nice trail', fakeAuth())
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/spot_comments')
     expect(opts.method).toBe('POST')
     expect(opts.headers.Authorization).toBe('Bearer token-123')
@@ -111,7 +111,7 @@ describe('deleteComment', () => {
     vi.stubGlobal('fetch', fetch)
     await deleteComment(5, fakeAuth())
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/spot_comments?id=eq.5')
     expect(opts.method).toBe('DELETE')
     expect(opts.headers.Authorization).toBe('Bearer token-123')

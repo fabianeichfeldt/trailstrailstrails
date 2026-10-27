@@ -19,7 +19,7 @@ describe('searchPlaces', () => {
 
     expect(result).toEqual([MUNICH])
     expect(fetch).toHaveBeenCalledTimes(1)
-    const url = fetch.mock.calls[0][0] as string
+    const url = fetch.mock.calls[0]![0] as string
     expect(url).toContain('https://nominatim.openstreetmap.org/search')
     expect(url).toContain('countrycodes=de,at,ch')
     expect(url).toContain(`q=${encodeURIComponent('München')}`)
@@ -35,7 +35,7 @@ describe('searchPlaces', () => {
 
     expect(result).toEqual([MUNICH_US])
     expect(fetch).toHaveBeenCalledTimes(2)
-    expect(fetch.mock.calls[1][0] as string).not.toContain('countrycodes')
+    expect(fetch.mock.calls[1]![0] as string).not.toContain('countrycodes')
   })
 
   it('returns an empty array when the geocoder rejects', async () => {

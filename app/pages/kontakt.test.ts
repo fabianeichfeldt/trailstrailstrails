@@ -39,7 +39,7 @@ describe('/kontakt', () => {
     await w.get('form').trigger('submit')
     await flushPromises()
     expect(fetchMock).toHaveBeenCalledTimes(1)
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toMatchObject({
+    expect(JSON.parse(fetchMock.mock.calls[0]![1].body)).toMatchObject({
       name: 'Rita', email: 'rita@example.com', message: 'Hallo, eine Frage zum Trail.', website: '',
     })
     expect(w.find('form').exists()).toBe(false)

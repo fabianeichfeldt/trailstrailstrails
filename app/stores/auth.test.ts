@@ -146,7 +146,7 @@ describe('useAuthStore.deleteTrailPhoto', () => {
 
   it('throws "Not logged in" when there is no user, without calling deletePhoto', async () => {
     const store = useAuthStore()
-    store.user.value = null
+    store.user!.value = null
 
     await expect(
       store.deleteTrailPhoto({ id: 1, url: 'https://x/trail-photos/t1/a.webp' })
@@ -156,7 +156,7 @@ describe('useAuthStore.deleteTrailPhoto', () => {
 
   it('delegates to deletePhoto(photo, client) when logged in', async () => {
     const store = useAuthStore()
-    store.user.value = { id: 'u1' } as any
+    store.user!.value = { id: 'u1' } as any
 
     const photo = { id: 1, url: 'https://x/trail-photos/t1/a.webp' }
     await store.deleteTrailPhoto(photo)

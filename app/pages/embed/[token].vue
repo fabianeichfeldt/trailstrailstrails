@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import type { EmbedTrail } from '~/server/routes/_embed/[token].get'
+import type { EmbedTrail } from '@@/server/routes/_embed/[token].get'
 import { createMiniMap, type MiniMapHandle, type MiniMapInput, type MiniMapMarker, type MiniMapPolyline } from '~/map/miniMap'
 import { shouldShowGpx } from '~/map/gpxZoomThreshold'
 import { parseEmbedQuery, getRequestedSearch } from '~/utils/embedQuery'

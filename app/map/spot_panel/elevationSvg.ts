@@ -22,7 +22,7 @@ export function elevationSVG(profile: ElevationPoint[], item: AnyItem, segments?
   const alts   = profile.map(p => p.alt);
   const minA   = Math.min(...alts), maxA = Math.max(...alts);
   const rangeA = maxA - minA || 1;
-  const maxD   = profile[profile.length - 1].dist || 1;
+  const maxD   = profile[profile.length - 1]!.dist || 1;
 
   const px = (d: number) => PL + (d / maxD) * cW;
   const py = (a: number) => PT + cH - ((a - minA) / rangeA) * cH;
@@ -112,7 +112,7 @@ export function bindElevationHover(
   const closestIdx = (dist: number): number => {
     let best = 0, bestDiff = Infinity;
     for (let i = 0; i < profile.length; i++) {
-      const d = Math.abs(profile[i].dist - dist);
+      const d = Math.abs(profile[i]!.dist - dist);
       if (d < bestDiff) { bestDiff = d; best = i; }
     }
     return best;
@@ -127,6 +127,7 @@ export function bindElevationHover(
     const idx    = closestIdx(dist);
     const pt     = profile[idx];
     const gpx    = item.gpxPoints[idx];
+    if (!pt || !gpx) return;
 
     const x = PL + (pt.dist / maxDist) * cW;
     const y = PT + cH - ((pt.alt - minA) / rangeA) * cH;
@@ -153,6 +154,6 @@ export function bindElevationHover(
 
   svgEl.addEventListener('mousemove', e => onMove(e.clientX));
   svgEl.addEventListener('mouseleave', handleLeave);
-  svgEl.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
+  svgEl.addEventListener('touchmove', e => { e.preventDefault(); onMove(e.touches[0]!.clientX); }, { passive: false });
   svgEl.addEventListener('touchend', handleLeave);
 }
