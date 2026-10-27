@@ -1,5 +1,5 @@
 // @vitest-environment node
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, vi } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { execFileSync } from 'node:child_process'
@@ -24,6 +24,63 @@ function collectTs(dir: string, out: string[] = []): string[] {
 }
 
 const HARDCODED_URL_RE = /ixafegmxkadbzhxmepsd\.supabase\.co/
+
+// ─────────────────────────────────────────────────────────────────────────────
+// E2E never talks to production
+// ─────────────────────────────────────────────────────────────────────────────
+// The browser-side safety net (tests/fixtures.ts) can't see SSR fetches made by
+// the Nuxt dev server itself; those used to reach the live project via the
+// committed .env.local, filling its logs with fixture slugs like `t1`.
+describe('E2E dev server never points at production', () => {
+  const PROD_URL = `https://${'ixafegmxkadbzhxmepsd'}.supabase.co`
+
+  async function loadConfig(env: Record<string, string>) {
+    const saved = { ...process.env }
+    for (const k of ['TEST_SUPABASE_URL', 'TEST_SUPABASE_KEY', 'E2E_PORT', 'NUXT_PUBLIC_SUPABASE_URL', 'NUXT_PUBLIC_SUPABASE_KEY', 'VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY']) delete process.env[k]
+    Object.assign(process.env, env)
+    try {
+      vi.resetModules() // the config reads process.env at import time
+      const { default: config } = await import('../playwright.config')
+      return config.webServer.env as Record<string, string>
+    } finally {
+      process.env = saved
+    }
+  }
+
+  test('overrides every Supabase URL/key the dev server reads, even when the shell has production values', async () => {
+    const env = await loadConfig({ NUXT_PUBLIC_SUPABASE_URL: PROD_URL, VITE_SUPABASE_URL: PROD_URL })
+    for (const k of ['NUXT_PUBLIC_SUPABASE_URL', 'VITE_SUPABASE_URL', 'NUXT_PUBLIC_SUPABASE_KEY', 'VITE_SUPABASE_ANON_KEY']) {
+      expect(env[k], k).toBeTruthy()
+    }
+    expect(env.NUXT_PUBLIC_SUPABASE_URL).not.toMatch(HARDCODED_URL_RE)
+    expect(env.VITE_SUPABASE_URL).not.toMatch(HARDCODED_URL_RE)
+  })
+
+  test('uses an explicit TEST_SUPABASE_URL when one is given (local Supabase)', async () => {
+    const env = await loadConfig({ TEST_SUPABASE_URL: 'http://127.0.0.1:54321', TEST_SUPABASE_KEY: 'local-key' })
+    expect(env.NUXT_PUBLIC_SUPABASE_URL).toBe('http://127.0.0.1:54321')
+    expect(env.VITE_SUPABASE_URL).toBe('http://127.0.0.1:54321')
+    expect(env.VITE_SUPABASE_ANON_KEY).toBe('local-key')
+  })
+
+  test('does not default to :3000, where a normal (production-backed) dev server gets reused', async () => {
+    const env = await loadConfig({})
+    expect(env.PORT).not.toBe('3000')
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CI: prerender only for deploys
+// ─────────────────────────────────────────────────────────────────────────────
+// Each `nuxt generate` makes ~2,700 Supabase requests; running it on every
+// branch push was most of the project's log volume.
+describe('CI prerenders only for deploys', () => {
+  test('the build (nuxt generate) job is limited to main and manual runs', () => {
+    const wf = read('.github/workflows/deploy.yml')
+    const buildJob = wf.split(/\n  build:\n/)[1]!.split(/\n  \w+:\n/)[0]!
+    expect(buildJob).toMatch(/\n    if: github\.ref == 'refs\/heads\/main' \|\| github\.event_name == 'workflow_dispatch'\n/)
+  })
+})
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Hardcoded URL invariant

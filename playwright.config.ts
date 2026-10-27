@@ -13,16 +13,19 @@ if (existsSync('.env.test')) {
   })
 }
 
-const supabaseUrl = process.env.TEST_SUPABASE_URL || process.env.NUXT_PUBLIC_SUPABASE_URL || ''
-const supabaseKey = process.env.TEST_SUPABASE_KEY || process.env.NUXT_PUBLIC_SUPABASE_KEY || ''
+// Never inherit the committed .env.local (production): the dev server's own SSR
+// fetches bypass the browser-side mocks. Same placeholder host as CI.
+const supabaseUrl = process.env.TEST_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseKey = process.env.TEST_SUPABASE_KEY || 'placeholder-anon-key'
 
 // Port is overridable because `reuseExistingServer` + a hardcoded 3000 is a
 // trap in this repo: work happens in git worktrees (see CLAUDE.md), and a
 // `nuxt dev` left running in the primary checkout will happily serve every
 // worktree's E2E run. The suite then passes or fails against code from a
 // completely different branch, with nothing in the output saying so.
+// Not 3000 by default, so a normal (production-backed) dev server is never reused.
 // Set E2E_PORT to give a worktree its own server.
-const PORT = process.env.E2E_PORT || '3000'
+const PORT = process.env.E2E_PORT || '3100'
 const BASE_URL = `http://localhost:${PORT}`
 
 export default defineConfig({
@@ -47,13 +50,15 @@ export default defineConfig({
     // First cold `nuxt dev` boot on CI (install already done) can crawl past
     // 30s before it serves; give it room.
     timeout: 120000,
-    // Forward Supabase config to the dev server process so it connects to the
-    // right instance (local or production) without mutating .env.local.
+    // Process env wins over .env.local for both Nuxt (NUXT_PUBLIC_*) and Vite
+    // (VITE_*, read by communication/http.ts), so neither falls back to production.
     env: {
       PORT,
       E2E: '1',
-      ...(supabaseUrl && { NUXT_PUBLIC_SUPABASE_URL: supabaseUrl }),
-      ...(supabaseKey && { NUXT_PUBLIC_SUPABASE_KEY: supabaseKey }),
+      NUXT_PUBLIC_SUPABASE_URL: supabaseUrl,
+      NUXT_PUBLIC_SUPABASE_KEY: supabaseKey,
+      VITE_SUPABASE_URL: supabaseUrl,
+      VITE_SUPABASE_ANON_KEY: supabaseKey,
     },
   },
 })

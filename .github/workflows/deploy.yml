@@ -1,8 +1,8 @@
 name: Build and Deploy
 
 on:
-  # Run the test + build jobs on every branch push. Only pushes to `main`
-  # continue on to the deploy job automatically (see the `deploy` job's `if`).
+  # Run the test job on every branch push. The build (prerender) and deploy
+  # jobs run only for `main` and manual runs (see their `if`s).
   # `branches: ['**']` = every branch, no tags — a lone `tags-ignore` here
   # would silently stop the workflow running on branch pushes at all.
   push:
@@ -74,6 +74,9 @@ jobs:
 
   build:
     needs: test
+    # `nuxt generate` makes ~2,700 Supabase requests per run; branch pushes only
+    # need the tests. To check a branch's static build, run `npm run verify:static-build` locally.
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     env:
       NUXT_TELEMETRY_DISABLED: 1
