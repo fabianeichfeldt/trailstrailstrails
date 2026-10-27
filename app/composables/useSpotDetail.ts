@@ -1,4 +1,5 @@
 import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
+import { SPOT_SNAPSHOT_PATH, type ResolvedSpot } from '~/communication/spotSnapshot'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
 import { TrailDetails } from '~/types/TrailDetails'
 import type { Trail } from '~/types/Trail'
@@ -15,6 +16,21 @@ import { useAuthService } from './useAuthService'
  * after mount — never during SSR/prerender, which would freeze them into the
  * static HTML.
  */
+let snapshot: Record<string, ResolvedSpot> | null | undefined
+
+// Prerender only: the build's bulk spot snapshot (nuxt.config.ts) instead of ~4 Supabase requests per page.
+async function prerenderedSpot(slug: string): Promise<ResolvedSpot | undefined> {
+  if (snapshot === undefined) {
+    try {
+      const { readFileSync } = await import('node:fs')
+      snapshot = JSON.parse(readFileSync(SPOT_SNAPSHOT_PATH, 'utf8'))
+    } catch {
+      snapshot = null
+    }
+  }
+  return snapshot?.[slug]
+}
+
 export async function useSpotDetail(slug: string | null) {
   // Region pages: no fetch and no payload key shared by every region page.
   if (!slug) {
@@ -38,6 +54,10 @@ export async function useSpotDetail(slug: string | null) {
   const key = `trail-${slug}`
   const asyncData = useAsyncData(key, async () => {
     try {
+      if (import.meta.prerender) {
+        const baked = await prerenderedSpot(slug)
+        if (baked) return baked
+      }
       const bySlug = await getTrailBySlug(slug)
       if (bySlug) return bySlug
 

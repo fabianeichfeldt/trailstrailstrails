@@ -2,6 +2,7 @@ import { REST, FUNCTIONS, anonHeaders, userHeaders } from './http'
 import { Trail } from '../types/Trail'
 import { SPOT_TYPES, SPOT_TYPE_LIST, visibleFilter, type SpotType, type SpotTypeDef } from '../types/SpotTypes'
 import { TrailDetails } from '../types/TrailDetails'
+import { mergeSpot, detailsSelect, PHOTO_COLUMNS, type ResolvedSpot, type SpotPhoto } from './spotSnapshot'
 import type { IAuthService } from '../auth/auth_service'
 import { SpotMtbData, MtbTrail, MtbTour, ElevationPoint } from '../types/MtbTypes'
 
@@ -14,25 +15,23 @@ const detailsCache = new Map<string, { data: TrailDetails; ts: number }>()
 
 // Fetches the type-specific details row + photos for a resolved spot.
 // A failed fetch degrades to empty details/photos.
-async function fetchSpotExtras(id: string, type: SpotType): Promise<{ detail: Record<string, any> | undefined; photos: unknown[] }> {
-  const { detailsTable: table, detailsIdColumn: idColumn, detailsColumns: columns } = SPOT_TYPES[type]
-  const select = columns.split(',').includes(idColumn) ? columns : `${idColumn},${columns}`
+async function fetchSpotExtras(id: string, type: SpotType): Promise<{ detail: Record<string, any> | undefined; photos: SpotPhoto[] }> {
+  const def = SPOT_TYPES[type]
   const [detailsRes, photosRes] = await Promise.all([
-    fetch(`${REST}/${table}?${idColumn}=eq.${id}&select=${select}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
-    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=id,url,copyright&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/${def.detailsTable}?${def.detailsIdColumn}=eq.${id}&select=${detailsSelect(def)}`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
+    fetch(`${REST}/trail_photos?trail_id=eq.${id}&select=${PHOTO_COLUMNS}&order=created_at.asc`, { method: 'GET', cache: 'no-store', headers: anonHeaders() }),
   ])
   const [details, photos] = await Promise.all([
     detailsRes.ok ? detailsRes.json() : [],
     photosRes.ok ? photosRes.json() : [],
   ])
   return {
-    detail: (details as Array<Record<string, any>>).find(d => d[idColumn] === id),
+    detail: (details as Array<Record<string, any>>).find(d => d[def.detailsIdColumn] === id),
     photos: Array.isArray(photos) ? photos : [],
   }
 }
 
-// A resolved spot page payload: the base row + its details row + photos.
-export type ResolvedSpot = Trail & { photos: Array<{ id: string; url: string; copyright?: string | null }> } & Record<string, any>
+export type { ResolvedSpot }
 
 // Resolves one spot by id or slug straight from Supabase REST (replaces the
 // former server/api/trail/[id].get.ts, which 404'd for anything created since
@@ -65,7 +64,7 @@ export async function resolveSpot(field: 'id' | 'slug', value: string): Promise<
   const { base, type } = hit
 
   const { detail, photos } = await fetchSpotExtras(base.id, type)
-  return { ...base, ...(detail ?? {}), type, photos } as ResolvedSpot
+  return mergeSpot(base, detail, type, photos)
 }
 
 // null = unknown slug (caller falls back to probing); 'not-a-spot' = e.g. a region slug.
@@ -92,7 +91,7 @@ async function resolveInTable(def: SpotTypeDef, id: string): Promise<ResolvedSpo
   const base = rows.find(r => String(r.id) === id)
   if (!base) return null
   const { detail, photos } = await fetchSpotExtras(base.id, def.type)
-  return { ...base, ...(detail ?? {}), type: def.type, photos } as ResolvedSpot
+  return mergeSpot(base, detail, def.type, photos)
 }
 
 export const getTrailById = (id: string) => resolveSpot('id', id)
