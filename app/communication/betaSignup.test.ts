@@ -44,9 +44,9 @@ describe('submitBetaSignup', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitBetaSignup('Jamie', 'jamie@example.com')
-    expect(fetch.mock.calls[0][0]).toBe(`${REST_URL}/beta_signups`)
-    expect(fetch.mock.calls[0][1].method).toBe('POST')
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
+    expect(fetch.mock.calls[0]![0]).toBe(`${REST_URL}/beta_signups`)
+    expect(fetch.mock.calls[0]![1].method).toBe('POST')
+    const body = JSON.parse(fetch.mock.calls[0]![1].body)
     expect(body).toEqual({ name: 'Jamie', email: 'jamie@example.com' })
   })
 
@@ -54,7 +54,7 @@ describe('submitBetaSignup', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitBetaSignup('Jamie', 'jamie@example.com')
-    expect(fetch.mock.calls[0][1].headers['Authorization']).toMatch(/^Bearer ey/)
+    expect(fetch.mock.calls[0]![1].headers['Authorization']).toMatch(/^Bearer ey/)
   })
 
   it('resolves to undefined on success', async () => {

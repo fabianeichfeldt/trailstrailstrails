@@ -190,6 +190,7 @@ else { ... }
 | Command | What it covers |
 |---|---|
 | `npm test` | unit tests incl. architecture invariant tests |
+| `npm run typecheck` | `nuxt typecheck` (vue-tsc, strict incl. `noUncheckedIndexedAccess`) over app + tests — runs in CI before unit tests and gates the deploy |
 | `npm run lint:arch` | Import boundary enforcement via dependency-cruiser |
 | `npm run test:e2e` | Playwright tests covering map, auth, add-spot, search, filters |
 | `npm run verify:static-build` | Real `nuxt generate` build, served as pure static files (no live Nitro), checks a real trail page actually renders. Runs in CI as a step in the `build` job (`.github/workflows/deploy.yml`), right after `generate` and before the deploy artifact is uploaded — a failure blocks the deploy. Not part of `npm test` (needs real Supabase creds, takes minutes) — run it manually too before/after changes to trail/spot data fetching |

@@ -130,7 +130,7 @@ describe('processGpx', () => {
     const profile = result!.elevationProfile;
     expect(profile.length).toBeGreaterThan(0);
     for (let i = 1; i < profile.length; i++) {
-      expect(profile[i].dist).toBeGreaterThanOrEqual(profile[i - 1].dist);
+      expect(profile[i]!.dist).toBeGreaterThanOrEqual(profile[i - 1]!.dist);
     }
   });
 });
@@ -146,7 +146,7 @@ describe('toElevationProfile', () => {
       [48.001, 11.501, 510],
     ];
     const profile = toElevationProfile(points);
-    expect(profile[0].dist).toBe(0);
+    expect(profile[0]!.dist).toBe(0);
   });
 
   it('distance increases for subsequent points', () => {
@@ -156,8 +156,8 @@ describe('toElevationProfile', () => {
       [48.02, 11.52, 540],
     ];
     const profile = toElevationProfile(points);
-    expect(profile[1].dist).toBeGreaterThan(0);
-    expect(profile[2].dist).toBeGreaterThan(profile[1].dist);
+    expect(profile[1]!.dist).toBeGreaterThan(0);
+    expect(profile[2]!.dist).toBeGreaterThan(profile[1]!.dist);
   });
 
   it('preserves altitude values', () => {
@@ -166,8 +166,8 @@ describe('toElevationProfile', () => {
       [48.001, 11.501, 600],
     ];
     const profile = toElevationProfile(points);
-    expect(profile[0].alt).toBe(500);
-    expect(profile[1].alt).toBe(600);
+    expect(profile[0]!.alt).toBe(500);
+    expect(profile[1]!.alt).toBe(600);
   });
 
   it('does not collapse closely-spaced points onto the same distance bucket', () => {
@@ -477,24 +477,24 @@ describe('matchTrailsInTour', () => {
   });
 
   it('skips trails with fewer than 3 points', () => {
-    const short = { name: 'Short', rawPoints: [TOUR[0], TOUR[1]] };
+    const short = { name: 'Short', rawPoints: TOUR.slice(0, 2) };
     expect(matchTrailsInTour(TOUR, [short])).toEqual([]);
   });
 
   it('detects a single trail contained in the tour', () => {
-    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    const trailA = { name: 'Trail A', rawPoints: TOUR.slice(0, 3) };
     expect(matchTrailsInTour(TOUR, [trailA])).toEqual(['Trail A']);
   });
 
   it('returns two sequential trails in order of appearance', () => {
-    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
-    const trailB = { name: 'Trail B', rawPoints: [TOUR[2], TOUR[3], TOUR[4]] };
+    const trailA = { name: 'Trail A', rawPoints: TOUR.slice(0, 3) };
+    const trailB = { name: 'Trail B', rawPoints: TOUR.slice(2, 5) };
     expect(matchTrailsInTour(TOUR, [trailA, trailB])).toEqual(['Trail A', 'Trail B']);
   });
 
   it('sorts by position in tour regardless of input order', () => {
-    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
-    const trailB = { name: 'Trail B', rawPoints: [TOUR[2], TOUR[3], TOUR[4]] };
+    const trailA = { name: 'Trail A', rawPoints: TOUR.slice(0, 3) };
+    const trailB = { name: 'Trail B', rawPoints: TOUR.slice(2, 5) };
     // Pass B first — result must still reflect order in the tour
     expect(matchTrailsInTour(TOUR, [trailB, trailA])).toEqual(['Trail A', 'Trail B']);
   });
@@ -508,7 +508,7 @@ describe('matchTrailsInTour', () => {
   });
 
   it('includes a matched trail only once even when it matches multiple windows', () => {
-    const trailA = { name: 'Trail A', rawPoints: [TOUR[0], TOUR[1], TOUR[2]] };
+    const trailA = { name: 'Trail A', rawPoints: TOUR.slice(0, 3) };
     expect(matchTrailsInTour(TOUR, [trailA])).toHaveLength(1);
   });
 });

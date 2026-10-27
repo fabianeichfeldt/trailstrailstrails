@@ -23,7 +23,7 @@ describe('deleteAccount', () => {
 
     const r = await deleteAccount('jwt-1')
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toMatch(/\/functions\/v1\/delete-account$/)
     expect(opts.method).toBe('POST')
     expect(opts.headers.Authorization).toBe('Bearer jwt-1')

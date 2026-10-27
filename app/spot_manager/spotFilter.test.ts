@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { filterSpots, shouldShowSpotSearch } from './spotFilter'
 
-const spots = ['Bikepark Leogang', 'Salzburg Süd', 'Hometrail Wien', 'Kitzbühel', 'Innsbruck'].map((name, i) => ({ id: String(i), name }))
+const spots = ['Bikepark Leogang', 'Salzburg Süd', 'Hometrail Wien', 'Kitzbühel', 'Innsbruck'].map((name, i) => ({ id: String(i), name, type: 'trail' as const }))
 
 describe('shouldShowSpotSearch', () => {
   it('hides for fewer than 5 spots, shows from 5', () => {

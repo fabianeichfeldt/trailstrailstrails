@@ -12,7 +12,7 @@ describe('getSupporterPrices', () => {
     ]), { status: 200 }))
     vi.stubGlobal('fetch', fetch)
     await expect(getSupporterPrices()).resolves.toEqual({ monthlyCents: 300, yearlyCents: 2500, currency: 'EUR' })
-    const [url, init] = fetch.mock.calls[0]
+    const [url, init] = fetch.mock.calls[0]!
     expect(url).toBe(`${BASE_URL}/rest/v1/subscription_plans?id=eq.supporter&select=price_monthly_cents,price_yearly_cents,currency`)
     expect(init.headers.apikey).toBeTruthy()
   })

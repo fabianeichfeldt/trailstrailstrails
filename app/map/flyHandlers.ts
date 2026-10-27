@@ -30,8 +30,8 @@ export function createMapFlyers(
 export function parseFlyQuery(fly: unknown, zoom: unknown): { lat: number; lng: number; zoom?: number } | null {
   if (typeof fly !== 'string') return null
   const [latStr, lngStr] = fly.split(',')
-  const lat = parseFloat(latStr)
-  const lng = parseFloat(lngStr)
+  const lat = parseFloat(latStr ?? '')
+  const lng = parseFloat(lngStr ?? '')
   if (Number.isNaN(lat) || Number.isNaN(lng)) return null
   const z = typeof zoom === 'string' ? parseInt(zoom, 10) : NaN
   return { lat, lng, zoom: z >= MIN_ZOOM && z <= MAX_ZOOM ? z : undefined }

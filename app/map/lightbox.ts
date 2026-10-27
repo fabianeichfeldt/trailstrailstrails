@@ -44,9 +44,9 @@ function ensureOverlay(): HTMLElement {
 
   // Touch swipe
   let touchStartX = 0;
-  overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  overlay.addEventListener('touchstart', e => { touchStartX = e.touches[0]?.clientX ?? touchStartX; }, { passive: true });
   overlay.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dx = (e.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
     if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
   });
 
@@ -64,6 +64,7 @@ function ensureOverlay(): HTMLElement {
 function render() {
   if (!overlay) return;
   const p = photos[index];
+  if (!p) return;
   (overlay.querySelector('.lbx-img') as HTMLImageElement).src = p.src;
   overlay.querySelector('.lbx-uploader')!.textContent = p.uploader ? `von ${p.uploader}` : '';
   overlay.querySelector('.lbx-date')!.textContent = p.date;

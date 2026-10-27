@@ -109,8 +109,8 @@ export function toElevationProfile(points: [number, number, number][]): Elevatio
   let cum = 0
   return points.map((p, i) => {
     if (i > 0) {
-      const dlat = (p[0] - points[i - 1][0]) * 111000
-      const dlng = (p[1] - points[i - 1][1]) * 111000 * Math.cos(p[0] * Math.PI / 180)
+      const dlat = (p[0] - points[i - 1]![0]) * 111000
+      const dlng = (p[1] - points[i - 1]![1]) * 111000 * Math.cos(p[0] * Math.PI / 180)
       cum += Math.hypot(dlat, dlng) / 1000
     }
     return { dist: cum, alt: p[2] }
@@ -200,8 +200,8 @@ export async function getSpotGpxData(spotId: string): Promise<SpotMtbData | null
 
     const trailsByName = new Map(trails.map(t => [t.name, t]))
     for (let i = 0; i < tours.length; i++) {
-      const tour    = tours[i]
-      const rawTour = rawTours[i]
+      const tour    = tours[i]!
+      const rawTour = rawTours[i]!
       if (!tour.gpxPoints?.length) continue
 
       if (rawTour.trail_names?.length) {

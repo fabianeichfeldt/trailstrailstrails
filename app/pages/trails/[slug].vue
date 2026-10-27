@@ -304,8 +304,8 @@ const selectedItemFocus = computed<{ lat: number; lng: number } | null>(() => {
   const item = list.find(i => i.id === selectedItemId)
   const points = item?.gpxPoints
   if (!points?.length) return null
-  const [startLat, startLng] = points[0]
-  const [endLat, endLng] = points[points.length - 1]
+  const [startLat, startLng] = points[0]!
+  const [endLat, endLng] = points[points.length - 1]!
   return { lat: (startLat + endLat) / 2, lng: (startLng + endLng) / 2 }
 })
 

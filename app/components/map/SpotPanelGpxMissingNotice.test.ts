@@ -7,6 +7,6 @@ describe('SpotPanelGpxMissingNotice', () => {
     const wrapper = mount(SpotPanelGpxMissingNotice)
     expect(wrapper.text()).toContain('Die GPX-Daten zu diesem Spot wurden noch nicht hochgeladen.')
     expect(wrapper.get('a[href="https://www.instagram.com/trailradar.germany"]').text()).toBe('@trailradar.germany')
-    expect(wrapper.get('a[href="mailto:webmaster@trailradar.org"]').exists()).toBe(true)
+    expect(wrapper.find('a[href="mailto:webmaster@trailradar.org"]').exists()).toBe(true)
   })
 })

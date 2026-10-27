@@ -225,7 +225,7 @@ async function onRedeemCode() {
   invSuccess.value = null
   invSubmitting.value = true
   try {
-    const { data, error } = await client.rpc('redeem_invitation', { p_code: invCode.value.toUpperCase().trim() })
+    const { data, error } = await client.rpc('redeem_invitation', { p_code: invCode.value.toUpperCase().trim() } as never)
     if (error) throw new Error(error.message)
     invSuccess.value = 'Trailcrew-Zugang aktiviert! Bitte Seite neu laden.'
     invCode.value = ''
@@ -345,7 +345,7 @@ async function onUpdatePassword() {
   savingPw.value = true
   try {
     await authStore.signIn(user.value?.email ?? '', oldPw.value)
-    await authStore.updatePassword(oldPw.value, newPw.value)
+    await authStore.updatePassword(newPw.value)
     oldPw.value = ''
     newPw.value = ''
     newPwRepeat.value = ''

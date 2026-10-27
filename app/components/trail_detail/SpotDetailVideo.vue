@@ -7,14 +7,14 @@
           <p class="yt-text">
             Dieses Video wird von YouTube bereitgestellt.<br />
             Durch das Laden können personenbezogene Daten an Google übermittelt werden.<br />
-            <a :href="details.videos[0].creator" class="yt-text"><i class="fa-brands fa-youtube"></i>&nbsp;{{ videoCreatorLabel }}</a>
+            <a :href="details.videos[0]?.creator" class="yt-text"><i class="fa-brands fa-youtube"></i>&nbsp;{{ videoCreatorLabel }}</a>
           </p>
           <button class="yt-load-btn" @click="videoLoaded = true">▶ Video laden</button>
         </div>
       </div>
       <iframe
         v-else
-        :src="details.videos[0].url"
+        :src="details.videos[0]?.url"
         loading="lazy"
         style="aspect-ratio: 16 / 9; width: 100%; border: none"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
