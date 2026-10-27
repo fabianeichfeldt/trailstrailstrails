@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { Capacitor } from '@capacitor/core'
 import { Browser } from '@capacitor/browser'
-import { uploadTrailPhoto as uploadTrailPhotoImpl, deletePhoto as deletePhotoImpl } from '~/communication/photos'
+import { uploadTrailPhoto as uploadTrailPhotoImpl, uploadAvatar as uploadAvatarImpl, deletePhoto as deletePhotoImpl } from '~/communication/photos'
 
 // Google blocks OAuth sign-in from embedded WebViews, so on native we route
 // through the system browser instead and catch the redirect via a custom
@@ -151,13 +151,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function uploadAvatar(file: File): Promise<string> {
     if (!user.value) throw new Error('Not logged in')
-    const filePath = `${resolveUserId(user.value)}/avatar.webp`
-    const { error } = await client.storage
-      .from('avatars')
-      .upload(filePath, file, { cacheControl: '3600', upsert: true, contentType: file.type })
-    if (error) throw new Error('Avatar upload failed')
-    const { data } = client.storage.from('avatars').getPublicUrl(filePath)
-    return data.publicUrl
+    return uploadAvatarImpl(file, resolveUserId(user.value), client)
   }
 
   async function uploadTrailPhoto(file: File, trailId: string, copyright?: string | null): Promise<string> {

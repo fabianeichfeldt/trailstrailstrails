@@ -28,6 +28,17 @@ describe('bindPhotoLightbox — copyright', () => {
     expect(credit.hidden).toBe(false)
   })
 
+  it('opens a carousel photo that has not been lazy-loaded yet (no src, only data-src)', () => {
+    const c = carousel([{ src: 'https://x/1.jpg' }])
+    const img = c.querySelector('img')!
+    img.removeAttribute('src')
+    img.dataset.src = 'https://x/1.jpg'
+    bindPhotoLightbox(c)
+
+    open(c, 0)
+    expect(document.querySelector<HTMLImageElement>('.lbx-img')!.src).toBe('https://x/1.jpg')
+  })
+
   it('hides the overlay for a photo without copyright', () => {
     const c = carousel([{ src: 'https://x/1.jpg', copyright: 'Max' }, { src: 'https://x/2.jpg' }])
     bindPhotoLightbox(c)
