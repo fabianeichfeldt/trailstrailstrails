@@ -1,7 +1,11 @@
 // Mutation testing: `npm run test:mutation` (whole suite, slow) or scope it with
 // `MUTATE="app/communication/**/*.ts" npm run test:mutation` (comma-separated globs).
 // Don't use `--mutate`: it replaces this whole list, so test files get mutated too.
-const EXCLUDE = ['!**/*.test.ts', '!**/*.d.ts', '!app/types/database.types.ts'];
+const EXCLUDE = [
+  '!**/*.test.ts', '!**/*.d.ts', '!app/types/database.types.ts',
+  // Leaflet/Nuxt wiring only — the logic lives in tested modules (gpxLayer, gpxOverview, markerPresentation, nativeBack).
+  '!app/composables/useTrailMap.ts', '!app/map/miniMap.ts', '!app/spot_manager/MapView.ts', '!app/plugins/**',
+];
 const scope = process.env.MUTATE?.split(',').map((g) => g.trim()).filter(Boolean);
 
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */

@@ -25,3 +25,33 @@ export function runBackHandlers(): boolean {
   }
   return false
 }
+
+export interface BackButtonFallbackDeps {
+  runHandlers: () => boolean
+  historyBack: () => void
+  exitApp: () => void
+  showHint: () => void
+  now?: () => number
+  windowMs?: number
+}
+
+// Android back-press decision chain: page handlers → history → double-press exit.
+// Pure: Capacitor, router and toast are injected by the plugin.
+export function createBackButtonFallback({
+  runHandlers,
+  historyBack,
+  exitApp,
+  showHint,
+  now = Date.now,
+  windowMs = 2000,
+}: BackButtonFallbackDeps): (canGoBack: boolean) => void {
+  // -Infinity so a first press is never a double press, even when now() starts at 0.
+  let lastExitPressAt = Number.NEGATIVE_INFINITY
+  return (canGoBack) => {
+    if (runHandlers()) return
+    if (canGoBack) { historyBack(); return }
+    if (now() - lastExitPressAt < windowMs) { exitApp(); return }
+    lastExitPressAt = now()
+    showHint()
+  }
+}

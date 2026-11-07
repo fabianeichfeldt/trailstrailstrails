@@ -12,7 +12,8 @@ vi.stubGlobal('watchEffect', watchEffect)
 vi.stubGlobal('ref', ref)
 vi.stubGlobal('useTrailMap', () => ({
   openTrail() {}, flyToPlace() {}, getCenter: () => null,
-  nearbyConflict: ref(null), addSpotPicked: ref(null), mapReady: ref(false),
+  nearbyConflict: ref(null), addSpotPicked: ref(null),
+  addMode: ref(undefined), startAddMode() {}, cancelAddMode() {}, mapReady: ref(false),
   soilCounts: ref({ matchCount: 0, totalCount: 0 }),
 }))
 

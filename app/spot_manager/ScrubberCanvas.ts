@@ -22,6 +22,7 @@ export interface ScrubberDrawOptions {
   committedSegments: readonly ScrubberSegment[];
 }
 
+// Stryker disable all : canvas painting, verified visually
 function hexToRgb(hex: string): [number, number, number] {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
 }
@@ -185,6 +186,7 @@ export function drawScrubberCanvas(opts: ScrubberDrawOptions): void {
   ctx.textAlign = 'center';
   ctx.fillText(`${selectionKm} km`, (startX + endX) / 2, handleCenterY + 4.5);
 }
+// Stryker restore all
 
 // Compute per-point smoothed altitudes using a 75 m sliding window radius.
 // Smoothing is GPS-density-independent: a point uses all neighbours within 75 m.
@@ -206,7 +208,7 @@ export function computeSmoothedAlts(
     if (v > altMax) altMax = v;
     return v;
   });
-  altMin = altMin === Infinity ? 0 : altMin;
+  if (smoothedAlts.length === 0) return { smoothedAlts, altMin: 0, altRange: 1 };
   return { smoothedAlts, altMin, altRange: (altMax - altMin) || 1 };
 }
 

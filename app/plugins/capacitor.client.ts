@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
 import { Browser } from '@capacitor/browser'
 import { App } from '@capacitor/app'
-import { runBackHandlers } from '~/utils/nativeBack'
+import { runBackHandlers, createBackButtonFallback } from '~/utils/nativeBack'
 import { showToast } from '~/utils/toast'
 import { resolveExternalLinkUrl } from '~/utils/externalLink'
 
@@ -40,18 +40,14 @@ export default defineNuxtPlugin({
     // screen — including the root page, which mounts no page-scoped handler
     // at all. Page-scoped dismissal (spot panel, status sheet, add-mode on
     // /map) runs first via runBackHandlers(); this is only the fallback.
-    let lastExitPressAt = 0
-    App.addListener('backButton', ({ canGoBack }) => {
-      if (runBackHandlers()) return
-      if (canGoBack) { window.history.back(); return }
-      // Nothing left to close and nowhere left to go back to — require a
-      // second press within 2s rather than exiting on a single accidental tap.
-      if (Date.now() - lastExitPressAt < 2000) {
-        App.exitApp()
-      } else {
-        lastExitPressAt = Date.now()
-        showToast('Nochmal drücken zum Beenden')
-      }
+    // Nothing left to close and nowhere left to go back to: the fallback
+    // requires a second press within 2s rather than exiting on one accidental tap.
+    const onBackButton = createBackButtonFallback({
+      runHandlers: runBackHandlers,
+      historyBack: () => window.history.back(),
+      exitApp: () => { App.exitApp() },
+      showHint: () => showToast('Nochmal drücken zum Beenden'),
     })
+    App.addListener('backButton', ({ canGoBack }) => onBackButton(canGoBack))
   },
 })
