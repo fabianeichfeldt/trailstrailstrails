@@ -5,6 +5,9 @@ const EXCLUDE = [
   '!**/*.test.ts', '!**/*.d.ts', '!app/types/database.types.ts',
   // Leaflet/Nuxt wiring only — the logic lives in tested modules (gpxLayer, gpxOverview, markerPresentation, nativeBack).
   '!app/composables/useTrailMap.ts', '!app/map/miniMap.ts', '!app/spot_manager/MapView.ts', '!app/plugins/**',
+  '!server/plugins/**',
+  // Data-only classes: field defaults, no behaviour.
+  '!app/types/Comment.ts', '!app/types/Photo.ts', '!app/types/VideoDetails.ts',
 ];
 const scope = process.env.MUTATE?.split(',').map((g) => g.trim()).filter(Boolean);
 
