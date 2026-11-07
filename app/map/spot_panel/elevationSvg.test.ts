@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { elevationSVG, bindElevationHover, IMBA, type AnyItem } from './elevationSvg'
 import type { ElevationPoint, MtbTour, MtbTrail, TourSegment } from '../../types/MtbTypes'

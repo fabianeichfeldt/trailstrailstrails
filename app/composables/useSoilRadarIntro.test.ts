@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { effectScope, ref, nextTick } from 'vue'
 import { useSoilRadarIntro, INTRO_SEEN_KEY, INTRO_DWELL_MS } from './useSoilRadarIntro'

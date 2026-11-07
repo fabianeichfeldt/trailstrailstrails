@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { describe, it, expect, vi } from 'vitest'
 import { createMiniMap, orderPolylines, resolveShowGpx, type MiniMapInput, type MiniMapPolyline } from './miniMap'
 
