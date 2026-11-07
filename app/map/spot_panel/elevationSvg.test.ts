@@ -182,6 +182,18 @@ describe('elevationSVG', () => {
       expect(svg.querySelector('path')!.getAttribute('fill')).toBe('rgba(0,0,0,0.04)')
     })
 
+    // Bug: IMBA[seg.difficulty!] threw for a trail segment without difficulty.
+    it('draws a trail segment without difficulty in neutral grey instead of throwing', () => {
+      const noDiff: TourSegment[] = [
+        { type: 'trail', trailId: 't1', gpxPoints: gpxFor(FIVE).slice(0, 3) },
+        { type: 'transfer', gpxPoints: gpxFor(FIVE).slice(3, 5) },
+      ]
+      const svg = mountSvg(tour({ segments: noDiff }), FIVE, noDiff)
+      const lines = svg.querySelectorAll('polyline')
+      expect(lines[0].getAttribute('stroke')).toBe('#888')
+      expect(lines[0].getAttribute('stroke-width')).toBe('2.2')
+    })
+
     it('skips a segment with fewer than two points', () => {
       const single: TourSegment[] = [
         { type: 'trail', trailId: 't1', difficulty: 'blue', gpxPoints: gpxFor(FIVE).slice(0, 1) },
@@ -332,6 +344,14 @@ describe('bindElevationHover', () => {
     expect(ev.defaultPrevented).toBe(true)
     expect(onHover.mock.calls[0][0]).toEqual([item.gpxPoints[1][0], item.gpxPoints[1][1]])
     expect(scrubber.hasAttribute('visibility')).toBe(false)
+  })
+
+  // Bug: profile had more points than gpxPoints, so gpx[idx] was undefined and threw.
+  it('maps hovered profile points onto a shorter gpxPoints array without throwing', () => {
+    const item = trail({ gpxPoints: gpxFor(PROFILE).slice(0, 2) })
+    const { onHover, move } = setup(item)
+    expect(() => move(294)).not.toThrow() // profile index 3, gpx has only 2 points
+    expect(onHover.mock.calls[0][0]).toEqual([item.gpxPoints[1][0], item.gpxPoints[1][1]])
   })
 
   it('touchend hides the scrubber and calls onLeave', () => {
