@@ -8,6 +8,7 @@ const SOIL_UNKNOWN = '#c9ccd0'
 const SOIL_SNOW_BADGE = '#7fa8cf'
 
 // Raw strings, not components: Leaflet divIcons and v-html need plain markup.
+// Stryker disable next-line all: Vite only accepts literal glob arguments, a mutant switch breaks the parse.
 const RAW = import.meta.glob<string>('../assets/icons/soil/*.svg', { query: '?raw', import: 'default', eager: true })
 
 /** Badge styling hook + hidden from assistive tech; the label beside it carries the meaning. */
