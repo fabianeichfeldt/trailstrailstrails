@@ -23,4 +23,14 @@ describe('submitFeedback', () => {
     await submitFeedback('trail-2', false)
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ trail_id: 'trail-2', up: false })
   })
+
+  it('rejects when the server answers non-2xx', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('boom', { status: 500 })))
+    await expect(submitFeedback('trail-3', true)).rejects.toThrow()
+  })
+
+  it('rejects when the request never reaches the server', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+    await expect(submitFeedback('trail-4', true)).rejects.toThrow()
+  })
 })

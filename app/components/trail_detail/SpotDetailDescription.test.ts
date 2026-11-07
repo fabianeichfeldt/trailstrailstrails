@@ -10,10 +10,11 @@ import { TrailDetails } from '~/types/TrailDetails'
 let fakeMapStore: { reportModalOpen: boolean; reportModalTrailId: string | null; reportModalTrailName: string | null }
 
 vi.stubGlobal('useMapStore', () => fakeMapStore)
-vi.mock('~/utils/feedback', () => ({ upVote: vi.fn(async () => {}), downVote: vi.fn(async () => {}) }))
+vi.mock('~/utils/feedback', () => ({ upVote: vi.fn(async () => true), downVote: vi.fn(async () => true) }))
 vi.mock('~/utils/toast', () => ({ showToast: vi.fn() }))
 
 import { upVote, downVote } from '~/utils/feedback'
+import { showToast } from '~/utils/toast'
 import SpotDetailDescription from './SpotDetailDescription.vue'
 
 function trail(overrides: Partial<Trail> = {}): Trail {
@@ -36,6 +37,7 @@ describe('SpotDetailDescription', () => {
     fakeMapStore = { reportModalOpen: false, reportModalTrailId: null, reportModalTrailName: null }
     vi.mocked(upVote).mockClear()
     vi.mocked(downVote).mockClear()
+    vi.mocked(showToast).mockClear()
   })
 
   it('renders the general description text', () => {
@@ -70,6 +72,23 @@ describe('SpotDetailDescription', () => {
     await Promise.resolve()
 
     expect(downVote).toHaveBeenCalledWith('t1', expect.any(HTMLElement))
+  })
+
+  it('thanks the user after a successful vote', async () => {
+    const wrapper = mount(SpotDetailDescription, { props: { trail: trail(), details: details() } })
+    await wrapper.find('.thumb-btn.up').trigger('click')
+    await Promise.resolve()
+    expect(showToast).toHaveBeenCalledWith('Danke für dein Feedback! 🙏', 'success')
+  })
+
+  it('does not thank the user when the vote failed (feedback util already showed the error)', async () => {
+    vi.mocked(upVote).mockResolvedValueOnce(false)
+    vi.mocked(downVote).mockResolvedValueOnce(false)
+    const wrapper = mount(SpotDetailDescription, { props: { trail: trail(), details: details() } })
+    await wrapper.find('.thumb-btn.up').trigger('click')
+    await wrapper.find('.thumb-btn.down').trigger('click')
+    await Promise.resolve()
+    expect(showToast).not.toHaveBeenCalled()
   })
 
   it('shows feature badges for a dirtpark, styled by whether each amenity is present', () => {

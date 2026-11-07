@@ -77,14 +77,12 @@ const downBtn = ref<HTMLButtonElement | null>(null)
 
 async function onUpvote() {
   if (!upBtn.value) return
-  await upVote(props.trail.id, upBtn.value)
-  showToast('Danke für dein Feedback! 🙏', 'success')
+  if (await upVote(props.trail.id, upBtn.value)) showToast('Danke für dein Feedback! 🙏', 'success')
 }
 
 async function onDownvote() {
   if (!downBtn.value) return
-  await downVote(props.trail.id, downBtn.value)
-  showToast('Danke für dein Feedback! 🙏', 'success')
+  if (await downVote(props.trail.id, downBtn.value)) showToast('Danke für dein Feedback! 🙏', 'success')
 }
 
 function onReportError() {
