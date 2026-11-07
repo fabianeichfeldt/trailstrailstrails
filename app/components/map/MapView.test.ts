@@ -10,10 +10,11 @@ vi.stubGlobal('useSoilRadarStore', () => soil)
 vi.stubGlobal('watch', watch)
 vi.stubGlobal('watchEffect', watchEffect)
 vi.stubGlobal('ref', ref)
+const addMode = ref<string | undefined>(undefined)
 vi.stubGlobal('useTrailMap', () => ({
   openTrail() {}, flyToPlace() {}, getCenter: () => null,
   nearbyConflict: ref(null), addSpotPicked: ref(null),
-  addMode: ref(undefined), startAddMode() {}, cancelAddMode() {}, mapReady: ref(false),
+  addMode, startAddMode() {}, cancelAddMode() {}, mapReady: ref(false),
   soilCounts: ref({ matchCount: 0, totalCount: 0 }),
 }))
 
@@ -36,5 +37,14 @@ describe('MapView container classes', () => {
     expect(el.classList.contains('leaflet-container')).toBe(true)
     expect(el.classList.contains('map-grayscale')).toBe(false)
     expect(el.classList.contains('soil-radar-on')).toBe(false)
+  })
+})
+
+describe('MapView add mode', () => {
+  it('re-emits the composable\'s add mode so the page can update the FAB', async () => {
+    const w = mount(MapView)
+    addMode.value = 'trail'
+    await nextTick()
+    expect(w.emitted('addMode')).toEqual([['trail']])
   })
 })
