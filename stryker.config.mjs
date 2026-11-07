@@ -1,19 +1,18 @@
-// Mutation testing: `npm run test:mutation` (whole suite, slow) or
-// `npm run test:mutation -- --mutate "app/communication/**/*.ts"` to scope it.
+// Mutation testing: `npm run test:mutation` (whole suite, slow) or scope it with
+// `MUTATE="app/communication/**/*.ts" npm run test:mutation` (comma-separated globs).
+// Don't use `--mutate`: it replaces this whole list, so test files get mutated too.
+const EXCLUDE = ['!**/*.test.ts', '!**/*.d.ts', '!app/types/database.types.ts'];
+const scope = process.env.MUTATE?.split(',').map((g) => g.trim()).filter(Boolean);
+
 /** @type {import('@stryker-mutator/api/core').PartialStrykerOptions} */
 export default {
   testRunner: 'vitest',
   vitest: { configFile: 'vitest.config.ts' },
-  mutate: [
-    'app/**/*.ts',
-    'server/**/*.ts',
-    'build/**/*.ts',
-    '!**/*.test.ts',
-    '!**/*.d.ts',
-    '!app/types/database.types.ts',
-  ],
+  mutate: [...(scope?.length ? scope : ['app/**/*.ts', 'server/**/*.ts', 'build/**/*.ts']), ...EXCLUDE],
   // The sandbox skips gitignored files, but tsconfig extends the generated .nuxt/tsconfig.json.
   ignorePatterns: ['!.nuxt'],
+  // Static mutants (module-level consts, e.g. SPOT_TYPES) force a full-suite run each; skipping them is the biggest speedup.
+  ignoreStatic: true,
   // Re-runs only mutants whose code or tests changed since the last run.
   incremental: true,
   incrementalFile: 'reports/stryker-incremental.json',
