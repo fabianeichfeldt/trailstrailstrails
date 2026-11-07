@@ -79,7 +79,7 @@ export default defineNuxtConfig({
         },
         // Only builds with UMAMI_WEBSITE_ID (CI deploy) get analytics; dev/tests stay untracked.
         ...(process.env.UMAMI_WEBSITE_ID
-          ? [{ src: 'https://cloud.umami.is/script.js', defer: true, 'data-website-id': process.env.UMAMI_WEBSITE_ID }]
+          ? [{ src: 'https://stats.eichfeldt.de/script.js', defer: true, 'data-website-id': process.env.UMAMI_WEBSITE_ID }]
           : []),
       ],
     },
