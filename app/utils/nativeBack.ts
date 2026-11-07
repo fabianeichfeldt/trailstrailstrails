@@ -21,7 +21,7 @@ export function registerBackHandler(handler: BackHandler): () => void {
 // them consumed the press (nothing further — e.g. router history — should run).
 export function runBackHandlers(): boolean {
   for (let i = handlers.length - 1; i >= 0; i--) {
-    if (handlers[i]()) return true
+    if (handlers[i]!()) return true
   }
   return false
 }

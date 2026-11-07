@@ -43,6 +43,9 @@ jobs:
       - run: npm ci
       - run: npx nuxt prepare
 
+      - name: Typecheck (vue-tsc)
+        run: npm run typecheck
+
       - name: Unit tests (Vitest)
         run: npm test
 

@@ -46,7 +46,7 @@ export async function postComment(spotId: string, text: string, authService: IAu
   })
   if (!res.ok) throw new Error(await extractErrorMessage(res))
   const [row] = await res.json() as Comment[]
-  return { ...row, profiles: { display_name: user.nickname, avatar_url: user.avatarUrl ?? '' } }
+  return { ...row!, profiles: { display_name: user.nickname, avatar_url: user.avatarUrl ?? '' } }
 }
 
 export async function deleteComment(commentId: number, authService: IAuthService): Promise<void> {

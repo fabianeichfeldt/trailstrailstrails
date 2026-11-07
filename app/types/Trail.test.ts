@@ -11,6 +11,7 @@ import {
 } from './Trail';
 
 const baseFields = {
+  slug: 'test-trail',
   name: 'Test Trail',
   id: '1',
   creator: 'tester',

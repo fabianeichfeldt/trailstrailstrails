@@ -27,25 +27,25 @@ const EPSILON_M = 0.5;
 
 function parseGpx(content: string): { name: string; points: GpxPoint[] } {
   const nameMatch = content.match(/<name>([^<]*)<\/name>/);
-  const name = nameMatch ? nameMatch[1].trim() : '';
+  const name = nameMatch ? nameMatch[1]!.trim() : '';
   const points: GpxPoint[] = [];
   const re = /<trkpt\b([^>]*)>([\s\S]*?)<\/trkpt>/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(content)) !== null) {
-    const latM = m[1].match(/lat="([^"]+)"/);
-    const lonM = m[1].match(/lon="([^"]+)"/);
+    const latM = m[1]!.match(/lat="([^"]+)"/);
+    const lonM = m[1]!.match(/lon="([^"]+)"/);
     if (!latM || !lonM) continue;
-    const eleM  = m[2].match(/<ele>([^<]+)<\/ele>/);
-    const timeM = m[2].match(/<time>([^<]+)<\/time>/);
+    const eleM  = m[2]!.match(/<ele>([^<]+)<\/ele>/);
+    const timeM = m[2]!.match(/<time>([^<]+)<\/time>/);
     // Some trail-planning-tool exports carry a blank `<time> </time>`
     // placeholder rather than omitting the tag. new Date(' ') is an
     // *Invalid Date object* (not null), which is truthy — so it must be
     // checked explicitly or a later `.toISOString()` throws.
-    const parsedTime = timeM ? new Date(timeM[1]) : null;
+    const parsedTime = timeM ? new Date(timeM[1]!) : null;
     points.push({
-      lat:  parseFloat(latM[1]),
-      lng:  parseFloat(lonM[1]),
-      alt:  eleM ? parseFloat(eleM[1]) : 0,
+      lat:  parseFloat(latM[1]!),
+      lng:  parseFloat(lonM[1]!),
+      alt:  eleM ? parseFloat(eleM[1]!) : 0,
       time: parsedTime && !isNaN(parsedTime.getTime()) ? parsedTime : null,
     });
   }
@@ -58,7 +58,7 @@ function smoothElevation(points: GpxPoint[], window = 5): GpxPoint[] {
     const s = Math.max(0, i - half);
     const e = Math.min(points.length - 1, i + half);
     let sum = 0;
-    for (let j = s; j <= e; j++) sum += points[j].alt;
+    for (let j = s; j <= e; j++) sum += points[j]!.alt;
     return { ...p, alt: Math.round(sum / (e - s + 1)) };
   });
 }
@@ -80,7 +80,7 @@ function rdp(points: GpxPoint[], epsilon: number): GpxPoint[] {
   let maxD = 0, maxI = 0;
   const last = points.length - 1;
   for (let i = 1; i < last; i++) {
-    const d = perpDistMeters(points[i], points[0], points[last]);
+    const d = perpDistMeters(points[i]!, points[0]!, points[last]!);
     if (d > maxD) { maxD = d; maxI = i; }
   }
   if (maxD > epsilon) {
@@ -88,7 +88,7 @@ function rdp(points: GpxPoint[], epsilon: number): GpxPoint[] {
     const R = rdp(points.slice(maxI), epsilon);
     return L.slice(0, -1).concat(R);
   }
-  return [points[0], points[last]];
+  return [points[0]!, points[last]!];
 }
 
 function computeStats(points: GpxPoint[]): {
@@ -99,7 +99,7 @@ function computeStats(points: GpxPoint[]): {
 } {
   let distM = 0, gain = 0, loss = 0;
   for (let i = 1; i < points.length; i++) {
-    const a = points[i - 1], b = points[i];
+    const a = points[i - 1]!, b = points[i]!;
     const dlat = (b.lat - a.lat) * 111000;
     const dlng = (b.lng - a.lng) * 111000 * Math.cos(b.lat * Math.PI / 180);
     distM += Math.hypot(dlat, dlng);
@@ -122,8 +122,8 @@ export function toElevationProfile(points: [number, number, number][]): Elevatio
   let cum = 0;
   return points.map((p, i) => {
     if (i > 0) {
-      const dlat = (p[0] - points[i - 1][0]) * 111000;
-      const dlng = (p[1] - points[i - 1][1]) * 111000 * Math.cos(p[0] * Math.PI / 180);
+      const dlat = (p[0] - points[i - 1]![0]) * 111000;
+      const dlng = (p[1] - points[i - 1]![1]) * 111000 * Math.cos(p[0] * Math.PI / 180);
       cum += Math.hypot(dlat, dlng) / 1000;
     }
     return { dist: cum, alt: p[2] };
@@ -140,11 +140,11 @@ function frechet(c1: GpxPoint[], c2: GpxPoint[]): number {
   if (!c1.length || !c2.length) return Infinity;
   const memo = new Map<string, number>();
   function fd(i: number, j: number): number {
-    if (i === 0 && j === 0) return latLngDist(c1[0], c2[0]);
+    if (i === 0 && j === 0) return latLngDist(c1[0]!, c2[0]!);
     if (i === 0 || j === 0) return Infinity;
     const key = `${i},${j}`;
     if (memo.has(key)) return memo.get(key)!;
-    const d = Math.max(latLngDist(c1[i], c2[j]), Math.min(fd(i - 1, j), fd(i, j - 1), fd(i - 1, j - 1)));
+    const d = Math.max(latLngDist(c1[i]!, c2[j]!), Math.min(fd(i - 1, j), fd(i, j - 1), fd(i - 1, j - 1)));
     memo.set(key, d);
     return d;
   }
@@ -243,7 +243,7 @@ async function correctElevation(points: GpxPoint[], jwt: string): Promise<{ poin
   try {
     const elevations = await fetchDemElevations(points.map(p => [p.lat, p.lng] as [number, number]), jwt);
     return {
-      points: points.map((p, i) => ({ ...p, alt: Math.round(elevations[i]) })),
+      points: points.map((p, i) => ({ ...p, alt: Math.round(elevations[i]!) })),
       demCorrected: true,
     };
   } catch (err) {

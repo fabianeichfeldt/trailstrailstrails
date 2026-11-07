@@ -106,7 +106,7 @@ describe('SearchBar emits', () => {
   it.each(['map', 'teaser'] as const)('emits openTrail with the spot id when a spot row is clicked (%s)', async (variant) => {
     const wrapper = await mountWithQuery({ variant })
 
-    await wrapper.findAll('.search-result-item')[0].trigger('click')
+    await wrapper.findAll('.search-result-item')[0]!.trigger('click')
 
     expect(wrapper.emitted('openTrail')).toEqual([['t1']])
   })
@@ -120,7 +120,7 @@ describe('SearchBar emits', () => {
     const wrapper = await mountWithQuery({ variant })
 
     const rows = wrapper.findAll('.search-result-item')
-    await rows[rows.length - 1].trigger('click')
+    await rows[rows.length - 1]!.trigger('click')
 
     expect(wrapper.emitted('flyTo')).toEqual([[47.71, 11.76, 11]])
   })
@@ -128,7 +128,7 @@ describe('SearchBar emits', () => {
   it('clears the input and dropdown after a pick', async () => {
     const wrapper = await mountWithQuery({ variant: 'teaser' })
 
-    await wrapper.findAll('.search-result-item')[0].trigger('click')
+    await wrapper.findAll('.search-result-item')[0]!.trigger('click')
     await flushPromises()
 
     expect((wrapper.get('[data-testid="search-input"]').element as HTMLInputElement).value).toBe('')

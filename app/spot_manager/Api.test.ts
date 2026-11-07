@@ -145,14 +145,14 @@ describe('getParkDetails', () => {
     const fetch = vi.fn().mockReturnValue(ok([row]));
     vi.stubGlobal('fetch', fetch);
     expect(await getParkDetails('bike_park_details', 'p1')).toEqual(row);
-    expect(fetch.mock.calls[0][0]).toContain(
+    expect(fetch.mock.calls[0]![0]).toContain(
       'bike_park_details?id=eq.p1&select=id,status,opening_hours,trail_description,last_update&limit=1');
   });
   it('reads dirtpark details from dirt_park_details', async () => {
     const fetch = vi.fn().mockReturnValue(ok([]));
     vi.stubGlobal('fetch', fetch);
     await getParkDetails('dirt_park_details', 'd1');
-    expect(fetch.mock.calls[0][0]).toContain('/dirt_park_details?id=eq.d1&');
+    expect(fetch.mock.calls[0]![0]).toContain('/dirt_park_details?id=eq.d1&');
   });
   it('returns null when absent', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
@@ -166,7 +166,7 @@ describe('upsertParkDetails', () => {
     vi.stubGlobal('fetch', fetch);
     const out = await upsertParkDetails('bike_park_details',
       { id: 'p1', status: 'open', opening_hours: 'h', trail_description: 'd', last_update: '2026-01-01T00:00:00Z' }, JWT);
-    const [url, init] = fetch.mock.calls[0];
+    const [url, init] = fetch.mock.calls[0]!;
     expect(url).toContain('bike_park_details?on_conflict=id');
     expect(init.method).toBe('POST');
     expect(init.headers.Prefer).toContain('resolution=merge-duplicates');
@@ -181,13 +181,13 @@ describe('upsertParkDetails', () => {
     const fetch = vi.fn().mockReturnValue(ok([{ id: 'p1' }]));
     vi.stubGlobal('fetch', fetch);
     await upsertParkDetails('bike_park_details', { id: 'p1', status: null, opening_hours: null, trail_description: null }, JWT);
-    expect(typeof JSON.parse(fetch.mock.calls[0][1].body).last_update).toBe('string');
+    expect(typeof JSON.parse(fetch.mock.calls[0]![1].body).last_update).toBe('string');
   });
   it('writes dirtpark details to dirt_park_details', async () => {
     const fetch = vi.fn().mockReturnValue(ok([{ id: 'd1' }]));
     vi.stubGlobal('fetch', fetch);
     await upsertParkDetails('dirt_park_details', { id: 'd1', status: 'open', opening_hours: null, trail_description: null }, JWT);
-    expect(fetch.mock.calls[0][0]).toContain('/dirt_park_details?on_conflict=id');
+    expect(fetch.mock.calls[0]![0]).toContain('/dirt_park_details?on_conflict=id');
   });
 });
 
@@ -196,7 +196,7 @@ describe('setDirtParkKind', () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
     vi.stubGlobal('fetch', fetch);
     await setDirtParkKind('d1', { pumptrack: true, dirtpark: false }, JWT);
-    const [url, init] = fetch.mock.calls[0];
+    const [url, init] = fetch.mock.calls[0]!;
     expect(url).toContain('rpc/set_dirtpark_kind');
     expect(init.headers.Authorization).toBe(`Bearer ${JWT}`);
     expect(JSON.parse(init.body)).toEqual({ p_spot_id: 'd1', p_pumptrack: true, p_dirtpark: false });
@@ -212,8 +212,8 @@ describe('setSpotWebsite', () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
     vi.stubGlobal('fetch', fetch);
     await setSpotWebsite('p1', 'https://x.de', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('rpc/set_spot_website');
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.de' });
+    expect(fetch.mock.calls[0]![0]).toContain('rpc/set_spot_website');
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({ p_spot_id: 'p1', p_url: 'https://x.de' });
   });
   it('throws with the server text on failure', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(err(400, 'invalid url')));
@@ -228,14 +228,14 @@ describe('uploadGpx', () => {
     const fetch = vi.fn().mockReturnValue(ok({}));
     vi.stubGlobal('fetch', fetch);
     await uploadGpx('spot1', 'trails', 'my trail.gpx', '<gpx/>', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('my_trail.gpx');
+    expect(fetch.mock.calls[0]![0]).toContain('my_trail.gpx');
   });
 
   it('removes characters outside [a-zA-Z0-9._-] from filename', async () => {
     const fetch = vi.fn().mockReturnValue(ok({}));
     vi.stubGlobal('fetch', fetch);
     await uploadGpx('spot1', 'trails', 'héllo!.gpx', '<gpx/>', JWT);
-    const url: string = fetch.mock.calls[0][0];
+    const url: string = fetch.mock.calls[0]![0];
     expect(url).toContain('hllo.gpx');
     expect(url).not.toContain('!');
   });
@@ -244,7 +244,7 @@ describe('uploadGpx', () => {
     const fetch = vi.fn().mockReturnValue(ok({}));
     vi.stubGlobal('fetch', fetch);
     await uploadGpx('spot1', 'trails', 'trail.gpx', '<gpx/>', JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('POST');
+    expect(fetch.mock.calls[0]![1].method).toBe('POST');
   });
 
   it('returns a public storage URL on success', async () => {
@@ -276,7 +276,7 @@ describe('upsertTrail', () => {
   const TRAIL: GpxTrailRow = {
     id: 't1', spot_id: 's1', name: 'Trail 1',
     difficulty: 'blue', direction: 'one-way-down',
-    distance_km: 1.2, elevation_gain: 80, elevation_loss: 80, gpx_points: [],
+    distance_km: 1.2, elevation_gain: 80, elevation_loss: 80, gpx_points: [], sort_order: 0,
   };
 
   it('uses POST for a new record (no id field)', async () => {
@@ -284,16 +284,16 @@ describe('upsertTrail', () => {
     const fetch = vi.fn().mockReturnValue(ok([{ ...newTrail, id: 'new-id' }]));
     vi.stubGlobal('fetch', fetch);
     await upsertTrail({ ...newTrail, spot_id: 's1' }, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('POST');
-    expect(fetch.mock.calls[0][0]).not.toContain('id=eq.');
+    expect(fetch.mock.calls[0]![1].method).toBe('POST');
+    expect(fetch.mock.calls[0]![0]).not.toContain('id=eq.');
   });
 
   it('uses PATCH for an existing record (has id)', async () => {
     const fetch = vi.fn().mockReturnValue(ok([TRAIL]));
     vi.stubGlobal('fetch', fetch);
     await upsertTrail(TRAIL, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('PATCH');
-    expect(fetch.mock.calls[0][0]).toContain('id=eq.t1');
+    expect(fetch.mock.calls[0]![1].method).toBe('PATCH');
+    expect(fetch.mock.calls[0]![0]).toContain('id=eq.t1');
   });
 
   it('unwraps an array response', async () => {
@@ -310,7 +310,7 @@ describe('upsertTrail', () => {
     const fetch = vi.fn().mockReturnValue(ok([TRAIL]));
     vi.stubGlobal('fetch', fetch);
     await upsertTrail(TRAIL, JWT);
-    expect(fetch.mock.calls[0][1].headers['Prefer']).toContain('return=representation');
+    expect(fetch.mock.calls[0]![1].headers['Prefer']).toContain('return=representation');
   });
 
   it('throws on non-ok response', async () => {
@@ -325,7 +325,7 @@ describe('upsertTour', () => {
   const TOUR: GpxTourRow = {
     id: 'tour1', spot_id: 's1', name: 'Tour 1',
     direction: 'cw', duration_minutes: 60, trail_names: ['T1'],
-    distance_km: 5.0, elevation_gain: 200, elevation_loss: 200, gpx_points: [],
+    distance_km: 5.0, elevation_gain: 200, elevation_loss: 200, gpx_points: [], sort_order: 0,
   };
 
   it('uses POST for a new tour (no id)', async () => {
@@ -333,15 +333,15 @@ describe('upsertTour', () => {
     const fetch = vi.fn().mockReturnValue(ok([{ ...newTour, id: 'new-id' }]));
     vi.stubGlobal('fetch', fetch);
     await upsertTour({ ...newTour, spot_id: 's1' }, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('POST');
+    expect(fetch.mock.calls[0]![1].method).toBe('POST');
   });
 
   it('uses PATCH for an existing tour (has id)', async () => {
     const fetch = vi.fn().mockReturnValue(ok([TOUR]));
     vi.stubGlobal('fetch', fetch);
     await upsertTour(TOUR, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('PATCH');
-    expect(fetch.mock.calls[0][0]).toContain('id=eq.tour1');
+    expect(fetch.mock.calls[0]![1].method).toBe('PATCH');
+    expect(fetch.mock.calls[0]![0]).toContain('id=eq.tour1');
   });
 
   it('unwraps an array response', async () => {
@@ -359,8 +359,8 @@ describe('deleteTrail', () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
     vi.stubGlobal('fetch', fetch);
     await deleteTrail('t1', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('spot_gpx_trails?id=eq.t1');
-    expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+    expect(fetch.mock.calls[0]![0]).toContain('spot_gpx_trails?id=eq.t1');
+    expect(fetch.mock.calls[0]![1].method).toBe('DELETE');
   });
 
   it('also deletes the GPX file from storage when gpx_url is provided', async () => {
@@ -368,7 +368,7 @@ describe('deleteTrail', () => {
     vi.stubGlobal('fetch', fetch);
     await deleteTrail('t1', JWT, GPX_URL);
     expect(fetch).toHaveBeenCalledTimes(2);
-    const [storageUrl, storageOpts] = fetch.mock.calls[1];
+    const [storageUrl, storageOpts] = fetch.mock.calls[1]!;
     expect(storageUrl).toContain('/storage/v1/object/gpx-files');
     expect(storageOpts.method).toBe('DELETE');
     expect(JSON.parse(storageOpts.body)).toEqual({ prefixes: ['spot1/trails/loop.gpx'] });
@@ -392,8 +392,8 @@ describe('deleteTour', () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
     vi.stubGlobal('fetch', fetch);
     await deleteTour('tour1', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('spot_gpx_tours?id=eq.tour1');
-    expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+    expect(fetch.mock.calls[0]![0]).toContain('spot_gpx_tours?id=eq.tour1');
+    expect(fetch.mock.calls[0]![1].method).toBe('DELETE');
   });
 
   it('also deletes the GPX file from storage when gpx_url is provided', async () => {
@@ -402,7 +402,7 @@ describe('deleteTour', () => {
     const tourGpxUrl = `${BASE}/storage/v1/object/public/gpx-files/spot1/tours/loop.gpx`;
     await deleteTour('tour1', JWT, tourGpxUrl);
     expect(fetch).toHaveBeenCalledTimes(2);
-    const [, storageOpts] = fetch.mock.calls[1];
+    const [, storageOpts] = fetch.mock.calls[1]!;
     expect(JSON.parse(storageOpts.body)).toEqual({ prefixes: ['spot1/tours/loop.gpx'] });
   });
 
@@ -424,19 +424,19 @@ describe('getSpotDetails', () => {
 
   it('returns null when no row exists (empty array)', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([])));
-    expect(await getSpotDetails('s1', JWT)).toBeNull();
+    expect(await getSpotDetails('s1')).toBeNull();
   });
 
   it('returns the first row when details exist', async () => {
     vi.stubGlobal('fetch', vi.fn().mockReturnValue(ok([DETAILS])));
-    expect(await getSpotDetails('s1', JWT)).toEqual(DETAILS);
+    expect(await getSpotDetails('s1')).toEqual(DETAILS);
   });
 
   it('queries by trail_id', async () => {
     const fetch = vi.fn().mockReturnValue(ok([DETAILS]));
     vi.stubGlobal('fetch', fetch);
-    await getSpotDetails('spot-xyz', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('trail_id=eq.spot-xyz');
+    await getSpotDetails('spot-xyz');
+    expect(fetch.mock.calls[0]![0]).toContain('trail_id=eq.spot-xyz');
   });
 });
 
@@ -454,7 +454,7 @@ describe('upsertSpotDetails', () => {
     const fetch = vi.fn().mockReturnValue(ok([DETAILS]));
     vi.stubGlobal('fetch', fetch);
     await upsertSpotDetails(DETAILS, JWT);
-    expect(fetch.mock.calls[0][1].headers['Prefer']).toContain('merge-duplicates');
+    expect(fetch.mock.calls[0]![1].headers['Prefer']).toContain('merge-duplicates');
   });
 
   it('unwraps an array response', async () => {
@@ -477,7 +477,7 @@ describe('upsertSpotDetails', () => {
 
 const TOKEN: EmbedTokenRow = {
   id: 'tok-1', token: 'abc123', name: 'Test Embed',
-  allowed_hosts: ['localhost'], is_active: true, created_at: '2026-01-01T00:00:00Z',
+  allowed_hosts: ['localhost'], is_active: true, is_wildcard: false, created_at: '2026-01-01T00:00:00Z',
 };
 
 describe('getEmbedTokens', () => {
@@ -574,7 +574,7 @@ describe('getSpotParking', () => {
     vi.stubGlobal('fetch', fetch);
     const result = await getSpotParking('s1');
     expect(result).toEqual([LOT]);
-    expect(fetch.mock.calls[0][0]).toContain('/parking?select=*&spot_id=eq.s1');
+    expect(fetch.mock.calls[0]![0]).toContain('/parking?select=*&spot_id=eq.s1');
   });
 
   it('returns an empty array when the spot has no lots', async () => {
@@ -593,16 +593,16 @@ describe('upsertParking', () => {
     const fetch = vi.fn().mockReturnValue(ok([{ ...newLot, id: 'new-id' }]));
     vi.stubGlobal('fetch', fetch);
     await upsertParking({ ...newLot, spot_id: 's1' }, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('POST');
-    expect(fetch.mock.calls[0][0]).not.toContain('id=eq.');
+    expect(fetch.mock.calls[0]![1].method).toBe('POST');
+    expect(fetch.mock.calls[0]![0]).not.toContain('id=eq.');
   });
 
   it('uses PATCH for an existing record (has id)', async () => {
     const fetch = vi.fn().mockReturnValue(ok([LOT]));
     vi.stubGlobal('fetch', fetch);
     await upsertParking(LOT, JWT);
-    expect(fetch.mock.calls[0][1].method).toBe('PATCH');
-    expect(fetch.mock.calls[0][0]).toContain('id=eq.pk1');
+    expect(fetch.mock.calls[0]![1].method).toBe('PATCH');
+    expect(fetch.mock.calls[0]![0]).toContain('id=eq.pk1');
   });
 
   it('unwraps an array response', async () => {
@@ -619,7 +619,7 @@ describe('upsertParking', () => {
     const fetch = vi.fn().mockReturnValue(ok([LOT]));
     vi.stubGlobal('fetch', fetch);
     await upsertParking(LOT, JWT);
-    expect(fetch.mock.calls[0][1].headers['Prefer']).toContain('return=representation');
+    expect(fetch.mock.calls[0]![1].headers['Prefer']).toContain('return=representation');
   });
 
   it('throws on non-ok response', async () => {
@@ -633,8 +633,8 @@ describe('deleteParking', () => {
     const fetch = vi.fn().mockReturnValue(ok(null));
     vi.stubGlobal('fetch', fetch);
     await deleteParking('pk1', JWT);
-    expect(fetch.mock.calls[0][0]).toContain('parking?id=eq.pk1');
-    expect(fetch.mock.calls[0][1].method).toBe('DELETE');
+    expect(fetch.mock.calls[0]![0]).toContain('parking?id=eq.pk1');
+    expect(fetch.mock.calls[0]![1].method).toBe('DELETE');
   });
 
   it('throws on non-ok response', async () => {

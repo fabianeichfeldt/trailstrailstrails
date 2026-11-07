@@ -93,7 +93,7 @@ describe('useSpotSearch — spot scoring', () => {
     await search.runSearch('Flow')
 
     expect(search.results.value).toHaveLength(1)
-    expect(search.results.value[0].items).toHaveLength(5)
+    expect(search.results.value[0]!.items).toHaveLength(5)
   })
 })
 
@@ -109,8 +109,8 @@ describe('useSpotSearch — group assembly', () => {
     await search.runSearch('Testspot')
 
     expect(search.results.value).toHaveLength(1)
-    expect(search.results.value[0].label).toBe('Trails & Parks')
-    expect(search.results.value[0].items.map(i => [i.name, i.sub, i.icon, i.trailId])).toEqual([
+    expect(search.results.value[0]!.label).toBe('Trails & Parks')
+    expect(search.results.value[0]!.items.map(i => [i.name, i.sub, i.icon, i.trailId])).toEqual([
       ['Testspot Trail', 'Trail', '🚵️', 't1'],
       ['Testspot Bikepark', 'Bikepark', '🚵', 'b1'],
       ['Testspot Pumptrack', 'Dirtpark / Pumptrack', '🚵', 'd1'],
@@ -125,7 +125,7 @@ describe('useSpotSearch — group assembly', () => {
     await search.runSearch('Freiburg')
 
     expect(search.results.value.map(g => g.label)).toEqual(['Trails & Parks', 'Orte & Regionen'])
-    expect(search.results.value[1].items[0]).toEqual({
+    expect(search.results.value[1]!.items[0]).toEqual({
       key: 'place-0',
       icon: '📍',
       name: 'Freiburg',

@@ -15,7 +15,7 @@ describe('opening a spot on the map', () => {
 
     openTrail('d1')
 
-    const [center, zoom] = map.flyTo.mock.calls[0]
+    const [center, zoom] = map.flyTo.mock.calls[0]!
     expect(center).toEqual([47.49, 10.72])
     expect(zoom).toBe(13)
   })
@@ -31,13 +31,13 @@ describe('flying to a place', () => {
   it('uses the given zoom (a town is one level closer than a district)', () => {
     const { map, flyToPlace } = setup()
     flyToPlace(47.49, 10.72, 12)
-    expect(map.flyTo.mock.calls[0][1]).toBe(12)
+    expect(map.flyTo.mock.calls[0]![1]).toBe(12)
   })
 
   it('keeps the district zoom 11 when no zoom is given (district, locate-me button)', () => {
     const { map, flyToPlace } = setup()
     flyToPlace(47.49, 10.72)
-    expect(map.flyTo.mock.calls[0][1]).toBe(11)
+    expect(map.flyTo.mock.calls[0]![1]).toBe(11)
   })
 })
 

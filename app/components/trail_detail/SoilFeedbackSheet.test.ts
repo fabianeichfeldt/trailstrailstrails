@@ -62,7 +62,7 @@ describe('SoilFeedbackSheet — structure', () => {
   it('offers a datetime-local picker: default now, max now, min now minus 3 days', () => {
     const input = mountSheet().find('input[type="datetime-local"]')
 
-    expect(input.element.value).toBe('2026-09-26T10:30')
+    expect((input.element as HTMLInputElement).value).toBe('2026-09-26T10:30')
     expect(input.attributes('max')).toBe('2026-09-26T10:30')
     expect(input.attributes('min')).toBe('2026-09-23T10:30')
   })
@@ -73,7 +73,7 @@ describe('SoilFeedbackSheet — structure', () => {
     expect(boxes).toHaveLength(2)
     expect(wrapper.text()).toContain('Schnee/Frost')
     expect(wrapper.text()).toContain('Regen')
-    expect(boxes.every((b) => !b.element.checked)).toBe(true)
+    expect(boxes.every((b) => !(b.element as HTMLInputElement).checked)).toBe(true)
   })
 })
 

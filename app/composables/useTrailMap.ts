@@ -428,7 +428,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
         spotName: string,
       ) {
         if (!latlngs.length) return
-        const mid = latlngs[Math.floor(latlngs.length / 2)]
+        const mid = latlngs[Math.floor(latlngs.length / 2)]!
 
         const marker = L.marker(mid, {
           icon: L.divIcon(trailStatusBadgeOptions(status.state)),

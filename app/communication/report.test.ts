@@ -26,15 +26,15 @@ describe('submitReport — HTTP mechanics', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitReport('trail-1', 'Der Trail ist gesperrt.')
-    expect(fetch.mock.calls[0][0]).toBe(`${BASE_URL}/functions/v1/report`)
-    expect(fetch.mock.calls[0][1].method).toBe('POST')
+    expect(fetch.mock.calls[0]![0]).toBe(`${BASE_URL}/functions/v1/report`)
+    expect(fetch.mock.calls[0]![1].method).toBe('POST')
   })
 
   it('sends anonHeaders (Content-Type + apikey + Authorization with anon key)', async () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitReport('trail-1', 'Der Trail ist gesperrt.')
-    const headers = fetch.mock.calls[0][1].headers
+    const headers = fetch.mock.calls[0]![1].headers
     expect(headers['Content-Type']).toBe('application/json')
     expect(headers['Authorization']).toMatch(/^Bearer /)
     expect(headers['apikey']).toBeTruthy()
@@ -63,7 +63,7 @@ describe('submitReport — request body', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitReport('trail-1', 'Der Trail ist gesperrt.')
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
+    const body = JSON.parse(fetch.mock.calls[0]![1].body)
     expect(body.trail_id).toBe('trail-1')
     expect(body.message).toBe('Der Trail ist gesperrt.')
   })
@@ -72,7 +72,7 @@ describe('submitReport — request body', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitReport('trail-1', 'Hinweis', 'user-uuid-123')
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
+    const body = JSON.parse(fetch.mock.calls[0]![1].body)
     expect(body.user_id).toBe('user-uuid-123')
   })
 
@@ -80,7 +80,7 @@ describe('submitReport — request body', () => {
     const fetch = vi.fn().mockReturnValue(ok())
     vi.stubGlobal('fetch', fetch)
     await submitReport('trail-1', 'Hinweis')
-    const body = JSON.parse(fetch.mock.calls[0][1].body)
+    const body = JSON.parse(fetch.mock.calls[0]![1].body)
     expect('user_id' in body).toBe(false)
   })
 })

@@ -117,7 +117,7 @@ describe('uploadTrailPhoto', () => {
 
     await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
 
-    const [path, blob, opts] = upload.mock.calls[0]
+    const [path, blob, opts] = upload.mock.calls[0]!
     expect(path).toMatch(/^t1\/.+\.webp$/)
     expect(blob.type).toBe('image/webp')
     expect(opts).toMatchObject({ contentType: 'image/webp', cacheControl: '31536000' })
@@ -129,7 +129,7 @@ describe('uploadTrailPhoto', () => {
 
     await uploadTrailPhoto(new File(['x'], 'a.jpg', { type: 'image/jpeg' }), 't1', client, 'u1')
 
-    const [path, blob, opts] = upload.mock.calls[0]
+    const [path, blob, opts] = upload.mock.calls[0]!
     expect(blob.type).toBe('image/jpeg')
     expect(path).toMatch(/^t1\/.+\.jpg$/)
     expect(opts).toMatchObject({ contentType: 'image/jpeg' })
@@ -172,7 +172,7 @@ describe('uploadAvatar', () => {
     const url = await uploadAvatar(original, 'u1', client)
 
     expect(storage.from).toHaveBeenCalledWith('avatars')
-    const [path, blob, opts] = upload.mock.calls[0]
+    const [path, blob, opts] = upload.mock.calls[0]!
     expect(blob).not.toBe(original)
     expect(widths).toEqual([256])
     expect(path).toBe('u1/avatar.webp')
@@ -186,7 +186,7 @@ describe('uploadAvatar', () => {
 
     await uploadAvatar(new File(['x'], 'me.png', { type: 'image/png' }), 'u1', client)
 
-    const [path, blob, opts] = upload.mock.calls[0]
+    const [path, blob, opts] = upload.mock.calls[0]!
     expect(blob.type).toBe('image/jpeg')
     expect(path).toBe('u1/avatar.jpg')
     expect(opts).toMatchObject({ contentType: 'image/jpeg' })
@@ -290,7 +290,7 @@ describe('isSpotAssignedToTrailcrew', () => {
 
     await isSpotAssignedToTrailcrew('s1', fakeAuth({ accessToken: 'tok-abc' }))
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/trailcrew_spots?')
     expect(url).toContain('user_id=eq.u1')
     expect(url).toContain('spot_id=eq.s1')

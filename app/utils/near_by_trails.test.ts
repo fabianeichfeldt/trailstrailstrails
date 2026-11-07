@@ -1,8 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { giveTrailNearBy } from './near_by_trails';
-import type { SingleTrail, BikePark, DirtPark } from './types/Trail';
+import type { SingleTrail, BikePark, DirtPark } from '../types/Trail';
 
 const BASE = {
+  slug: 'x',
   id: 'x',
   creator: '',
   url: '',

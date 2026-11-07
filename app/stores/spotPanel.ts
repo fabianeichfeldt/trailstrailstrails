@@ -72,7 +72,7 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   async function loadMoreComments() {
     if (!currentItem.value || !comments.value.length) return
     const spotId = currentItem.value.id
-    const oldest = comments.value[comments.value.length - 1].created_at
+    const oldest = comments.value[comments.value.length - 1]!.created_at
     try {
       const older = await getOlderComments(spotId, oldest)
       if (currentItem.value?.id !== spotId) return

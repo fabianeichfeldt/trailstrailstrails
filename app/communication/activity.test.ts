@@ -15,7 +15,7 @@ afterEach(() => vi.unstubAllGlobals())
 
 function mockFetch(byTable: Record<string, unknown[]>) {
   const fetch = vi.fn((url: string, _init?: RequestInit) => {
-    const table = new URL(url).pathname.split('/').pop()!.split('?')[0]
+    const table = new URL(url).pathname.split('/').pop()!.split('?')[0]!
     return table in byTable ? json(byTable[table]) : json([])
   })
   vi.stubGlobal('fetch', fetch)

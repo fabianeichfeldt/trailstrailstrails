@@ -81,10 +81,10 @@ describe('SpotDetailDescription', () => {
     })
     const badges = wrapper.findAll('.feature-badge')
     expect(badges).toHaveLength(2)
-    expect(badges[0].classes()).toContain('feature-badge-yes')
-    expect(badges[0].text()).toContain('Pumptrack')
-    expect(badges[1].classes()).toContain('feature-badge-no')
-    expect(badges[1].text()).toContain('Dirtpark')
+    expect(badges[0]!.classes()).toContain('feature-badge-yes')
+    expect(badges[0]!.text()).toContain('Pumptrack')
+    expect(badges[1]!.classes()).toContain('feature-badge-no')
+    expect(badges[1]!.text()).toContain('Dirtpark')
   })
 
   it('does not show feature badges for a plain trail', () => {

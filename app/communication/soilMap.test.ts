@@ -41,7 +41,7 @@ describe('soil-map adapter — request', () => {
     const fetchMock = respond(200)
     vi.stubGlobal('fetch', fetchMock)
     await fetchSoil('u1')
-    const [url, init] = fetchMock.mock.calls[0]
+    const [url, init] = fetchMock.mock.calls[0]!
     expect(url).toBe(`${FUNCTIONS}/soil-map`)
     expect(init.method).toBe('POST')
     expect(init.headers.Authorization).toBe('Bearer tok')

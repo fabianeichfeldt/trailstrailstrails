@@ -118,7 +118,7 @@ export function useSegmentEditor(opts: Options) {
     let total = 0;
     const dists: number[] = [0];
     for (let i = 1; i < points.length; i++) {
-      const a = points[i - 1], b = points[i];
+      const a = points[i - 1]!, b = points[i]!;
       const dLat = (b.lat - a.lat) * 111000;
       const dLng = (b.lng - a.lng) * 111000 * Math.cos(a.lat * Math.PI / 180);
       total += Math.hypot(dLat, dLng);
@@ -209,8 +209,8 @@ export function useSegmentEditor(opts: Options) {
     if (!canvas || !segmentSource.value || distances.value.length === 0) return;
     const rect = canvas.getBoundingClientRect();
     const x    = (e.clientX - rect.left) * (canvas.width / rect.width);
-    const startX = handleXPosition(distances.value[segmentStartIndex.value], totalDistance.value, canvas.width);
-    const endX   = handleXPosition(distances.value[segmentEndIndex.value],   totalDistance.value, canvas.width);
+    const startX = handleXPosition(distances.value[segmentStartIndex.value]!, totalDistance.value, canvas.width);
+    const endX   = handleXPosition(distances.value[segmentEndIndex.value]!,   totalDistance.value, canvas.width);
     dragging = Math.abs(x - startX) <= Math.abs(x - endX) ? 'start' : 'end';
     canvas.style.cursor = 'grabbing';
     canvas.setPointerCapture(e.pointerId);
@@ -223,8 +223,8 @@ export function useSegmentEditor(opts: Options) {
     const rawX = (e.clientX - rect.left) * (canvas.width / rect.width);
 
     if (!dragging) {
-      const startX = handleXPosition(distances.value[segmentStartIndex.value], totalDistance.value, canvas.width);
-      const endX   = handleXPosition(distances.value[segmentEndIndex.value],   totalDistance.value, canvas.width);
+      const startX = handleXPosition(distances.value[segmentStartIndex.value]!, totalDistance.value, canvas.width);
+      const endX   = handleXPosition(distances.value[segmentEndIndex.value]!,   totalDistance.value, canvas.width);
       canvas.style.cursor = (Math.abs(rawX - startX) <= 16 || Math.abs(rawX - endX) <= 16) ? 'grab' : 'ew-resize';
       return;
     }
@@ -256,7 +256,7 @@ export function useSegmentEditor(opts: Options) {
 
     const key = `seg-${crypto.randomUUID()}`;
     const distKm = Math.round(
-      (distances.value[segmentEndIndex.value] - distances.value[segmentStartIndex.value]) / 100,
+      (distances.value[segmentEndIndex.value]! - distances.value[segmentStartIndex.value]!) / 100,
     ) / 10;
 
     pendingSegments.value.push({
@@ -280,6 +280,7 @@ export function useSegmentEditor(opts: Options) {
 
   function removeSegment(index: number) {
     const seg = pendingSegments.value[index];
+    if (!seg) return;
     mapView.value?.removeLayer(seg.key);
     pendingSegments.value.splice(index, 1);
   }

@@ -28,7 +28,7 @@ describe('startCheckout', () => {
 
     const r = await startCheckout('jwt-1', 'yearly')
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toMatch(/\/functions\/v1\/billing$/)
     expect(opts.method).toBe('POST')
     expect(opts.headers.Authorization).toBe('Bearer jwt-1')
@@ -39,7 +39,7 @@ describe('startCheckout', () => {
   it('sends mode: test when asked', async () => {
     const fetch = stub(res(200, { checkoutUrl: 'x' }))
     await startCheckout('jwt-1', 'monthly', 'test')
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ action: 'checkout', interval: 'monthly', mode: 'test' })
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({ action: 'checkout', interval: 'monthly', mode: 'test' })
   })
 
   it('maps 409 already_subscribed', async () => {
@@ -66,8 +66,8 @@ describe('openPortal', () => {
   it('posts the portal action and returns the url', async () => {
     const fetch = stub(res(200, { url: 'https://portal.example' }))
     const r = await openPortal('jwt-1')
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ action: 'portal' })
-    expect(fetch.mock.calls[0][1].headers.Authorization).toBe('Bearer jwt-1')
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({ action: 'portal' })
+    expect(fetch.mock.calls[0]![1].headers.Authorization).toBe('Bearer jwt-1')
     expect(r).toEqual({ ok: true, url: 'https://portal.example' })
   })
 
@@ -85,7 +85,7 @@ describe('resumeSubscription', () => {
   it('posts resume and returns ok', async () => {
     const fetch = stub(res(200, { ok: true }))
     expect(await resumeSubscription('jwt-1')).toEqual({ ok: true })
-    expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ action: 'resume' })
+    expect(JSON.parse(fetch.mock.calls[0]![1].body)).toEqual({ action: 'resume' })
   })
 
   it('maps 409 to nothing_to_resume and others to unknown', async () => {
@@ -100,7 +100,7 @@ describe('cancelSubscription', () => {
   it('with a jwt uses user headers and sends no identity', async () => {
     const fetch = stub(res(200, { ok: true, receivedAt: '2026-10-03T10:00:00Z' }))
     const r = await cancelSubscription({ jwt: 'jwt-1' })
-    const [, opts] = fetch.mock.calls[0]
+    const [, opts] = fetch.mock.calls[0]!
     expect(opts.headers.Authorization).toBe('Bearer jwt-1')
     expect(JSON.parse(opts.body)).toEqual({ action: 'cancel' })
     expect(r).toEqual({ ok: true, receivedAt: '2026-10-03T10:00:00Z' })
@@ -109,7 +109,7 @@ describe('cancelSubscription', () => {
   it('anonymously sends email and name with the anon key', async () => {
     const fetch = stub(res(200, { ok: true, receivedAt: 't' }))
     await cancelSubscription({ email: 'a@b.de', name: 'Anna' })
-    const [, opts] = fetch.mock.calls[0]
+    const [, opts] = fetch.mock.calls[0]!
     expect(opts.headers.Authorization).toBe(`Bearer ${anon}`)
     expect(JSON.parse(opts.body)).toEqual({ action: 'cancel', email: 'a@b.de', name: 'Anna' })
   })
@@ -134,7 +134,7 @@ describe('getMySubscription', () => {
 
     const r = await getMySubscription('jwt-1')
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/rest/v1/subscriptions?')
     expect(url).toContain('status=in.(active,trialing,past_due)')
     expect(url).toContain('order=created_at.desc')
@@ -161,7 +161,7 @@ describe('getCheckoutEligibility', () => {
   it('calls the RPC and maps the row', async () => {
     const fetch = stub(res(200, [{ eligible: false, reason: 'grant_active', eligible_from: '2027-01-01T00:00:00Z' }]))
     const r = await getCheckoutEligibility('jwt-1')
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/rpc/get_my_checkout_eligibility')
     expect(opts.method).toBe('POST')
     expect(r).toEqual({ eligible: false, reason: 'grant_active', eligibleFrom: '2027-01-01T00:00:00Z' })

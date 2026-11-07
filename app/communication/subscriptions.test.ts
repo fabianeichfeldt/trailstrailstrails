@@ -28,7 +28,7 @@ describe('getMyEntitlement', () => {
 
     await getMyEntitlement('token-123')
 
-    const [url, opts] = fetch.mock.calls[0]
+    const [url, opts] = fetch.mock.calls[0]!
     expect(url).toContain('/rpc/get_my_entitlement')
     expect(opts.method).toBe('POST')
     expect(opts.headers.Authorization).toBe('Bearer token-123')
