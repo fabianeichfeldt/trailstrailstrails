@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { upVote, downVote } from './feedback'
+import { showToast } from './toast'
+
+vi.mock('./toast', () => ({ showToast: vi.fn() }))
 
 function buildButtons(): { up: HTMLElement; down: HTMLElement } {
   document.body.innerHTML = `
@@ -67,5 +70,37 @@ describe('downVote', () => {
     expect(up.classList.contains('selected')).toBe(false)
     const [, init] = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0]
     expect(JSON.parse(init.body)).toEqual({ trail_id: 'trail-2', up: false })
+  })
+})
+
+describe('failed vote', () => {
+  beforeEach(() => {
+    vi.mocked(showToast).mockClear()
+  })
+
+  it('restores the previous selection and shows an error when the server rejects the vote', async () => {
+    const { up, down } = buildButtons()
+    down.classList.add('selected')
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('boom', { status: 500 }))
+    await upVote('trail-1', up)
+    expect(up.classList.contains('selected')).toBe(false)
+    expect(down.classList.contains('selected')).toBe(true)
+    expect(showToast).toHaveBeenCalledWith('Feedback konnte nicht gesendet werden', 'error')
+  })
+
+  it('clears the selection when nothing was selected before the failed vote', async () => {
+    const { up, down } = buildButtons()
+    vi.mocked(fetch).mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await downVote('trail-2', down)
+    expect(up.classList.contains('selected')).toBe(false)
+    expect(down.classList.contains('selected')).toBe(false)
+    expect(showToast).toHaveBeenCalledWith('Feedback konnte nicht gesendet werden', 'error')
+  })
+
+  it('shows no error when the vote succeeds', async () => {
+    const { up } = buildButtons()
+    await upVote('trail-1', up)
+    expect(up.classList.contains('selected')).toBe(true)
+    expect(showToast).not.toHaveBeenCalled()
   })
 })

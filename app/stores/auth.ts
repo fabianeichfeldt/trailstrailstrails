@@ -49,8 +49,14 @@ export const useAuthStore = defineStore('auth', () => {
       const { data } = await client.rpc('get_my_role')
       dbRole.value = data ?? 'user'
     } catch {
-      const { data } = await client.from('user_roles').select('role').limit(1)
-      dbRole.value = (data as any)?.[0]?.role ?? 'user'
+      // Watcher calls this unawaited; a rejection here would be unhandled. Fail closed to 'user'.
+      try {
+        const { data } = await client.from('user_roles').select('role').limit(1)
+        dbRole.value = (data as any)?.[0]?.role ?? 'user'
+      } catch (err) {
+        console.warn('[auth] role lookup failed, defaulting to user', err)
+        dbRole.value = 'user'
+      }
     }
   }
 

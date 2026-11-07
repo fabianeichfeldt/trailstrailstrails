@@ -182,6 +182,28 @@ describe('elevationSVG', () => {
       expect(svg.querySelector('path')!.getAttribute('fill')).toBe('rgba(0,0,0,0.04)')
     })
 
+    // Bug: IMBA[seg.difficulty!] threw for a trail segment without difficulty.
+    it('draws a trail segment without difficulty in neutral grey instead of throwing', () => {
+      const noDiff: TourSegment[] = [
+        { type: 'trail', trailId: 't1', gpxPoints: gpxFor(FIVE).slice(0, 3) },
+        { type: 'transfer', gpxPoints: gpxFor(FIVE).slice(3, 5) },
+      ]
+      const svg = mountSvg(tour({ segments: noDiff }), FIVE, noDiff)
+      const lines = svg.querySelectorAll('polyline')
+      expect(lines[0].getAttribute('stroke')).toBe('#888')
+      expect(lines[0].getAttribute('stroke-width')).toBe('2.2')
+    })
+
+    // difficulty comes from the DB as a plain string, so it can hold a value IMBA doesn't know.
+    it('draws a trail segment with an unknown difficulty in neutral grey instead of throwing', () => {
+      const unknown = [
+        { type: 'trail', trailId: 't1', difficulty: 'orange', gpxPoints: gpxFor(FIVE).slice(0, 3) },
+        { type: 'transfer', gpxPoints: gpxFor(FIVE).slice(3, 5) },
+      ] as unknown as TourSegment[]
+      const svg = mountSvg(tour({ segments: unknown }), FIVE, unknown)
+      expect(svg.querySelectorAll('polyline')[0].getAttribute('stroke')).toBe('#888')
+    })
+
     it('skips a segment with fewer than two points', () => {
       const single: TourSegment[] = [
         { type: 'trail', trailId: 't1', difficulty: 'blue', gpxPoints: gpxFor(FIVE).slice(0, 1) },

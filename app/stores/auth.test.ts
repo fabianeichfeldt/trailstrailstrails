@@ -253,6 +253,24 @@ describe('useAuthStore role resolution', () => {
     expect(store.dbRole).toBe('user')
   })
 
+  it('keeps the role at "user" without an unhandled rejection when the RPC and the user_roles fallback both fail', async () => {
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown) => { unhandled.push(reason) }
+    process.on('unhandledRejection', onUnhandled)
+    try {
+      rpc.mockRejectedValue(new Error('rpc down'))
+      from.mockReturnValue({ select: () => ({ limit: () => Promise.reject(new Error('table down')) }) })
+      const store = useAuthStore()
+      userRef.value = { id: 'u1' }
+      await flush()
+      await flush()
+      expect(store.dbRole).toBe('user')
+      expect(unhandled).toEqual([])
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
+  })
+
   it('resets the role to "user" on logout', async () => {
     rpc.mockResolvedValue({ data: 'admin' })
     const store = useAuthStore()

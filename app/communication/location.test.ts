@@ -26,6 +26,11 @@ describe('getApproxLocation', () => {
     await expect(getApproxLocation()).resolves.toEqual({ lat: 48.1, lng: 11.6 })
   })
 
+  it('keeps a valid coordinate of exactly 0 (Greenwich meridian, equator)', async () => {
+    vi.stubGlobal('fetch', geo(200, { lat: 51.5, lon: 0 }))
+    await expect(getApproxLocation()).resolves.toEqual({ lat: 51.5, lng: 0 })
+  })
+
   it('falls back to 0/0 when the response is not ok', async () => {
     vi.stubGlobal('fetch', geo(503, { lat: 48.1, lon: 11.5 }))
     await expect(getApproxLocation()).resolves.toEqual({ lat: 0, lng: 0 })

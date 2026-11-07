@@ -45,7 +45,8 @@ export function elevationSVG(profile: ElevationPoint[], item: AnyItem, segments?
       ptIdx += n;
       if (pts.length < 2) continue;
 
-      const color  = seg.type === 'trail' ? IMBA[seg.difficulty!].hex : '#aaa';
+      // difficulty may be missing or an unknown DB string; grey matches DIFF_COLOR's unknown fallback
+      const color  = seg.type === 'trail' ? (IMBA[seg.difficulty as ImbaColor]?.hex ?? '#888') : '#aaa';
       const width  = seg.type === 'trail' ? '2.2' : '1.5';
       const points = pts.map(p => `${px(p.dist).toFixed(1)},${py(p.alt).toFixed(1)}`).join(' ');
       profileLines += `<polyline points="${points}" stroke="${color}" stroke-width="${width}" fill="none" stroke-linejoin="round" opacity="${seg.type === 'trail' ? 1 : 0.6}"/>`;
