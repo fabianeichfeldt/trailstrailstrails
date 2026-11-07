@@ -23,5 +23,13 @@ export default defineConfig({
     environment: 'happy-dom',
     include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'build/**/*.test.ts', 'scripts/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
+    // Off by default so per-edit hooks stay fast; `npm run test:coverage` turns it on.
+    coverage: {
+      provider: 'v8',
+      include: ['app/**/*.{ts,vue}', 'server/**/*.ts', 'build/**/*.ts', 'scripts/**/*.{ts,mjs}'],
+      exclude: ['**/*.test.ts', '**/*.d.ts', 'app/types/database.types.ts'],
+      reporter: ['text-summary', 'html', 'lcov', 'json-summary'],
+      reportsDirectory: './coverage',
+    },
   },
 });

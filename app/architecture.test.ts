@@ -183,6 +183,8 @@ describe('No orphaned content directories at repo root', () => {
     '.nuxt',
     '.output',
     'dist',
+    'coverage', // gitignored `npm run test:coverage` HTML report
+    'reports', // gitignored `npm run test:mutation` Stryker report
     'ios',
     'android',
     'assets', // Capacitor native-shell icon/splash source assets, not web content
