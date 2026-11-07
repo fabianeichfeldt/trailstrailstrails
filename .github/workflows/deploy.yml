@@ -80,6 +80,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NUXT_TELEMETRY_DISABLED: 1
+      UMAMI_WEBSITE_ID: ${{ vars.UMAMI_WEBSITE_ID }}
     steps:
       - uses: actions/checkout@v6
 

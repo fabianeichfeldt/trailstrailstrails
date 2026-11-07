@@ -77,6 +77,10 @@ export default defineNuxtConfig({
           innerHTML: `window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__pwaPrompt=e;});`,
           type: 'text/javascript',
         },
+        // Only builds with UMAMI_WEBSITE_ID (CI deploy) get analytics; dev/tests stay untracked.
+        ...(process.env.UMAMI_WEBSITE_ID
+          ? [{ src: 'https://cloud.umami.is/script.js', defer: true, 'data-website-id': process.env.UMAMI_WEBSITE_ID }]
+          : []),
       ],
     },
   },
