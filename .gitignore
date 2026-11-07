@@ -28,3 +28,8 @@ public/nearby.json
 public/regions.json
 # Now written straight into .output/public by prerender:done; ignored so older branches' dev runs stay clean
 public/sitemap.xml
+
+# Test reports (npm run test:coverage / test:mutation)
+coverage/
+reports/
+.stryker-tmp/
