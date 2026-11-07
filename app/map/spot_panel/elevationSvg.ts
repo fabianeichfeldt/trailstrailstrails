@@ -45,8 +45,8 @@ export function elevationSVG(profile: ElevationPoint[], item: AnyItem, segments?
       ptIdx += n;
       if (pts.length < 2) continue;
 
-      // Trail segments may lack difficulty (optional in TourSegment); grey matches DIFF_COLOR's unknown fallback
-      const color  = seg.type === 'trail' ? (seg.difficulty ? IMBA[seg.difficulty].hex : '#888') : '#aaa';
+      // difficulty may be missing or an unknown DB string; grey matches DIFF_COLOR's unknown fallback
+      const color  = seg.type === 'trail' ? (IMBA[seg.difficulty as ImbaColor]?.hex ?? '#888') : '#aaa';
       const width  = seg.type === 'trail' ? '2.2' : '1.5';
       const points = pts.map(p => `${px(p.dist).toFixed(1)},${py(p.alt).toFixed(1)}`).join(' ');
       profileLines += `<polyline points="${points}" stroke="${color}" stroke-width="${width}" fill="none" stroke-linejoin="round" opacity="${seg.type === 'trail' ? 1 : 0.6}"/>`;
@@ -127,9 +127,7 @@ export function bindElevationHover(
     const dist   = (chartX / cW) * maxDist;
     const idx    = closestIdx(dist);
     const pt     = profile[idx];
-    // gpxPoints may be shorter than the profile; map proportionally (identity when equal length)
-    const gpxIdx = Math.round(idx * (item.gpxPoints.length - 1) / Math.max(1, profile.length - 1));
-    const gpx    = item.gpxPoints[gpxIdx];
+    const gpx    = item.gpxPoints[idx];
 
     const x = PL + (pt.dist / maxDist) * cW;
     const y = PT + cH - ((pt.alt - minA) / rangeA) * cH;
@@ -146,7 +144,7 @@ export function bindElevationHover(
     scrubTxt.textContent = `${Math.round(pt.alt)} m`;
 
     scrubber.removeAttribute('visibility');
-    if (gpx) onHover([gpx[0], gpx[1]], color);
+    onHover([gpx[0], gpx[1]], color);
   };
 
   const handleLeave = () => {
