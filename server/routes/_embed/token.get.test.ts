@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest'
 import { SPOT_TYPE_LIST } from '@@/app/types/SpotTypes'
 

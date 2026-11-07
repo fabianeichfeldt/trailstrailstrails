@@ -80,6 +80,8 @@ SSG deploy = no server at runtime. A `server/api/*.ts` route only works in prod 
 - **When fixing a bug, write a failing test first.** The test must fail on the broken code before you touch the fix. A test that passes before the fix is not acceptable.
 - **Tests must never call the production database.** Use a placeholder `SUPABASE_URL` (e.g. `http://localhost:54321`) in the test environment. Mock at the HTTP boundary if DB behaviour is needed.
 - **Prefer vitest over Playwright.** Default to vitest for all new tests. Only use Playwright when the behaviour genuinely cannot be tested with vitest (e.g. real browser rendering, real auth cookie flows).
+- **Vitest runs in `node` by default.** A test that mounts components or touches `document`/`window`/`localStorage` starts with `// @vitest-environment happy-dom` (missing it fails with "document is not defined"). Don't flip the global default back: per-file happy-dom setup was the largest share of suite time.
+- **PGlite RLS tests: migrate once, clone per test.** Build the migrated DB in `beforeAll`, give each test `await template.clone()` in `beforeEach`, close it in `afterEach` (pattern: `app/communication/trailPhotoRls.test.ts`). A `new PGlite()` per test costs 1–3 s.
 
 ### Mobile is first-class
 - Every UI change must work on mobile. Check touch targets, scrolling, and layout at small viewports before reporting done.

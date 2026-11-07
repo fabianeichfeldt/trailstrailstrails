@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -76,14 +76,22 @@ const insertPhoto = (user: string | null, row: { trail_id: string; url: string; 
   as(user, 'INSERT INTO public.trail_photos (trail_id, url, creator, copyright) VALUES ($1, $2, $3, $4)',
     [row.trail_id, row.url, row.creator, row.copyright ?? null])
 
-beforeEach(async () => {
-  db = new PGlite()
-  await db.exec(SUPABASE_STUB)
-  await db.exec(migration('_add_trail_photo_delete_policies.sql'))
-  await db.exec(migration('_fix_trail_photo_delete_returning.sql'))
-  await db.exec(migration('_add_trail_photo_copyright.sql'))
-  await db.exec(migration('_restrict_trail_photo_insert.sql'))
+// Booting PGlite costs ~1s; migrate once, then hand each test its own clone (~0.2s).
+let template: PGlite
+beforeAll(async () => {
+  template = new PGlite()
+  await template.exec(SUPABASE_STUB)
+  await template.exec(migration('_add_trail_photo_delete_policies.sql'))
+  await template.exec(migration('_fix_trail_photo_delete_returning.sql'))
+  await template.exec(migration('_add_trail_photo_copyright.sql'))
+  await template.exec(migration('_restrict_trail_photo_insert.sql'))
 })
+afterAll(() => template.close())
+
+beforeEach(async () => {
+  db = await template.clone() as PGlite
+})
+afterEach(() => db.close())
 
 describe('trail_photos INSERT', () => {
   it('accepts the app upload flow: own user, own freshly uploaded file, matching trail', async () => {

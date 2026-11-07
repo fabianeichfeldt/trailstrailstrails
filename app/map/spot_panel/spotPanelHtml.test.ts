@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import { describe, it, expect } from 'vitest'
 import { trailStatusCardFor } from './spotPanelHtml'
 import type { MtbTrail, MtbTour } from '../../types/MtbTypes'

@@ -20,7 +20,8 @@ export default defineConfig({
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify('https://test.supabase.co'),
   },
   test: {
-    environment: 'happy-dom',
+    // DOM tests opt in per file with a `// @vitest-environment happy-dom` header; node skips that setup cost.
+    environment: 'node',
     include: ['app/**/*.test.ts', 'server/**/*.test.ts', 'build/**/*.test.ts', 'scripts/**/*.test.ts'],
     setupFiles: ['./vitest.setup.ts'],
     // Off by default so per-edit hooks stay fast; `npm run test:coverage` turns it on.

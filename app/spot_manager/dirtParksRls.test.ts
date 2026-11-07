@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -67,11 +67,19 @@ async function as(user: string | null, sql: string, params: unknown[] = []) {
 const kind = (id: string) => db.query<{ pumptrack: boolean; dirtpark: boolean }>(
   'SELECT pumptrack, dirtpark FROM public.dirt_parks WHERE id = $1', [id]).then(r => r.rows[0])
 
-beforeEach(async () => {
-  db = new PGlite()
-  await db.exec(SUPABASE_STUB)
-  await db.exec(migration('_spotmanager_dirtparks.sql'))
+// Booting PGlite costs ~1s; migrate once, then hand each test its own clone (~0.2s).
+let template: PGlite
+beforeAll(async () => {
+  template = new PGlite()
+  await template.exec(SUPABASE_STUB)
+  await template.exec(migration('_spotmanager_dirtparks.sql'))
 })
+afterAll(() => template.close())
+
+beforeEach(async () => {
+  db = await template.clone() as PGlite
+})
+afterEach(() => db.close())
 
 describe('dirt_parks SELECT', () => {
   it('returns dirtparks to logged-in users (SpotManager picker)', async () => {

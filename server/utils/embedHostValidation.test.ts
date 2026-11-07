@@ -1,4 +1,3 @@
-// @vitest-environment node
 import { describe, test, expect } from 'vitest'
 import { extractHostname, isHostAllowed, resolveHostname } from './embedHostValidation'
 
