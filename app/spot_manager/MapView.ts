@@ -2,10 +2,8 @@ import L from 'leaflet';
 import { GpxTrailRow, GpxTourRow } from './Api';
 import { DIFF_COLOR } from './GpxProcessor';
 import type { GpxPoint } from './GpxProcessor';
-import { elevationSVG, bindElevationHover } from '../map/spot_panel/elevationSvg';
 import { markerIconOptions, parkingIconOptions } from '../map/markerIcon';
 import { roundCoord, type LatLng } from './coords';
-import { ElevationPoint } from '../types/MtbTypes';
 
 export interface MapViewLike {
   clear(): void;
@@ -36,7 +34,6 @@ const PENDING_COLOR = '#999';
 export class MapView {
   private map: L.Map;
   private layers = new Map<string, L.Polyline>();
-  private hoverMarker: L.CircleMarker | null = null;
   private spotMarker: L.Marker | null = null;
   private onPolylineClick?: (id: string) => void;
   private sourceTrack: L.Polyline | null = null;
@@ -139,21 +136,6 @@ export class MapView {
     this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
   }
 
-  setHoverMarker(latlng: [number, number], color: string) {
-    if (!this.hoverMarker) {
-      this.hoverMarker = L.circleMarker(latlng, {
-        radius: 7, color, weight: 2.5, fillColor: '#fff', fillOpacity: 1, interactive: false,
-      }).addTo(this.map);
-    } else {
-      this.hoverMarker.setLatLng(latlng);
-      this.hoverMarker.setStyle({ color });
-    }
-  }
-
-  removeHoverMarker() {
-    if (this.hoverMarker) { this.map.removeLayer(this.hoverMarker); this.hoverMarker = null; }
-  }
-
   showSourceTrack(points: GpxPoint[]) {
     if (this.sourceTrack) { this.map.removeLayer(this.sourceTrack); }
     const latlngs = points.map(p => [p.lat, p.lng] as [number, number]);
@@ -224,7 +206,6 @@ export class MapView {
   clear() {
     this.layers.forEach(pl => this.map.removeLayer(pl));
     this.layers.clear();
-    this.removeHoverMarker();
     this.spotMarker?.remove();
     this.spotMarker = null;
     this.clearSourceTrack();
@@ -235,70 +216,4 @@ export class MapView {
   invalidate() {
     this.map.invalidateSize();
   }
-}
-
-// ── Elevation panel helpers ────────────────────────────────────────────────────
-
-export interface ElevItem {
-  name: string;
-  gpxPoints: [number, number, number][];
-  elevationProfile: ElevationPoint[];
-  distance_km: number;
-  elevation_gain: number;
-  elevation_loss: number;
-  direction: string;
-  difficulty?: string;
-  gpx_url?: string;
-}
-
-export function renderElevation(panel: HTMLElement, item: ElevItem, mapView: MapView): void {
-  const fakeItem = {
-    id: '',
-    spotId: '',
-    name: item.name,
-    gpxPoints: item.gpxPoints,
-    elevationProfile: item.elevationProfile,
-    distance_km: item.distance_km,
-    elevation_gain: item.elevation_gain,
-    elevation_loss: item.elevation_loss,
-    direction: item.direction as any,
-    difficulty: (item.difficulty ?? 'blue') as any,
-    trailCount: 0,
-    segments: [],
-    hasFullGpx: true,
-    duration_minutes: 0,
-  };
-
-  const dirLabels: Record<string, string> = {
-    'cw': '↻ Uhrzeigersinn', 'ccw': '↺ Gegen Uhrzeiger',
-    'one-way-down': '⤵ Bergab', 'one-way-up': '⤴ Bergauf', 'both': '↔ Beide',
-  };
-
-  panel.querySelector('.sm-elev-name')!.textContent = item.name;
-  panel.querySelector('.sm-elev-chart')!.innerHTML = elevationSVG(item.elevationProfile, fakeItem);
-  panel.querySelector('.sm-elev-stats')!.innerHTML =
-    `<span>📍 ${item.distance_km} km</span>` +
-    `<span>↑ ${item.elevation_gain} m</span>` +
-    `<span>↓ ${item.elevation_loss} m</span>` +
-    `<span>${dirLabels[item.direction] ?? item.direction}</span>`;
-
-  const dl = panel.querySelector('.sm-elev-dl') as HTMLAnchorElement;
-  if (item.gpx_url) {
-    dl.href = item.gpx_url;
-    dl.download = `${item.name}.gpx`;
-    dl.classList.remove('hidden');
-  } else {
-    dl.classList.add('hidden');
-  }
-
-  panel.classList.remove('hidden');
-
-  requestAnimationFrame(() => {
-    const svg = panel.querySelector('.sm-elev-chart svg') as SVGSVGElement | null;
-    if (!svg) return;
-    bindElevationHover(svg, fakeItem,
-      (ll, color) => mapView.setHoverMarker(ll, color),
-      () => mapView.removeHoverMarker(),
-    );
-  });
 }

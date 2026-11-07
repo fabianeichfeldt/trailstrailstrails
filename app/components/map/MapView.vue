@@ -26,6 +26,7 @@ const emit = defineEmits<{
   soilCounts: [{ matchCount: number; totalCount: number }]
   nearbyConflict: [{ trail: any; resolve: (proceed: boolean) => void }]
   spotPicked: [{ lat: number; lng: number; type: string }]
+  addMode: [string | undefined]
 }>()
 
 const mapEl = ref<HTMLElement | null>(null)
@@ -37,7 +38,14 @@ watchEffect(() => {
   el.classList.toggle('map-grayscale', filtersStore.grayscaleMap)
   el.classList.toggle('soil-radar-on', soilStore.enabled)
 }, { flush: 'post' })
-const { openTrail, flyToPlace, nearbyConflict, addSpotPicked, mapReady, soilCounts, getCenter } = useTrailMap(mapEl)
+const {
+  openTrail, flyToPlace, nearbyConflict, addSpotPicked, addMode, startAddMode, cancelAddMode,
+  mapReady, soilCounts, getCenter,
+} = useTrailMap(mapEl)
+
+// The FAB lives in pages/map.vue; it arms/cancels add mode through this handle and mirrors the state.
+defineExpose({ startAddMode, cancelAddMode })
+watch(addMode, m => emit('addMode', m))
 
 watch(nearbyConflict, (v) => {
   if (v) emit('nearbyConflict', v)

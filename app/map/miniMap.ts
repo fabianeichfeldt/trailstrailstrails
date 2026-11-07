@@ -12,11 +12,8 @@
 // createMiniMap so they never land in the entry bundle — only in whichever
 // route chunk actually renders a mini-map.
 import { markerIconOptions, parkingIconOptions } from './markerIcon'
-import {
-  DIFF_COLOR,
-  computeTrailStats, trailTooltipHtml, placeholderDesc,
-  positionTooltip, createTooltipEl,
-} from './trailTooltip'
+import { DIFF_COLOR, placeholderDesc, createTooltipEl } from './trailTooltip'
+import { addTrackLayer, createHideController, bindTooltipHover } from './gpxLayer'
 import { shouldShowGpx } from './gpxZoomThreshold'
 
 /** One trail or tour track to draw. */
@@ -124,62 +121,31 @@ export async function createMiniMap(
   const tooltipEl = createTooltipEl(map.getContainer())
   const containerW = () => map.getContainer().clientWidth
 
-  let hideTimer: ReturnType<typeof setTimeout> | null = null
-  let touchHideTimer: ReturnType<typeof setTimeout> | null = null
-  function scheduleHide() {
-    if (hideTimer) clearTimeout(hideTimer)
-    hideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 800)
-  }
-  function cancelHide() { if (hideTimer) clearTimeout(hideTimer) }
-  tooltipEl.addEventListener('mouseenter', cancelHide)
-  tooltipEl.addEventListener('mouseleave', () => { tooltipEl.style.display = 'none' })
-
-  function showPolylineTooltip(p: MiniMapPolyline, e: { containerPoint: { x: number; y: number } }) {
-    const stats = computeTrailStats(p.points)
-    const desc  = p.difficulty
-      ? placeholderDesc(p.difficulty)
-      : 'Eine abwechslungsreiche Tour durch die Trailanlage.'
-    tooltipEl.innerHTML = trailTooltipHtml(p.name, p.difficulty, desc, stats)
-    const extra = options.tooltipActionHtml?.(p)
-    if (extra) tooltipEl.querySelector('.ttr-bottom')?.insertAdjacentHTML('beforeend', extra)
-    positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW())
-
-    const onAction = options.onTooltipAction ?? options.onPolylineActivate
-    if (onAction) {
-      tooltipEl.querySelector('.ttr-open')?.addEventListener('click', (ev) => {
-        ev.stopPropagation()
-        onAction(p)
-      }, { once: true })
-    }
-  }
+  const hide = createHideController(tooltipEl)
+  const touchHide = createHideController(tooltipEl)
+  bindTooltipHover(tooltipEl, hide)
 
   // Layers that setData() tears down and rebuilds — everything except the
   // base tile layer.
   let dataLayer = L.layerGroup().addTo(map)
 
   function addPolyline(p: MiniMapPolyline) {
-    const latlngs = p.points.map(([la, ln]) => [la, ln] as [number, number])
     const visibleOpts = p.difficulty
       ? { color: DIFF_COLOR[p.difficulty] ?? '#888', weight: 6, opacity: 0.85 }
       : { color: '#555', weight: 5, opacity: 0.6, dashArray: '8, 6' }
+    const onAction = options.onTooltipAction ?? options.onPolylineActivate
 
-    L.polyline(latlngs, { ...visibleOpts, interactive: false }).addTo(dataLayer)
-    const hit = L.polyline(latlngs, { weight: 20, opacity: 0.001, color: '#000' }).addTo(dataLayer)
-
-    hit.on('mouseover', (e: any) => { cancelHide(); showPolylineTooltip(p, e) })
-    hit.on('mousemove', (e: any) => positionTooltip(tooltipEl, e.containerPoint.x, e.containerPoint.y, containerW()))
-    hit.on('mouseout', scheduleHide)
-    hit.on('touchstart', (e: any) => {
-      if (touchHideTimer) clearTimeout(touchHideTimer)
-      const touch = e.originalEvent.touches[0]
-      const rect  = map.getContainer().getBoundingClientRect()
-      showPolylineTooltip(p, { containerPoint: { x: touch.clientX - rect.left, y: touch.clientY - rect.top } })
-      touchHideTimer = setTimeout(() => { tooltipEl.style.display = 'none' }, 3000)
-    }, { passive: true })
-
-    if (options.onPolylineActivate) {
-      hit.on('click', () => options.onPolylineActivate!(p))
-    }
+    addTrackLayer({
+      L, map, parent: dataLayer, tooltipEl, hide, touchHide,
+      latlngs: p.points.map(([la, ln]) => [la, ln] as [number, number]),
+      visibleOpts, name: p.name, difficulty: p.difficulty, points: p.points,
+      description: p.difficulty
+        ? placeholderDesc(p.difficulty)
+        : 'Eine abwechslungsreiche Tour durch die Trailanlage.',
+      extraActionHtml: () => options.tooltipActionHtml?.(p) ?? null,
+      onOpen: onAction && (() => onAction(p)),
+      onClick: options.onPolylineActivate && (() => options.onPolylineActivate!(p)),
+    })
   }
 
   function addMarker(m: MiniMapMarker) {
@@ -214,8 +180,8 @@ export async function createMiniMap(
     },
     setData,
     destroy() {
-      if (hideTimer) clearTimeout(hideTimer)
-      if (touchHideTimer) clearTimeout(touchHideTimer)
+      hide.cancel()
+      touchHide.cancel()
       tooltipEl.remove()
       map.remove()
     },

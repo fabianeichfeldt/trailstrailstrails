@@ -191,7 +191,7 @@ else { ... }
 |---|---|
 | `npm test` | unit tests incl. architecture invariant tests |
 | `npm run test:coverage` | unit tests + v8 coverage (`coverage/index.html`); this is what CI runs, report uploaded as the `coverage-report` artifact |
-| `npm run test:mutation` | Stryker mutation testing over `app/`, `server/`, `build/` `.ts` (slow, incremental; HTML in `reports/mutation/`). Scope it: `npm run test:mutation -- --mutate "app/utils/**/*.ts"`. Not in CI |
+| `npm run test:mutation` | Stryker mutation testing over `app/`, `server/`, `build/` `.ts` (slow, incremental; HTML in `reports/mutation/`). Scope it: `MUTATE="app/utils/**/*.ts" npm run test:mutation` (never `--mutate`: it drops the test-file exclusions). Static mutants are skipped (`ignoreStatic`). Not in CI |
 | `npm run lint:arch` | Import boundary enforcement via dependency-cruiser |
 | `npm run test:e2e` | Playwright tests covering map, auth, add-spot, search, filters |
 | `npm run verify:static-build` | Real `nuxt generate` build, served as pure static files (no live Nitro), checks a real trail page actually renders. Runs in CI as a step in the `build` job (`.github/workflows/deploy.yml`), right after `generate` and before the deploy artifact is uploaded — a failure blocks the deploy. Not part of `npm test` (needs real Supabase creds, takes minutes) — run it manually too before/after changes to trail/spot data fetching |

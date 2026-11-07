@@ -5,6 +5,8 @@
 
     <ClientOnly>
       <MapView
+        ref="mapView"
+        @add-mode="addMode = $event"
         @ready="onMapReady"
         @nearby-conflict="onNearbyConflict"
         @spot-picked="onSpotPicked"
@@ -16,12 +18,12 @@
 
       <!-- Add-trail FAB -->
       <div class="add-btn-wrapper" id="top-map-buttons">
-        <div class="fab-menu hidden" id="fab-menu">
+        <div class="fab-menu" :class="{ hidden: !fabMenuOpen }" id="fab-menu" @click="onFabMenuClick">
           <button class="fab-item" data-type="trail">Trail Spot</button>
           <button class="fab-item" data-type="bikepark">Bikepark eintragen</button>
           <button class="fab-item" data-type="dirtpark">Dirtpark / Pumptrack</button>
         </div>
-        <button class="add-trail-btn" id="add-btn">+</button>
+        <button class="add-trail-btn" :class="{ active: fabMenuOpen || !!addMode }" id="add-btn" @click="onAddBtnClick">{{ addMode ? 'Klick auf Karte, um Trail zu setzen' : '+' }}</button>
       </div>
 
       <button class="location-btn" @click="flyToUserLocation" aria-label="Meinen Standort anzeigen">
@@ -76,6 +78,22 @@ let getCenter: () => { lat: number; lon: number } | null = () => null
 let openTrail = (_id: string) => {}
 let flyToPlace = (_lat: number, _lon: number, _zoom?: number) => {}
 const nearbyConflict = ref<{ trail: any; resolve: (proceed: boolean) => void } | null>(null)
+const mapView = ref<{ startAddMode: (t: string) => void; cancelAddMode: () => void } | null>(null)
+const fabMenuOpen = ref(false)
+const addMode = ref<string | undefined>(undefined)
+
+function onAddBtnClick() {
+  fabMenuOpen.value = !fabMenuOpen.value
+  if (addMode.value) mapView.value?.cancelAddMode()
+}
+
+function onFabMenuClick(e: MouseEvent) {
+  const target = e.target as HTMLElement
+  if (!target.classList.contains('fab-item')) return
+  fabMenuOpen.value = false
+  const type = target.dataset.type
+  if (type) mapView.value?.startAddMode(type)
+}
 const addSpotModal = reactive({ open: false, lat: 0, lng: 0, type: 'trail' })
 
 const trailIdFromQuery = route.query.trail as string | undefined
