@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -42,11 +42,19 @@ async function as(role: 'anon' | 'authenticated', sql: string) {
   }
 }
 
-beforeEach(async () => {
-  db = new PGlite()
-  await db.exec(SUPABASE_STUB)
-  await db.exec(migration('_parks_select_authenticated.sql'))
+// Booting PGlite costs ~1s; migrate once, then hand each test its own clone (~0.2s).
+let template: PGlite
+beforeAll(async () => {
+  template = new PGlite()
+  await template.exec(SUPABASE_STUB)
+  await template.exec(migration('_parks_select_authenticated.sql'))
 })
+afterAll(() => template.close())
+
+beforeEach(async () => {
+  db = await template.clone() as PGlite
+})
+afterEach(() => db.close())
 
 describe('parks SELECT', () => {
   it('returns parks to logged-in users (SpotManager picker)', async () => {

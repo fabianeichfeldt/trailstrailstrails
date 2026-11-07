@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import { PGlite } from '@electric-sql/pglite'
 import { readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
@@ -34,11 +34,19 @@ const insertTrail = (name: string, source: string | null, sourceId: string | nul
     [name, source, sourceId],
   )
 
-beforeEach(async () => {
-  db = new PGlite()
-  await db.exec(SUPABASE_STUB)
-  await db.exec(migration('_spot_gpx_trails_source.sql'))
+// Booting PGlite costs ~1s; migrate once, then hand each test its own clone (~0.2s).
+let template: PGlite
+beforeAll(async () => {
+  template = new PGlite()
+  await template.exec(SUPABASE_STUB)
+  await template.exec(migration('_spot_gpx_trails_source.sql'))
 })
+afterAll(() => template.close())
+
+beforeEach(async () => {
+  db = await template.clone() as PGlite
+})
+afterEach(() => db.close())
 
 describe('spot_gpx_trails external source identity', () => {
   it('rejects a second row with the same (source, source_id)', async () => {
