@@ -1,0 +1,32 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: ['config:recommended', 'group:allNonMajor'],
+
+  // Gradle, SPM and GitHub Actions bumps can't be validated: branch CI only runs the web tests.
+  enabledManagers: ['npm'],
+
+  timezone: 'Europe/Berlin',
+  // Wide window: the hosted app only visits the repo every few hours.
+  schedule: ['* 0-5 */2 * *'],
+
+  automerge: true,
+  // main has no required checks, so GitHub's native auto-merge wouldn't wait for CI.
+  platformAutomerge: false,
+
+  // Merges deploy straight to production; don't be first to install a compromised release.
+  minimumReleaseAge: '3 days',
+
+  packageRules: [
+    {
+      // One-off data scripts that CI never installs or runs.
+      matchFileNames: ['scripts/package.json'],
+      enabled: false,
+    },
+    {
+      // Capacitor core, CLI and native packages must stay on the same major.
+      matchPackageNames: ['@capacitor/**'],
+      matchUpdateTypes: ['major'],
+      groupName: 'capacitor major',
+    },
+  ],
+}
