@@ -5,6 +5,8 @@ import { injectUmamiScript } from '~/analytics/umami'
 export default defineNuxtPlugin(() => {
   const websiteId = useRuntimeConfig().public.umamiWebsiteId as string
   if (!websiteId) return
+  // /embed/* runs in an iframe (region page, third-party sites): the host page already counts the visit.
+  if (window.location.pathname.startsWith('/embed/')) return
 
   const assignment = assignVariant(activeExperiment(experimentsConfig))
   useState<Assignment | null>('experimentAssignment').value = assignment
