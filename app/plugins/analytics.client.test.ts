@@ -10,7 +10,7 @@ vi.stubGlobal('useState', () => state)
 
 const scripts = () => Array.from(document.head.querySelectorAll('script[data-website-id]'))
 
-beforeEach(() => { document.head.innerHTML = ''; state.value = null })
+beforeEach(() => { document.head.innerHTML = ''; state.value = null; window.history.replaceState(null, '', '/map') })
 
 const load = async () => (await import('./analytics.client')).default as unknown as () => void
 
@@ -19,6 +19,15 @@ describe('analytics plugin', () => {
     websiteId = ''
     ;(await load())()
     expect(scripts()).toHaveLength(0)
+  })
+
+  // The region page and third-party sites iframe /embed/*: a second script there double-counts and re-rolls the variant.
+  it('injects nothing inside the /embed iframe', async () => {
+    websiteId = 'site-1'
+    window.history.replaceState(null, '', '/embed/abc123/?parentHost=trailradar.org')
+    ;(await load())()
+    expect(scripts()).toHaveLength(0)
+    expect(state.value).toBeNull()
   })
 
   it('injects the Umami script with DNT and the variant tag, and exposes the assignment', async () => {
