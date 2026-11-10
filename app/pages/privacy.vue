@@ -128,6 +128,9 @@
             Bildschirmgröße, Sprache und das aus der IP-Adresse abgeleitete Land bzw. die Region. Dazu kommen
             Nutzungsereignisse in der App (z.B. „Spot geöffnet“, „Filter geändert“, „Suche genutzt“), aber keine
             Suchbegriffe und keine Inhalte.</li>
+          <li>Solange du die Seite aktiv nutzt (sichtbar und mit einer Eingabe in den letzten 30 Sekunden), sendet
+            die App alle 30 Sekunden ein kurzes Aktivitätssignal ohne weitere Daten. So können wir messen, wie
+            lange Trailradar tatsächlich genutzt wird.</li>
           <li>Deine IP-Adresse wird nicht gespeichert. Umami bildet daraus zusammen mit der Browserkennung und
             einem regelmäßig wechselnden Zufallswert eine anonyme Kennung. Über längere Zeit hinweg können wir
             dich damit nicht wiedererkennen.</li>

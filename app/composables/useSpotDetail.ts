@@ -1,4 +1,5 @@
 import { track } from '~/analytics/track'
+import { isInitialRoute, claimSpotView, spotViewEvent } from '~/analytics/spotView'
 import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
 import { SPOT_SNAPSHOT_PATH, type ResolvedSpot } from '~/communication/spotSnapshot'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
@@ -53,6 +54,8 @@ export async function useSpotDetail(slug: string | null) {
   // refresh happens in onMounted below. Awaited only at the end — lifecycle
   // hooks must register before the first await or they attach to nothing.
   const key = `trail-${slug}`
+  // The legacy-id page instance is replaced by the slug page, which reports the view itself.
+  let redirected = false
   const asyncData = useAsyncData(key, async () => {
     try {
       if (import.meta.prerender) {
@@ -66,6 +69,7 @@ export async function useSpotDetail(slug: string | null) {
       // covers ids too new to have a stub and direct in-app navigation.
       const byId = await getTrailById(slug)
       if (byId?.slug && byId.slug !== slug) {
+        redirected = true
         await navigateTo(`/trails/${byId.slug}/`, { redirectCode: 301, replace: true })
       }
       return byId
@@ -104,9 +108,9 @@ export async function useSpotDetail(slug: string | null) {
   // start each spot once.
   let startedFor: string | null = null
   function start(item: Trail) {
-    if (startedFor === item.id) return
+    if (redirected || startedFor === item.id) return
     startedFor = item.id
-    track('spot_open', { type: item.type })
+    if (claimSpotView(item.id)) track(spotViewEvent(isInitialRoute()), { type: item.type })
     details.value = bakedTrailDetails(trail.value)
     spotPanel.load(item)
     const authInfo = { userId: authStore.userId, isAdmin: authStore.isAdmin, isTrailcrew: authStore.isTrailcrew }

@@ -1,14 +1,31 @@
 {
-  "active": "aa-baseline",
+  "active": "aa-baseline-2",
   "experiments": [
     {
       "id": "aa-baseline",
       "hypothesis": "A/A test: two identical variants. Validates the tagging/report pipeline and measures noise; expected verdict: no difference.",
-      "variants": ["a", "b"],
+      "variants": [
+        "a",
+        "b"
+      ],
+      "primaryMetric": "engagedRate",
+      "minVisitsPerVariant": 300,
+      "status": "aborted",
+      "startedAt": "2026-11-10",
+      "endedAt": "2026-11-10",
+      "result": "aborted: engaged definition changed to v2 (spot_land, pin+open counted once, heartbeat)"
+    },
+    {
+      "id": "aa-baseline-2",
+      "hypothesis": "A/A test: two identical variants. Validates the tagging/report pipeline and measures noise; expected verdict: no difference.",
+      "variants": [
+        "a",
+        "b"
+      ],
       "primaryMetric": "engagedRate",
       "minVisitsPerVariant": 300,
       "status": "running",
-      "startedAt": "2026-11-10",
+      "startedAt": "2026-11-10T19:05:00Z",
       "endedAt": null,
       "result": null
     }

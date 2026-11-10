@@ -71,6 +71,7 @@ describe('/privacy', () => {
     expect(text).toContain('Umami')
     expect(text).toContain('Hetzner Online GmbH')
     expect(text).toMatch(/A\/B-Test/)
+    expect(text).toMatch(/alle 30 Sekunden/)
     expect(text).toMatch(/Seitenaufrufe[\s\S]*ohne IP-Adresse/)
     expect(text).toMatch(/Empfänger[\s\S]*Hetzner/)
     // Analytics is live, so the old blanket claim would be false.
