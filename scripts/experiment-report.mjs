@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // A/B readout from self-hosted Umami. Usage: npm run experiment:report -- [--experiment id] [--since YYYY-MM-DD] [--until YYYY-MM-DD] [--json]
-import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { collectReport, parseDate, renderMarkdown } from './experiment-report-lib.mjs';
+import { KEYCHAIN_HELP, resolveCredentials } from './umami-credentials.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const BASE_URL = process.env.UMAMI_URL || 'https://stats.eichfeldt.de';
-const KEYCHAIN_HELP = 'Add credentials with: security add-generic-password -s trailradar-umami -a <username> -w   (or set UMAMI_USERNAME / UMAMI_PASSWORD / UMAMI_WEBSITE_ID)';
 
 const USAGE = `Usage: npm run experiment:report -- [options]
 
@@ -34,28 +33,6 @@ function parseArgs(argv) {
     } else throw new Error(`Unknown argument ${a}`);
   }
   return opts;
-}
-
-const run = (cmd, args) => {
-  try { return execFileSync(cmd, args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return ''; }
-};
-
-function keychainUsername() {
-  const out = run('security', ['find-generic-password', '-s', 'trailradar-umami']);
-  return /"acct"<blob>="([^"]*)"/.exec(out)?.[1] ?? '';
-}
-
-function resolveCredentials() {
-  const username = process.env.UMAMI_USERNAME || keychainUsername();
-  const password = process.env.UMAMI_PASSWORD || (username && run('security', ['find-generic-password', '-s', 'trailradar-umami', '-a', username, '-w']));
-  // `security add-generic-password ... -w` without a TTY (e.g. Claude Code's `!`) stores an empty password.
-  if (username && !password && !process.env.UMAMI_PASSWORD && keychainUsername()) {
-    throw new Error('Keychain item "trailradar-umami" has an empty password. Re-add it in a normal Terminal window: security add-generic-password -U -s trailradar-umami -a ' + username + ' -w');
-  }
-  const websiteId = process.env.UMAMI_WEBSITE_ID || run('gh', ['variable', 'get', 'UMAMI_WEBSITE_ID']);
-  const missing = [!username && 'UMAMI_USERNAME', !password && 'UMAMI_PASSWORD', !websiteId && 'UMAMI_WEBSITE_ID'].filter(Boolean);
-  if (missing.length) throw new Error(`Missing ${missing.join(', ')}. ${KEYCHAIN_HELP}`);
-  return { username, password, websiteId };
 }
 
 async function main() {
