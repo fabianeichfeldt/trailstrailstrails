@@ -166,10 +166,12 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
   for (let i = 7; i >= 1; i--) baselineDays.push(dayWindow(addDays(day, -i)));
 
   const exp = registry?.experiments?.find(e => e.id === registry.active);
-  const expRunning = exp && exp.startedAt && day >= exp.startedAt;
+  // startedAt may be a full timestamp; the day logic works on its Berlin calendar date.
+  const startDay = exp?.startedAt ? new Date(Date.parse(exp.startedAt.length === 10 ? `${exp.startedAt}T12:00:00Z` : exp.startedAt)).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' }) : null;
+  const expRunning = exp && startDay && day >= startDay;
   const baselineStart = baselineDays[0].startAt;
   // One raw fetch covers the day, the baseline and (if older) the experiment start.
-  const visitsFrom = expRunning ? Math.min(baselineStart, berlinMidnight(exp.startedAt)) : baselineStart;
+  const visitsFrom = expRunning ? Math.min(baselineStart, berlinMidnight(startDay)) : baselineStart;
 
   const [dayRaw, baselineSlices, allVisits, urlRows, referrerRows, deviceRows, retentionRaw] = await Promise.all([
     slice(dw),
@@ -196,10 +198,10 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
 
   let experiment = null;
   if (exp) {
-    if (!exp.startedAt || day < exp.startedAt) {
+    if (!startDay || day < startDay) {
       experiment = { id: exp.id, startedAt: exp.startedAt ?? null, notStarted: true };
     } else {
-      const groups = groupByTag(within({ startAt: berlinMidnight(exp.startedAt), endAt: dw.endAt }, allVisits), `${exp.id}:`);
+      const groups = groupByTag(within({ startAt: berlinMidnight(startDay), endAt: dw.endAt }, allVisits), `${exp.id}:`);
       const visitsByVariant = Object.fromEntries(exp.variants.map(v => [v, (groups[v] ?? []).length]));
       experiment = {
         id: exp.id,
@@ -210,7 +212,7 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
           variants: exp.variants,
           visitsByVariant,
           minVisitsPerVariant: exp.minVisitsPerVariant,
-          daysSoFar: daysBetween(exp.startedAt, day) + 1,
+          daysSoFar: daysBetween(startDay, day) + 1,
         }),
       };
     }

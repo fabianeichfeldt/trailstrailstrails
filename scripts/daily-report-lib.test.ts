@@ -250,6 +250,13 @@ describe('collectDailyReport', () => {
     expect(report.experiment.daysLeft).toBe(Math.ceil((300 - 1) / (1 / 9)));
   });
 
+  it('counts the start day when startedAt is a timestamp', async () => {
+    const { fetchFn } = mockUmami();
+    const tsRegistry = { ...registry, experiments: [{ ...registry.experiments[0], startedAt: '2026-11-09T19:05:00Z' }] };
+    const report = await collectDailyReport({ fetch: fetchFn, baseUrl: 'https://umami.test', websiteId: '7', username: 'u', password: 'p', day: '2026-11-09', registry: tsRegistry });
+    expect(report.experiment.notStarted).toBeFalsy();
+  });
+
   it('skips the experiment when the day is before its start', async () => {
     const { fetchFn, calls } = mockUmami();
     const report = await collectDailyReport({ fetch: fetchFn, baseUrl: 'https://umami.test', websiteId: '7', username: 'u', password: 'p', day: '2026-10-20', registry });

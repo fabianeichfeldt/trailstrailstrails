@@ -4,7 +4,10 @@
     {
       "id": "aa-baseline",
       "hypothesis": "A/A test: two identical variants. Validates the tagging/report pipeline and measures noise; expected verdict: no difference.",
-      "variants": ["a", "b"],
+      "variants": [
+        "a",
+        "b"
+      ],
       "primaryMetric": "engagedRate",
       "minVisitsPerVariant": 300,
       "status": "aborted",
@@ -15,11 +18,14 @@
     {
       "id": "aa-baseline-2",
       "hypothesis": "A/A test: two identical variants. Validates the tagging/report pipeline and measures noise; expected verdict: no difference.",
-      "variants": ["a", "b"],
+      "variants": [
+        "a",
+        "b"
+      ],
       "primaryMetric": "engagedRate",
       "minVisitsPerVariant": 300,
       "status": "running",
-      "startedAt": null,
+      "startedAt": "2026-11-10T19:05:00Z",
       "endedAt": null,
       "result": null
     }
