@@ -48,6 +48,10 @@ function keychainUsername() {
 function resolveCredentials() {
   const username = process.env.UMAMI_USERNAME || keychainUsername();
   const password = process.env.UMAMI_PASSWORD || (username && run('security', ['find-generic-password', '-s', 'trailradar-umami', '-a', username, '-w']));
+  // `security add-generic-password ... -w` without a TTY (e.g. Claude Code's `!`) stores an empty password.
+  if (username && !password && !process.env.UMAMI_PASSWORD && keychainUsername()) {
+    throw new Error('Keychain item "trailradar-umami" has an empty password. Re-add it in a normal Terminal window: security add-generic-password -U -s trailradar-umami -a ' + username + ' -w');
+  }
   const websiteId = process.env.UMAMI_WEBSITE_ID || run('gh', ['variable', 'get', 'UMAMI_WEBSITE_ID']);
   const missing = [!username && 'UMAMI_USERNAME', !password && 'UMAMI_PASSWORD', !websiteId && 'UMAMI_WEBSITE_ID'].filter(Boolean);
   if (missing.length) throw new Error(`Missing ${missing.join(', ')}. ${KEYCHAIN_HELP}`);

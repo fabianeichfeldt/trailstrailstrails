@@ -14,8 +14,9 @@ push to `main`, and never change a running experiment's variants: that invalidat
 npm run experiment:report -- --json
 ```
 
-Credentials come from the macOS keychain (`trailradar-umami`). If they are missing, stop and tell the user to run
-`! security add-generic-password -s trailradar-umami -a <umami-user> -w`. Never ask for the password in chat.
+Credentials come from the macOS keychain (`trailradar-umami`, account `reporter`). If they are missing or empty, stop and
+tell the user to run `security add-generic-password -U -s trailradar-umami -a reporter -w` in a normal Terminal
+window (not via `!`: no TTY there, so it stores an empty password). Never ask for the password in chat.
 
 ## 2. Decide
 
@@ -33,6 +34,17 @@ Sanity checks before trusting a verdict:
 - A guardrail metric must not get clearly worse (bounce rate up >5 points, visit time down >20%) in a "winner".
 - The A/A test (`aa-baseline`) must end as `no_difference`. If it doesn't, the pipeline is broken: stop and report.
 - Weekend vs. weekday and weather skew both arms equally in an A/B test, so they don't block a verdict. Do call out a big rain week in the log, though.
+
+## Seasonality (traffic drops Oct–Mar)
+
+- Both arms of an A/B test see the same season, so a verdict **within** one experiment stays valid. Never compare
+  absolute numbers across experiments or against an earlier baseline: only the lift inside one experiment counts.
+- Fewer visits make experiments longer. Estimate the days left to `minVisitsPerVariant` from the visits so far and
+  report that. Never conclude early because a trend "looks clear" (peeking inflates false winners).
+- The winter audience plans rides instead of riding today. Mark a winter verdict on a "ride now" hypothesis
+  (e.g. `map-start-near-me`, `pin-status-badges`) as `recheck_in_spring` in the log, and prefer planning-content
+  hypotheses (`nearby-carousel-detail`, `photos-first-panel`) between November and February.
+- Record the season (and any unusual weather week) in each LOG.md entry.
 
 ## 3. Conclude (only if not `need_more_data`)
 

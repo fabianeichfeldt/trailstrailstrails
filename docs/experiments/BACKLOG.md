@@ -15,4 +15,7 @@ Secondary: avg visit time, `spot_open` per visit, bounce rate.
 | 5 | `map-bottom-cards` | Pin-by-pin hunting is tedious on mobile | Horizontal card strip of visible spots at the bottom of `/map`, synced with the viewport | `/map` | needs design |
 | 6 | `first-visit-hint` | First-time visitors don't know pins open a panel | One-time 3-step coach mark (in-memory per page load, so it shows on every cold load: acceptable for a test) | `/map` | needs design |
 
+Season: Nov–Feb visitors plan rather than ride, so run the planning-content rows (#2, #4) first and leave
+"ride now" rows (#1, #3) for March onwards, or recheck their winter verdict in spring.
+
 Done experiments move to `LOG.md` with their verdict.
