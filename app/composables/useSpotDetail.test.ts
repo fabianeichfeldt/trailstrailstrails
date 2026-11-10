@@ -201,4 +201,15 @@ describe('useSpotDetail', () => {
 
     expect(details.value.photos.map(p => p.id)).toEqual(['p2'])
   })
+
+  it('reports spot_open to Umami once the spot starts loading', async () => {
+    const umami = vi.fn()
+    window.umami = { track: umami }
+    vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
+
+    await mountDetail('t1-slug')
+
+    expect(umami).toHaveBeenCalledWith('spot_open', { type: 'trail' })
+    delete window.umami
+  })
 })

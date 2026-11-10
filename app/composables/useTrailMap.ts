@@ -1,3 +1,4 @@
+import { track } from '~/analytics/track'
 import type { Ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
 import type { Trail } from '~/types/Trail'
@@ -97,6 +98,7 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
   // returns to. Same route/component, query-only change, so this doesn't
   // remount /map or re-run its one-time onMapReady() flyTo logic.
   async function navigateToSpot(trail: Trail, hash = '') {
+    track('map_pin_open', { type: trail.type })
     // ?trail= stays the spot id (map deep-link, resolved by openTrailFn); the
     // detail page path is the name-slug.
     await router.replace({ path: '/map', query: { trail: trail.id } })

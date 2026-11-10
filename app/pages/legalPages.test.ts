@@ -64,6 +64,19 @@ describe('/privacy', () => {
     expect(w.text()).toMatch(/Kontaktformular[\s\S]*Resend/)
   })
 
+  it('discloses the self-hosted Umami analytics, the A/B variants and the own visit counter', () => {
+    const w = mountPage(PrivacyPage)
+    const text = w.text()
+    expect(w.findAll('h2').map(h => h.text()).join('|')).toMatch(/Reichweitenmessung/)
+    expect(text).toContain('Umami')
+    expect(text).toContain('Hetzner Online GmbH')
+    expect(text).toMatch(/A\/B-Test/)
+    expect(text).toMatch(/Seitenaufrufe[\s\S]*ohne IP-Adresse/)
+    expect(text).toMatch(/Empfänger[\s\S]*Hetzner/)
+    // Analytics is live, so the old blanket claim would be false.
+    expect(text).not.toMatch(/Wir nutzen kein Tracking/)
+  })
+
   it('lists every data-subject right incl. the complaint to the Bavarian authority', () => {
     const text = mountPage(PrivacyPage).text()
     for (const right of ['Auskunft', 'Berichtigung', 'Löschung', 'Einschränkung', 'Datenübertragbarkeit', 'Widerspruch', 'Beschwerde']) {
@@ -80,6 +93,10 @@ describe('/terms', () => {
     expect(w.text()).toContain('Armitage Labs OÜ')
     expect(hrefs(w)).toContain('/kuendigen')
     expect(hrefs(w)).toContain('/impressum')
+  })
+
+  it('says that features are tested in variants', () => {
+    expect(mountPage(TermsPage).text()).toMatch(/unterschiedlichen Varianten/)
   })
 
   it('points to the pricing page', () => {

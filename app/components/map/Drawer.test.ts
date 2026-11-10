@@ -28,4 +28,15 @@ describe('Drawer', () => {
     expect(link.attributes('target')).toBe('_blank')
     expect(link.attributes('rel')).toBe('noopener noreferrer')
   })
+
+  it('reports filter_toggle (filter + on/off) to Umami, never the filter state of others', async () => {
+    const umami = vi.fn()
+    window.umami = { track: umami }
+    const wrapper = mount(Drawer, { global: { stubs: { NuxtLink: true } } })
+
+    await wrapper.get('input[data-filter="trail"]').setValue(false)
+
+    expect(umami).toHaveBeenCalledWith('filter_toggle', { filter: 'trail', on: false })
+    delete window.umami
+  })
 })

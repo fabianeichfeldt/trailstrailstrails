@@ -1,3 +1,4 @@
+import { track } from '~/analytics/track'
 // `ref`/`computed` are explicit imports rather than Nuxt auto-imports, the
 // same way usePwaInstall.ts does it: it keeps the module self-contained under
 // vitest, where there is no Nuxt to inject them.
@@ -79,6 +80,7 @@ export function useSpotSearch() {
 
   async function runSearch(q: string) {
     currentQuery = q
+    track('search', { stage: 'query' }) // never the query text
 
     // Spots are loaded lazily, so a query typed before (or instead of) a focus
     // event still has to wait for the data before it can score anything.

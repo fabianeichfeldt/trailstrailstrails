@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 import type { Trail } from '~/types/Trail'
 import { SPOT_TYPES } from '~/types/SpotTypes'
 import { likeTrail, dislikeTrail } from '~/communication/trails'
@@ -64,6 +65,7 @@ async function handleLike() {
     mapStore.authModalOpen = true
     return
   }
+  track('like', { liked: !store.isLiked })
   if (store.isLiked) {
     await dislikeTrail(props.trail.id, authService)
     store.isLiked = false
@@ -86,6 +88,7 @@ function showShareToast(message: string, type = 'success') {
 }
 
 async function handleShare() {
+  track('share')
   await shareTrail(props.trail, {
     hasNativeShare: typeof navigator.share === 'function',
     nativeShare: data => navigator.share(data),

@@ -1,0 +1,16 @@
+{
+  "active": "aa-baseline",
+  "experiments": [
+    {
+      "id": "aa-baseline",
+      "hypothesis": "A/A test: two identical variants. Validates the tagging/report pipeline and measures noise; expected verdict: no difference.",
+      "variants": ["a", "b"],
+      "primaryMetric": "engagedRate",
+      "minVisitsPerVariant": 300,
+      "status": "running",
+      "startedAt": null,
+      "endedAt": null,
+      "result": null
+    }
+  ]
+}
