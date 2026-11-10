@@ -139,6 +139,9 @@
       <p>Ein Anspruch auf dauerhafte Verfügbarkeit der kostenlosen Funktionen besteht nicht. Die Supporter-Funktionen
         stellen wir im Rahmen des technisch Zumutbaren bereit; kurze Unterbrechungen, etwa für Wartung oder bei
         Ausfällen externer Datenquellen, sind möglich.</p>
+      <p>Wir entwickeln Trailradar laufend weiter und testen neue Funktionen auch in unterschiedlichen Varianten. Es
+        kann also sein, dass du vorübergehend eine andere Version siehst als andere Nutzer. Wie wir dabei
+        Nutzungsdaten auswerten, steht in der <NuxtLink to="/privacy">Datenschutzerklärung</NuxtLink>.</p>
 
       <h2>11. Änderungen der Nutzungsbedingungen</h2>
       <p>Wir können diese Nutzungsbedingungen aus rechtlichen, technischen oder betrieblichen Gründen anpassen.

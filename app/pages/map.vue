@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 import { canonicalUrl } from '~/utils/seo'
 import { parseFlyQuery } from '~/map/flyHandlers'
 definePageMeta({ layout: 'map' })
@@ -213,6 +214,7 @@ function onNearbyConflict(conflict: { trail: any; resolve: (proceed: boolean) =>
 }
 
 function flyToUserLocation() {
+  track('locate_me', { located: !!mapStore.userLocation })
   if (mapStore.userLocation) {
     flyToPlace(mapStore.userLocation[0], mapStore.userLocation[1])
   }

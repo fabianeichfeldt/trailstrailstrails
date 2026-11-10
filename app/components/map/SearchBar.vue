@@ -44,6 +44,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 import { useSpotSearch, type SpotSearchItem } from '~/composables/useSpotSearch'
 
 // Presentational only. All search behaviour lives in useSpotSearch(); where a
@@ -95,6 +96,7 @@ function scrollSelected() {
 }
 
 function select(item: SpotSearchItem) {
+  track('search', { stage: 'pick', result: item.trailId ? 'spot' : 'place' })
   if (item.trailId) emit('openTrail', item.trailId)
   else if (item.lat !== undefined) emit('flyTo', item.lat, item.lon!, item.zoom)
   clear()

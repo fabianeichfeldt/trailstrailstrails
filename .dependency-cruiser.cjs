@@ -37,6 +37,20 @@ module.exports = {
       to:   { path: '^app/stores/' },
     },
     {
+      name: 'analytics-leaf',
+      comment: 'app/analytics is a leaf: it must not import stores, composables, map, components or pages.',
+      severity: 'error',
+      from: { path: '^app/analytics/' },
+      to:   { path: '^app/(stores|composables|map|components|pages|communication)/' },
+    },
+    {
+      name: 'map-no-analytics',
+      comment: 'Map UI must not import analytics directly; the composable layer reports events.',
+      severity: 'error',
+      from: { path: '^app/map/' },
+      to:   { path: '^app/analytics/' },
+    },
+    {
       name: 'no-circular',
       comment: 'Circular dependencies make code hard to reason about and test.',
       severity: 'warn',

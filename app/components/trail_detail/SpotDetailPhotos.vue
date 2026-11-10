@@ -23,6 +23,7 @@
           v-for="(p, i) in details.photos"
           :key="p.id"
           class="photo-wrap"
+          @click="track('photo_open')"
           :class="{ active: i === activePhoto }"
           :style="{ '--img': `url('${p.url}')` }"
         >
@@ -67,6 +68,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 import '~/css/photo_caroussel.css'
 import '~/map/detail_popup/details_popup.css'
 import { showToast } from '~/utils/toast'

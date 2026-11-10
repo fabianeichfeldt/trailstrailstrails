@@ -24,6 +24,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 import type { SpotParkingLot } from '~/communication/trails'
 
 const props = defineProps<{
@@ -40,6 +41,7 @@ const selectedId = ref<string | undefined>(props.highlightId)
 
 function select(lot: SpotParkingLot) {
   selectedId.value = lot.id
+  track('parking_select')
   emit('flyTo', lot.lat, lot.lng)
 }
 </script>

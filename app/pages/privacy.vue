@@ -22,8 +22,9 @@
         <h2>Allgemeine Hinweise</h2>
         <p>Wir verarbeiten personenbezogene Daten im Einklang mit der DSGVO und den geltenden deutschen
           Datenschutzgesetzen – nur soweit es für den Betrieb von Trailradar nötig ist, für einen Vertrag mit dir
-          erforderlich ist, wir ein berechtigtes Interesse haben oder du eingewilligt hast. Wir nutzen kein Tracking
-          und keine Werbung.</p>
+          erforderlich ist, wir ein berechtigtes Interesse haben oder du eingewilligt hast. Wir zeigen keine Werbung
+          und verfolgen dich nicht über andere Websites hinweg. Zur Reichweitenmessung nutzen wir ein selbst
+          betriebenes, cookieloses Analysetool (siehe „Reichweitenmessung“).</p>
 
         <h2>Hosting & Infrastruktur</h2>
         <p>
@@ -115,6 +116,39 @@
           (Open-Meteo). Dabei werden keine personenbezogenen Daten von dir übermittelt.
         </p>
 
+        <h2>Reichweitenmessung (Umami & Besuchszählung)</h2>
+        <p>
+          Damit wir sehen, welche Funktionen genutzt werden, und Trailradar verbessern können, setzen wir das
+          Open-Source-Analysetool Umami ein. Wir betreiben Umami selbst auf einem Server der Hetzner Online GmbH
+          in Nürnberg (Deutschland). Hetzner ist unser Auftragsverarbeiter nach Art. 28 DSGVO. Die Daten geben wir
+          nicht an Dritte weiter.
+        </p>
+        <ul>
+          <li>Erfasst werden die aufgerufene Seite, der Referrer, Browser, Betriebssystem, Gerätetyp,
+            Bildschirmgröße, Sprache und das aus der IP-Adresse abgeleitete Land bzw. die Region. Dazu kommen
+            Nutzungsereignisse in der App (z.B. „Spot geöffnet“, „Filter geändert“, „Suche genutzt“), aber keine
+            Suchbegriffe und keine Inhalte.</li>
+          <li>Deine IP-Adresse wird nicht gespeichert. Umami bildet daraus zusammen mit der Browserkennung und
+            einem regelmäßig wechselnden Zufallswert eine anonyme Kennung. Über längere Zeit hinweg können wir
+            dich damit nicht wiedererkennen.</li>
+          <li>Umami setzt keine Cookies und speichert nichts auf deinem Gerät. Hat dein Browser „Do Not Track“
+            aktiviert, wird nichts erfasst.</li>
+          <li>A/B-Test: Manchmal vergleichen wir zwei Varianten einer Funktion. Beim Laden der Seite wird dir
+            zufällig eine Variante zugeteilt und zusammen mit den Nutzungsdaten übermittelt. Gespeichert wird
+            die Zuteilung auf deinem Gerät nicht.</li>
+        </ul>
+        <p>
+          Zusätzlich zählen wir Seitenaufrufe in unserer eigenen Datenbank (Supabase, Frankfurt am Main). Dabei
+          speichern wir den Pfad, den Referrer, die Browserkennung, die Plattform und ob Trailradar als App
+          installiert ist, ohne IP-Adresse.
+        </p>
+        <p>
+          Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an einem nutzerfreundlichen,
+          stetig verbesserten Angebot). Du kannst dieser Verarbeitung jederzeit widersprechen (Art. 21 DSGVO),
+          z.B. indem du „Do Not Track“ aktivierst oder uns schreibst. Die Analysedaten löschen wir spätestens
+          nach 24 Monaten.
+        </p>
+
         <h2>Cookies & lokaler Speicher</h2>
         <p>Wir verwenden keine Cookies zu Analyse- oder Marketingzwecken. Technisch notwendige Cookies setzen:</p>
         <ul>
@@ -136,7 +170,7 @@
 
         <h2>Empfänger</h2>
         <p>Wir geben personenbezogene Daten nur an die oben genannten Dienste weiter (GitHub, Cloudflare, Supabase,
-          Creem, Resend, ggf. YouTube) oder wenn wir gesetzlich dazu verpflichtet sind.</p>
+          Hetzner, Creem, Resend, ggf. YouTube) oder wenn wir gesetzlich dazu verpflichtet sind.</p>
 
         <h2>Speicherdauer & Löschung</h2>
         <ul>
@@ -168,7 +202,7 @@
           91522 Ansbach.
         </p>
 
-        <p class="stand">Stand: Oktober 2026</p>
+        <p class="stand">Stand: November 2026</p>
       </section>
 
       <NuxtLink to="/" class="back-link">← Zurück zur Startseite</NuxtLink>

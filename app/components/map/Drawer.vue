@@ -22,19 +22,19 @@
       <label class="filter-item" v-for="f in filters" :key="f.key">
         <span class="filter-dot" :style="{ background: f.color }" />
         <span class="filter-label">{{ f.label }}</span>
-        <input type="checkbox" :data-filter="f.filter" v-model="filtersStore[f.key]" @change="mapStore.drawerOpen = false" />
+        <input type="checkbox" :data-filter="f.filter" v-model="filtersStore[f.key]" @change="onFilter(f.filter, $event); mapStore.drawerOpen = false" />
         <span class="filter-toggle" />
       </label>
 
       <label class="filter-item" style="margin-top:0.4em">
         <span class="filter-label" style="font-size:0.75em">Gruppierung</span>
-        <input data-testid="cluster-toggle" type="checkbox" v-model="filtersStore.useCluster" />
+        <input data-testid="cluster-toggle" type="checkbox" v-model="filtersStore.useCluster" @change="onFilter('cluster', $event)" />
         <span class="filter-toggle" />
       </label>
 
       <label class="filter-item" style="margin-top:0.4em">
         <span class="filter-label" style="font-size:0.75em">Graue Karte</span>
-        <input data-testid="grayscale-toggle" type="checkbox" v-model="filtersStore.grayscaleMap" />
+        <input data-testid="grayscale-toggle" type="checkbox" v-model="filtersStore.grayscaleMap" @change="onFilter('grayscale', $event)" />
         <span class="filter-toggle" />
       </label>
     </div>
@@ -68,9 +68,14 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 const mapStore = useMapStore()
 const filtersStore = useFiltersStore()
 const authStore = useAuthStore()
+
+function onFilter(filter: string, e: Event) {
+  track('filter_toggle', { filter, on: (e.target as HTMLInputElement).checked })
+}
 
 function openLogin() {
   mapStore.drawerOpen = false

@@ -91,3 +91,16 @@ describe('map page add-spot FAB', () => {
     expect(w.get('#add-btn').classes()).not.toContain('active')
   })
 })
+
+describe('map page locate FAB', () => {
+  it('reports locate_me to Umami', async () => {
+    const umami = vi.fn()
+    window.umami = { track: umami }
+    const w = mountPage()
+
+    await w.get('.location-btn').trigger('click')
+
+    expect(umami).toHaveBeenCalledWith('locate_me', { located: false })
+    delete window.umami
+  })
+})

@@ -1,3 +1,4 @@
+import { track } from '~/analytics/track'
 import { hasGpx, type Trail } from '~/types/Trail'
 import { fetchMultipleSpotParking, getSpotGpxData, type SpotParkingLot } from '~/communication/trails'
 import {
@@ -145,6 +146,7 @@ export const useSpotPanelStore = defineStore('spotPanel', () => {
   function selectItem(id: string, kind: 'tour' | 'trail') {
     selectedItemId.value = id
     selectedItemKind.value = kind
+    track('item_select', { kind })
   }
 
   // Closes the elevation panel — its visibility on the spot-detail page

@@ -1,3 +1,4 @@
+import { track } from '~/analytics/track'
 import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
 import { SPOT_SNAPSHOT_PATH, type ResolvedSpot } from '~/communication/spotSnapshot'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
@@ -105,6 +106,7 @@ export async function useSpotDetail(slug: string | null) {
   function start(item: Trail) {
     if (startedFor === item.id) return
     startedFor = item.id
+    track('spot_open', { type: item.type })
     details.value = bakedTrailDetails(trail.value)
     spotPanel.load(item)
     const authInfo = { userId: authStore.userId, isAdmin: authStore.isAdmin, isTrailcrew: authStore.isTrailcrew }
