@@ -1,3 +1,5 @@
+import { ENGAGEMENT_NOTE, fetchVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
+
 // Pure helpers for `npm run experiment:report` (Umami A/B readout). No I/O except the injected fetch.
 
 export const EVENT_NAMES = ['engaged', 'spot_open', 'item_select', 'search', 'filter_toggle', 'locate_me', 'photo_open', 'share', 'parking_select', 'map_pin_open', 'like'];
@@ -73,7 +75,7 @@ export function twoProportionZ(x1, n1, x2, n2) {
 
 export function verdict(control, variant, minVisits, alpha = 0.05) {
   if (control.visits < minVisits || variant.visits < minVisits) return 'need_more_data';
-  const t = twoProportionZ(control.engagedCount, control.visits, variant.engagedCount, variant.visits);
+  const t = twoProportionZ(control.engagedVisits, control.visits, variant.engagedVisits, variant.visits);
   if (t.pValue >= alpha) return 'no_difference';
   return t.diff > 0 ? 'winner' : 'loser';
 }
@@ -83,7 +85,7 @@ export function compareVariants(variantMetrics, minVisits) {
   return rest.map(v => ({
     control: control.variant,
     variant: v.variant,
-    ...twoProportionZ(control.engagedCount, control.visits, v.engagedCount, v.visits),
+    ...twoProportionZ(control.engagedVisits, control.visits, v.engagedVisits, v.visits),
     verdict: verdict(control, v, minVisits),
   }));
 }
@@ -126,17 +128,15 @@ async function fetchSlice(fetchFn, base, token, startAt, endAt, tag) {
 export async function collectReport({ fetch: fetchFn, baseUrl, websiteId, username, password, experiment, startAt, endAt }) {
   const token = await login(fetchFn, baseUrl, username, password);
   const base = `${baseUrl}/api/websites/${websiteId}`;
-  const variants = [];
-  for (const variant of experiment.variants) {
-    const slice = await fetchSlice(fetchFn, base, token, startAt, endAt, `${experiment.id}:${variant}`);
-    variants.push({ variant, ...slice });
-  }
+  const visits = await fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt, endAt });
+  const groups = groupByTag(visits, `${experiment.id}:`);
+  const variants = experiment.variants.map(variant => ({ variant, ...summariseVisits(groups[variant] ?? []) }));
   const all = await fetchSlice(fetchFn, base, token, startAt, endAt, null);
   return {
     experiment: { id: experiment.id, hypothesis: experiment.hypothesis, primaryMetric: experiment.primaryMetric, minVisitsPerVariant: experiment.minVisitsPerVariant },
     window: { startAt, endAt },
     variants,
-    allTraffic: { variant: 'all traffic', ...all },
+    allTraffic: { variant: 'all traffic (Umami)', ...all },
     comparisons: compareVariants(variants, experiment.minVisitsPerVariant),
   };
 }
@@ -147,15 +147,19 @@ const f2 = v => v.toFixed(2);
 export function renderMarkdown(report) {
   const { experiment: e, window: w } = report;
   const day = ms => new Date(ms).toISOString().slice(0, 10);
-  const rows = [...report.variants, report.allTraffic].map(v =>
-    `| ${v.variant} | ${v.visits} | ${Math.round(v.avgVisitSeconds)} | ${pct(v.bounceRate)} | ${pct(v.engagedRate)} | ${f2(v.spotOpenPerVisit)} | ${f2(v.eventsPerVisit)} |`);
+  const rows = report.variants.map(v =>
+    `| ${v.variant} | ${v.visits} | ${pct(v.engagedRate)} | ${f2(v.actionsPerVisit)} | ${Math.round(v.activeTimeMedian)} | ${pct(v.bounceRate)} | ${f2(v.spotViewsPerVisit)} |`);
+  const a = report.allTraffic;
+  rows.push(`| ${a.variant} | ${a.visits} | - | - | - | ${pct(a.bounceRate)} | - |`);
   const lines = [
     `# Experiment ${e.id}`,
     '',
     `Hypothesis: ${e.hypothesis}`,
     `Window: ${day(w.startAt)} to ${day(w.endAt)} | primary metric: ${e.primaryMetric} | min visits per variant: ${e.minVisitsPerVariant}`,
     '',
-    '| Variant | Visits | Avg visit (s) | Bounce rate | Engaged rate | spot_open/visit | Events/visit |',
+    ENGAGEMENT_NOTE,
+    '',
+    '| Variant | Visits | Engaged rate | Actions/visit | Active time median (s) | Bounce rate | Spot views/visit |',
     '|---|---|---|---|---|---|---|',
     ...rows,
     '',

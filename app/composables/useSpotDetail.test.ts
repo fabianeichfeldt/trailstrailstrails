@@ -28,6 +28,7 @@ import { getTrailById, getTrailBySlug, getTrailDetails, getSpotGpxData, fetchMul
 import { getComments } from '~/communication/comments'
 import { isSpotAssignedToTrailcrew } from '~/communication/photos'
 import { useSpotDetail } from './useSpotDetail'
+import { markRouteChange, resetSpotViews } from '~/analytics/spotView'
 
 // Minimal stand-in for Nuxt's useAsyncData: `data`/`refresh` are available
 // synchronously and the result is awaitable, like the real one. Runs the
@@ -67,6 +68,7 @@ async function mountDetail(slug: string | null) {
 }
 
 beforeEach(() => {
+  resetSpotViews()
   setActivePinia(createPinia())
   vi.stubGlobal('useAsyncData', fakeUseAsyncData)
   vi.stubGlobal('navigateTo', navigateTo)
@@ -202,14 +204,42 @@ describe('useSpotDetail', () => {
     expect(details.value.photos.map(p => p.id)).toEqual(['p2'])
   })
 
-  it('reports spot_open to Umami once the spot starts loading', async () => {
+  it('reports spot_land (cold open) to Umami once the spot starts loading', async () => {
     const umami = vi.fn()
     window.umami = { track: umami }
     vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
 
     await mountDetail('t1-slug')
 
-    expect(umami).toHaveBeenCalledWith('spot_open', { type: 'trail' })
+    expect(umami).toHaveBeenCalledWith('spot_land', { type: 'trail' })
+    expect(umami).toHaveBeenCalledTimes(1)
+    delete window.umami
+  })
+})
+
+describe('spot view events', () => {
+  it('reports spot_open once the app has navigated in-app', async () => {
+    const umami = vi.fn()
+    window.umami = { track: umami }
+    markRouteChange(); markRouteChange()
+    vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
+
+    await mountDetail('t1-slug')
+
+    expect(umami.mock.calls.map(c => c[0])).toEqual(['spot_open'])
+    delete window.umami
+  })
+
+  it('a legacy-id URL reports one view, from the slug page it redirects to (not also the id page)', async () => {
+    const umami = vi.fn()
+    window.umami = { track: umami }
+    vi.mocked(getTrailBySlug).mockResolvedValue(null)
+    vi.mocked(getTrailById).mockResolvedValue(spotRow('t1'))
+    vi.mocked(getTrailDetails).mockResolvedValue(liveDetails('t1'))
+
+    await mountDetail('t1')
+
+    expect(umami.mock.calls.filter(c => c[0] === 'spot_open' || c[0] === 'spot_land')).toHaveLength(0)
     delete window.umami
   })
 })

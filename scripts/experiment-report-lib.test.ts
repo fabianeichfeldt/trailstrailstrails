@@ -49,7 +49,7 @@ describe('twoProportionZ', () => {
 });
 
 describe('verdict', () => {
-  const arm = (engagedCount: number, visits: number) => ({ engagedCount, visits });
+  const arm = (engagedVisits: number, visits: number) => ({ engagedVisits, visits });
   it('need_more_data when any arm is below the minimum', () => {
     expect(verdict(arm(120, 400), arm(250, 299), 300)).toBe('need_more_data');
     expect(verdict(arm(10, 100), arm(50, 400), 300)).toBe('need_more_data');
@@ -61,33 +61,50 @@ describe('verdict', () => {
   });
 });
 
+const act = (visitId: string, at: number, extra: Record<string, unknown> = {}) => ({ visitId, sessionId: 's-' + visitId, createdAt: new Date(at).toISOString(), urlPath: '/map', tag: null, eventType: 2, eventName: null, ...extra });
+const ev = (visitId: string, at: number, name: string, tag: string | null) => act(visitId, at, { eventName: name, tag });
+const pv = (visitId: string, at: number, tag: string | null) => act(visitId, at, { eventType: 1, tag });
+
 describe('collectReport (mocked fetch)', () => {
-  it('logs in, then queries stats and metrics per variant with Bearer + tag', async () => {
+  function mock() {
     const calls: { url: string; init?: any }[] = [];
+    // visit a1 engaged (2 actions), a2 bounce, b1 engaged
+    const activity: Record<string, unknown[]> = {
+      sa1: [pv('a1', 0, 'exp:a'), ev('a1', 1000, 'search', 'exp:a'), ev('a1', 20000, 'like', 'exp:a'), ev('a1', 30000, 'active', 'exp:a')],
+      sa2: [pv('a2', 0, 'exp:a')],
+      sb1: [pv('b1', 0, 'exp:b'), ev('b1', 1000, 'share', 'exp:b'), ev('b1', 2000, 'locate_me', 'exp:b')],
+    };
     const fetchMock = vi.fn(async (url: string, init?: any) => {
       calls.push({ url, init });
       const json = (b: unknown) => ({ ok: true, status: 200, json: async () => b });
-      if (url.endsWith('/api/auth/login')) return json({ token: 'tok' });
-      if (url.includes('/stats')) return json({ visits: { value: 400 }, visitors: 300, pageviews: 900, bounces: 100, totaltime: 40000 });
-      return json([{ x: 'engaged', y: 120 }, { x: 'spot_open', y: 200 }]);
+      const u = new URL(url);
+      if (u.pathname.endsWith('/api/auth/login')) return json({ token: 'tok' });
+      if (u.pathname.endsWith('/sessions')) return json({ data: [{ id: 'sa1' }, { id: 'sa2' }, { id: 'sb1' }], count: 3, page: 1, pageSize: 100 });
+      const m = u.pathname.match(/\/sessions\/(.+)\/activity$/);
+      if (m) return json(activity[m[1]].map((a: any) => ({ ...a, sessionId: m[1] })));
+      if (u.pathname.endsWith('/stats')) return json({ visits: { value: 400 }, visitors: 300, pageviews: 900, bounces: 100, totaltime: 40000 });
+      return json([]);
     });
-    const report = await collectReport({
-      fetch: fetchMock, baseUrl: 'http://localhost:9', websiteId: 'w1', username: 'u', password: 'p',
-      experiment: { id: 'exp', hypothesis: 'h', variants: ['a', 'b'], primaryMetric: 'engagedRate', minVisitsPerVariant: 300 },
-      startAt: 1000, endAt: 2000,
-    });
+    return { fetchMock, calls };
+  }
+  const exp = { id: 'exp', hypothesis: 'h', variants: ['a', 'b'], primaryMetric: 'engagedRate', minVisitsPerVariant: 300 };
+
+  it('derives variants from raw visits and keeps only an all-traffic Umami row', async () => {
+    const { fetchMock, calls } = mock();
+    const report = await collectReport({ fetch: fetchMock, baseUrl: 'http://localhost:9', websiteId: 'w1', username: 'u', password: 'p', experiment: exp, startAt: 1000, endAt: 2000 });
     expect(JSON.parse(calls[0].init.body)).toEqual({ username: 'u', password: 'p' });
-    const stats = calls.filter(c => c.url.includes('/api/websites/w1/stats'));
-    expect(stats).toHaveLength(3);
-    expect(new URL(stats[0].url).searchParams.get('tag')).toBe('exp:a');
-    expect(new URL(stats[1].url).searchParams.get('tag')).toBe('exp:b');
-    expect(new URL(stats[2].url).searchParams.has('tag')).toBe(false);
-    const metrics = calls.find(c => c.url.includes('/metrics'))!;
-    expect(new URL(metrics.url).searchParams.get('type')).toBe('event');
     expect(calls.slice(1).every(c => c.init.headers.Authorization === 'Bearer tok')).toBe(true);
-    expect(report.variants[0].engagedRate).toBeCloseTo(0.3);
-    expect(report.comparisons[0].verdict).toBe('no_difference');
-    expect(renderMarkdown(report)).toContain('no_difference');
+    expect(report.variants[0]).toMatchObject({ variant: 'a', visits: 2, engagedVisits: 1, engagedRate: 0.5, bounceRate: 0.5, activeTimeMedian: 15 });
+    expect(report.variants[1]).toMatchObject({ variant: 'b', visits: 1, engagedRate: 1 });
+    // Only the cross-check row uses /stats; no per-variant tag queries.
+    const stats = calls.filter(c => c.url.includes('/stats'));
+    expect(stats).toHaveLength(1);
+    expect(new URL(stats[0].url).searchParams.has('tag')).toBe(false);
+    expect(report.comparisons[0].verdict).toBe('need_more_data');
+    const md = renderMarkdown(report);
+    expect(md).toContain('Engagement v2: computed from raw events');
+    expect(md).toContain('| Variant | Visits | Engaged rate | Actions/visit | Active time median (s) | Bounce rate | Spot views/visit |');
+    expect(md).toContain('all traffic (Umami)');
   });
 
   it('fails clearly when login is rejected', async () => {

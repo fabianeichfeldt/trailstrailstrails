@@ -1,5 +1,6 @@
 // Pure helpers for `npm run daily:report` (Umami daily readout). No I/O except the injected fetch.
 import { computeMetrics, login, normaliseMetrics, normaliseStats } from './experiment-report-lib.mjs';
+import { ENGAGEMENT_NOTE, fetchVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
 
 export const TZ = 'Europe/Berlin';
 const DAY = 86400000;
@@ -114,16 +115,18 @@ export function tagVisits(tags, experimentId, variants) {
 const OVERVIEW = [
   ['Visits', 'visits', 'count', 'pct'],
   ['Visitors', 'visitors', 'count', 'pct'],
-  ['Avg visit (s)', 'avgVisitSeconds', 'seconds', 'pct'],
-  ['Bounce rate', 'bounceRate', 'rate', 'pp'],
   ['Engaged rate', 'engagedRate', 'rate', 'pp'],
-  ['spot_open per visit', 'spotOpenPerVisit', 'ratio', 'pct'],
+  ['Actions per visit', 'actionsPerVisit', 'ratio', 'pct'],
+  ['Active time median (s)', 'activeTimeMedian', 'seconds', 'pct'],
+  ['Bounce rate', 'bounceRate', 'rate', 'pp'],
 ];
 
-// `day` and `base` are objects shaped like computeMetrics() output plus visits/visitors.
+// `day` and `base` carry visits/visitors (from /stats) plus summariseVisits() fields.
 export function buildOverview(day, base) {
+  // Seconds are shown rounded; compare what is shown, or 0.4 s vs 0.3 s reads as "0 → 0, +33%".
+  const shown = (v, unit) => (unit === 'seconds' && v != null ? Math.round(v) : v);
   return OVERVIEW.map(([label, key, unit, kind]) => ({
-    label, unit, kind, day: day[key], base: base[key], change: changeOf(day[key], base[key], kind),
+    label, unit, kind, day: day[key], base: base[key], change: changeOf(shown(day[key], unit), shown(base[key], unit), kind),
   }));
 }
 
@@ -154,18 +157,24 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
   const stats = async w => normaliseStats(await call(`${base}/stats?${q(w)}`));
   const metrics = async (w, type) => call(`${base}/metrics?${new URLSearchParams({ ...Object.fromEntries(q(w)), type })}`);
   const slice = async w => {
-    const [s, ev] = await Promise.all([stats(w), metrics(w, 'event')]);
-    const events = normaliseMetrics(ev);
-    return { stats: s, events, ...computeMetrics(s, events) };
+    const s = await stats(w);
+    return { stats: s, events: {}, ...computeMetrics(s, {}) };
   };
 
   const dw = dayWindow(day);
   const baselineDays = [];
   for (let i = 7; i >= 1; i--) baselineDays.push(dayWindow(addDays(day, -i)));
 
-  const [dayRaw, baselineSlices, urlRows, referrerRows, deviceRows, retentionRaw] = await Promise.all([
+  const exp = registry?.experiments?.find(e => e.id === registry.active);
+  const expRunning = exp && exp.startedAt && day >= exp.startedAt;
+  const baselineStart = baselineDays[0].startAt;
+  // One raw fetch covers the day, the baseline and (if older) the experiment start.
+  const visitsFrom = expRunning ? Math.min(baselineStart, berlinMidnight(exp.startedAt)) : baselineStart;
+
+  const [dayRaw, baselineSlices, allVisits, urlRows, referrerRows, deviceRows, retentionRaw] = await Promise.all([
     slice(dw),
     Promise.all(baselineDays.map(slice)),
+    fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt: visitsFrom, endAt: dw.endAt }),
     metrics(dw, 'url'),
     metrics(dw, 'referrer'),
     metrics(dw, 'device'),
@@ -179,16 +188,19 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
     }),
   ]);
 
-  const dayMetrics = { ...dayRaw, visitors: dayRaw.stats.visitors };
-  const baseMetrics = aggregateBaseline(baselineSlices);
+  const within = (w, vs) => vs.filter(v => v.startedAt >= w.startAt && v.startedAt <= w.endAt);
+  const { visits: _dv, ...dayEng } = summariseVisits(within(dw, allVisits));
+  const { visits: _bv, ...baseEng } = summariseVisits(within({ startAt: baselineStart, endAt: baselineDays[6].endAt }, allVisits));
+  const dayMetrics = { ...dayRaw, visitors: dayRaw.stats.visitors, ...dayEng };
+  const baseMetrics = { ...aggregateBaseline(baselineSlices), ...baseEng };
 
   let experiment = null;
-  const exp = registry?.experiments?.find(e => e.id === registry.active);
   if (exp) {
     if (!exp.startedAt || day < exp.startedAt) {
       experiment = { id: exp.id, startedAt: exp.startedAt ?? null, notStarted: true };
     } else {
-      const tags = normaliseMetrics(await metrics({ startAt: berlinMidnight(exp.startedAt), endAt: dw.endAt }, 'tag'));
+      const groups = groupByTag(within({ startAt: berlinMidnight(exp.startedAt), endAt: dw.endAt }, allVisits), `${exp.id}:`);
+      const visitsByVariant = Object.fromEntries(exp.variants.map(v => [v, (groups[v] ?? []).length]));
       experiment = {
         id: exp.id,
         hypothesis: exp.hypothesis,
@@ -196,7 +208,7 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
         minVisitsPerVariant: exp.minVisitsPerVariant,
         ...experimentProgress({
           variants: exp.variants,
-          visitsByVariant: tagVisits(tags, exp.id, exp.variants),
+          visitsByVariant,
           minVisitsPerVariant: exp.minVisitsPerVariant,
           daysSoFar: daysBetween(exp.startedAt, day) + 1,
         }),
@@ -239,6 +251,8 @@ export function renderDailyMarkdown(report) {
     `Day ${day} (Europe/Berlin) | baseline: 7 days before, ${new Date(report.window.baseline.startAt).toISOString().slice(0, 10)} to ${addDays(day, -1)}`,
     '',
     '## Overview',
+    '',
+    ENGAGEMENT_NOTE,
     '',
     '| Metric | Day | 7-day avg | Change |',
     '|---|---|---|---|',

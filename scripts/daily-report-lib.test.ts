@@ -120,8 +120,8 @@ describe('experiment progress', () => {
 
 describe('overview', () => {
   it('builds rows with pp change for rates and pct change for counts', () => {
-    const base = { visits: 100, visitors: 80, avgVisitSeconds: 60, bounceRate: 0.4, engagedRate: 0.3, spotOpenPerVisit: 0.5 };
-    const day = { visits: 110, visitors: 80, avgVisitSeconds: 60, bounceRate: 0.5, engagedRate: 0.3, spotOpenPerVisit: 0.5 };
+    const base = { visits: 100, visitors: 80, activeTimeMedian: 60, actionsPerVisit: 1, bounceRate: 0.4, engagedRate: 0.3 };
+    const day = { visits: 110, visitors: 80, activeTimeMedian: 60, actionsPerVisit: 1, bounceRate: 0.5, engagedRate: 0.3 };
     const rows = buildOverview(day, base);
     expect(rows.find(r => r.label === 'Visits').change).toBeCloseTo(0.1);
     expect(rows.find(r => r.label === 'Bounce rate').kind).toBe('pp');
@@ -141,7 +141,7 @@ describe('renderDailyMarkdown', () => {
     const md = renderDailyMarkdown({
       day: '2026-11-09',
       window: { day: dayWindow('2026-11-09'), baseline: dayWindow('2026-11-02') },
-      overview: buildOverview({ visits: 10, visitors: 8, avgVisitSeconds: 30, bounceRate: 0.5, engagedRate: 0.2, spotOpenPerVisit: 1 }, { visits: 5, visitors: 4, avgVisitSeconds: 30, bounceRate: 0.5, engagedRate: 0.2, spotOpenPerVisit: 1 }),
+      overview: buildOverview({ visits: 10, visitors: 8, activeTimeMedian: 30, actionsPerVisit: 1, bounceRate: 0.5, engagedRate: 0.2 }, { visits: 5, visitors: 4, activeTimeMedian: 30, actionsPerVisit: 1, bounceRate: 0.5, engagedRate: 0.2 }),
       visitsPerVisitor: 1.25,
       retention: retentionSummary(retentionRows),
       topPages: [],
@@ -153,11 +153,20 @@ describe('renderDailyMarkdown', () => {
     expect(md).toContain('| Visits | 10 | 5 | +100.0% |');
     expect(md).toContain('Lower bound: Umami re-identifies by IP');
     expect(md).toContain('No active experiment.');
+    expect(md).toContain('Engagement v2: computed from raw events');
+    expect(md).toContain('| Engaged rate | 20.0% | 20.0% | +0.0 pp |');
     expect(md).toContain('Day-7 return: n/a');
   });
 });
 
 describe('collectDailyReport', () => {
+  const t = (day: string, h: number, s = 0) => Date.parse(`${day}T${String(h).padStart(2, '0')}:00:${String(s).padStart(2, '0')}+01:00`);
+  const row = (visitId: string, at: number, extra: Record<string, unknown>) => ({ visitId, createdAt: new Date(at).toISOString(), urlPath: '/map', tag: null, eventType: 2, eventName: null, ...extra });
+  // x1: engaged visit on the report day, variant a. x2: bounce in the baseline, variant b.
+  const activity: Record<string, unknown[]> = {
+    x1: [row('v1', t('2026-11-09', 10), { eventType: 1, tag: 'aa-baseline:a' }), row('v1', t('2026-11-09', 10, 2), { eventName: 'search', tag: 'aa-baseline:a' }), row('v1', t('2026-11-09', 10, 30), { eventName: 'like', tag: 'aa-baseline:a' })],
+    x2: [row('v2', t('2026-11-05', 12), { eventType: 1, tag: 'aa-baseline:b' })],
+  };
   function mockUmami({ retention = retentionRows } = {}) {
     const calls: Array<{ path: string; params: Record<string, string>; method: string; headers: Record<string, string>; body?: any }> = [];
     const fetchFn = vi.fn(async (url: string, init: any = {}) => {
@@ -172,6 +181,9 @@ describe('collectDailyReport', () => {
       const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
       if (u.pathname === '/api/auth/login') return ok({ token: 'tok' });
       if (u.pathname === '/api/reports/retention') return ok(retention);
+      if (u.pathname.endsWith('/sessions')) return ok({ data: [{ id: 'x1' }, { id: 'x2' }], count: 2 });
+      const am = u.pathname.match(/\/sessions\/(.+)\/activity$/);
+      if (am) return ok(activity[am[1]]);
       if (u.pathname.endsWith('/stats')) {
         return ok({ pageviews: { value: 10 }, visitors: { value: 5 }, visits: { value: 6 }, bounces: { value: 2 }, totaltime: { value: 600 } });
       }
@@ -180,8 +192,6 @@ describe('collectDailyReport', () => {
           url: [{ x: '/trails/a/', y: 3 }, { x: '/map', y: 7 }],
           referrer: [{ x: null, y: 2 }],
           device: [{ x: 'desktop', y: 4 }, { x: 'mobile', y: 2 }],
-          event: [{ x: 'engaged', y: 3 }, { x: 'spot_open', y: 2 }],
-          tag: [{ x: 'aa-baseline:a', y: 4 }, { x: 'aa-baseline:b', y: 5 }],
         };
         return ok(rows[u.searchParams.get('type') ?? ''] ?? []);
       }
@@ -219,7 +229,15 @@ describe('collectDailyReport', () => {
     });
 
     const types = new Set(calls.filter(c => c.path.endsWith('/metrics')).map(c => c.params.type));
-    expect(types).toEqual(new Set(['url', 'referrer', 'device', 'event', 'tag']));
+    expect(types).toEqual(new Set(['url', 'referrer', 'device']));
+    // One raw-visit fetch for day + baseline: 1 sessions page + 2 activity calls.
+    expect(calls.filter(c => c.path.endsWith('/sessions'))).toHaveLength(1);
+    expect(calls.filter(c => c.path.endsWith('/activity'))).toHaveLength(2);
+    const ov = Object.fromEntries(report.overview.map((r: any) => [r.label, r]));
+    expect(ov['Engaged rate'].day).toBe(1);
+    expect(ov['Engaged rate'].base).toBe(0);
+    expect(ov['Bounce rate'].base).toBe(1);
+    expect(ov['Active time median (s)'].day).toBe(30);
 
     // One stats call for the day and one per baseline day.
     expect(calls.filter(c => c.path.endsWith('/stats'))).toHaveLength(8);
@@ -227,9 +245,9 @@ describe('collectDailyReport', () => {
     expect(report.topSpots).toEqual([{ key: '/trails/a', count: 3 }]);
     expect(report.topPages[0]).toEqual({ key: '/map', count: 7 });
     expect(report.referrers).toEqual([{ key: 'direct', count: 2 }]);
-    expect(report.experiment.variants).toEqual([{ variant: 'a', visits: 4 }, { variant: 'b', visits: 5 }]);
-    expect(report.experiment.minVisits).toBe(4);
-    expect(report.experiment.daysLeft).toBe(Math.ceil((300 - 4) / (4 / 9)));
+    expect(report.experiment.variants).toEqual([{ variant: 'a', visits: 1 }, { variant: 'b', visits: 1 }]);
+    expect(report.experiment.minVisits).toBe(1);
+    expect(report.experiment.daysLeft).toBe(Math.ceil((300 - 1) / (1 / 9)));
   });
 
   it('skips the experiment when the day is before its start', async () => {
@@ -237,5 +255,12 @@ describe('collectDailyReport', () => {
     const report = await collectDailyReport({ fetch: fetchFn, baseUrl: 'https://umami.test', websiteId: '7', username: 'u', password: 'p', day: '2026-10-20', registry });
     expect(report.experiment.notStarted).toBe(true);
     expect(calls.some(c => c.params.type === 'tag')).toBe(false);
+  });
+});
+
+describe('buildOverview seconds', () => {
+  it('compares seconds as displayed: 0.4 s vs 0.3 s is 0 → 0, no change', () => {
+    const row = buildOverview({ activeTimeMedian: 0.4 }, { activeTimeMedian: 0.3 }).find(r => r.label.startsWith('Active time'));
+    expect(row.change).toBe(0);
   });
 });
