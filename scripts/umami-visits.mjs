@@ -10,6 +10,21 @@ export const ENGAGEMENT_RULES = {
 };
 export const ENGAGEMENT_NOTE = 'Engagement v2: computed from raw events (see scripts/umami-visits.mjs).';
 
+// Visits from these countries are bots (2026-11: ~27% of traffic from CN, 0 engaged, 0 events). One line to extend.
+export const EXCLUDED_COUNTRIES = ['CN'];
+
+export const isBotVisit = (visit, excludedCountries = EXCLUDED_COUNTRIES) =>
+  visit?.country != null && excludedCountries.includes(String(visit.country).toUpperCase());
+
+// -> { visits: humans, excluded: bot count }.
+export function filterBotVisits(visits, excludedCountries = EXCLUDED_COUNTRIES) {
+  const kept = visits.filter(v => !isBotVisit(v, excludedCountries));
+  return { visits: kept, excluded: visits.length - kept.length };
+}
+
+export const botNote = (excluded, excludedCountries = EXCLUDED_COUNTRIES) =>
+  `Excluded ${excluded} bot visits (${excludedCountries.join(', ')})`;
+
 const PAGE_SIZE = 100;
 const unwrap = raw => (Array.isArray(raw) ? raw : Array.isArray(raw?.data) ? raw.data : []);
 
@@ -46,8 +61,9 @@ export function groupIntoVisits(activities) {
   for (const a of activities) {
     if (String(a.urlPath ?? '').startsWith('/embed/')) continue;
     const key = a.visitId ?? `${a.sessionId}:nov`;
-    if (!byVisit.has(key)) byVisit.set(key, { visitId: key, sessionId: a.sessionId, tags: [], events: [] });
+    if (!byVisit.has(key)) byVisit.set(key, { visitId: key, sessionId: a.sessionId, country: null, tags: [], events: [] });
     const v = byVisit.get(key);
+    v.country ??= a.country ?? null;
     v.tags.push(a.tag);
     v.events.push({
       type: Number(a.eventType) === 2 ? 'event' : 'pageview',
@@ -62,6 +78,7 @@ export function groupIntoVisits(activities) {
   }).sort((a, b) => a.startedAt - b.startedAt);
 }
 
+// Returns ALL visits incl. bots, each with `country`; callers apply filterBotVisits().
 export async function fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt, endAt, concurrency = 4 }) {
   const base = `${baseUrl}/api/websites/${websiteId}`;
   const sessions = [];
@@ -75,7 +92,7 @@ export async function fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, s
   const q = new URLSearchParams({ startAt: String(startAt), endAt: String(endAt) });
   const perSession = await mapLimited(sessions, concurrency, async s => {
     const acts = unwrap(await getJson(fetchFn, `${base}/sessions/${s.id}/activity?${q}`, token));
-    return acts.map(a => ({ ...a, sessionId: a.sessionId ?? s.id }));
+    return acts.map(a => ({ ...a, sessionId: a.sessionId ?? s.id, country: a.country ?? s.country ?? null }));
   });
   return groupIntoVisits(perSession.flat());
 }

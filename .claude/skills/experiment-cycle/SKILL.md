@@ -30,7 +30,7 @@ The report gives one verdict per variant vs. control (`a`):
 | `loser` | Conclude. Remove B. |
 
 Sanity checks before trusting a verdict:
-- Visits per variant should be within ±10% of each other. A bigger skew means the assignment or tagging is broken, so investigate instead of concluding.
+- Visits per variant (bot visits, currently CN, are already excluded; the report prints the count) should be within ±10% of each other. A bigger skew means the assignment or tagging is broken, so investigate instead of concluding.
 - A guardrail metric must not get clearly worse (bounce rate up >5 points, visit time down >20%) in a "winner".
 - The A/A test (`aa-baseline`) must end as `no_difference`. If it doesn't, the pipeline is broken: stop and report.
 - Weekend vs. weekday and weather skew both arms equally in an A/B test, so they don't block a verdict. Do call out a big rain week in the log, though.

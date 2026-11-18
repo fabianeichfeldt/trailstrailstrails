@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 // @ts-expect-error plain .mjs
 import * as lib from './umami-visits.mjs';
 
-const { fetchVisits, groupIntoVisits, countActions, summariseVisits, groupByTag, ENGAGEMENT_RULES } = lib;
+const { fetchVisits, groupIntoVisits, countActions, summariseVisits, groupByTag, ENGAGEMENT_RULES, EXCLUDED_COUNTRIES, isBotVisit, filterBotVisits, botNote } = lib;
 
 let n = 0;
 const act = (visitId: string, sec: number, o: Record<string, unknown> = {}) => ({
@@ -125,5 +125,39 @@ describe('fetchVisits (mocked fetch)', () => {
     expect(await fetchVisits({ fetch: f, baseUrl: 'http://x', token: 't', websiteId: 'w', startAt: 1, endAt: 2 })).toHaveLength(1);
     const bad = vi.fn(async () => ({ ok: false, status: 500, json: async () => ({}) }));
     await expect(fetchVisits({ fetch: bad, baseUrl: 'http://x', token: 't', websiteId: 'w', startAt: 1, endAt: 2 })).rejects.toThrow('500');
+  });
+});
+
+describe('bot filter', () => {
+  it('is data-driven by EXCLUDED_COUNTRIES', () => {
+    expect(EXCLUDED_COUNTRIES).toEqual(['CN']);
+    expect(isBotVisit({ country: 'CN' })).toBe(true);
+    expect(isBotVisit({ country: 'cn' })).toBe(true);
+    expect(isBotVisit({ country: 'DE' })).toBe(false);
+    expect(isBotVisit({ country: null })).toBe(false);
+    expect(isBotVisit({})).toBe(false);
+    expect(isBotVisit({ country: 'RU' }, ['CN', 'RU'])).toBe(true);
+  });
+
+  it('carries the session country onto visits and filters them out of the metrics', async () => {
+    const sessions = [{ id: 'sCN', country: 'CN' }, { id: 'sDE', country: 'DE' }, { id: 'sNone' }];
+    const f = vi.fn(async (url: string) => {
+      const u = new URL(url);
+      if (u.pathname.endsWith('/sessions')) return { ok: true, json: async () => ({ data: sessions, count: 3 }) };
+      const sid = u.pathname.split('/')[5];
+      const acts = sid === 'sDE'
+        ? [pv('vDE', 0, { sessionId: sid }), ev('vDE', 1, 'like', { sessionId: sid }), ev('vDE', 2, 'share', { sessionId: sid })]
+        : [pv(`v${sid}`, 0, { sessionId: sid })];
+      return { ok: true, json: async () => acts };
+    });
+    const all = await fetchVisits({ fetch: f, baseUrl: 'http://x', token: 't', websiteId: 'w', startAt: 1, endAt: 2 });
+    expect(all.map((v: any) => v.country).sort()).toEqual(['CN', 'DE', null]);
+    const { visits, excluded } = filterBotVisits(all);
+    expect(excluded).toBe(1);
+    expect(visits).toHaveLength(2);
+    // CN bounce would otherwise drag engaged rate to 1/3.
+    expect(summariseVisits(all).engagedRate).toBeCloseTo(1 / 3);
+    expect(summariseVisits(visits).engagedRate).toBe(0.5);
+    expect(botNote(excluded)).toBe('Excluded 1 bot visits (CN)');
   });
 });
