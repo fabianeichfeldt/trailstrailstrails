@@ -1,6 +1,6 @@
 // Pure helpers for `npm run daily:report` (Umami daily readout). No I/O except the injected fetch.
-import { computeMetrics, login, normaliseMetrics, normaliseStats } from './experiment-report-lib.mjs';
-import { ENGAGEMENT_NOTE, fetchVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
+import { computeMetrics, login, normaliseMetrics } from './experiment-report-lib.mjs';
+import { ENGAGEMENT_NOTE, botNote, EXCLUDED_COUNTRIES, fetchVisits, filterBotVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
 
 export const TZ = 'Europe/Berlin';
 const DAY = 86400000;
@@ -121,7 +121,7 @@ const OVERVIEW = [
   ['Bounce rate', 'bounceRate', 'rate', 'pp'],
 ];
 
-// `day` and `base` carry visits/visitors (from /stats) plus summariseVisits() fields.
+// `day` and `base` carry visits/visitors plus summariseVisits() fields.
 export function buildOverview(day, base) {
   // Seconds are shown rounded; compare what is shown, or 0.4 s vs 0.3 s reads as "0 → 0, +33%".
   const shown = (v, unit) => (unit === 'seconds' && v != null ? Math.round(v) : v);
@@ -154,12 +154,7 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
     return res.json();
   };
   const q = w => new URLSearchParams({ startAt: String(w.startAt), endAt: String(w.endAt) });
-  const stats = async w => normaliseStats(await call(`${base}/stats?${q(w)}`));
   const metrics = async (w, type) => call(`${base}/metrics?${new URLSearchParams({ ...Object.fromEntries(q(w)), type })}`);
-  const slice = async w => {
-    const s = await stats(w);
-    return { stats: s, events: {}, ...computeMetrics(s, {}) };
-  };
 
   const dw = dayWindow(day);
   const baselineDays = [];
@@ -173,9 +168,7 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
   // One raw fetch covers the day, the baseline and (if older) the experiment start.
   const visitsFrom = expRunning ? Math.min(baselineStart, berlinMidnight(startDay)) : baselineStart;
 
-  const [dayRaw, baselineSlices, allVisits, urlRows, referrerRows, deviceRows, retentionRaw] = await Promise.all([
-    slice(dw),
-    Promise.all(baselineDays.map(slice)),
+  const [rawVisits, urlRows, referrerRows, deviceRows, retentionRaw] = await Promise.all([
     fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt: visitsFrom, endAt: dw.endAt }),
     metrics(dw, 'url'),
     metrics(dw, 'referrer'),
@@ -190,11 +183,18 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
     }),
   ]);
 
+  const { visits: allVisits, excluded } = filterBotVisits(rawVisits);
   const within = (w, vs) => vs.filter(v => v.startedAt >= w.startAt && v.startedAt <= w.endAt);
-  const { visits: _dv, ...dayEng } = summariseVisits(within(dw, allVisits));
-  const { visits: _bv, ...baseEng } = summariseVisits(within({ startAt: baselineStart, endAt: baselineDays[6].endAt }, allVisits));
-  const dayMetrics = { ...dayRaw, visitors: dayRaw.stats.visitors, ...dayEng };
-  const baseMetrics = { ...aggregateBaseline(baselineSlices), ...baseEng };
+  // Visits/visitors come from the filtered raw visits, not Umami's /stats (which can't exclude countries).
+  const visitors = vs => new Set(vs.map(v => v.sessionId)).size;
+  const dayVisits = within(dw, allVisits);
+  const baseVisits = within({ startAt: baselineStart, endAt: baselineDays[6].endAt }, allVisits);
+  const dayMetrics = { ...summariseVisits(dayVisits), visitors: visitors(dayVisits) };
+  const baseMetrics = {
+    ...summariseVisits(baseVisits),
+    visits: baseVisits.length / baselineDays.length,
+    visitors: baselineDays.reduce((a, w) => a + visitors(within(w, allVisits)), 0) / baselineDays.length,
+  };
 
   let experiment = null;
   if (exp) {
@@ -220,6 +220,7 @@ export async function collectDailyReport({ fetch: fetchFn, baseUrl, websiteId, u
 
   return {
     day,
+    botsExcluded: { count: excluded, countries: EXCLUDED_COUNTRIES },
     window: { day: dw, baseline: { startAt: baselineDays[0].startAt, endAt: baselineDays[6].endAt } },
     overview: buildOverview(dayMetrics, baseMetrics),
     visitsPerVisitor: visitsPerVisitor(dayMetrics),
@@ -255,12 +256,13 @@ export function renderDailyMarkdown(report) {
     '## Overview',
     '',
     ENGAGEMENT_NOTE,
+    `${botNote(report.botsExcluded.count, report.botsExcluded.countries)} (window: day + 7-day baseline + experiment start).`,
     '',
     '| Metric | Day | 7-day avg | Change |',
     '|---|---|---|---|',
     ...report.overview.map(r => `| ${r.label} | ${fmt(r.day, r.unit)} | ${fmt(r.base, r.unit)} | ${formatChange(r.change, r.kind)} |`),
     '',
-    '## Returning visitors (last 28 days)',
+    '## Returning visitors (last 28 days, incl. bots)',
     '',
     `- Day-1 return: ${pct1(report.retention.day1.rate)} (${report.retention.day1.returned} of ${report.retention.day1.visitors} visitors, ${report.retention.day1.cohorts} cohorts)`,
     `- Day-7 return: ${pct1(report.retention.day7.rate)} (${report.retention.day7.returned} of ${report.retention.day7.visitors} visitors, ${report.retention.day7.cohorts} cohorts)`,
@@ -268,15 +270,15 @@ export function renderDailyMarkdown(report) {
     '',
     `_${RETENTION_CAVEAT}_`,
     '',
-    '## Top 5 pages',
+    '## Top 5 pages (incl. bots)',
     '',
     list(report.topPages, r => `${r.key}: ${r.count}`),
     '',
-    '## Top 5 spots',
+    '## Top 5 spots (incl. bots)',
     '',
     list(report.topSpots, r => `${r.key}: ${r.count}`),
     '',
-    '## Sources',
+    '## Sources (incl. bots)',
     '',
     '### Referrers',
     '',

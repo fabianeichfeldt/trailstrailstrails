@@ -1,4 +1,4 @@
-import { ENGAGEMENT_NOTE, fetchVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
+import { ENGAGEMENT_NOTE, botNote, EXCLUDED_COUNTRIES, fetchVisits, filterBotVisits, groupByTag, summariseVisits } from './umami-visits.mjs';
 
 // Pure helpers for `npm run experiment:report` (Umami A/B readout). No I/O except the injected fetch.
 
@@ -128,15 +128,16 @@ async function fetchSlice(fetchFn, base, token, startAt, endAt, tag) {
 export async function collectReport({ fetch: fetchFn, baseUrl, websiteId, username, password, experiment, startAt, endAt }) {
   const token = await login(fetchFn, baseUrl, username, password);
   const base = `${baseUrl}/api/websites/${websiteId}`;
-  const visits = await fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt, endAt });
+  const { visits, excluded } = filterBotVisits(await fetchVisits({ fetch: fetchFn, baseUrl, token, websiteId, startAt, endAt }));
   const groups = groupByTag(visits, `${experiment.id}:`);
   const variants = experiment.variants.map(variant => ({ variant, ...summariseVisits(groups[variant] ?? []) }));
   const all = await fetchSlice(fetchFn, base, token, startAt, endAt, null);
   return {
     experiment: { id: experiment.id, hypothesis: experiment.hypothesis, primaryMetric: experiment.primaryMetric, minVisitsPerVariant: experiment.minVisitsPerVariant },
     window: { startAt, endAt },
+    botsExcluded: { count: excluded, countries: EXCLUDED_COUNTRIES },
     variants,
-    allTraffic: { variant: 'all traffic (Umami)', ...all },
+    allTraffic: { variant: 'all traffic (Umami, incl. bots)', ...all },
     comparisons: compareVariants(variants, experiment.minVisitsPerVariant),
   };
 }
@@ -158,6 +159,7 @@ export function renderMarkdown(report) {
     `Window: ${day(w.startAt)} to ${day(w.endAt)} | primary metric: ${e.primaryMetric} | min visits per variant: ${e.minVisitsPerVariant}`,
     '',
     ENGAGEMENT_NOTE,
+    `${botNote(report.botsExcluded.count, report.botsExcluded.countries)}; the all-traffic row is Umami's aggregate and still includes them.`,
     '',
     '| Variant | Visits | Engaged rate | Actions/visit | Active time median (s) | Bounce rate | Spot views/visit |',
     '|---|---|---|---|---|---|---|',

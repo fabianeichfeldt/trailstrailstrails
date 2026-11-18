@@ -140,6 +140,7 @@ describe('renderDailyMarkdown', () => {
   it('renders the overview, the fixed caveat and the no-experiment note', async () => {
     const md = renderDailyMarkdown({
       day: '2026-11-09',
+      botsExcluded: { count: 3, countries: ['CN'] },
       window: { day: dayWindow('2026-11-09'), baseline: dayWindow('2026-11-02') },
       overview: buildOverview({ visits: 10, visitors: 8, activeTimeMedian: 30, actionsPerVisit: 1, bounceRate: 0.5, engagedRate: 0.2 }, { visits: 5, visitors: 4, activeTimeMedian: 30, actionsPerVisit: 1, bounceRate: 0.5, engagedRate: 0.2 }),
       visitsPerVisitor: 1.25,
@@ -232,6 +233,7 @@ describe('collectDailyReport', () => {
     expect(types).toEqual(new Set(['url', 'referrer', 'device']));
     // One raw-visit fetch for day + baseline: 1 sessions page + 2 activity calls.
     expect(calls.filter(c => c.path.endsWith('/sessions'))).toHaveLength(1);
+    expect(report.botsExcluded).toEqual({ count: 0, countries: ['CN'] });
     expect(calls.filter(c => c.path.endsWith('/activity'))).toHaveLength(2);
     const ov = Object.fromEntries(report.overview.map((r: any) => [r.label, r]));
     expect(ov['Engaged rate'].day).toBe(1);
@@ -239,8 +241,10 @@ describe('collectDailyReport', () => {
     expect(ov['Bounce rate'].base).toBe(1);
     expect(ov['Active time median (s)'].day).toBe(30);
 
-    // One stats call for the day and one per baseline day.
-    expect(calls.filter(c => c.path.endsWith('/stats'))).toHaveLength(8);
+    // Visits/visitors come from filtered raw visits, so /stats is never called.
+    expect(calls.filter(c => c.path.endsWith('/stats'))).toHaveLength(0);
+    expect(ov.Visits.day).toBe(1);
+    expect(ov.Visitors.day).toBe(1);
 
     expect(report.topSpots).toEqual([{ key: '/trails/a', count: 3 }]);
     expect(report.topPages[0]).toEqual({ key: '/map', count: 7 });
@@ -248,6 +252,24 @@ describe('collectDailyReport', () => {
     expect(report.experiment.variants).toEqual([{ variant: 'a', visits: 1 }, { variant: 'b', visits: 1 }]);
     expect(report.experiment.minVisits).toBe(1);
     expect(report.experiment.daysLeft).toBe(Math.ceil((300 - 1) / (1 / 9)));
+  });
+
+  it('excludes CN visits from the overview and reports the count', async () => {
+    const { fetchFn } = mockUmami();
+    const f = vi.fn(async (url: string, init: any = {}) => {
+      const u = new URL(url);
+      if (u.pathname.endsWith('/sessions')) return { ok: true, status: 200, json: async () => ({ data: [{ id: 'x1', country: 'DE' }, { id: 'x2', country: 'DE' }, { id: 'x3', country: 'CN' }, { id: 'x4', country: 'CN' }], count: 4 }) };
+      const m = u.pathname.match(/\/sessions\/(x[34])\/activity$/);
+      if (m) return { ok: true, status: 200, json: async () => [row('c' + m[1], t('2026-11-09', 11), { eventType: 1, sessionId: m[1] })] };
+      return fetchFn(url, init);
+    });
+    const report = await collectDailyReport({ fetch: f, baseUrl: 'https://umami.test', websiteId: '7', username: 'u', password: 'p', day: '2026-11-09', registry });
+    const ov = Object.fromEntries(report.overview.map((r: any) => [r.label, r]));
+    expect(report.botsExcluded.count).toBe(2);
+    expect(ov.Visits.day).toBe(1);
+    expect(ov['Engaged rate'].day).toBe(1);
+    expect(report.experiment.variants).toEqual([{ variant: 'a', visits: 1 }, { variant: 'b', visits: 1 }]);
+    expect(renderDailyMarkdown(report)).toContain('Excluded 2 bot visits (CN)');
   });
 
   it('counts the start day when startedAt is a timestamp', async () => {

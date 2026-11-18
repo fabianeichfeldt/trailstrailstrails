@@ -104,7 +104,24 @@ describe('collectReport (mocked fetch)', () => {
     const md = renderMarkdown(report);
     expect(md).toContain('Engagement v2: computed from raw events');
     expect(md).toContain('| Variant | Visits | Engaged rate | Actions/visit | Active time median (s) | Bounce rate | Spot views/visit |');
-    expect(md).toContain('all traffic (Umami)');
+    expect(md).toContain('all traffic (Umami, incl. bots)');
+    expect(md).toContain('Excluded 0 bot visits (CN)');
+    expect(report.botsExcluded).toEqual({ count: 0, countries: ['CN'] });
+  });
+
+  it('drops CN visits from per-variant counts and engaged rate and reports the count', async () => {
+    const { fetchMock } = mock();
+    const withCn = vi.fn(async (url: string, init?: any) => {
+      const u = new URL(url);
+      if (u.pathname.endsWith('/sessions')) return { ok: true, status: 200, json: async () => ({ data: [{ id: 'sa1', country: 'DE' }, { id: 'sa2', country: 'DE' }, { id: 'sb1', country: 'DE' }, { id: 'sc1', country: 'CN' }, { id: 'sc2', country: 'CN' }], count: 5 }) };
+      const m = u.pathname.match(/\/sessions\/(sc\d)\/activity$/);
+      if (m) return { ok: true, status: 200, json: async () => [{ ...pv('c' + m[1], 0, 'exp:b'), sessionId: m[1] }] };
+      return fetchMock(url, init);
+    });
+    const report = await collectReport({ fetch: withCn, baseUrl: 'http://localhost:9', websiteId: 'w1', username: 'u', password: 'p', experiment: exp, startAt: 1000, endAt: 2000 });
+    expect(report.botsExcluded.count).toBe(2);
+    expect(report.variants[1]).toMatchObject({ variant: 'b', visits: 1, engagedRate: 1 });
+    expect(renderMarkdown(report)).toContain('Excluded 2 bot visits (CN)');
   });
 
   it('fails clearly when login is rejected', async () => {
