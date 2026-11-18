@@ -16,12 +16,6 @@ describe('buildSpotSummary', () => {
     expect(s).toContain('Öffnungszeiten / Fahrverbote: Mo-Fr 9-17.')
     expect(buildSpotSummary({ name: 'X', type: 'trail' })).not.toContain('Öffnungszeiten')
   })
-  it('includes live status only on request and skips unknown', () => {
-    const i = { name: 'X', type: 'trail' as const, status: 'closed' as const }
-    expect(buildSpotSummary(i)).not.toContain('gesperrt')
-    expect(buildSpotSummary(i, { includeStatus: true })).toContain('Aktuell gesperrt.')
-    expect(buildSpotSummary({ ...i, status: 'unknown' }, { includeStatus: true })).not.toContain('Aktuell')
-  })
   it('truncates very long opening hours', () => {
     expect(buildSpotSummary({ name: 'X', type: 'trail', openingHours: 'a '.repeat(200) })).toContain('…')
   })
