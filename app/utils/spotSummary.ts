@@ -8,15 +8,7 @@ export interface SpotSummaryInput {
   type: SpotType
   approved?: boolean
   region?: SpotRegionMatch | null
-  /** Live status; left out of meta text because the build bakes it. */
-  status?: 'open' | 'limited' | 'closed' | 'unknown'
   openingHours?: string
-}
-
-const STATUS_TEXT: Record<'open' | 'limited' | 'closed', string> = {
-  open: 'Aktuell geöffnet.',
-  limited: 'Aktuell nur eingeschränkt befahrbar.',
-  closed: 'Aktuell gesperrt.',
 }
 
 const MAX_HOURS = 140
@@ -44,12 +36,11 @@ export function findSpotRegion(
 }
 
 /** German 1–2 sentence fact text built only from fields that are present. */
-export function buildSpotSummary(input: SpotSummaryInput, opts: { includeStatus?: boolean } = {}): string {
+export function buildSpotSummary(input: SpotSummaryInput): string {
   const label = SPOT_TYPES[input.type].eyebrow
   const official = input.approved ? 'offizieller ' : ''
   const place = input.region ? ` ${input.region.pronom}` : ''
   const parts = [`${input.name} ist ein ${official}${label}${place}.`]
-  if (opts.includeStatus && input.status && input.status !== 'unknown') parts.push(STATUS_TEXT[input.status])
   const hours = hoursSentence(input.openingHours)
   if (hours) parts.push(hours)
   return parts.join(' ')

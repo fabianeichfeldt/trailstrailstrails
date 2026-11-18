@@ -17,8 +17,7 @@ describe('trails/[slug].vue SEO wiring', () => {
     expect(src).toContain("ogSiteName: 'Trailradar'")
     expect(src).not.toMatch(/TrailRadar|Trailradar\.org'/)
   })
-  test('renders the crawlable region list and the spot summary', () => {
+  test('renders the crawlable region list', () => {
     expect(src).toContain('<RegionSpotList')
-    expect(src).toContain('<SpotDetailSummary')
   })
 })

@@ -62,8 +62,6 @@
            trailcrew's rule ("Geschlossen 24h nach Regen"), not the answer. -->
       <SpotDetailStatus :details="details" :condition="showConditionLocked ? null : condition" />
 
-      <SpotDetailSummary :text="summaryText" />
-
       <!-- Sits with the status banner rather than below the photos: both
            answer the same "can I ride this today" question. Above the sticky
            nav, so it needs no jump-link of its own. -->
@@ -174,7 +172,6 @@ import SpotDetailDescription from '~/components/trail_detail/SpotDetailDescripti
 import SpotDetailRules from '~/components/trail_detail/SpotDetailRules.vue'
 import SpotDetailVideo from '~/components/trail_detail/SpotDetailVideo.vue'
 import SpotDetailNearby from '~/components/trail_detail/SpotDetailNearby.vue'
-import SpotDetailSummary from '~/components/trail_detail/SpotDetailSummary.vue'
 import RegionSpotList from '~/components/trail_detail/RegionSpotList.vue'
 import SpotPanelToursTab from '~/components/map/SpotPanelToursTab.vue'
 import SpotPanelTrailsTab from '~/components/map/SpotPanelTrailsTab.vue'
@@ -365,19 +362,17 @@ const pageUrl = computed(() => canonicalUrl(`/trails/${canonicalSlug.value}`))
 // social card instead of a bare "Trail | Trailradar".
 const metaTitle = computed(() => `${pageName.value} - Trailradar`)
 
-// Full text — feeds the JSON-LD below. The meta/og/twitter descriptions get
-// the trimmed version: search snippets and social cards cut off around
-// 160–200 chars anyway, and WhatsApp shows the raw truncation.
-// Status is left out of the description: the build would freeze it into meta.
+// Fallback text for the description when a spot has no trail_description.
+// The meta/og/twitter descriptions get the trimmed version: search snippets
+// and social cards cut off around 160–200 chars anyway, and WhatsApp shows
+// the raw truncation.
 const summaryInput = computed(() => trail.value && {
   name: trail.value.name,
   type: trail.value.type,
   approved: trail.value.approved,
   region: regionMatch.value,
-  status: details.value.status,
   openingHours: details.value.opening_hours,
 })
-const summaryText = computed(() => (summaryInput.value ? buildSpotSummary(summaryInput.value, { includeStatus: true }) : ''))
 
 const pageDescription = computed(() => isRegion
   ? `Finde offizielle Mountainbike Trails ${region!.pronom}. Community-basiert und aktuell.`
