@@ -76,6 +76,8 @@ beforeEach(() => {
   vi.stubGlobal('useSpotPanelStore', useSpotPanelStore)
   fakeAuth = { isLoggedIn: false, userId: '', isAdmin: false, isTrailcrew: false, nickname: '', avatarUrl: '', getToken: async () => '' }
   vi.stubGlobal('useAuthStore', () => fakeAuth)
+  vi.stubGlobal('useNuxtApp', () => ({ isHydrating: true }))
+  vi.stubGlobal('useTrailsStore', () => ({ all: [] }))
 
   navigateTo.mockReset()
   clearNuxtData.mockReset()
@@ -86,6 +88,40 @@ beforeEach(() => {
   vi.mocked(fetchMultipleSpotParking).mockReset().mockResolvedValue(new Map())
   vi.mocked(getComments).mockReset().mockResolvedValue([])
   vi.mocked(isSpotAssignedToTrailcrew).mockReset().mockResolvedValue(false)
+})
+
+describe('useSpotDetail client navigation', () => {
+  it('does not refetch the spot after mount on client-side nav, but still starts it', async () => {
+    vi.stubGlobal('useNuxtApp', () => ({ isHydrating: false }))
+    vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
+
+    await mountDetail('t1-slug')
+
+    expect(getTrailBySlug).toHaveBeenCalledOnce()
+    expect(clearNuxtData).not.toHaveBeenCalled()
+    expect(getComments).toHaveBeenCalledWith('t1')
+    expect(useSpotPanelStore().currentItem?.id).toBe('t1')
+  })
+
+  it('still refreshes after mount when hydrating from the SSG payload', async () => {
+    vi.stubGlobal('useNuxtApp', () => ({ isHydrating: true }))
+    vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
+
+    await mountDetail('t1-slug')
+
+    expect(getTrailBySlug).toHaveBeenCalledTimes(2)
+    expect(clearNuxtData).toHaveBeenCalledWith('trail-t1-slug')
+  })
+
+  it('hints id + type from the loaded spot list so the slug lookup is skipped', async () => {
+    vi.stubGlobal('useNuxtApp', () => ({ isHydrating: false }))
+    vi.stubGlobal('useTrailsStore', () => ({ all: [{ id: 't1', slug: 't1-slug', type: 'bikepark' }] }))
+    vi.mocked(getTrailBySlug).mockResolvedValue(spotRow('t1'))
+
+    await mountDetail('t1-slug')
+
+    expect(getTrailBySlug).toHaveBeenCalledWith('t1-slug', { id: 't1', type: 'bikepark' })
+  })
 })
 
 describe('useSpotDetail', () => {

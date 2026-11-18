@@ -1,3 +1,4 @@
+import { renderGpxSwap } from '~/map/gpxSwap'
 import { track } from '~/analytics/track'
 import type { Ref } from 'vue'
 import { Capacitor } from '@capacitor/core'
@@ -263,87 +264,85 @@ export function useTrailMap(mapEl: Ref<HTMLElement | null>) {
       if (destroyed) return
       const gen = renderGuard.beginRender()
 
-      // Hide marker layers while in GPX mode
-      if (mymap.hasLayer(clusterGroup)) mymap.removeLayer(clusterGroup)
-      if (mymap.hasLayer(markerGroup))  mymap.removeLayer(markerGroup)
-
-      // Clear previous GPX layers
-      for (const l of gpxLayers) mymap.removeLayer(l)
-      gpxLayers = []
-      highlighter.clear()
-      // Clear previous parking markers
-      for (const l of parkingLayers) mymap.removeLayer(l)
-      parkingLayers = []
-      tooltipEl.style.display = 'none'
-
       // No bounds filter — spot marker coords can be far from the actual trail
       // geometry (e.g. city-centre marker whose trails are 5 km into the hills).
       const filtered = filtersStore.apply(allSpots())
-      if (!filtered.length) return
 
-      // Batch-fetch GPX + parking lots for any uncached spots
-      const uncached = uncachedIds(filtered, gpxCache)
-      const uncachedParking = uncachedIds(filtered, parkingCache)
-      const [fetched, fetchedParking] = await Promise.all([
-        uncached.length ? fetchMultipleSpotGpx(uncached) : Promise.resolve(new Map()),
-        uncachedParking.length ? fetchMultipleSpotParking(uncachedParking) : Promise.resolve(new Map()),
-      ])
-      fetched.forEach((gpx: any, id: string) => gpxCache.set(id, gpx))
-      fetchedParking.forEach((lots: SpotParkingLot[], id: string) => parkingCache.set(id, lots))
-      if (renderGuard.isStale(gen)) return  // superseded by newer render or mode switched to markers
-
-      const view = gpxOverview(filtered, gpxCache, parkingCache, new Date())
-
-      function openPanel(trail: Trail) {
+      // Fetch first: on-screen markers/old GPX view stay until the new layers swap in.
+      await renderGpxSwap(renderGuard, gen, async () => {
+        if (!filtered.length) return
+        const uncached = uncachedIds(filtered, gpxCache)
+        const uncachedParking = uncachedIds(filtered, parkingCache)
+        const [fetched, fetchedParking] = await Promise.all([
+          uncached.length ? fetchMultipleSpotGpx(uncached) : Promise.resolve(new Map()),
+          uncachedParking.length ? fetchMultipleSpotParking(uncachedParking) : Promise.resolve(new Map()),
+        ])
+        fetched.forEach((gpx: any, id: string) => gpxCache.set(id, gpx))
+        fetchedParking.forEach((lots: SpotParkingLot[], id: string) => parkingCache.set(id, lots))
+      }, () => {
+        if (mymap.hasLayer(clusterGroup)) mymap.removeLayer(clusterGroup)
+        if (mymap.hasLayer(markerGroup))  mymap.removeLayer(markerGroup)
+        for (const l of gpxLayers) mymap.removeLayer(l)
+        gpxLayers = []
+        highlighter.clear()
+        for (const l of parkingLayers) mymap.removeLayer(l)
+        parkingLayers = []
         tooltipEl.style.display = 'none'
-        navigateToSpot(trail)
-      }
+        if (!filtered.length) return
 
-      // Every spot keeps its pin in GPX view — it marks the spot centre, tracks or not.
-      const spotPinLayer = L.layerGroup().addTo(mymap)
-      gpxLayers.push(spotPinLayer)
-      for (const trail of view.pins) {
-        L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail) })
-          .addTo(spotPinLayer)
-          .on('click', () => { navigateToSpot(trail) })
-      }
+        const view = gpxOverview(filtered, gpxCache, parkingCache, new Date())
 
-      for (const ln of view.lines) {
-        const { line, hit } = addTrackLayer({
-          L, map: mymap, parent: mymap, tooltipEl, hide, highlighter,
-          latlngs: ln.latlngs, visibleOpts: ln.style, name: ln.name, difficulty: ln.difficulty,
-          points: ln.points, description: ln.description, spotId: ln.spot.id,
-          onOpen: () => openPanel(ln.spot),
-          doubleTap: { detector: tapDetector, id: ln.spot.id },
-        })
-        gpxLayers.push(line, hit)
-      }
+        function openPanel(trail: Trail) {
+          tooltipEl.style.display = 'none'
+          navigateToSpot(trail)
+        }
 
-      // Status badge at the track midpoint; the difficulty-colour lines stay untouched.
-      for (const b of view.badges) {
-        const marker = L.marker(b.latlng, {
-          icon: L.divIcon(trailStatusBadgeOptions(b.status.state)),
-          zIndexOffset: 1000,
-        }).addTo(mymap)
-        marker.on('click', (e: any) => {
-          L.DomEvent.stop(e)
-          if (isDesktopViewport()) {
-            marker.bindPopup(buildTrailStatusContent(b.status, b.spot.name)).openPopup()
-          } else {
-            statusSheet.open(b.status, b.spot.name)
-          }
-        })
-        gpxLayers.push(marker)
-      }
+        // Every spot keeps its pin in GPX view — it marks the spot centre, tracks or not.
+        const spotPinLayer = L.layerGroup().addTo(mymap)
+        gpxLayers.push(spotPinLayer)
+        for (const trail of view.pins) {
+          L.marker([trail.latitude, trail.longitude], { icon: createCustomIcon(trail) })
+            .addTo(spotPinLayer)
+            .on('click', () => { navigateToSpot(trail) })
+        }
 
-      // Parking pins: plain layers on the map (not clustered), for every spot type.
-      for (const p of view.parking) {
-        const marker = L.marker([p.lat, p.lng], { icon: L.divIcon(parkingIconOptions()) }).addTo(mymap)
-        // No per-lot deep link (YAGNI) — jump to the spot page's Parkplätze section.
-        marker.on('click', () => { navigateToSpot(p.spot, '#parking') })
-        parkingLayers.push(marker)
-      }
-      renderSoilChips()
+        for (const ln of view.lines) {
+          const { line, hit } = addTrackLayer({
+            L, map: mymap, parent: mymap, tooltipEl, hide, highlighter,
+            latlngs: ln.latlngs, visibleOpts: ln.style, name: ln.name, difficulty: ln.difficulty,
+            points: ln.points, description: ln.description, spotId: ln.spot.id,
+            onOpen: () => openPanel(ln.spot),
+            doubleTap: { detector: tapDetector, id: ln.spot.id },
+          })
+          gpxLayers.push(line, hit)
+        }
+
+        // Status badge at the track midpoint; the difficulty-colour lines stay untouched.
+        for (const b of view.badges) {
+          const marker = L.marker(b.latlng, {
+            icon: L.divIcon(trailStatusBadgeOptions(b.status.state)),
+            zIndexOffset: 1000,
+          }).addTo(mymap)
+          marker.on('click', (e: any) => {
+            L.DomEvent.stop(e)
+            if (isDesktopViewport()) {
+              marker.bindPopup(buildTrailStatusContent(b.status, b.spot.name)).openPopup()
+            } else {
+              statusSheet.open(b.status, b.spot.name)
+            }
+          })
+          gpxLayers.push(marker)
+        }
+
+        // Parking pins: plain layers on the map (not clustered), for every spot type.
+        for (const p of view.parking) {
+          const marker = L.marker([p.lat, p.lng], { icon: L.divIcon(parkingIconOptions()) }).addTo(mymap)
+          // No per-lot deep link (YAGNI) — jump to the spot page's Parkplätze section.
+          marker.on('click', () => { navigateToSpot(p.spot, '#parking') })
+          parkingLayers.push(marker)
+        }
+        renderSoilChips()
+      })
     }
 
     function switchView() {

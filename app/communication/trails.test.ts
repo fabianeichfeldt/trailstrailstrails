@@ -406,3 +406,44 @@ describe('hidden trails on the detail page', () => {
     expect(await getTrailById('h1')).toBeNull()
   })
 })
+
+describe('getTrailBySlug with a hint (spot already known on the client)', () => {
+  const calls = (f: ReturnType<typeof vi.fn>) => f.mock.calls.map(c => String(c[0]))
+
+  it('skips spot_slugs and fires base, details and photos in one concurrent wave', async () => {
+    const started: string[] = []
+    const gates: Array<() => void> = []
+    const fetch = vi.fn((url: string) => {
+      started.push(String(url).split('/rest/v1/')[1].split('?')[0])
+      const table = started[started.length - 1]
+      const body = table === 'trails' ? [{ id: 't1', slug: 's', name: 'S', latitude: 1, longitude: 1 }] : []
+      return new Promise(resolve => gates.push(() => resolve({ ok: true, status: 200, json: () => Promise.resolve(body) })))
+    })
+    vi.stubGlobal('fetch', fetch)
+
+    const p = getTrailBySlug('s', { id: 't1', type: 'trail' })
+    await Promise.resolve()
+    // All three requests are in flight before any answered.
+    expect(started.sort()).toEqual(['trail_details', 'trail_photos', 'trails'])
+    gates.forEach(g => g())
+    expect((await p)?.id).toBe('t1')
+    expect(calls(fetch).some(u => u.includes('spot_slugs'))).toBe(false)
+  })
+
+  it('falls back to the slug lookup when the hinted row is gone', async () => {
+    const fetch = vi.fn((url: string) => {
+      const table = String(url).split('/rest/v1/')[1].split('?')[0]
+      const rows: Record<string, unknown[]> = {
+        spot_slugs: [{ slug: 's', spot_id: 'new', spot_type: 'trail' }],
+        trails: String(url).includes('id=eq.new') ? [{ id: 'new', slug: 's', name: 'S', latitude: 1, longitude: 1 }] : [],
+      }
+      return ok(rows[table] ?? [])
+    })
+    vi.stubGlobal('fetch', fetch)
+
+    const res = await getTrailBySlug('s', { id: 'stale', type: 'trail' })
+
+    expect(res?.id).toBe('new')
+    expect(calls(fetch).some(u => u.includes('spot_slugs'))).toBe(true)
+  })
+})

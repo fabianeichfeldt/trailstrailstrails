@@ -40,8 +40,15 @@ export type { ResolvedSpot }
 // only the one base table it names is queried; ids, and slugs spot_slugs
 // doesn't know, probe every registry base table in parallel. Details + photos
 // are fetched only after the type is known, since they key on the spot id.
-export async function resolveSpot(field: 'id' | 'slug', value: string): Promise<ResolvedSpot | null> {
+export type SpotHint = { id: string; type: SpotType }
+
+export async function resolveSpot(field: 'id' | 'slug', value: string, hint?: SpotHint): Promise<ResolvedSpot | null> {
   if (field === 'slug') {
+    // The caller already knows id+type (map list): one parallel wave, no spot_slugs round trip.
+    if (hint) {
+      const hinted = await resolveInTable(SPOT_TYPES[hint.type], hint.id, true)
+      if (hinted) return hinted
+    }
     const known = await lookupSlug(value)
     if (known === 'not-a-spot') return null
     if (known) return resolveInTable(known.def, known.id)
@@ -82,21 +89,25 @@ async function lookupSlug(slug: string): Promise<{ def: SpotTypeDef; id: string 
   return def ? { def, id: row.spot_id } : 'not-a-spot'
 }
 
-async function resolveInTable(def: SpotTypeDef, id: string): Promise<ResolvedSpot | null> {
-  const res = await fetch(
-    `${REST}/${def.table}?id=eq.${encodeURIComponent(id)}${visibleFilter(def)}&select=*`,
-    { method: 'GET', cache: 'no-store', headers: anonHeaders() },
-  )
-  const rows = res.ok ? await res.json() as Array<Record<string, any>> : []
-  const base = rows.find(r => String(r.id) === id)
+async function resolveInTable(def: SpotTypeDef, id: string, parallelExtras = false): Promise<ResolvedSpot | null> {
+  const fetchBase = async () => {
+    const res = await fetch(
+      `${REST}/${def.table}?id=eq.${encodeURIComponent(id)}${visibleFilter(def)}&select=*`,
+      { method: 'GET', cache: 'no-store', headers: anonHeaders() },
+    )
+    const rows = res.ok ? await res.json() as Array<Record<string, any>> : []
+    return rows.find(r => String(r.id) === id)
+  }
+  // Extras key on the id only, so with a trusted id they need not wait for the base row.
+  const [base, extras] = await Promise.all([fetchBase(), parallelExtras ? fetchSpotExtras(id, def.type) : undefined])
   if (!base) return null
-  const { detail, photos } = await fetchSpotExtras(base.id, def.type)
+  const { detail, photos } = extras ?? await fetchSpotExtras(base.id, def.type)
   return mergeSpot(base, detail, def.type, photos)
 }
 
 export const getTrailById = (id: string) => resolveSpot('id', id)
 // Primary resolver for /trails/[slug]; null falls the caller back to getTrailById (legacy id URLs).
-export const getTrailBySlug = (slug: string) => resolveSpot('slug', slug)
+export const getTrailBySlug = (slug: string, hint?: SpotHint) => resolveSpot('slug', slug, hint)
 
 export async function getTrailDetails(trail: Trail): Promise<TrailDetails> {
   const cached = detailsCache.get(trail.id)
