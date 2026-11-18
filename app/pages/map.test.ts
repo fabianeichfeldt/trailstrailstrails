@@ -22,6 +22,9 @@ vi.stubGlobal('useSoilRadarIntro', (opts: typeof introOpts) => {
   return { highlight: ref(false), show: ref(false), dismiss: vi.fn(), start: vi.fn() }
 })
 
+const preloadRouteComponents = vi.fn().mockResolvedValue(undefined)
+vi.stubGlobal('preloadRouteComponents', preloadRouteComponents)
+
 import MapPage from './map.vue'
 
 const startAddMode = vi.fn()
@@ -128,5 +131,18 @@ describe('map page radar intro (experiment radar-free-with-account)', () => {
     expect(introOpts.engaged?.()).toBe(false)
     engaged.value = true
     expect(introOpts.engaged?.()).toBe(true)
+  })
+})
+
+describe('map page spot-page warmup', () => {
+  it('preloads the spot page chunk once the map is ready', async () => {
+    vi.stubGlobal('requestIdleCallback', (cb: () => void) => cb())
+    vi.stubGlobal('useSoilRadarStore', () => reactive({ enabled: false, failure: null, mode: null, restore: () => Promise.resolve() }))
+    const w = mountPage()
+    expect(preloadRouteComponents).not.toHaveBeenCalled()
+
+    w.getComponent(MapViewStub).vm.$emit('ready', { openTrail() {}, flyToPlace() {}, getCenter: () => null })
+
+    expect(preloadRouteComponents).toHaveBeenCalledWith('/trails/x')
   })
 })

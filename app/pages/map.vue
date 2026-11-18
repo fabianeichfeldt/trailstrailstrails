@@ -117,6 +117,11 @@ function onMapReady(handlers: {
   flyToPlace = handlers.flyToPlace
   getCenter = handlers.getCenter
 
+  // Warm the spot page chunk (link prefetch is off) so the first pin click isn't a cold download.
+  const warm = () => { preloadRouteComponents('/trails/x').catch(() => {}) }
+  if (typeof requestIdleCallback === 'function') requestIdleCallback(warm, { timeout: 4000 })
+  else setTimeout(warm, 1500)
+
   // A persisted "on" brings its data back only once entitled; otherwise it flips off without the teaser.
   soilStore.restore().finally(() => {
     // Deep link from the landing page / spot page: open the radar, unless restore already did.

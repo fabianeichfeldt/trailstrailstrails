@@ -1,6 +1,6 @@
 import { track } from '~/analytics/track'
 import { isInitialRoute, claimSpotView, spotViewEvent } from '~/analytics/spotView'
-import { getTrailById, getTrailBySlug, getTrailDetails } from '~/communication/trails'
+import { getTrailById, getTrailBySlug, getTrailDetails, type SpotHint } from '~/communication/trails'
 import { SPOT_SNAPSHOT_PATH, type ResolvedSpot } from '~/communication/spotSnapshot'
 import { bakedTrailDetails } from '~/utils/bakedTrailDetails'
 import { TrailDetails } from '~/types/TrailDetails'
@@ -33,6 +33,17 @@ async function prerenderedSpot(slug: string): Promise<ResolvedSpot | undefined> 
   return snapshot?.[slug]
 }
 
+// Client-side nav from the map: the loaded spot list already knows id + type, which saves the spot_slugs round trip.
+function spotHint(slug: string): SpotHint | undefined {
+  if (import.meta.server || import.meta.prerender) return undefined
+  try {
+    const known = useTrailsStore().all.find(t => t.slug === slug)
+    return known ? { id: known.id, type: known.type } : undefined
+  } catch {
+    return undefined
+  }
+}
+
 export async function useSpotDetail(slug: string | null) {
   // Region pages: no fetch and no payload key shared by every region page.
   if (!slug) {
@@ -54,6 +65,10 @@ export async function useSpotDetail(slug: string | null) {
   // refresh happens in onMounted below. Awaited only at the end — lifecycle
   // hooks must register before the first await or they attach to nothing.
   const key = `trail-${slug}`
+  // Only a hard load hydrates from the SSG payload; on client nav the fetch in
+  // setup is already live, so the post-mount refetch would just repeat it.
+  let hydrated = true
+  try { hydrated = useNuxtApp().isHydrating } catch { /* no Nuxt app: keep the refresh */ }
   // The legacy-id page instance is replaced by the slug page, which reports the view itself.
   let redirected = false
   const asyncData = useAsyncData(key, async () => {
@@ -62,7 +77,7 @@ export async function useSpotDetail(slug: string | null) {
         const baked = await prerenderedSpot(slug)
         if (baked) return baked
       }
-      const bySlug = await getTrailBySlug(slug)
+      const bySlug = await getTrailBySlug(slug, spotHint(slug))
       if (bySlug) return bySlug
 
       // Legacy /trails/<id>/ URL: edge redirect stubs cover crawlers; this
@@ -124,8 +139,10 @@ export async function useSpotDetail(slug: string | null) {
     mounted = true
     // clearNuxtData() is required: refresh() alone is a silent no-op while
     // Nuxt still holds the SSR-time promise for this key.
-    clearNuxtData(key)
-    await refresh()
+    if (hydrated) {
+      clearNuxtData(key)
+      await refresh()
+    }
     if (spot.value) start(spot.value)
   })
 
