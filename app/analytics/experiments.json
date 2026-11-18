@@ -39,7 +39,7 @@
       "primaryMetric": "engagedRate",
       "minVisitsPerVariant": 300,
       "status": "running",
-      "startedAt": null,
+      "startedAt": "2026-11-18T18:35:00Z",
       "endedAt": null,
       "result": null
     }
