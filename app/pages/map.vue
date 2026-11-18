@@ -31,7 +31,7 @@
       </button>
 
       <SoilRadarButton ref="soilButton" :highlight="soilIntro.highlight.value" @teaser="onSoilTeaser" />
-      <SoilRadarIntro :show="soilIntro.show.value" @try="onSoilIntroTry" @dismiss="soilIntro.dismiss" />
+      <SoilRadarIntro :show="soilIntro.show.value" :free-with-account="radarVariant === 'b' && !authStore.isLoggedIn" @try="onSoilIntroTry" @dismiss="soilIntro.dismiss" />
       <SoilRadarPanel v-if="soilStore.enabled" />
       <SoilRadarLockedSheet v-if="soilSheetOpen" @close="closeSoilSheet" />
       <p v-if="soilUnavailable" class="soil-notice" role="status">Boden-Radar gerade nicht verfügbar</p>
@@ -143,9 +143,14 @@ function onMapReady(handlers: {
 const soilSheetOpen = ref(false)
 const soilUnavailable = ref(false)
 const soilButton = ref<{ activate: () => void } | null>(null)
+// Arm B: the radar intro is the only popup, and only after the visit's `engaged` event.
+const radarVariant = useExperiment('radar-free-with-account')
+const engaged = useEngaged()
 const soilIntro = useSoilRadarIntro({
   busy: () => soilSheetOpen.value || mapStore.authModalOpen || addSpotModal.open || !!nearbyConflict.value,
   used: () => soilStore.enabled,
+  afterEngagement: () => radarVariant.value === 'b',
+  engaged: () => engaged.value,
 })
 
 function onSoilIntroTry() {

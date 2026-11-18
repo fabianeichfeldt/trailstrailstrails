@@ -14,7 +14,7 @@
       <h2 id="soil-intro-title">Wo fährt's sich heute am besten?</h2>
       <p id="soil-intro-text">
         Der {{ FEATURES.soil_radar.label }} legt den Bodenzustand aller Spots über die Karte – berechnet aus
-        Regen der letzten Tage, aktuellem Wetter und Bodenart.
+        Regen der letzten Tage, aktuellem Wetter und Bodenart.<template v-if="freeWithAccount"> Kostenlos mit Konto.</template>
       </p>
       <div class="levels" aria-hidden="true">
         <span v-for="(l, i) in LEVELS" :key="l" class="level" :style="{ background: SOIL_PALETTE[i] }" v-html="SOIL_GLYPHS[l]" />
@@ -29,7 +29,8 @@ import { FEATURES } from '~/entitlements/features'
 import { SOIL_GLYPHS } from '~/map/soilBadge'
 import { SOIL_PALETTE, SOIL_SCALE as LEVELS } from '~/types/soilScale'
 
-defineProps<{ show: boolean }>()
+// `freeWithAccount`: experiment arm B, logged-out visitors only.
+defineProps<{ show: boolean; freeWithAccount?: boolean }>()
 const emit = defineEmits<{ try: []; dismiss: [] }>()
 
 </script>

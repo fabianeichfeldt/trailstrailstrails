@@ -2,6 +2,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { activeExperiment, assignVariant, variantTag } from './experiments'
 import { createEngagement } from './engagement'
+import { COUNTED_ACTIONS } from './engagementRules'
+// @ts-expect-error plain .mjs
+import { ENGAGEMENT_RULES } from '../../scripts/umami-visits.mjs'
 import { claimSpotView, markRouteChange, spotViewEvent } from './spotView'
 import { startHeartbeat } from './heartbeat'
 import config from './experiments.json'
@@ -21,7 +24,7 @@ describe('assignVariant', () => {
     expect(activeExperiment({ active: 'missing', experiments: [exp] })).toBeNull()
   })
   it('reads the shipped config', () => {
-    expect(activeExperiment(config as never)?.id).toBe('aa-baseline-2')
+    expect(activeExperiment(config as never)?.id).toBe('radar-free-with-account')
   })
 })
 
@@ -161,5 +164,17 @@ describe('track', () => {
     track('locate_me')
     track('share')
     expect(stub.mock.calls.map(c => c[0])).toEqual(['filter_toggle', 'active', 'locate_me', 'engaged', 'share'])
+  })
+})
+
+describe('funnel events never count toward engaged', () => {
+  it('the app rule and the report mirror count exactly the same actions', () => {
+    expect([...COUNTED_ACTIONS].sort()).toEqual([...ENGAGEMENT_RULES.countedActions].sort())
+  })
+  it('radar_open, locked_view, signup_start, signup_done are ignored by createEngagement', () => {
+    const fn = vi.fn()
+    const rec = createEngagement(fn, 2, () => 0)
+    for (const e of ['radar_open', 'locked_view', 'signup_start', 'signup_done'] as const) { rec(e); rec(e) }
+    expect(fn).not.toHaveBeenCalled()
   })
 })

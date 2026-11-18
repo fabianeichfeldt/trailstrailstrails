@@ -322,3 +322,15 @@ describe('usePwaInstall — decisions', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 })
+
+describe('usePwaInstall — suppressed (experiment arm B)', () => {
+  it('never shows when suppressed at timer time, even with a prompt available', () => {
+    setDeferredInstallPrompt({ prompt: vi.fn(), userChoice: Promise.resolve({ outcome: 'accepted' }) } as any)
+    let b = false
+    const { result, unmount } = withSetup(() => usePwaInstall({ suppressed: () => b }))
+    b = true // the variant is assigned after the composable was set up
+    vi.advanceTimersByTime(10_000)
+    expect(result.show.value).toBe(false)
+    unmount()
+  })
+})

@@ -2,6 +2,7 @@
 
 export const ENGAGEMENT_RULES = {
   version: 2,
+  // Not counted (allowlist): spot_land, active, engaged, radar_open, locked_view, signup_start, signup_done.
   countedActions: ['map_pin_open', 'search', 'filter_toggle', 'locate_me', 'item_select', 'photo_open', 'share', 'parking_select', 'like', 'spot_open'],
   // spot_open right after one of these is the same user action.
   mergeOpenAfter: ['map_pin_open', 'search'],

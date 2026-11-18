@@ -127,6 +127,7 @@
 </template>
 
 <script setup lang="ts">
+import { track } from '~/analytics/track'
 const authStore = useAuthStore()
 const mapStore = useMapStore()
 
@@ -180,6 +181,7 @@ async function handleSignUp() {
   try {
     await authStore.signUp(email.value, password.value, nickname.value)
     await authStore.signIn(email.value, password.value)
+    track('signup_done')
     mapStore.authModalOpen = false
   } catch {
     error.value = 'Fehler beim Registrieren. Bitte versuche es erneut.'

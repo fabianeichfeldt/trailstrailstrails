@@ -1,3 +1,4 @@
+import { track } from '~/analytics/track'
 import { soilMapAdapter } from '~/communication/soilMap'
 import type { FeatureAccess } from '~/entitlements/features'
 import { createGatedFetch, settled } from '~/entitlements/gatedFetch'
@@ -136,6 +137,7 @@ export const useSoilRadarStore = defineStore('soilRadar', () => {
     if (outcome === 'ready') {
       enabled.value = true
       writeEnabled(true)
+      track('radar_open')
     } else if (outcome !== 'superseded') {
       failure.value = outcome === 'locked' ? 'locked' : 'unavailable'
     }

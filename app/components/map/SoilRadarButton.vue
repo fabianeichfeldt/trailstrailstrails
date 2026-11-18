@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import IconRadar from '~/assets/icons/radar.svg'
 import IconLock from '~/assets/icons/lock.svg'
+import { useExperiment } from '~/composables/useExperiment'
 
 defineProps<{ highlight?: boolean }>()
 const emit = defineEmits<{ teaser: [] }>()
@@ -28,8 +29,9 @@ const store = useSoilRadarStore()
 const access = computed(() => store.access)
 onMounted(() => store.attach())
 
+const variant = useExperiment('radar-free-with-account')
 const label = computed(() => {
-  if (access.value === 'locked') return 'Boden-Radar ansehen (Supporter-Funktion)'
+  if (access.value === 'locked') return variant.value === 'b' ? 'Boden-Radar ansehen (kostenlos mit Konto)' : 'Boden-Radar ansehen (Supporter-Funktion)'
   return store.enabled ? 'Boden-Radar ausschalten' : 'Boden-Radar einschalten'
 })
 

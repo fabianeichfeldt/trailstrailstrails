@@ -56,6 +56,8 @@ skill skips them until March; set them back to `ready` then.
 
 ### Spec: `radar-free-today`
 
+- **Superseded/dependent (18.11.2026):** the experiment `radar-free-with-account` (radar free with any account, one popup after engagement) runs first. Revisit this row only after its result.
+
 - **Decision (10.11.2026):** today's soil state becomes free for the test. There are no running
   subscriptions yet, so what Supporter keeps can still change; for now it is Trail-Zustand per spot
   (verdict, day strip, 10-day rain) and the offline GPX download.
@@ -77,7 +79,6 @@ Not in the queue. Each line says what would bring it back.
 | `plans-framing` | `/plans` leads with "hält Trailradar unabhängig und finanziert Traildaten" instead of the feature comparison | `/plans` gets too few visits to reach 300 per variant in a reasonable time. Decide the framing by judgment, or test it once traffic is several times higher |
 | `follow-spot` | "Folgen" on a spot; push or email on status change and on soil turning dry | Its payoff is return visits, which the consent-free setup cannot measure. Build it as a feature, not an experiment |
 | `radar-give-to-get` | One soil report or photo unlocks the Boden-Radar for 30 days | Contradicts #1: nothing left to unlock if today's state is free. Fallback if #1 costs too many Supporter conversions |
-| `radar-free-with-account` | Boden-Radar free with a free account (registration wall instead of paywall) | Fallback for #1, same condition |
 | `radar-home-region-free` | Boden-Radar free for one chosen region, the rest stays Supporter | Fallback for #1, same condition |
 | `nearby-carousel-detail` | Swipeable "Trails in der Nähe" cards at the end of `trails/[slug]` | Already live for everyone (`SpotDetailNearby.vue`), so there is no control to test against |
 

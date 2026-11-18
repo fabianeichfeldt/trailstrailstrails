@@ -70,6 +70,20 @@ describe('soilRadar store — live', () => {
     expect(s.points).toHaveLength(2)
   })
 
+  it('tracks radar_open once when the live radar actually switches on, not on a failed or off toggle', async () => {
+    const umami = { track: vi.fn() }
+    ;(window as any).umami = umami
+    fetchMock.mockResolvedValueOnce(respond(500, {}))
+    const s = useSoilRadarStore()
+    await s.toggle()
+    expect(umami.track).not.toHaveBeenCalledWith('radar_open', undefined)
+    answer(snapshot())
+    await s.toggle()
+    await s.toggle() // off
+    expect(umami.track.mock.calls.filter(c => c[0] === 'radar_open')).toHaveLength(1)
+    delete (window as any).umami
+  })
+
   it('exposes status "loading" while the fetch is in flight', async () => {
     let resolve!: (v: unknown) => void
     fetchMock.mockReturnValue(new Promise(r => { resolve = r }))

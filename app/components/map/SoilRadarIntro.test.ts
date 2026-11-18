@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import SoilRadarIntro from './SoilRadarIntro.vue'
 
-const mountIntro = (show: boolean) => mount(SoilRadarIntro, { props: { show }, global: { stubs: { transition: false } } })
+const mountIntro = (show: boolean, freeWithAccount = false) => mount(SoilRadarIntro, { props: { show, freeWithAccount }, global: { stubs: { transition: false } } })
 
 describe('SoilRadarIntro', () => {
   it('pitches the radar with the "where to ride today" hook', () => {
@@ -23,5 +23,10 @@ describe('SoilRadarIntro', () => {
     await w.get('[data-testid="soil-intro"]').trigger('keydown', { key: 'Escape' })
     expect(w.emitted('try')).toHaveLength(1)
     expect(w.emitted('dismiss')).toHaveLength(2)
+  })
+
+  it('mentions "kostenlos mit Konto" only when told to (arm B, logged out)', () => {
+    expect(mountIntro(true).text()).not.toContain('Kostenlos mit Konto')
+    expect(mountIntro(true, true).text()).toContain('Kostenlos mit Konto')
   })
 })

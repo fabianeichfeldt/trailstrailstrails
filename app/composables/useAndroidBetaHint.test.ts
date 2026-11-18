@@ -243,3 +243,15 @@ describe('useAndroidBetaHint — decisions', () => {
     expect(vi.getTimerCount()).toBe(0)
   })
 })
+
+describe('useAndroidBetaHint — suppressed (experiment arm B)', () => {
+  it('never shows and never takes the bottom slot when suppressed at timer time', () => {
+    let b = false
+    const { result, unmount } = withSetup(() => useAndroidBetaHint({ suppressed: () => b }))
+    b = true
+    vi.advanceTimersByTime(15_000)
+    expect(result.show.value).toBe(false)
+    expect(bottomBannerActive.value).toBe(false)
+    unmount()
+  })
+})

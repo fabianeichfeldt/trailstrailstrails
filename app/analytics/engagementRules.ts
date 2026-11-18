@@ -1,6 +1,6 @@
 import type { AnalyticsEvent } from './events'
 
-// Mirrors the report's "engaged" rule (v2). Not counted: spot_land, active, engaged.
+// Mirrors the report's "engaged" rule (v2). Not counted: spot_land, active, engaged and the funnel events radar_open, locked_view, signup_start, signup_done.
 export const COUNTED_ACTIONS: ReadonlySet<AnalyticsEvent> = new Set<AnalyticsEvent>([
   'map_pin_open', 'search', 'filter_toggle', 'locate_me', 'item_select',
   'photo_open', 'share', 'parking_select', 'like', 'spot_open',

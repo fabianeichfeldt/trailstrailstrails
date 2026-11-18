@@ -46,10 +46,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { usePwaInstall } from '~/composables/usePwaInstall'
+import { useExperiment } from '~/composables/useExperiment'
 import { bottomBannerActive } from '~/composables/bottomBannerSlot'
 import IconShare from '~/assets/icons/share.svg'
 
-const { show, isIos, install, dismiss } = usePwaInstall()
+// Open-map experiment arm B: no install banner.
+const variant = useExperiment('radar-free-with-account')
+const { show, isIos, install, dismiss } = usePwaInstall({ suppressed: () => variant.value === 'b' })
 
 // Local `visible` drives the CSS transition.
 // When `show` becomes true → show immediately.

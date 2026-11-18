@@ -11,7 +11,11 @@
 <script setup lang="ts">
 import { useAndroidBetaHint } from '~/composables/useAndroidBetaHint'
 
-const { show, dismiss } = useAndroidBetaHint()
+import { useExperiment } from '~/composables/useExperiment'
+
+// Open-map experiment arm B: no app-beta hint.
+const variant = useExperiment('radar-free-with-account')
+const { show, dismiss } = useAndroidBetaHint({ suppressed: () => variant.value === 'b' })
 </script>
 
 <style scoped>

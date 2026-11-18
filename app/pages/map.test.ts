@@ -12,9 +12,15 @@ vi.stubGlobal('useAuthStore', () => reactive({ isLoggedIn: false }))
 vi.stubGlobal('useMapStore', () => reactive({ authModalOpen: false, userLocation: null }))
 vi.stubGlobal('useTrailsStore', () => reactive({ all: [] }))
 vi.stubGlobal('useSoilRadarStore', () => reactive({ enabled: false, failure: null, mode: null }))
-vi.stubGlobal('useSoilRadarIntro', () => ({
-  highlight: ref(false), show: ref(false), dismiss: vi.fn(), start: vi.fn(),
-}))
+const variant = ref<string | null>(null)
+const engaged = ref(false)
+vi.stubGlobal('useExperiment', () => variant)
+vi.stubGlobal('useEngaged', () => engaged)
+let introOpts: { afterEngagement?: () => boolean; engaged?: () => boolean } = {}
+vi.stubGlobal('useSoilRadarIntro', (opts: typeof introOpts) => {
+  introOpts = opts
+  return { highlight: ref(false), show: ref(false), dismiss: vi.fn(), start: vi.fn() }
+})
 
 import MapPage from './map.vue'
 
@@ -43,6 +49,8 @@ const mountPage = () => mount(MapPage, {
 })
 
 beforeEach(() => {
+  variant.value = null
+  engaged.value = false
   startAddMode.mockClear()
   cancelAddMode.mockClear()
 })
@@ -102,5 +110,23 @@ describe('map page locate FAB', () => {
 
     expect(umami).toHaveBeenCalledWith('locate_me', { located: false })
     delete window.umami
+  })
+})
+
+describe('map page radar intro (experiment radar-free-with-account)', () => {
+  it('control: the intro is not held back for engagement', () => {
+    mountPage()
+    expect(introOpts.afterEngagement?.()).toBe(false)
+    variant.value = 'a'
+    expect(introOpts.afterEngagement?.()).toBe(false)
+  })
+
+  it('B: the intro waits for engagement, read at call time, and follows the engaged flag', () => {
+    mountPage()
+    variant.value = 'b' // assigned after the page was set up
+    expect(introOpts.afterEngagement?.()).toBe(true)
+    expect(introOpts.engaged?.()).toBe(false)
+    engaged.value = true
+    expect(introOpts.engaged?.()).toBe(true)
   })
 })

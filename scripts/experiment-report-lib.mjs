@@ -2,7 +2,7 @@ import { ENGAGEMENT_NOTE, fetchVisits, groupByTag, summariseVisits } from './uma
 
 // Pure helpers for `npm run experiment:report` (Umami A/B readout). No I/O except the injected fetch.
 
-export const EVENT_NAMES = ['engaged', 'spot_open', 'item_select', 'search', 'filter_toggle', 'locate_me', 'photo_open', 'share', 'parking_select', 'map_pin_open', 'like'];
+export const EVENT_NAMES = ['engaged', 'spot_open', 'item_select', 'search', 'filter_toggle', 'locate_me', 'photo_open', 'share', 'parking_select', 'map_pin_open', 'like', 'radar_open', 'locked_view', 'signup_start', 'signup_done'];
 
 const num = v => (typeof v === 'number' && Number.isFinite(v) ? v : Number(v) || 0);
 // Umami v1/v2 returns { visits: { value, prev } }, newer versions flat numbers.
