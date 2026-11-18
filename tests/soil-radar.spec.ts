@@ -176,7 +176,8 @@ baseTest('the sheet\'s register button leaves the auth modal on top, not underne
   assertNoLeaks();
 });
 
-baseTest('a signed-in free account sees the sample and a link to the plans, and no soil-map request', async ({ page }) => {
+// radar-free-with-account: any account (level 0) gets the live layer, no sample, no sheet.
+baseTest('a signed-in free account turns on the live radar', async ({ page }) => {
   const assertNoLeaks = await setupAllMocks(page);
   const soilCalls = trackSoilRequests(page);
   await page.route('**/rest/v1/rpc/get_my_entitlement', (route) => route.fulfill({ json: entitlementRows(0) }));
@@ -187,9 +188,10 @@ baseTest('a signed-in free account sees the sample and a link to the plans, and 
   await navigateClientSide(page, '/map');
 
   await page.locator('[data-testid="soil-radar-button"]').click();
-  await expect(page.locator('[data-testid="soil-sample-pill"]')).toBeVisible();
-  await expect(page.locator('[data-testid="soil-locked-link"]')).toHaveAttribute('href', '/plans');
-  expect(soilCalls).toEqual([]);
+  await expect(page.locator('[data-testid="soil-panel"]')).toBeVisible();
+  await expect(page.locator('[data-testid="soil-sample-pill"]')).toHaveCount(0);
+  await expect(page.locator('[data-testid="soil-locked-sheet"]')).toHaveCount(0);
+  expect(soilCalls).toHaveLength(1);
 
   assertNoLeaks();
 });
