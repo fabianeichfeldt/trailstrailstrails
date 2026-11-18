@@ -1,8 +1,13 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import SoilRadarLockedSheet from './SoilRadarLockedSheet.vue'
+
+const trackMock = vi.hoisted(() => vi.fn())
+vi.mock('~/analytics/track', () => ({ track: trackMock }))
+const variant = ref<string | null>(null)
+vi.stubGlobal('useState', () => computed({ get: () => (variant.value ? { experimentId: 'radar-free-with-account', variant: variant.value } : null), set: () => {} }))
 
 const NuxtLink = { props: ['to'], template: '<a :href="to"><slot /></a>' }
 const mountSheet = () => mount(SoilRadarLockedSheet, { global: { stubs: { NuxtLink } } })
@@ -14,6 +19,8 @@ vi.stubGlobal('useMapStore', () => fakeMapStore)
 beforeEach(() => {
   fakeAuthStore = reactive({ isLoggedIn: false })
   fakeMapStore = reactive({ authModalOpen: false })
+  variant.value = null
+  trackMock.mockClear()
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-10-10T12:00:00Z'))
 })
@@ -42,10 +49,11 @@ describe('SoilRadarLockedSheet', () => {
     expect(w.get('[data-testid="soil-locked-cta"]').text()).toContain('registrieren')
   })
 
-  it('logged in: names it a Supporter feature and links to /plans', () => {
+  it('logged in (stale 403): neutral copy, never "Stufe 0", links to /plans', () => {
     fakeAuthStore.isLoggedIn = true
     const w = mountSheet()
-    expect(w.text()).toContain('Boden-Radar ist eine Supporter-Funktion')
+    expect(w.text()).toContain('Boden-Radar ist für dich noch nicht freigeschaltet')
+    expect(w.text()).not.toContain('Stufe')
     expect(w.get('a[href="/plans"]').exists()).toBe(true)
     expect(w.find('[data-testid="soil-locked-cta"]').exists()).toBe(false)
   })
@@ -61,5 +69,41 @@ describe('SoilRadarLockedSheet', () => {
   it('is a labelled dialog', () => {
     const d = mountSheet().get('[role="dialog"]')
     expect(d.attributes('aria-labelledby')).toBeTruthy()
+  })
+  describe('experiment radar-free-with-account', () => {
+    it('control and no assignment keep the Supporter copy', () => {
+      variant.value = 'a'
+      vi.setSystemTime(new Date('2027-01-05T12:00:00Z'))
+      const w = mountSheet()
+      expect(w.get('h2').text()).toBe('Boden-Radar für Supporter')
+      expect(w.text()).not.toContain('Kostenlos mit Konto')
+    })
+
+    it('B logged out: free-with-account title and CTA, opens the auth modal and tracks signup_start', async () => {
+      variant.value = 'b'
+      const w = mountSheet()
+      expect(w.get('h2').text()).toBe('Kostenlos mit Konto')
+      const cta = w.get('[data-testid="soil-locked-cta"]')
+      expect(cta.text()).toBe('Kostenloses Konto erstellen')
+      await cta.trigger('click')
+      expect(fakeMapStore.authModalOpen).toBe(true)
+      expect(trackMock).toHaveBeenCalledWith('signup_start', { source: 'radar_sheet' })
+    })
+
+    it('tracks locked_view with the login state when shown', () => {
+      mountSheet()
+      expect(trackMock).toHaveBeenCalledWith('locked_view', { logged_in: false })
+      fakeAuthStore.isLoggedIn = true
+      mountSheet()
+      expect(trackMock).toHaveBeenCalledWith('locked_view', { logged_in: true })
+    })
+
+    it('never renders "Stufe 0" in any arm or login state', () => {
+      for (const v of [null, 'a', 'b']) for (const li of [false, true]) {
+        variant.value = v
+        fakeAuthStore.isLoggedIn = li
+        expect(mountSheet().text()).not.toContain('Stufe')
+      }
+    })
   })
 })

@@ -6,7 +6,8 @@ const SIGNED_UP_KEY = 'android-beta-signed-up'
 const DISMISS_WINDOW_MS = 3 * 24 * 60 * 60 * 1000
 const DWELL_MS = 10_000
 
-export function useAndroidBetaHint() {
+/** `suppressed` is read when the timer fires: the experiment variant is assigned after hydration. */
+export function useAndroidBetaHint(opts: { suppressed?: () => boolean } = {}) {
   const show = ref(false)
 
   // 1. Not an Android device — this hint is irrelevant
@@ -28,7 +29,7 @@ export function useAndroidBetaHint() {
   // 4. Dwell timer — show after 10s, but only if the bottom-sheet slot is
   // free (e.g. the PWA install banner isn't currently occupying it).
   const timerId = setTimeout(() => {
-    if (bottomBannerActive.value) return
+    if (opts.suppressed?.() || bottomBannerActive.value) return
     show.value = true
     bottomBannerActive.value = true
   }, DWELL_MS)

@@ -24,8 +24,11 @@
         </ul>
         <NuxtLink to="/map?radar=1" class="promo-cta" data-testid="soil-promo-cta">Boden-Radar ausprobieren →</NuxtLink>
         <p class="fine">
-          {{ minPlanName('soil_radar') }}-Funktion<template v-if="promoActive"> – neue Mitglieder testen {{ SIGNUP_PROMO.weeks }} Wochen kostenlos</template>.
-          Ohne Konto siehst du eine Beispielansicht.
+          <template v-if="freeWithAccount">Kostenlos mit Konto. Ohne Konto siehst du eine Beispielansicht.</template>
+          <template v-else>
+            Supporter-Funktion<template v-if="promoActive"> – neue Mitglieder testen {{ SIGNUP_PROMO.weeks }} Wochen kostenlos</template>.
+            Ohne Konto siehst du eine Beispielansicht.
+          </template>
         </p>
       </div>
     </div>
@@ -33,11 +36,15 @@
 </template>
 
 <script setup lang="ts">
-import { FEATURES, SIGNUP_PROMO, isSignupPromoActive, minPlanName } from '~/entitlements/features'
+import { FEATURES, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
+import { useExperiment } from '~/composables/useExperiment'
 import { SOIL_GLYPHS } from '~/map/soilBadge'
 import { SOIL_LABELS, SOIL_PALETTE, SOIL_SCALE as LEVELS } from '~/types/soilScale'
 
 const promoActive = isSignupPromoActive()
+// Fine print only, so the SSR (control) to B switch after mount shifts no layout.
+const variant = useExperiment('radar-free-with-account')
+const freeWithAccount = computed(() => variant.value === 'b')
 </script>
 
 <style scoped>

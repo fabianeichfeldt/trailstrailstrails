@@ -126,7 +126,7 @@
         <ul>
           <li>Erfasst werden die aufgerufene Seite, der Referrer, Browser, Betriebssystem, Gerätetyp,
             Bildschirmgröße, Sprache und das aus der IP-Adresse abgeleitete Land bzw. die Region. Dazu kommen
-            Nutzungsereignisse in der App (z.B. „Spot geöffnet“, „Filter geändert“, „Suche genutzt“), aber keine
+            Nutzungsereignisse in der App (z.B. „Spot geöffnet“, „Filter geändert“, „Suche genutzt“, „Registrierung abgeschlossen“, „Boden-Radar eingeschaltet“), aber keine
             Suchbegriffe und keine Inhalte.</li>
           <li>Solange du die Seite aktiv nutzt (sichtbar und mit einer Eingabe in den letzten 30 Sekunden), sendet
             die App alle 30 Sekunden ein kurzes Aktivitätssignal ohne weitere Daten. So können wir messen, wie

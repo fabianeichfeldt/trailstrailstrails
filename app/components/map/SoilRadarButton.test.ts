@@ -1,16 +1,19 @@
 // @vitest-environment happy-dom
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { reactive, ref, nextTick } from 'vue'
+import { computed, reactive, ref, nextTick } from 'vue'
 import type { FeatureAccess } from '~/entitlements/features'
 import SoilRadarButton from './SoilRadarButton.vue'
 
+const variant = ref<string | null>(null)
+vi.stubGlobal('useState', () => computed({ get: () => (variant.value ? { experimentId: 'radar-free-with-account', variant: variant.value } : null), set: () => {} }))
 // Nuxt auto-import; stubbed as the store shape the button reads (access comes from the store's gate).
 const access = ref<FeatureAccess>('allowed')
 let store: { enabled: boolean; status: string; access: FeatureAccess; toggle: ReturnType<typeof vi.fn>; attach: ReturnType<typeof vi.fn> }
 vi.stubGlobal('useSoilRadarStore', () => store)
 
 beforeEach(() => {
+  variant.value = null
   access.value = 'allowed'
   store = reactive({ enabled: false, status: 'idle', access, toggle: vi.fn(), attach: vi.fn() }) as unknown as typeof store
 })
@@ -73,6 +76,13 @@ describe('SoilRadarButton', () => {
     access.value = 'locked'
     const w = mount(SoilRadarButton)
     expect(w.attributes('aria-label')).toContain('Supporter')
+  })
+
+  it('labels the locked state as free with an account in arm B', () => {
+    access.value = 'locked'
+    variant.value = 'b'
+    const w = mount(SoilRadarButton)
+    expect(w.attributes('aria-label')).toBe('Boden-Radar ansehen (kostenlos mit Konto)')
   })
 })
 

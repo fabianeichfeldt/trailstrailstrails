@@ -26,8 +26,8 @@ describe('trail_condition', () => {
 })
 
 describe('soil_radar', () => {
-  it('is a Supporter feature, mirroring REQUIRED_LEVEL of the soil-map edge function', () => {
-    expect(FEATURES.soil_radar.minLevel).toBe(1)
+  it('is free with any account, mirroring REQUIRED_LEVEL of the soil-map edge function', () => {
+    expect(FEATURES.soil_radar.minLevel).toBe(0)
   })
 
   it('has a German label for the teaser', () => {

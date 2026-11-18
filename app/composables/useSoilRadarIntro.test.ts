@@ -92,3 +92,57 @@ describe('useSoilRadarIntro', () => {
     set.mockRestore()
   })
 })
+
+describe('useSoilRadarIntro — after engagement (experiment arm B)', () => {
+  function setupB(engagedInit = false) {
+    const engaged = ref(engagedInit)
+    const variantB = ref(false)
+    const scope = effectScope()
+    const intro = scope.run(() => useSoilRadarIntro({
+      busy: () => false, used: () => false,
+      afterEngagement: () => variantB.value, engaged: () => engaged.value,
+    }))!
+    return { intro, engaged, variantB }
+  }
+
+  it('never shows on the dwell timer and keeps the pulse off until engaged', () => {
+    const { intro, variantB } = setupB()
+    variantB.value = true // assigned after hydration, before the map is ready
+    intro.start()
+    vi.advanceTimersByTime(INTRO_DWELL_MS * 5)
+    expect(intro.show.value).toBe(false)
+    expect(intro.highlight.value).toBe(false)
+  })
+
+  it('shows with the pulse once engaged fires after the map is up', async () => {
+    const { intro, engaged, variantB } = setupB()
+    variantB.value = true
+    intro.start()
+    engaged.value = true
+    await nextTick()
+    expect(intro.show.value).toBe(true)
+    expect(intro.highlight.value).toBe(true)
+  })
+
+  it('shows when the visit was already engaged before the map got ready', () => {
+    const { intro, variantB } = setupB(true)
+    variantB.value = true
+    intro.start()
+    expect(intro.show.value).toBe(true)
+  })
+
+  it('a timer armed before the variant arrived does not show it in B', () => {
+    const { intro, variantB } = setupB()
+    intro.start()
+    variantB.value = true
+    vi.advanceTimersByTime(INTRO_DWELL_MS)
+    expect(intro.show.value).toBe(false)
+  })
+
+  it('control (not arm B) keeps the dwell timer regardless of engagement', () => {
+    const { intro } = setupB()
+    intro.start()
+    vi.advanceTimersByTime(INTRO_DWELL_MS)
+    expect(intro.show.value).toBe(true)
+  })
+})

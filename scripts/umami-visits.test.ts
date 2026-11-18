@@ -45,6 +45,11 @@ describe('countActions', () => {
   it('never counts spot_land, active, engaged or pageviews', () => {
     expect(countActions(visit([pv('v', 0), pv('v', 1), ev('v', 2, 'spot_land'), ev('v', 3, 'active'), ev('v', 4, 'engaged')]))).toBe(0);
   });
+  it('never counts the funnel events radar_open, locked_view, signup_start, signup_done', () => {
+    const names = ['radar_open', 'locked_view', 'signup_start', 'signup_done'];
+    expect(countActions(visit([pv('v', 0), ...names.map((n, i) => ev('v', 1 + i, n))]))).toBe(0);
+    for (const n of names) expect(ENGAGEMENT_RULES.countedActions).not.toContain(n);
+  });
   it('exposes the rules in one place', () => {
     expect(ENGAGEMENT_RULES.minActionsEngaged).toBe(2);
     expect(ENGAGEMENT_RULES.countedActions).not.toContain('spot_land');

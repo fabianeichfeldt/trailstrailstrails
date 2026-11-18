@@ -13,7 +13,8 @@
       <button type="button" class="close" aria-label="Schließen" data-testid="soil-locked-close" @click="emit('close')">×</button>
 
       <h2 id="soil-locked-title">
-        <template v-if="loggedIn">{{ FEATURES.soil_radar.label }} ist eine {{ plan }}-Funktion</template>
+        <template v-if="loggedIn">{{ FEATURES.soil_radar.label }} ist für dich noch nicht freigeschaltet</template>
+        <template v-else-if="freeWithAccount">Kostenlos mit Konto</template>
         <template v-else>{{ promoActive ? 'Für begrenzte Zeit kostenlos' : `${FEATURES.soil_radar.label} für Supporter` }}</template>
       </h2>
       <p class="hint">
@@ -23,17 +24,20 @@
       </p>
 
       <template v-if="!loggedIn">
-        <button type="button" class="cta" data-testid="soil-locked-cta" @click="mapStore.authModalOpen = true">
-          {{ promoActive ? `Jetzt registrieren – ${SIGNUP_PROMO.weeks} Wochen kostenlos` : 'Jetzt registrieren' }}
+        <button type="button" class="cta" data-testid="soil-locked-cta" @click="onSignup">
+          <template v-if="freeWithAccount">Kostenloses Konto erstellen</template>
+          <template v-else>{{ promoActive ? `Jetzt registrieren – ${SIGNUP_PROMO.weeks} Wochen kostenlos` : 'Jetzt registrieren' }}</template>
         </button>
       </template>
-      <NuxtLink v-else to="/plans" class="cta" data-testid="soil-locked-link">Supporter werden</NuxtLink>
+      <NuxtLink v-else to="/plans" class="cta" data-testid="soil-locked-link">Pläne ansehen</NuxtLink>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { FEATURES, minPlanName, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
+import { FEATURES, SIGNUP_PROMO, isSignupPromoActive } from '~/entitlements/features'
+import { useExperiment } from '~/composables/useExperiment'
+import { track } from '~/analytics/track'
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -41,12 +45,22 @@ const emit = defineEmits<{ close: [] }>()
 const authStore = useAuthStore()
 const mapStore = useMapStore()
 const loggedIn = computed(() => authStore.isLoggedIn)
-const plan = minPlanName('soil_radar')
 const promoActive = isSignupPromoActive()
+// Experiment arm B: free-with-account framing; SSR and control keep the Supporter copy.
+const variant = useExperiment('radar-free-with-account')
+const freeWithAccount = computed(() => variant.value === 'b')
+
+function onSignup() {
+  track('signup_start', { source: 'radar_sheet' })
+  mapStore.authModalOpen = true
+}
 
 // Escape works only if focus is inside the dialog.
 const dialog = ref<HTMLElement | null>(null)
-onMounted(() => dialog.value?.focus())
+onMounted(() => {
+  dialog.value?.focus()
+  track('locked_view', { logged_in: loggedIn.value })
+})
 </script>
 
 <style scoped>

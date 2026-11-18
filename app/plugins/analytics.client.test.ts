@@ -44,8 +44,8 @@ describe('analytics plugin', () => {
     expect(s.defer).toBe(true)
     expect(s.getAttribute('data-website-id')).toBe('site-1')
     expect(s.getAttribute('data-do-not-track')).toBe('true')
-    expect(s.getAttribute('data-tag')).toMatch(/^aa-baseline-2:(a|b)$/)
-    expect((state.value as { experimentId: string }).experimentId).toBe('aa-baseline-2')
+    expect(s.getAttribute('data-tag')).toMatch(/^radar-free-with-account:(a|b)$/)
+    expect((state.value as { experimentId: string }).experimentId).toBe('radar-free-with-account')
   })
 
   it('starts the heartbeat and route counting when enabled', async () => {

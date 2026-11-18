@@ -1,5 +1,5 @@
 {
-  "active": "aa-baseline-2",
+  "active": "radar-free-with-account",
   "experiments": [
     {
       "id": "aa-baseline",
@@ -24,8 +24,22 @@
       ],
       "primaryMetric": "engagedRate",
       "minVisitsPerVariant": 300,
-      "status": "running",
+      "status": "concluded",
       "startedAt": "2026-11-10T19:05:00Z",
+      "endedAt": "2026-11-18",
+      "result": "no_difference: a=364 visits (engaged 18.7%), b=376 (21.0%), diff +2.3 pp, 95% CI [-3.4, 8.1] pp, z=0.79, p=0.4272"
+    },
+    {
+      "id": "radar-free-with-account",
+      "hypothesis": "Boden-Radar free with a free account plus one well-timed popup instead of three: logged-out visitors engage more and sign up more than with the Supporter paywall framing and on-load popups.",
+      "variants": [
+        "a",
+        "b"
+      ],
+      "primaryMetric": "engagedRate",
+      "minVisitsPerVariant": 300,
+      "status": "running",
+      "startedAt": null,
       "endedAt": null,
       "result": null
     }

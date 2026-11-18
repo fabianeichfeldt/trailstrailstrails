@@ -1,7 +1,8 @@
 import { ref, onUnmounted } from 'vue'
 import { deferredInstallPrompt } from './pwaInstallPrompt'
 
-export function usePwaInstall() {
+/** `suppressed` is read when the timer fires: the experiment variant is assigned after hydration. */
+export function usePwaInstall(opts: { suppressed?: () => boolean } = {}) {
   const show = ref(false)
   const isIos = ref(false)
 
@@ -28,6 +29,7 @@ export function usePwaInstall() {
   //          so checking deferredInstallPrompt is the correct "not yet installed" guard.
   // iOS:     always show — Safari never fires beforeinstallprompt; instructions are always relevant.
   const timerId = setTimeout(() => {
+    if (opts.suppressed?.()) return
     if (isIos.value || deferredInstallPrompt !== null) {
       show.value = true
     }
