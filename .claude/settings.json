@@ -57,7 +57,7 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/run-tests.sh stop",
-            "timeout": 260
+            "timeout": 700
           }
         ]
       }
